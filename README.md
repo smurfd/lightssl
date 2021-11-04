@@ -29,6 +29,6 @@ int main() {
 ```
 # Compile your project
 ```bash
-gcc main.c -llightssl -I/PATH/TO/LIB
+gcc main.c -I../lightssl/src -L. -llightssl -o main
 ```
-or copy `build_your_project.sh` to your project and edit it
+or copy `build_your_project.sh` and `build/liblightssl.a` to your project.
