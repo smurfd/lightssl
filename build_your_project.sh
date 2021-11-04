@@ -1,3 +1,1 @@
-# gcc main.c -llightssl -I/PATH/TO/LIB
-gcc main.c -llightssl -I.
-
+gcc main.c -I../lightssl/src -L. -llightssl -o main
