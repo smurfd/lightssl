@@ -18,7 +18,7 @@ or
 # Use lightssl in your project
 ```c
 #include <stdio.h>
-#include <liblightssl.h>
+#include <lightssl.h>
 
 int main() {
   lightssl_init();
@@ -27,3 +27,8 @@ int main() {
   return 0;
 }
 ```
+# Compile your project
+```bash
+gcc main.c -llightssl -I/PATH/TO/LIB
+```
+or copy `build_your_project.sh` to your project and edit it
