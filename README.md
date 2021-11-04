@@ -4,14 +4,14 @@ Do SSL need to be so hard?
 
 # Compile lightssl
 
-````bash
+```bash
 meson build
 cd build
 meson compile
 meson test
 ```
 or
-````bash
+```bash
 ./build.sh
 ```
 
