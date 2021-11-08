@@ -1,0 +1,1 @@
+[{"cmd": ["/home/rumrogers/Code/Github/smurfd/lightssl/build/test_lightssl"], "env": {}, "name": "basic", "workdir": null, "timeout": 30, "suite": ["lightssl"], "is_parallel": true, "priority": 0, "protocol": "exitcode"}]

@@ -3,8 +3,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "lighthash.h"
 #include "defs.h"
+
+extern uint64_t sha[80];
+extern uint64_t sha_init[8];
 
 // "Construct"
 char* lh_new(const char* in) {
@@ -107,5 +111,13 @@ void lh_transform(const unsigned char *msg, uint8_t blocknb) {
     for (int j = 0; j < 8; j++) {
        m_h[j] += wv[j];
     }
+  }
+}
+
+bool lh_verify(const char *hash, const char *ver_hash) {
+  if (strcasecmp(hash, ver_hash) == 0) {
+    return true;
+  } else {
+    return false;
   }
 }

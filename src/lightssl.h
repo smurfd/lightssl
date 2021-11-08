@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/socket.h>
+#include "defs.h"
 
 #ifndef LIGHTSSL_H
-#define LIGHTSSL_H
+#define LIGHTSSL_H 1
 
 int ls_cli_connect(const char *host, const char *port, bool udp);
 void ls_cli_disconnect(int sd, bool udp);
