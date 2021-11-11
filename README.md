@@ -42,8 +42,10 @@ int main(void) {
 }
 ```
 # Compile your project
-`cp src/*.h ../newproj/src`
-`cp build/*.a ../newproj/src`
-`cp build_your_project.sh ../newproj/src`
-`cd ../newproj/src`
-`./build_your_project.sh`
+```bash
+cp src/*.h ../newproj/src
+cp build/*.a ../newproj/src
+cp build_your_project.sh ../newproj/src
+cd ../newproj/src
+./build_your_project.sh
+```
