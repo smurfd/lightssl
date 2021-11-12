@@ -38,6 +38,7 @@ int main(void) {
 
   // the hash of rh and the generated one match?
   assert(lh_verify(out, rh));
+  printf("The hashes match!\nRealHash:  %s\nGenerated: %s\n", rh, out);
   return 0;
 }
 ```
