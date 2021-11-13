@@ -6,8 +6,9 @@
 #include "lightssl.h"
 #include "lighthash.h"
 
-int main(void) {
-  char* out;
+int main(int argc, char **argv) {
+  char *out;
+  char *data;
   const char* in = "smurfd";
   const char* rh = "555cfc37fc24d4971de9b091ef"\
                    "13401b8c5cb8b5b55804da571f"\
@@ -23,18 +24,22 @@ int main(void) {
   assert(lh_verify(out, rh));
   printf("The hashes match!\nRealHash:  %s\nGenerated: %s\n", rh, out);
 
-/*
-  // For documentation, client and server example
-  // Needs separate files
-  struct sockaddr *cli = NULL;
-  int s = ls_srv_init("127.0.0.1", "12345");
-  int c = ls_srv_listen(s, cli);
-  ls_srv_send(c, "hey");
-
-  char *data;
-  data = (char*) malloc(1024);
-  int cl = ls_cli_init("127.0.0.1", "12345");
-  printf("Rec from server: %s %d\n", ls_cli_recv(c, data), cl);
+  if (argc == 2 && argv) {
+    // For documentation, client and server example
+    // Needs separate files
+    if (strcmp(argv[1], "server") == 0) {
+      struct sockaddr *cli = NULL;
+      int s = ls_srv_init("127.0.0.1", "12345");
+      int c = ls_srv_listen(s, cli);
+    }
+    if (strcmp(argv[1], "client") == 0) {
+      if(!data)
+        data = (char*) malloc(2048);
+      int cl = ls_cli_init("127.0.0.1", "12345");
+      ls_cli_recv(cl, &data);
+      printf("Rec from server: %d, %s\n", cl, &data);
+      ls_cli_end(cl);
+    }
+  }
   return 0;
-*/
 }

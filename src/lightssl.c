@@ -36,17 +36,15 @@ void *ls_srv_handler(void *sdesc) {
   char *msg = NULL;
   char cm[2000];
 
-
   if (msg) {}
-  while (rd) {
+  ls_srv_send(s, "some data");
+  while (rd >= 0) {
     rd = recv(s, cm, 2000, 0);
     write(s, cm, strlen(cm));
-    printf("cm = %s\n", cm);
     memset(cm, '\0', 2000);
   }
   // if rd == 0, client disconnect
   // if rd < 0, received failed
-
   free(sdesc);
   close(s);
   pthread_exit(NULL);
@@ -58,21 +56,27 @@ int ls_srv_listen(int ssock, struct sockaddr *cli) {
   int *new_sock;
   int c = sizeof(struct sockaddr_in);
   listen(ssock, 3);
-  while(csock) {
+  while(csock >= 0) {
     csock = accept(ssock, (struct sockaddr*)&cli, (socklen_t*)&c);
     pthread_t sniffer_thread;
     new_sock = (int*)malloc(sizeof *new_sock);
     *new_sock = csock;
     if (pthread_create(&sniffer_thread, NULL, ls_srv_handler, (void*)new_sock) < 0) {
-      // couldnt create thread
-      return 1;
+      printf("rerrror\n");
+      return -1;
     }
   }
   return csock;
 }
 
 void ls_srv_send(int csock, const char *msg) {
-  send(csock, msg, sizeof(msg), 0);
+  send(csock, msg, strlen(msg), 0);
+}
+
+char* ls_srv_recv(int csock) {
+  char data[20];
+  recv(csock, data, strlen(data), 0);
+  return data;
 }
 
 int ls_cli_init(const char *host, const char *port) {
@@ -91,19 +95,22 @@ int ls_cli_init(const char *host, const char *port) {
   return csock;
 }
 
-char* ls_cli_recv(int csock, char *data) {
+void ls_cli_recv(int csock, char **data) {
   recv(csock, data, sizeof(data), 0);
-  return data;
 }
 
 void ls_cli_send(int csock, const char *msg) {
   send(csock, msg, strlen(msg), 0);
 }
 
+void ls_cli_end(int csock) {
+  close(csock);
+}
+
 void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls,
   uint64_t r, byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess) {
   hs.hi.server = srv;
-  hs.hi.tls_v = tls;
+  hs.hi.tls_v = tls; // will be 4 = TLS1.3
   hs.hi.rnd = r;
   hs.hi.ciph_avail[0] = avail[0]; // will only use 1 cipher
   hs.hi.ciph_select[0] = sel[0]; // will only use 1 cipher
@@ -111,14 +118,16 @@ void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls,
   hs.hi.session_id = sess;
 }
 
-byte8_t ls_hs_send_hi(bool srv, struct hello *hi) {
+byte8_t ls_hs_send_hi(int csock, bool srv, struct hello *hi) {
   if (srv) {}
   if (hi) {}
+  send(csock, hi, sizeof(hi), 0);
   return 0;
 }
 
-void ls_hs_recv_hi(bool srv, struct hello *hi) {
+byte8_t ls_hs_recv_hi(int csock, bool srv, struct hello *hi) {
   if (srv) {}
   if (hi) {}
-  //return hi;
+  recv(csock, hi, sizeof(hi), 0);
+  return 0;
 }
