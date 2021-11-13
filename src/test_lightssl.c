@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
     // For documentation, client and server example
     // Needs separate files
     if (strcmp(argv[1], "server") == 0) {
+      // If you are on mac run server as root
       struct sockaddr *cli = NULL;
       int s = ls_srv_init("127.0.0.1", "12345");
       int c = ls_srv_listen(s, cli);
