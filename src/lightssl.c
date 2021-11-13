@@ -97,14 +97,3 @@ char* ls_cli_recv(int csock, char *data) {
 void ls_cli_send(int csock, const char *msg) {
   send(csock, msg, strlen(msg), 0);
 }
-// Example:
-// Server
-// int s = ls_srv_init("127.0.0.1", "12345");
-// int c = ls_srv_listen(s);
-// ls_srv_send(c, "hey");
-//
-// Client
-// char *data;
-// data = (char*) malloc(1024);
-// int c = ls_cli_init("127.0.0.1", "12345");
-// printf("Rec from server: %s\n", ls_cli_recv(c));

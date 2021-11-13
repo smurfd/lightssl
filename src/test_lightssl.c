@@ -22,5 +22,19 @@ int main(void) {
   // the hash of rh and the generated one match?
   assert(lh_verify(out, rh));
   printf("The hashes match!\nRealHash:  %s\nGenerated: %s\n", rh, out);
+
+/*
+  // For documentation, client and server example
+  // Needs separate files
+  struct sockaddr *cli = NULL;
+  int s = ls_srv_init("127.0.0.1", "12345");
+  int c = ls_srv_listen(s, cli);
+  ls_srv_send(c, "hey");
+
+  char *data;
+  data = (char*) malloc(1024);
+  int cl = ls_cli_init("127.0.0.1", "12345");
+  printf("Rec from server: %s %d\n", ls_cli_recv(c, data), cl);
   return 0;
+*/
 }
