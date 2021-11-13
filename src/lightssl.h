@@ -7,7 +7,6 @@
 #ifndef LIGHTSSL_H
 #define LIGHTSSL_H 1
 
-struct handshake {
   struct hello {
     bool server;           // is the hello comming from server?
     byte8_t tls_v;         // 4 = TLS1.3
@@ -16,7 +15,10 @@ struct handshake {
     byte8_t ciph_select[1];// Selected ciphers, will use only SHA512
     byte8_t compress;      // compression type
     uint64_t session_id;   // session id
-  } hi;
+  };
+
+struct handshake {
+  struct hello hi;
 
 } hs;
 
@@ -33,7 +35,8 @@ char* ls_cli_recv(int csock, char *data);
 // Handshake
 void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls, uint64_t r,
   byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess);
-
+byte8_t ls_hs_send_hi(bool srv, struct hello *hi);
+void ls_hs_recv_hi(bool srv, struct hello *hi);
 /*
 Handshake Start
  C -> ClientHello : tlsversion, randnr, ciphers & compressions, (sessionid)

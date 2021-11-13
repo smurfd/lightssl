@@ -36,6 +36,8 @@ void *ls_srv_handler(void *sdesc) {
   char *msg = NULL;
   char cm[2000];
 
+
+  if (msg) {}
   while (rd) {
     rd = recv(s, cm, 2000, 0);
     write(s, cm, strlen(cm));
@@ -107,4 +109,16 @@ void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls,
   hs.hi.ciph_select[0] = sel[0]; // will only use 1 cipher
   hs.hi.compress = c;
   hs.hi.session_id = sess;
+}
+
+byte8_t ls_hs_send_hi(bool srv, struct hello *hi) {
+  if (srv) {}
+  if (hi) {}
+  return 0;
+}
+
+void ls_hs_recv_hi(bool srv, struct hello *hi) {
+  if (srv) {}
+  if (hi) {}
+  //return hi;
 }
