@@ -33,7 +33,7 @@ int ls_srv_init(const char *host, const char *port) {
 void *ls_srv_handler(void *sdesc) {
   int s = *(int*)sdesc;
   int rd = 1;
-  char *msg;
+  char *msg = NULL;
   char cm[2000];
 
   while (rd) {
@@ -96,4 +96,15 @@ char* ls_cli_recv(int csock, char *data) {
 
 void ls_cli_send(int csock, const char *msg) {
   send(csock, msg, strlen(msg), 0);
+}
+
+void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls,
+  uint64_t r, byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess) {
+  hs.hi.server = srv;
+  hs.hi.tls_v = tls;
+  hs.hi.rnd = r;
+  hs.hi.ciph_avail[0] = avail[0]; // will only use 1 cipher
+  hs.hi.ciph_select[0] = sel[0]; // will only use 1 cipher
+  hs.hi.compress = c;
+  hs.hi.session_id = sess;
 }

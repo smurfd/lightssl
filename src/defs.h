@@ -4,6 +4,8 @@
 #ifndef DEFS_H
 #define DEFS_H 1
 
+typedef unsigned char byte8_t;
+
 // SSL
 #define M_BUF 1024
 #define KEYFILE "key.pem"

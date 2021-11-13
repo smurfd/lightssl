@@ -7,6 +7,19 @@
 #ifndef LIGHTSSL_H
 #define LIGHTSSL_H 1
 
+struct handshake {
+  struct hello {
+    bool server;           // is the hello comming from server?
+    byte8_t tls_v;         // 4 = TLS1.3
+    uint64_t rnd;          // random number
+    byte8_t ciph_avail[1]; // available ciphers
+    byte8_t ciph_select[1];// Selected ciphers, will use only SHA512
+    byte8_t compress;      // compression type
+    uint64_t session_id;   // session id
+  } hi;
+
+} hs;
+
 void ls_init();
 // Server
 int ls_srv_init(const char *host, const char *port);
@@ -17,6 +30,9 @@ void ls_srv_send(int csock, const char *msg);
 int ls_cli_init(const char *host, const char *port);
 void ls_cli_send(int csock, const char *msg);
 char* ls_cli_recv(int csock, char *data);
+// Handshake
+void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls, uint64_t r,
+  byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess);
 
 /*
 Handshake Start
