@@ -65,6 +65,7 @@ int ls_srv_listen(int ssock, struct sockaddr *cli) {
       printf("rerrror\n");
       return -1;
     }
+    pthread_join(sniffer_thread, NULL);
   }
   return csock;
 }
@@ -73,10 +74,8 @@ void ls_srv_send(int csock, const char *msg) {
   send(csock, msg, strlen(msg), 0);
 }
 
-char* ls_srv_recv(int csock) {
-  char data[20];
-  recv(csock, data, strlen(data), 0);
-  return data;
+void ls_srv_recv(int csock, char **data) {
+  recv(csock, &data, sizeof(data), 0);
 }
 
 int ls_cli_init(const char *host, const char *port) {
@@ -107,15 +106,15 @@ void ls_cli_end(int csock) {
   close(csock);
 }
 
-void ls_hs_set_hello(struct handshake hs, bool srv, byte8_t tls,
+void ls_hs_set_hello(struct handshake *hs, bool srv, byte8_t tls,
   uint64_t r, byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess) {
-  hs.hi.server = srv;
-  hs.hi.tls_v = tls; // will be 4 = TLS1.3
-  hs.hi.rnd = r;
-  hs.hi.ciph_avail[0] = avail[0]; // will only use 1 cipher
-  hs.hi.ciph_select[0] = sel[0]; // will only use 1 cipher
-  hs.hi.compress = c;
-  hs.hi.session_id = sess;
+  hs->hi.server = srv;
+  hs->hi.tls_v = tls; // will be 4 = TLS1.3
+  hs->hi.rnd = r;
+  hs->hi.ciph_avail[0] = avail[0]; // will only use 1 cipher
+  hs->hi.ciph_select[0] = sel[0]; // will only use 1 cipher
+  hs->hi.compress = c;
+  hs->hi.session_id = sess;
 }
 
 byte8_t ls_hs_send_hi(int csock, bool srv, struct hello *hi) {

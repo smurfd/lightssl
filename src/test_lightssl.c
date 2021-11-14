@@ -7,8 +7,12 @@
 #include "lighthash.h"
 
 int main(int argc, char **argv) {
-  char *out;
-  char *data;
+  char *out = NULL;
+  char *data = NULL;
+  byte8_t avail[] = {222};
+  byte8_t select[] = {222};
+  byte8_t compress = 123;
+
   const char* in = "smurfd";
   const char* rh = "555cfc37fc24d4971de9b091ef"\
                    "13401b8c5cb8b5b55804da571f"\
@@ -30,15 +34,20 @@ int main(int argc, char **argv) {
     if (strcmp(argv[1], "server") == 0) {
       // If you are on mac run server as root
       struct sockaddr *cli = NULL;
+      struct handshake hs_srv;
+      ls_hs_set_hello(&hs_srv, true, 4, 1337, avail, select, compress, 13371337);
       int s = ls_srv_init("127.0.0.1", "12345");
       int c = ls_srv_listen(s, cli);
+      if (c) {}
     }
     if (strcmp(argv[1], "client") == 0) {
+      struct handshake hs_cli;
+      ls_hs_set_hello(&hs_cli, false, 4, 1337, avail, select, compress, 13371337);
       if(!data)
         data = (char*) malloc(2048);
       int cl = ls_cli_init("127.0.0.1", "12345");
       ls_cli_recv(cl, &data);
-      printf("Rec from server: %d, %s\n", cl, &data);
+      printf("Rec from server: %d, %s\n", cl, (char*)&data);
       ls_cli_end(cl);
     }
   }
