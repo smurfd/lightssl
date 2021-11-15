@@ -12,10 +12,8 @@
 #include <pthread.h>
 #include "lightssl.h"
 
-// dummy
-void ls_init() {
-  printf("hi from lib\n");
-}
+// TODO: alot of warnings when building
+// TODO: rework function names
 
 void print_hello(struct hello *hi) {
   printf("//%d %lu %lu %d %d %d\n", hi->server, hi->tls_v, hi->rnd,
@@ -45,23 +43,15 @@ void *ls_srv_handler(void *sdesc) {
   byte8_t compress = 123;
   struct hello *hs_srv;
   struct hello *hs_cli_recv;
-
+  if (s==-1) {return -1;}
   if (msg) {}
-  hs_srv = (struct hello*) malloc(sizeof(struct hello));
-  hs_cli_recv = (struct hello*) malloc(sizeof(struct hello));
-  //memcpy(hs_srv, ls_hs_set_hello(hs_srv, true, 4, 1337, avail, select, compress, 13371337), 21);
+  hs_srv = (struct hello*) malloc(sizeof(struct hello)*2);
+  hs_cli_recv = (struct hello*) malloc(sizeof(struct hello)*2);
   ls_hs_set_hello(hs_srv, true, 4, 1337, avail, select, compress, 13371337);
   ls_hs_send_hi(s, true, hs_srv);
   ls_hs_recv_hi(s, true, &hs_cli_recv);
   print_hello(&hs_cli_recv);
-  ls_srv_send(s, "some data");
-  while (rd >= 0) {
-    rd = recv(s, cm, 2000, 0);
-    write(s, cm, strlen(cm));
-    memset(cm, '\0', 2000);
-  }
-  // if rd == 0, client disconnect
-  // if rd < 0, received failed
+  printf("^recvd from client\n");
   free(sdesc);
   close(s);
   pthread_exit(NULL);
@@ -73,7 +63,7 @@ int ls_srv_listen(int ssock, struct sockaddr *cli) {
   int *new_sock;
   int c = sizeof(struct sockaddr_in);
   listen(ssock, 3);
-  while(csock >= 0) {
+  while(csock >= 1) {
     csock = accept(ssock, (struct sockaddr*)&cli, (socklen_t*)&c);
     pthread_t sniffer_thread;
     new_sock = (int*)malloc(sizeof *new_sock);
@@ -142,27 +132,28 @@ byte8_t ls_hs_send_hi(int csock, bool srv, struct hello *hi) {
     printf("Sending Hello from client\n");
   }
   if (hi) {}
-  //print_hello(&hi);
-  printf("-%d\n", send(csock, hi, sizeof(struct hello), 0));
+
+  send(csock, hi, sizeof(struct hello), 0);
+  print_hello(hi);
   return 0;
 }
 
 struct hello* ls_hs_recv_hi(int csock, bool srv, struct hello *hi) {
+  int r, r_tot;
   if (srv) {
     printf("Receiving Hello from client\n");
   } else {
     printf("Receiving Hello from server\n");
   }
   if (hi) {}
-  printf("recv\n");
-  int r = recv(csock, hi, sizeof(struct hello), 0);
-  printf("r=%d\n",r);
-  printf("tls %d %d\n", hi->tls_v, r);
-//  if(r< sizeof(struct hello))
-//    r = recv(csock, hi, sizeof(struct hello)-r, 0);
- // printf("r=%d\n",r );
-  //print_hello(&hi);
-  //recv(csock, hi, 22, 0);
-  printf("tls %d\n", hi->tls_v);
+  r_tot = 0;
+  r = 0;
+  while(r_tot < sizeof(struct hello)) {
+    r = recv(csock, hi, sizeof(struct hello), 0);
+    if(r==-1) break;
+    if (r>0) {
+      r_tot = r_tot + r;
+    }
+  }
   return hi;
 }

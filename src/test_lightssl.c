@@ -23,7 +23,6 @@ int main(int argc, char **argv) {
 
   out = (char*) malloc(100);
   strcpy(out, lh_new(in));
-  ls_init();
 
   // the hash of rh and the generated one match?
   assert(lh_verify(out, rh));
@@ -43,18 +42,13 @@ int main(int argc, char **argv) {
     if (strcmp(argv[1], "client") == 0) {
       struct hello *hs_cli;
       struct hello *hs_srv_recv;
-      hs_cli = (struct hello*) malloc(sizeof(struct hello));
-      ls_hs_set_hello(&hs_cli, false, 4, 1337, avail, select, compress, 13371337);
-      if(!data)
-        data = (char*) malloc(2048);
+      hs_cli = (struct hello*) malloc(sizeof(struct hello)+1);
+      ls_hs_set_hello(hs_cli, false, 4, 1337, avail, select, compress, 13371337);
       int cl = ls_cli_init("127.0.0.1", "12345");
-      ls_cli_recv(cl, &data);
-      printf("Rec from server: %d, %s\n", cl, (char*)&data);
-      ls_hs_send_hi(cl, false, &hs_cli);
-      hs_srv_recv = (struct hello*) malloc(sizeof(struct hello)+1);
+      ls_hs_send_hi(cl, false, hs_cli);
+      hs_srv_recv = (struct hello*) malloc(sizeof(struct hello)*2);
       ls_hs_recv_hi(cl, false, hs_srv_recv);
       print_hello(hs_srv_recv);
-      printf("s : %d\n", sizeof(struct hello));
       ls_cli_end(cl);
     }
   }

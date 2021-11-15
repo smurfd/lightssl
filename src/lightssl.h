@@ -22,7 +22,6 @@ struct handshake {
 
 } hs;
 
-void ls_init();
 void print_hello(struct hello *hi);
 // Server
 int ls_srv_init(const char *host, const char *port);
