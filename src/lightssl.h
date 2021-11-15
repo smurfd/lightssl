@@ -22,23 +22,23 @@ struct handshake {
 
 } hs;
 
-void print_hello(struct hello *hi);
+void lightssl_print_hello(struct hello *hi);
 // Server
-int ls_srv_init(const char *host, const char *port);
-void *ls_srv_handler(void *sdesc);
-int ls_srv_listen(int ssock, struct sockaddr *cli);
-void ls_srv_send(int csock, const char *msg);
-void ls_srv_recv(int csock, char **data);
+int  lightssl_srv_init(const char *host, const char *port);
+void *lightssl_srv_handler(void *sdesc);
+int  lightssl_srv_listen(int ssock, struct sockaddr *cli);
+void lightssl_srv_send(int csock, const char *msg);
+void lightssl_srv_recv(int csock, char **data);
 // Client
-int ls_cli_init(const char *host, const char *port);
-void ls_cli_send(int csock, const char *msg);
-void ls_cli_recv(int csock, char **data);
-void ls_cli_end(int csock);
+int  lightssl_cli_init(const char *host, const char *port);
+void lightssl_cli_send(int csock, const char *msg);
+void lightssl_cli_recv(int csock, char **data);
+void lightssl_cli_end(int csock);
 // Handshake
-struct hello* ls_hs_set_hello(struct hello *hs, bool srv, byte8_t tls, uint64_t r,
+struct hello* lightssl_hs_set_hello(struct hello *hs, bool srv, byte8_t tls, uint64_t r,
   byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess);
-byte8_t ls_hs_send_hi(int csock, bool srv, struct hello *hi);
-struct hello* ls_hs_recv_hi(int csock, bool srv, struct hello *hi);
+byte8_t lightssl_hs_send_hi(int csock, bool srv, struct hello *hi);
+struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi);
 /*
 Handshake Start
  C -> ClientHello : tlsversion, randnr, ciphers & compressions, (sessionid)
