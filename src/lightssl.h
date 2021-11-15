@@ -7,15 +7,15 @@
 #ifndef LIGHTSSL_H
 #define LIGHTSSL_H 1
 
-  struct hello {
-    bool server;           // is the hello comming from server?
-    byte8_t tls_v;         // 4 = TLS1.3
-    uint64_t rnd;          // random number
-    byte8_t ciph_avail[1]; // available ciphers
-    byte8_t ciph_select[1];// Selected ciphers, will use only SHA512
-    byte8_t compress;      // compression type
-    uint64_t session_id;   // session id
-  };
+struct hello {
+  bool server;           // is the hello comming from server?
+  byte8_t tls_v;         // 4 = TLS1.3
+  uint64_t rnd;          // random number
+  byte8_t ciph_avail[1]; // available ciphers
+  byte8_t ciph_select[1];// Selected ciphers, will use only SHA512
+  byte8_t compress;      // compression type
+  uint64_t session_id;   // session id
+};
 
 struct handshake {
   struct hello hi;
@@ -23,6 +23,7 @@ struct handshake {
 } hs;
 
 void ls_init();
+void print_hello(struct hello *hi);
 // Server
 int ls_srv_init(const char *host, const char *port);
 void *ls_srv_handler(void *sdesc);
@@ -35,10 +36,10 @@ void ls_cli_send(int csock, const char *msg);
 void ls_cli_recv(int csock, char **data);
 void ls_cli_end(int csock);
 // Handshake
-void ls_hs_set_hello(struct handshake *hs, bool srv, byte8_t tls, uint64_t r,
+struct hello* ls_hs_set_hello(struct hello *hs, bool srv, byte8_t tls, uint64_t r,
   byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess);
 byte8_t ls_hs_send_hi(int csock, bool srv, struct hello *hi);
-byte8_t ls_hs_recv_hi(int csock, bool srv, struct hello *hi);
+struct hello* ls_hs_recv_hi(int csock, bool srv, struct hello *hi);
 /*
 Handshake Start
  C -> ClientHello : tlsversion, randnr, ciphers & compressions, (sessionid)

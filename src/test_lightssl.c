@@ -1,6 +1,7 @@
 //                                                                            //
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <assert.h>
 #include "lightssl.h"
@@ -35,19 +36,25 @@ int main(int argc, char **argv) {
       // If you are on mac run server as root
       struct sockaddr *cli = NULL;
       struct handshake hs_srv;
-      ls_hs_set_hello(&hs_srv, true, 4, 1337, avail, select, compress, 13371337);
       int s = ls_srv_init("127.0.0.1", "12345");
       int c = ls_srv_listen(s, cli);
       if (c) {}
     }
     if (strcmp(argv[1], "client") == 0) {
-      struct handshake hs_cli;
+      struct hello *hs_cli;
+      struct hello *hs_srv_recv;
+      hs_cli = (struct hello*) malloc(sizeof(struct hello));
       ls_hs_set_hello(&hs_cli, false, 4, 1337, avail, select, compress, 13371337);
       if(!data)
         data = (char*) malloc(2048);
       int cl = ls_cli_init("127.0.0.1", "12345");
       ls_cli_recv(cl, &data);
       printf("Rec from server: %d, %s\n", cl, (char*)&data);
+      ls_hs_send_hi(cl, false, &hs_cli);
+      hs_srv_recv = (struct hello*) malloc(sizeof(struct hello)+1);
+      ls_hs_recv_hi(cl, false, hs_srv_recv);
+      print_hello(hs_srv_recv);
+      printf("s : %d\n", sizeof(struct hello));
       ls_cli_end(cl);
     }
   }

@@ -17,6 +17,11 @@ void ls_init() {
   printf("hi from lib\n");
 }
 
+void print_hello(struct hello *hi) {
+  printf("//%d %lu %lu %d %d %d\n", hi->server, hi->tls_v, hi->rnd,
+    hi->ciph_avail[0], hi->ciph_select[0], hi->compress, hi->session_id);
+}
+
 int ls_srv_init(const char *host, const char *port) {
   int ssock = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in saddr;
@@ -35,8 +40,20 @@ void *ls_srv_handler(void *sdesc) {
   int rd = 1;
   char *msg = NULL;
   char cm[2000];
+  byte8_t avail[] = {222};
+  byte8_t select[] = {222};
+  byte8_t compress = 123;
+  struct hello *hs_srv;
+  struct hello *hs_cli_recv;
 
   if (msg) {}
+  hs_srv = (struct hello*) malloc(sizeof(struct hello));
+  hs_cli_recv = (struct hello*) malloc(sizeof(struct hello));
+  //memcpy(hs_srv, ls_hs_set_hello(hs_srv, true, 4, 1337, avail, select, compress, 13371337), 21);
+  ls_hs_set_hello(hs_srv, true, 4, 1337, avail, select, compress, 13371337);
+  ls_hs_send_hi(s, true, hs_srv);
+  ls_hs_recv_hi(s, true, &hs_cli_recv);
+  print_hello(&hs_cli_recv);
   ls_srv_send(s, "some data");
   while (rd >= 0) {
     rd = recv(s, cm, 2000, 0);
@@ -62,7 +79,7 @@ int ls_srv_listen(int ssock, struct sockaddr *cli) {
     new_sock = (int*)malloc(sizeof *new_sock);
     *new_sock = csock;
     if (pthread_create(&sniffer_thread, NULL, ls_srv_handler, (void*)new_sock) < 0) {
-      printf("rerrror\n");
+      printf("error\n");
       return -1;
     }
     pthread_join(sniffer_thread, NULL);
@@ -106,27 +123,46 @@ void ls_cli_end(int csock) {
   close(csock);
 }
 
-void ls_hs_set_hello(struct handshake *hs, bool srv, byte8_t tls,
+struct hello* ls_hs_set_hello(struct hello *hi, bool srv, byte8_t tls,
   uint64_t r, byte8_t avail[], byte8_t sel[], byte8_t c, uint64_t sess) {
-  hs->hi.server = srv;
-  hs->hi.tls_v = tls; // will be 4 = TLS1.3
-  hs->hi.rnd = r;
-  hs->hi.ciph_avail[0] = avail[0]; // will only use 1 cipher
-  hs->hi.ciph_select[0] = sel[0]; // will only use 1 cipher
-  hs->hi.compress = c;
-  hs->hi.session_id = sess;
+  hi->server = srv;
+  hi->tls_v = tls; // will be 4 = TLS1.3
+  hi->rnd = r;
+  hi->ciph_avail[0] = avail[0]; // will only use 1 cipher
+  hi->ciph_select[0] = sel[0]; // will only use 1 cipher
+  hi->compress = c;
+  hi->session_id = sess;
+  return hi;
 }
 
 byte8_t ls_hs_send_hi(int csock, bool srv, struct hello *hi) {
-  if (srv) {}
+  if (srv) {
+    printf("Sending Hello from server\n");
+  } else {
+    printf("Sending Hello from client\n");
+  }
   if (hi) {}
-  send(csock, hi, sizeof(hi), 0);
+  //print_hello(&hi);
+  printf("-%d\n", send(csock, hi, sizeof(struct hello), 0));
   return 0;
 }
 
-byte8_t ls_hs_recv_hi(int csock, bool srv, struct hello *hi) {
-  if (srv) {}
+struct hello* ls_hs_recv_hi(int csock, bool srv, struct hello *hi) {
+  if (srv) {
+    printf("Receiving Hello from client\n");
+  } else {
+    printf("Receiving Hello from server\n");
+  }
   if (hi) {}
-  recv(csock, hi, sizeof(hi), 0);
-  return 0;
+  printf("recv\n");
+  int r = recv(csock, hi, sizeof(struct hello), 0);
+  printf("r=%d\n",r);
+  printf("tls %d %d\n", hi->tls_v, r);
+//  if(r< sizeof(struct hello))
+//    r = recv(csock, hi, sizeof(struct hello)-r, 0);
+ // printf("r=%d\n",r );
+  //print_hello(&hi);
+  //recv(csock, hi, 22, 0);
+  printf("tls %d\n", hi->tls_v);
+  return hi;
 }
