@@ -14,7 +14,7 @@
 
 // TODO: alot of warnings when building
 // TODO: rework function names
-
+// TODO: rework listen server loop
 void lightssl_print_hello(struct hello *hi) {
   printf("//%d %d %llu %d %d %d %llu\n", hi->server, hi->tls_v, hi->rnd,
     hi->ciph_avail[0], hi->ciph_select[0], hi->compress, hi->session_id);

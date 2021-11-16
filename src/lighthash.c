@@ -11,16 +11,16 @@ extern uint64_t sha[80];
 extern uint64_t sha_init[8];
 
 // "Construct"
-char* lh_new(const char* in) {
+char* lighthash_new(const char* in) {
   unsigned char digest[DIGEST_SIZE];
   char* buf;
   memset(digest,0,DIGEST_SIZE);
   buf = (char*) malloc(2 * DIGEST_SIZE + 1);
   buf[2 * DIGEST_SIZE] = 0;
 
-  lh_init();
-  lh_update((unsigned char*)in, strlen(in));
-  lh_finalize(digest);
+  lighthash_init();
+  lighthash_update((unsigned char*)in, strlen(in));
+  lighthash_finalize(digest);
 
   for (int i = 0; i < DIGEST_SIZE; i++) {
     sprintf(buf+i*2, "%02x", digest[i]);
@@ -29,7 +29,7 @@ char* lh_new(const char* in) {
 }
 
 // Initialize
-void lh_init() {
+void lighthash_init() {
   for (int i=0; i<8; i++) {
     m_h[i] = sha_init[i];
   }
@@ -38,7 +38,7 @@ void lh_init() {
 }
 
 // Update
-void lh_update(const unsigned char *msg, uint8_t len) {
+void lighthash_update(const unsigned char *msg, uint8_t len) {
   uint8_t block_nb;
   uint8_t new_len, rem_len, tmp_len;
   const unsigned char *shifted_message;
@@ -53,8 +53,8 @@ void lh_update(const unsigned char *msg, uint8_t len) {
   new_len = len - rem_len;
   block_nb = new_len / SHA512_BLOCK_SIZE;
   shifted_message = msg + rem_len;
-  lh_transform(m_block, 1);
-  lh_transform(shifted_message, block_nb);
+  lighthash_transform(m_block, 1);
+  lighthash_transform(shifted_message, block_nb);
   rem_len = new_len % SHA512_BLOCK_SIZE;
   memcpy(m_block, &shifted_message[block_nb << 7], rem_len);
   m_len = rem_len;
@@ -62,7 +62,7 @@ void lh_update(const unsigned char *msg, uint8_t len) {
 }
 
 // Finalize
-void lh_finalize(unsigned char *digest) {
+void lighthash_finalize(unsigned char *digest) {
   uint8_t block_nb;
   uint8_t pm_len;
   uint8_t len_b;
@@ -72,7 +72,7 @@ void lh_finalize(unsigned char *digest) {
   memset(m_block + m_len, 0, pm_len - m_len);
   m_block[m_len] = 0x80;
   SHA2_UNPACK32(len_b, m_block + pm_len - 4);
-  lh_transform(m_block, block_nb);
+  lighthash_transform(m_block, block_nb);
 
   for (int i = 0 ; i < 8; i++) {
     SHA2_UNPACK64(m_h[i], &digest[i << 3]);
@@ -80,7 +80,7 @@ void lh_finalize(unsigned char *digest) {
 }
 
 // Transform
-void lh_transform(const unsigned char *msg, uint8_t blocknb) {
+void lighthash_transform(const unsigned char *msg, uint8_t blocknb) {
   uint64_t w[80];
   uint64_t wv[8];
   uint64_t t1, t2;
@@ -114,7 +114,7 @@ void lh_transform(const unsigned char *msg, uint8_t blocknb) {
   }
 }
 
-bool lh_verify(const char *hash, const char *ver_hash) {
+bool lighthash_verify(const char *hash, const char *ver_hash) {
   if (strcasecmp(hash, ver_hash) == 0) {
     return true;
   } else {

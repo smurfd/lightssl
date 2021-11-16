@@ -10,12 +10,12 @@
 #define SHA512_BLOCK_SIZE 1024/BYTE
 #define DIGEST_SIZE 512/BYTE
 
-char* lh_new(const char* in);
-void lh_init();
-void lh_update(const unsigned char *msg, uint8_t len);
-void lh_finalize(unsigned char *digest);
-void lh_transform(const unsigned char *msg, uint8_t blocknb);
-bool lh_verify(const char *hash, const char *ver_hash);
+char* lighthash_new(const char* in);
+void lighthash_init();
+void lighthash_update(const unsigned char *msg, uint8_t len);
+void lighthash_finalize(unsigned char *digest);
+void lighthash_transform(const unsigned char *msg, uint8_t blocknb);
+bool lighthash_verify(const char *hash, const char *ver_hash);
 
 uint8_t m_tot_len;
 uint8_t m_len;

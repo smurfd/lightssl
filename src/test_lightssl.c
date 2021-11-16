@@ -22,10 +22,10 @@ int main(int argc, char **argv) {
                    "d024f3b97dd1bdac7e70f3d1";
 
   out = (char*) malloc(100);
-  strcpy(out, lh_new(in));
+  strcpy(out, lighthash_new(in));
 
   // the hash of rh and the generated one match?
-  assert(lh_verify(out, rh));
+  assert(lighthash_verify(out, rh));
   printf("The hashes match!\nRealHash:  %s\nGenerated: %s\n", rh, out);
 
   if (argc == 2 && argv) {
