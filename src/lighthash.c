@@ -7,8 +7,8 @@
 #include "lighthash.h"
 #include "defs.h"
 
-extern uint64_t sha[80];
-extern uint64_t sha_init[8];
+extern u64 sha[80];
+extern u64 sha_init[8];
 
 // "Construct"
 char* lighthash_new(const char* in) {
@@ -39,8 +39,8 @@ void lighthash_init() {
 
 // Update
 void lighthash_update(const unsigned char *msg, uint8_t len) {
-  uint8_t block_nb;
-  uint8_t new_len, rem_len, tmp_len;
+  u08 block_nb;
+  u08 new_len, rem_len, tmp_len;
   const unsigned char *shifted_message;
   tmp_len = SHA512_BLOCK_SIZE - m_len;
   rem_len = len < tmp_len ? len : tmp_len;
@@ -63,9 +63,9 @@ void lighthash_update(const unsigned char *msg, uint8_t len) {
 
 // Finalize
 void lighthash_finalize(unsigned char *digest) {
-  uint8_t block_nb;
-  uint8_t pm_len;
-  uint8_t len_b;
+  u08 block_nb;
+  u08 pm_len;
+  u08 len_b;
   block_nb = 1 + ((SHA512_BLOCK_SIZE - 17) < (m_len % SHA512_BLOCK_SIZE));
   len_b = (m_tot_len + m_len) << 3;
   pm_len = block_nb << 7;
@@ -80,10 +80,10 @@ void lighthash_finalize(unsigned char *digest) {
 }
 
 // Transform
-void lighthash_transform(const unsigned char *msg, uint8_t blocknb) {
-  uint64_t w[80];
-  uint64_t wv[8];
-  uint64_t t1, t2;
+void lighthash_transform(const unsigned char *msg, u08 blocknb) {
+  u64 w[80];
+  u64 wv[8];
+  u64 t1, t2;
   const unsigned char *sub_block;
   for (int i = 0; i < (int) blocknb; i++) {
     sub_block = msg + (i << 7);

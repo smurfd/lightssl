@@ -9,10 +9,9 @@
 
 int main(int argc, char **argv) {
   char *out = NULL;
-  //char *data = NULL;
-  byte8_t avail[] = {222};
-  byte8_t select[] = {222};
-  byte8_t compress = 123;
+  b08 avail[] = {TLSCIPHER};
+  b08 select[] = {TLSCIPHERAVAIL};
+  b08 compress = TLSCOMPRESSION;
 
   const char* in = "smurfd";
   const char* rh = "555cfc37fc24d4971de9b091ef"\
@@ -29,24 +28,20 @@ int main(int argc, char **argv) {
   printf("The hashes match!\nRealHash:  %s\nGenerated: %s\n", rh, out);
 
   if (argc == 2 && argv) {
-    // For documentation, client and server example
-    // Needs separate files
     if (strcmp(argv[1], "server") == 0) {
       // If you are on mac run server as root
       struct sockaddr *cli = NULL;
-      //struct handshake hs_srv;
       int s = lightssl_srv_init("127.0.0.1", "12345");
-      int c = lightssl_srv_listen(s, cli);
-      if (c) {}
+      lightssl_srv_listen(s, cli);
     }
     if (strcmp(argv[1], "client") == 0) {
       struct hello *hs_cli;
       struct hello *hs_srv_recv;
-      hs_cli = (struct hello*) malloc(sizeof(struct hello)+1);
-      lightssl_hs_set_hello(hs_cli, false, 4, 1337, avail, select, compress, 13371337);
+      hs_cli = (struct hello*) malloc(sizeof(struct hello));
+      lightssl_hs_set_hello(hs_cli, false, TLSVERSION, 1337, avail, select, compress, 13371337);
       int cl = lightssl_cli_init("127.0.0.1", "12345");
       lightssl_hs_send_hi(cl, false, hs_cli);
-      hs_srv_recv = (struct hello*) malloc(sizeof(struct hello)*2);
+      hs_srv_recv = (struct hello*) malloc(sizeof(struct hello));
       lightssl_hs_recv_hi(cl, false, hs_srv_recv);
       lightssl_print_hello(hs_srv_recv);
       lightssl_cli_end(cl);
