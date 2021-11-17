@@ -45,8 +45,8 @@ void *lightssl_srv_handler(void *sdesc) {
     return (void*)-1;
   }
 
-  hs_srv = (struct hello*) malloc(sizeof(struct hello)); // *2
-  hs_cli_recv = (struct hello*) malloc(sizeof(struct hello)); // *2
+  hs_srv = (struct hello*) malloc(sizeof(struct hello));
+  hs_cli_recv = (struct hello*) malloc(sizeof(struct hello));
   lightssl_hs_set_hello(hs_srv, true, TLSVERSION, 1337, avail, select,
     compress, 13371337);
   lightssl_hs_send_hi(s, true, hs_srv);

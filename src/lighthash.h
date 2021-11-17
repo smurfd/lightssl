@@ -7,10 +7,6 @@
 #ifndef LIGHTHASH_H
 #define LIGHTHASH_H 1
 
-#define BYTE 8
-#define SHA512_BLOCK_SIZE 1024/BYTE
-#define DIGEST_SIZE 512/BYTE
-
 char* lighthash_new(const char* in);
 void lighthash_init();
 void lighthash_update(const unsigned char *msg, u08 len);

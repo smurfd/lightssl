@@ -40,10 +40,6 @@ struct hello* lightssl_hs_set_hello(struct hello *hs, bool srv, b08 tls,
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi);
 struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi);
 
-#define TLSVERSION 4
-#define TLSCIPHER 222
-#define TLSCIPHERAVAIL 222
-#define TLSCOMPRESSION 123
 /*
 Handshake Start
  C -> ClientHello : tlsversion, randnr, ciphers & compressions, (sessionid)

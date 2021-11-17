@@ -1,6 +1,6 @@
 #include "defs.h"
 
-uint64_t sha[80] = {
+u64 sha[80] = {
   0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
   0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
   0x3956c25bf348b538ULL, 0x59f111f1b605d019ULL,
@@ -42,7 +42,7 @@ uint64_t sha[80] = {
   0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL,
   0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL};
 
-uint64_t sha_init[8] = {
+u64 sha_init[BYTE] = {
   0x6a09e667f3bcc908ULL,
   0xbb67ae8584caa73bULL,
   0x3c6ef372fe94f82bULL,

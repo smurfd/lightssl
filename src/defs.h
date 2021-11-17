@@ -11,17 +11,15 @@ typedef unsigned char b08;
 // SSL
 #define SEVENFFF 0x7fffffffffffffff
 #define RAND() (rand() & SEVENFFF)
-#define M_BUF 1024
-#define KEYFILE "key.pem"
-#define CERTFILE "cert.pem"
-#define CAFILE "/etc/ssl/certs/ca-certificates.crt"
-#define CRLFILE "crl.pem"
-#define LIGHTTLS_AGAIN -28
-#define LIGHTTLS_INTERRUPTED -52
-#define LOOP_CHECK(rval, cmd) \
-  do {                        \
-    rval = cmd;               \
-  } while(rval == LIGHTTLS_AGAIN || rval == LIGHTTLS_INTERRUPTED)
+#define BYTE 8
+#define SHA512_BLOCK_SIZE 1024/BYTE
+#define DIGEST_SIZE 512/BYTE
+
+// TLS
+#define TLSVERSION 4
+#define TLSCIPHER 222
+#define TLSCIPHERAVAIL 222
+#define TLSCOMPRESSION 123
 
 // Hash
 #define SHFR(x, n) (x >> n)
@@ -64,11 +62,11 @@ typedef unsigned char b08;
   | ((u64) *((str) + 0) << 56);\
 }
 
-#define RAND64()         \
- ((u64)(RAND()) << 48) ^ \
- ((u64)(RAND()) << 35) ^ \
- ((u64)(RAND()) << 22) ^ \
- ((u64)(RAND()) <<  9) ^ \
- ((u64)(RAND()) >>  4)
+#define RAND64()          \
+  ((u64)(RAND()) << 48) ^ \
+  ((u64)(RAND()) << 35) ^ \
+  ((u64)(RAND()) << 22) ^ \
+  ((u64)(RAND()) <<  9) ^ \
+  ((u64)(RAND()) >>  4)
 
 #endif
