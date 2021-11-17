@@ -29,12 +29,10 @@ int main(int argc, char **argv) {
 
   if (argc == 2 && argv) {
     if (strcmp(argv[1], "server") == 0) {
-      // If you are on mac run server as root
       struct sockaddr *cli = NULL;
       int s = lightssl_srv_init("127.0.0.1", "12345");
       lightssl_srv_listen(s, cli);
-    }
-    if (strcmp(argv[1], "client") == 0) {
+    } else if (strcmp(argv[1], "client") == 0) {
       struct hello *hs_cli;
       struct hello *hs_srv_recv;
       hs_cli = (struct hello*) malloc(sizeof(struct hello));
@@ -45,6 +43,8 @@ int main(int argc, char **argv) {
       lightssl_hs_recv_hi(cl, false, hs_srv_recv);
       lightssl_print_hello(hs_srv_recv);
       lightssl_cli_end(cl);
+      free(hs_srv_recv);
+      free(hs_cli);
     }
   }
   return 0;

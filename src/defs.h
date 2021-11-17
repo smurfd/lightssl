@@ -9,8 +9,8 @@ typedef uint8_t  u08;
 typedef unsigned char b08;
 
 // SSL
-#define 7FFF 0x7fffffffffffffff
-#define RAND() (rand() & 7FFFF)
+#define SEVENFFF 0x7fffffffffffffff
+#define RAND() (rand() & SEVENFFF)
 #define M_BUF 1024
 #define KEYFILE "key.pem"
 #define CERTFILE "cert.pem"

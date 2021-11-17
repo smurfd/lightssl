@@ -7,4 +7,5 @@ test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
   link_with: [liblightssl, liblighthash, liblightdefs],
   install : true)
 
-test('basic', test_lightssl, args: ['test', 'test'])
+test('server', test_lightssl, args: ['server'])
+test('client', test_lightssl, args: ['client'])
