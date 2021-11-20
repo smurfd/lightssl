@@ -35,10 +35,12 @@ void lightssl_cli_send(int csock, const char *msg);
 void lightssl_cli_recv(int csock, char **data);
 void lightssl_cli_end(int csock);
 // Handshake
-struct hello* lightssl_hs_set_hello(struct hello *hs, bool srv, b08 tls,
+struct hello* lightssl_hs_set_hello(struct hello *hs, bool srv, int tls,
   u64 r, b08 avail[], b08 sel[], b08 c, u64 sess);
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi);
 struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi);
+
+#endif
 
 /*
 Handshake Start
@@ -69,4 +71,7 @@ Handshake Done
 https://datatracker.ietf.org/doc/html/rfc8446
 https://en.wikipedia.org/wiki/Transport_Layer_Security
 */
-#endif
+
+// TODO
+// Read: https://dev.to/techschoolguru/a-complete-overview-of-ssl-tls-and-its-cryptographic-system-36pd
+// Read: https://dev.to/techschoolguru/how-to-create-sign-ssl-tls-certificates-2aai

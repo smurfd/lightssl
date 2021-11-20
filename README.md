@@ -12,6 +12,16 @@ meson test
 ```
 `./build.sh` has those parts in it
 
+# Run client and server
+In one terminal run
+```
+./build/test_lightssl server
+```
+In another teerminal run
+```
+./build/test_lightssl client
+```
+
 # Use lightssl in your project
 ```c
 #include <stdio.h>
@@ -21,6 +31,7 @@ meson test
 #include <assert.h>
 #include "lightssl.h"
 #include "lighthash.h"
+#include "lightcrypt.h"
 
 int main(int argc, char **argv) {
   char *out = NULL;
@@ -62,6 +73,7 @@ int main(int argc, char **argv) {
       free(hs_cli);
     }
   }
+  free(out);
   return 0;
 }
 ```

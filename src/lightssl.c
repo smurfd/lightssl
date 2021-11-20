@@ -115,7 +115,7 @@ void lightssl_cli_end(int csock) {
   close(csock);
 }
 
-struct hello* lightssl_hs_set_hello(struct hello *hi, bool srv, b08 tls,
+struct hello* lightssl_hs_set_hello(struct hello *hi, bool srv, int tls,
   u64 r, b08 avail[], b08 sel[], b08 c, u64 sess) {
   hi->server = srv;
   hi->tls_v = tls; // will be 4 = TLS1.3

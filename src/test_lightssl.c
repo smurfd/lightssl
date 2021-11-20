@@ -6,6 +6,7 @@
 #include <assert.h>
 #include "lightssl.h"
 #include "lighthash.h"
+#include "lightcrypt.h"
 
 int main(int argc, char **argv) {
   char *out = NULL;
@@ -47,5 +48,8 @@ int main(int argc, char **argv) {
       free(hs_cli);
     }
   }
+  free(out);
+  // Crypt
+  lightcrypt_init();
   return 0;
 }

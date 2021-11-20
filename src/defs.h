@@ -16,7 +16,7 @@ typedef unsigned char b08;
 #define DIGEST_SIZE 512/BYTE
 
 // TLS
-#define TLSVERSION 4
+#define TLSVERSION 0x304
 #define TLSCIPHER 222
 #define TLSCIPHERAVAIL 222
 #define TLSCOMPRESSION 123
