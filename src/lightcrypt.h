@@ -22,6 +22,9 @@
 
 // went back to port the ecdhe.py
 
+#ifndef LIGHTCRYPT_H
+#define LIGHTCRYPT_H 1
+
 const uint8_t a1[] = {
   0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff,
@@ -100,3 +103,5 @@ struct rrr *scalar_mult(uint64_t k, struct rrr *p1, struct rrr *ret);
 void private_key(uint8_t *ret);
 void public_key(uint8_t *pk, struct rrr *ret);
 void lightcrypt_init();
+
+#endif
