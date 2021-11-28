@@ -11,12 +11,51 @@
 #include <time.h>
 #include "lightcrypt.h"
 #include "defs.h"
+
+extern const uint8_t a1[30];
+extern const uint8_t a2_1[32];
+extern const uint8_t a2_2[32];
+extern const uint8_t a3[32];
  
 void lightcrypt_init() {
   unsigned __int128 big1 = 123456788;
   __uint128_t big2 = 123456788;
   if(big1 == big2)
     printf("crypting stuff\n");
+
+  struct rrr *r;
+  uint8_t *k1;
+
+  memcpy(curve.p, a1, sizeof(a1)*sizeof(uint8_t));
+  memcpy(curve.g1, a2_1, sizeof(a2_1)*sizeof(uint8_t));
+  memcpy(curve.g2, a2_2, sizeof(a2_2)*sizeof(uint8_t));
+  memcpy(curve.n, a3, sizeof(a3)*sizeof(uint8_t));
+
+  strcpy(curve.name, "secp256k1");
+  curve.a = 0;
+  curve.b = 7;
+  curve.h = 1;
+
+  for (int i=0;i<32; i++) {
+    if (i % 4 == 0 && i != 0) {
+      printf("\n");
+    }
+    printf("0x%x ", curve.g2[i]);
+  }
+  printf("\n--\n");
+  k1 = (uint8_t*) malloc(30*sizeof(uint8_t));
+  private_key(k1);
+  for (int i=0; i<30; i++) {
+    if (i % 4 == 0 && i != 0) {
+      printf("\n");
+    }
+    printf("%d ", k1[i]);
+  }
+  printf("\n--\n");
+  r = (struct rrr*)malloc(sizeof(struct rrr));
+  //public_key(k1, r); // FIXME: fails tests
+  is_on_curve((uint64_t*)a1);
+  free(k1);
 }
 
 uint64_t inverse_mod(uint64_t k, uint64_t p) {
@@ -228,39 +267,3 @@ void public_key(uint8_t *pk, struct rrr *ret) {
   }
   free(r);
 }
-/*
-int main() {
-  struct rrr *r;
-  uint8_t *k1;
-
-  memcpy(curve.p, a1, sizeof(a1)*sizeof(uint8_t));
-  memcpy(curve.g1, a2_1, sizeof(a2_1)*sizeof(uint8_t));
-  memcpy(curve.g2, a2_2, sizeof(a2_2)*sizeof(uint8_t));
-  memcpy(curve.n, a3, sizeof(a3)*sizeof(uint8_t));
-
-  strcpy(curve.name, "secp256k1");
-  curve.a = 0;
-  curve.b = 7;
-  curve.h = 1;
-
-  for (int i=0;i<32; i++) {
-    if (i % 4 == 0 && i != 0) {
-      printf("\n");
-    }
-    printf("0x%x ", curve.g2[i]);
-  }
-  printf("\n--\n");
-  k1 = (uint8_t*) malloc(30*sizeof(uint8_t));
-  private_key(k1);
-  for (int i=0; i<30; i++) {
-    if (i % 4 == 0 && i != 0) {
-      printf("\n");
-    }
-    printf("%d ", k1[i]);
-  }
-  printf("\n--\n");
-  r = (struct rrr*)malloc(sizeof(struct rrr));
-  public_key(k1, r);
-  is_on_curve((uint64_t*)a1);
-  free(k1);
-}*/
