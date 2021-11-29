@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <gmp.h>
 #include "defs.h"
 
 // Read: https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/

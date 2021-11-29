@@ -1,6 +1,8 @@
 # lightssl
 Do SSL really need to be so hard?
 
+# Dependency
+C is not good with big numbers. Using [gmp](https://gmplib.org) for that
 
 # Compile lightssl
 

@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <time.h>
+#include <gmp.h>
 #include "lightcrypt.h"
 #include "defs.h"
 
