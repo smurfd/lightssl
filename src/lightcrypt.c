@@ -13,258 +13,288 @@
 #include "lightcrypt.h"
 #include "defs.h"
 
-extern const uint8_t a1[30];
-extern const uint8_t a2_1[32];
-extern const uint8_t a2_2[32];
-extern const uint8_t a3[32];
- 
 void lightcrypt_init() {
   unsigned __int128 big1 = 123456788;
   __uint128_t big2 = 123456788;
   if(big1 == big2)
     printf("crypting stuff\n");
 
+  mpz_t za1;
+  mpz_t za21;
+  mpz_t za22;
+  mpz_t za3;
+  mpz_t k1, k2;
+  mpz_inits(za1, za21, za22, za3, k1, k2, NULL);
+  mpz_set_str(za1,"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefc2f", 16);
+  mpz_set_str(za21, "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16);
+  mpz_set_str(za22, "483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16);
+  mpz_set_str(za3, "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
   struct rrr *r;
-  uint8_t *k1;
 
-  memcpy(curve.p, a1, sizeof(a1)*sizeof(uint8_t));
-  memcpy(curve.g1, a2_1, sizeof(a2_1)*sizeof(uint8_t));
-  memcpy(curve.g2, a2_2, sizeof(a2_2)*sizeof(uint8_t));
-  memcpy(curve.n, a3, sizeof(a3)*sizeof(uint8_t));
-
+  mpz_set(curve.p, za1);
+  mpz_set(curve.g1, za21);
+  mpz_set(curve.g2, za22);
+  mpz_set(curve.n, za3);
   strcpy(curve.name, "secp256k1");
   curve.a = 0;
   curve.b = 7;
   curve.h = 1;
-
-  for (int i=0;i<32; i++) {
-    if (i % 4 == 0 && i != 0) {
-      printf("\n");
-    }
-    printf("0x%x ", curve.g2[i]);
-  }
-  printf("\n--\n");
-  k1 = (uint8_t*) malloc(30*sizeof(uint8_t));
   private_key(k1);
-  for (int i=0; i<30; i++) {
-    if (i % 4 == 0 && i != 0) {
-      printf("\n");
-    }
-    printf("%d ", k1[i]);
-  }
-  printf("\n--\n");
-  r = (struct rrr*)malloc(sizeof(struct rrr));
-  //public_key(k1, r); // FIXME: fails tests
-  is_on_curve((uint64_t*)a1);
-  free(k1);
+  r = (struct rrr*)malloc(96*sizeof(uint64_t));
+  public_key(k1, k2);
 }
 
-uint64_t inverse_mod(uint64_t k, uint64_t p) {
-  if (k == 0) {
-    return 0;
+void inverse_mod(mpz_t k, mpz_t pi, mpz_t tmp) {
+  mpz_t s, old_s, t, old_t, r, old_r, zero, one, gcd, x, y, tmp2, tmp3, neg, nk;
+  mpz_inits(s, t, r, old_s, old_t, old_r, zero, one, gcd, x, y, tmp2, tmp3, neg, nk, NULL);
+
+  mpz_set_str(zero, "0", 10);
+  mpz_set_str(one, "1", 10);
+  mpz_set_str(s, "0", 10);
+  mpz_set_str(old_s, "1", 10);
+  mpz_set_str(t, "1", 10);
+  mpz_set_str(old_t, "0", 10);
+  mpz_set(r, pi);
+  mpz_set(old_r, k);
+  mpz_set_ui(neg, -1);
+
+  if (mpz_cmp(k,zero) == 0) {
+    mpz_set(tmp, zero);
+    return;
   }
 
-  if (k < 0) {
-    return p - inverse_mod(-k, p);
+  if (mpz_cmp(k, zero) < 0) {
+    mpz_mul(nk, k, neg);
+    inverse_mod(nk, pi, tmp);
+    mpz_sub(tmp3, pi, tmp);
+    mpz_set(tmp, tmp3);
+    return;
   }
 
-  uint64_t s = 0;
-  uint64_t old_s = 1;
-  uint64_t t = 1;
-  uint64_t old_t = 0;
-  uint64_t r = p;
-  uint64_t old_r = k;
+  while (mpz_cmp(r, zero) != 0) {
+    mpz_t quot;
+    mpz_inits(quot, NULL);
 
-  while (r != 0) {
-    uint64_t quot = old_r / r;
-    old_r = r;
-    r = old_r - quot * r;
-    old_s = s;
-    s = old_s - quot * s;
-    old_t = t;
-    t = old_t - quot * t;
+    mpz_tdiv_q(quot, old_r, r);
+    mpz_set(old_r, r);
+    mpz_mul(tmp, quot, r);
+    mpz_sub(r, old_r, tmp);
+    mpz_set(old_s, s);
+    mpz_mul(tmp, quot, s);
+    mpz_sub(s, old_s, tmp);
+    mpz_set(old_t, t);
+    mpz_mul(tmp, quot, t);
+    mpz_sub(t, old_t, tmp);
   }
+  mpz_set(gcd, old_r);
+  mpz_set(x, old_s);
+  mpz_set(y, old_t);
 
-  uint64_t gcd = old_r;
-  uint64_t x = old_s;
-  uint64_t y = old_t;
-
-  assert(gcd == 1);
-  assert((k*x) % p == 1);
-  return x % p;
+  assert(mpz_cmp(gcd, one) == 0);
+  mpz_mul(tmp, k, x);
+  mpz_mod(tmp2, tmp, pi);
+  assert(mpz_cmp(tmp2, one) == 0);
+  mpz_mod(tmp, x, pi);
 }
 
-bool is_on_curve(uint64_t* point) {
-  if (point == NULL) {
+bool is_on_curve(mpz_t point, mpz_t point2) {
+  // TODO: how to handle if tuple(or point?)
+  // This works like shit...
+  mpz_t x, y, tmpy, tmpx, tmpx2, tmpcx, tmpxy, tmpc, tmp1, tmp2, zero, ca, cb;
+  if ((point == NULL) || (point == NULL && point2 == NULL)) {
     return true;
   }
-  uint64_t x[30];
-  uint64_t y[30];
-  uint64_t tmp[30];
-  bool res = false;
-
-  memcpy(x, point, sizeof(point)*sizeof(uint64_t));
-  memcpy(y, point, sizeof(point)*sizeof(uint64_t));
-
-  for (uint64_t i=0; i<sizeof(curve.p); i++) {
-    tmp[i] = ((y[i]*y[i]) - (x[i]*x[i]*x[i]) - (curve.a * x[i]) - curve.b) % curve.p[i];
-    if ((tmp[i] == 0) && (res == false)) {
-      res = true;
+  mpz_inits(x, y, tmpy, tmpx, tmpx2, tmpcx, tmpxy, tmpc, tmp1, tmp2, zero, ca, cb, NULL);
+  mpz_set(x, point);
+  mpz_set(y, point);
+  mpz_set_str(zero, "0", 10);
+  mpz_mul(tmpy, y, y);
+  mpz_mul(tmpx, x, x);
+  mpz_mul(tmpx2, tmpx, x);
+  mpz_set_ui(ca, curve.a);
+  mpz_mul(tmpcx, ca, x);
+  mpz_sub(tmpxy, tmpy, tmpx2);
+  mpz_set_ui(cb, curve.b);
+  mpz_sub(tmpc, tmpcx, cb);
+  mpz_sub(tmp1, tmpxy, tmpc);
+  mpz_mod(tmp2, tmp1, curve.p);
+  gmp_printf("tmp= %Zd...\n", tmp2);
+  if (!point2) {
+    if (mpz_cmp(tmp2, zero) == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    mpz_set(x, point2);
+    mpz_set(y, point2);
+    mpz_set_str(zero, "0", 10);
+    mpz_mul(tmpy, y, y);
+    mpz_mul(tmpx, x, x);
+    mpz_mul(tmpx2, tmpx, x);
+    mpz_set_ui(ca, curve.a);
+    mpz_mul(tmpcx, ca, x);
+    mpz_sub(tmpxy, tmpy, tmpx2);
+    mpz_set_ui(cb, curve.b);
+    mpz_sub(tmpc, tmpcx, cb);
+    mpz_sub(tmp1, tmpxy, tmpc);
+    mpz_mod(tmp2, tmp1, curve.p);
+    gmp_printf("tmp2= %Zd...\n", tmp2);
+    if (mpz_cmp(tmp2, zero) == 0) {
+      return true;
+    } else {
+      return false;
     }
   }
-
-  return res;
 }
 
-struct rrr point_neg(uint64_t *point) {
-  uint64_t *x = point;
-  uint64_t *y = point;
-  struct r res;
+void point_neg(mpz_t point, mpz_t pr1, mpz_t pr2) {
+  mpz_t x, y, negy, result, neg1, ymo;
   struct rrr res1;
-  assert(is_on_curve(point));
-
+  assert(is_on_curve(point, NULL));
+  mpz_inits(x, y, negy, result, neg1, ymo, NULL);
+  mpz_set(x, point);
+  mpz_set(y, point);
   if (point == NULL) {
     res1.uniontype = 1;
-    res1.u.p = NULL;
-    return res1;
+    mpz_set(res1.u.p, NULL);
+    mpz_set(pr1, NULL);
+    mpz_set(pr2, NULL);
+    return;
   }
+  mpz_set_str(neg1, "-1", 10);
+  mpz_mul(negy, y, neg1);
+  mpz_mod(ymo, negy, curve.p);
 
-  for (int i=0; i<sizeof(curve.p); i++) {
-    res.r1[i] = x[i];
-    res.r2[i] = -y[i] % curve.p[i];
-  }
-  assert(is_on_curve(res.r1));
-  assert(is_on_curve(res.r2));
-  res1.uniontype = 2;
-  memcpy(res1.u.r3.r1, res.r1, sizeof(struct r)*sizeof(uint64_t));
-  memcpy(res1.u.r3.r2, res.r2, sizeof(struct r)*sizeof(uint64_t));
-  return res1;
+  assert(is_on_curve(x, ymo));
+  mpz_set(pr1, x);
+  mpz_set(pr2, ymo);
 }
 
-void point_add(uint64_t *point1, uint64_t *point2, struct rrr *ret) {
-  uint64_t x1[30];
-  uint64_t y1[30];
-  uint64_t x2[30];
-  uint64_t y2[30];
-  uint64_t x3[30];
-  uint64_t y3[30];
-  uint64_t m[30];
+void point_add(mpz_t point1, mpz_t point2, struct rrr *ret) {
+  mpz_t x1, y1, x2, y2, x3, y3, yn, m, tw, tr, tmptr, tmpx, tmpc, tmpca, tmpcp, tmp2y, neg, tt;
   struct r res;
   struct rrr res1;
-  assert(is_on_curve(point1));
-  assert(is_on_curve(point2));
+  gmp_printf("p1= %Zd...\n", point1);
+  gmp_printf("p2= %Zd...\n", point2);
+  assert(is_on_curve(point1, NULL));
+  assert(is_on_curve(point2, NULL));
+  mpz_inits(x1, y1, x2, y2, x3, y3, yn, m, tw, tr, tmptr, tmpx, tmpc, tmpca, tmpcp, neg, tt, NULL);
 
   if (point1 == NULL) {
     ret->uniontype = 1;
-    memcpy(ret->u.p, point2, sizeof(point2)*sizeof(uint64_t));
+    mpz_set(ret->u.p, point2);
     return;
   }
   if (point2 == NULL) {
     ret->uniontype = 1;
-    memcpy(ret->u.p, point1, sizeof(point1)*sizeof(uint64_t));
+    mpz_set(ret->u.p, point1);
+    return;
+  }
+  mpz_set(x1, point1);
+  mpz_set(y1, point1);
+  mpz_set(x2, point2);
+  mpz_set(x2, point2);
+  if ((mpz_cmp(x1, x2) == 0) && (mpz_cmp(y1, y2) != 0)) {
+    mpz_set(ret->u.p, NULL);
     return;
   }
 
-  memcpy(x1, point1, sizeof(point1)*sizeof(uint64_t));
-  memcpy(y1, point1, sizeof(point1)*sizeof(uint64_t));
-  memcpy(x2, point2, sizeof(point2)*sizeof(uint64_t));
-  memcpy(y2, point2, sizeof(point2)*sizeof(uint64_t));
-
-  for (int i=0; i<30;i++) {
-    if (x1[i] == x2[i] && y1[i] != y2[i]) {
-      ret->uniontype = 1;
-      ret->u.p = NULL;
-      return;
-    }
-
-    if (x1[i] == x2[i]) {
-      m[i] = (3*x1[i]*x1[i] + curve.a) * inverse_mod(2*y1[i], curve.p[i]);
-    } else {
-      m[i] = (y1[i] - y2[i]) * inverse_mod((x1[i] - x2[i]), curve.p[i]);
-    }
-    x3[i] = m[i] * m[i] - x1[i] - x2[i];
-    y3[i] = y1[i] + m[i] * (x3[i] - x1[i]);
-    res.r1[i] = (x3[i] % curve.p[i]);
-    res.r2[i] = (-y3[i] % curve.p[i]);
+  if (mpz_cmp(x1, x2) == 0) {
+    mpz_set_ui(tw, 2);
+    mpz_set_ui(tr, 3);
+    mpz_mul(tmptr, tr, x1);
+    mpz_mul(tmpx, tmptr, x1);
+    mpz_set_ui(tmpca, curve.a);
+    mpz_add(tmpc, tmpx, tmpca);
+    mpz_mul(tmp2y, tw, y1);
+    inverse_mod(tmp2y, curve.p, tt);
+    mpz_mul(m, tmpc, tt);
+  } else {
+    mpz_sub(tmpx, x1, x2);
+    mpz_sub(tmptr, y1, y2);
+    inverse_mod(tmpx, curve.p, tt);
+    mpz_mul(m, tmptr, tt);
   }
-  assert(is_on_curve(res.r1));
-  assert(is_on_curve(res.r2));
+
+  mpz_sub(tmpx, x1, x2);
+  mpz_mul(tmptr, m, m);
+  mpz_sub(x3, tmptr, tmpx);
+
+  mpz_sub(tmpx, x3, x1);
+  mpz_add(tmptr, y1, m);
+  mpz_mul(y3, tmptr, tmpx);
+
+  mpz_mod(tmpx, x3, curve.p);
+  mpz_set_ui(neg, -1);
+  mpz_mul(yn, y3, neg);
+  mpz_mod(tmptr, yn, curve.p);
+
+  assert(is_on_curve(tmpx, tmptr));
+
   ret->uniontype = 2;
-  memcpy(ret->u.r3.r1, res.r1, sizeof(struct r)*sizeof(uint64_t));
-  memcpy(ret->u.r3.r2, res.r2, sizeof(struct r)*sizeof(uint64_t));
+  mpz_set(ret->u.r3.r1, tmpx);
+  mpz_set(ret->u.r3.r2, tmptr);
 }
 
-struct rrr *scalar_mult(uint64_t k, struct rrr *p1, struct rrr *ret) {
+void scalar_mult(mpz_t kk, mpz_t point, mpz_t point2, mpz_t tt) {
   struct r res;
   struct r add;
   struct r p;
-  struct rrr p2;
+  struct rrr *pp2;
   struct rrr add1;
   struct rrr *add2;
-  if (p1->uniontype == 1)
-    assert(is_on_curve(p1->u.p));
+  mpz_t x1, p1, p2, kk2, cn, result, addend, zero, one, neg, nk;
+  mpz_inits(x1, p1, p2, kk2, cn, result, addend, zero, one, neg, nk, NULL);
+  //assert(is_on_curve(point, point2));
 
-  if (k % (uint64_t)curve.n == 0 || (p1->uniontype == 1 && p1->u.p == NULL)) {
-    ret->uniontype = 1;
-    ret->u.p = NULL;
-    return ret;
+  mpz_set_ui(zero, 0);
+  mpz_set_ui(one, 1);
+  mpz_set_ui(neg, -1);
+  mpz_mod(cn, kk, curve.n);
+  if ((mpz_cmp(cn, zero) == 0) || (point == NULL && point2 == NULL)) {
+    mpz_set(tt, NULL);
+    return;
   }
 
-  if (k < 0) {
-    if (p1->u.p == NULL) {
-      ret->uniontype = 1;
-      ret->u.p = NULL;
-      return ret;
-    } else {
-      p2 = point_neg(p1->u.p);
-      ret = scalar_mult(-k, &p2, ret);
-      return ret;
+  if (mpz_cmp(kk, zero) < 0) {
+    point_neg(point, p1, p2);
+    mpz_mul(nk, kk, neg);
+    scalar_mult(nk, p1, p2, tt);
+    return;
+  }
+  pp2 = (struct rrr*) malloc(sizeof(struct rrr));
+  mpz_set(addend, point);
+  printf("--\n");
+  while (kk) {
+    printf("-\n");
+    mpz_and(kk2, kk, one);
+    printf("-\n");
+    gmp_printf("kk2= %Zd...\n", kk2);
+    if (mpz_cmp(kk2, zero)) {
+      printf("-\n");
+      point_add(result, addend, pp2);
+      printf("-\n");
+      mpz_set(result, pp2->u.p);
     }
+    point_add(addend, addend, pp2);
+    mpz_set(addend, pp2->u.p);
+    mpz_tdiv_q_2exp(kk, kk, 1);
+    //kk >>= 1;
   }
-  memcpy(add.r1, p1->u.p, sizeof(p1->u.p)*sizeof(uint64_t));
-  memcpy(add.r2, p1->u.p, sizeof(p1->u.p)*sizeof(uint64_t));
-
-  add2 = (struct rrr*) malloc(sizeof(struct rrr));
-  while (k) {
-    if (k & 1) {
-      point_add(res.r1, add.r1, ret);
-      point_add(res.r2, add.r2, ret);
-    }
-    point_add(add2->u.r3.r1, add2->u.r3.r1, add2);
-    point_add(add2->u.r3.r2, add2->u.r3.r2, add2);
-    k >>= 1;
-  }
-  assert(is_on_curve(res.r1));
-  assert(is_on_curve(res.r2));
-  ret->uniontype = 2;
-  memcpy(ret->u.r3.r1, res.r1, sizeof(struct r)*sizeof(uint64_t));
-  memcpy(ret->u.r3.r2, res.r2, sizeof(struct r)*sizeof(uint64_t));
-  free(add2);
-  return ret;
+  printf("-\n");
+  assert(is_on_curve(result, NULL));
+  free(pp2);
+  mpz_set(tt, result);
+  //return result;
 }
 
-void private_key(uint8_t *ret) {
-  srand(time(0));
-  for (int i=0; i<30; i++) {
-    ret[i] = rand() % 100;
-  }
+void private_key(mpz_t key) {
+  gmp_randstate_t ran;
+  gmp_randinit_default(ran);
+  mpz_urandomm(key, ran, curve.n);
 }
 
-void public_key(uint8_t *pk, struct rrr *ret) {
-  struct rrr *r;
-  struct rrr r2;
-
-  r = (struct rrr*) malloc(sizeof(struct rrr));
-
-  printf("--- %lu\n", sizeof(struct rrr));
-  r->uniontype = 2;
-  // FIXME: Segfaults here....
-  memcpy(r->u.r3.r1, curve.g1, 30*sizeof(uint8_t));
-  printf("--- %lu\n", sizeof(uint8_t));
-  memcpy(r->u.r3.r2, curve.g2, 30*sizeof(uint8_t));
-  printf("----\n");
-  for (int i=0; i<30; i++) {
-    scalar_mult(pk[i], r, ret);
-  }
-  free(r);
+void public_key(mpz_t privkey, mpz_t pubkey) {
+  scalar_mult(privkey, curve.g1, curve.g2, pubkey);
 }

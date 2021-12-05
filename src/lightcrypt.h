@@ -28,13 +28,13 @@
 
 // FIXME: better struct names
 struct r {
-  uint64_t *r1;
-  uint64_t *r2;
+  mpz_t r1;
+  mpz_t r2;
 };
 
 union rr {
   struct r r3;
-  uint64_t *p;
+  mpz_t p;
 };
 
 struct rrr {
@@ -44,22 +44,22 @@ struct rrr {
 
 struct ellipticcurve {
   char name[10];
-  uint8_t p[30];
+  mpz_t p;
   uint8_t a;
   uint8_t b;
-  uint8_t g1[32];
-  uint8_t g2[32];
-  uint8_t n[32];
+  mpz_t g1;
+  mpz_t g2;
+  mpz_t n;
   uint8_t h;
 } curve;
 
-uint64_t inverse_mod(uint64_t k, uint64_t p);
-bool is_on_curve(uint64_t* point);
-struct rrr point_neg(uint64_t *point);
-void point_add(uint64_t *point1, uint64_t *point2, struct rrr *ret);
-struct rrr *scalar_mult(uint64_t k, struct rrr *p1, struct rrr *ret);
-void private_key(uint8_t *ret);
-void public_key(uint8_t *pk, struct rrr *ret);
+void inverse_mod(mpz_t k, mpz_t pi, mpz_t tmp);
+bool is_on_curve(mpz_t point, mpz_t point2);
+void point_neg(mpz_t point, mpz_t pr1, mpz_t pr2);
+void point_add(mpz_t point1, mpz_t point2, struct rrr *ret);
+void scalar_mult(mpz_t kk, mpz_t point, mpz_t point2, mpz_t tt);
+void private_key(mpz_t key);
+void public_key(mpz_t privkey, mpz_t pubkey);
 void lightcrypt_init();
 
 #endif
