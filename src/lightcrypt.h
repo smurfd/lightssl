@@ -43,11 +43,12 @@ struct ellipticcurve {
 } curve;
 
 void lightcrypt_init();
-void inverse_mod(mpz_t k, mpz_t pi, mpz_t tmp);
+void inverse_mod(mpz_t k, mpz_t pi, mpz_t *tmp);
 bool is_on_curve(struct tuple point);
-void point_neg(struct tuple point, struct tuple rest);
-void point_add(struct tuple p1, struct tuple p2, struct tuple r1);
-void scalar_mult(mpz_t kk, struct tuple point, struct tuple tt);
-void private_key(mpz_t key);
-void public_key(mpz_t privkey, struct tuple pubkey);
+void point_neg(struct tuple point, struct tuple *rest);
+void point_add(struct tuple p1, struct tuple p2, struct tuple *r1);
+void scalar_mult(mpz_t kk, struct tuple point, struct tuple *tt);
+void private_key(mpz_t *key);
+void public_key(mpz_t privkey, struct tuple *pubkey);
+
 #endif
