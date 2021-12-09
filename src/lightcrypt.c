@@ -196,7 +196,7 @@ void point_neg(struct tuple point, struct tuple *rest) {
 void point_add(struct tuple p1, struct tuple p2, struct tuple *r1) {
   mpz_t x1, y1, x2, y2, x3, y3, yn, m, tw, tr, tmptr, tmpx, tmpc, tmpca, tmpcp, tmp2y, neg, tt, zero;
   mpz_inits(x1, y1, x2, y2, x3, y3, yn, m, tw, tr, tmptr, tmpx, tmpc, tmpca, tmpcp, tmp2y, neg, tt, zero,NULL);
-  assert(is_on_curve(p1));
+  assert(is_on_curve(p1)); // assert fails here lap 3
   assert(is_on_curve(p2));
   if (p1.empty == true) {
     r1 = &p2;
@@ -231,23 +231,22 @@ void point_add(struct tuple p1, struct tuple p2, struct tuple *r1) {
     mpz_mul(m, tmptr, tt);
   }
 
-  mpz_sub(tmpx, x1, x2);
   mpz_mul(tmptr, m, m);
-  mpz_sub(x3, tmptr, tmpx);
+  mpz_sub(tmpx, tmptr, x1);
+  mpz_sub(x3, tmpx, x2);
 
   mpz_sub(tmpx, x3, x1);
   mpz_mul(tmp2y, m, tmpx);
-
   mpz_add(y3, y1, tmp2y);
 
   mpz_mod(tmpx, x3, curve.p);
   mpz_set_ui(neg, -1);
-  mpz_mul(yn, y3, neg);
+  mpz_neg(yn, y3);
   mpz_mod(tmptr, yn, curve.p);
 
   mpz_set(r1->p1, tmpx);
   mpz_set(r1->p2, tmptr);
-  assert(is_on_curve(*r1)); // assert fails 1st run
+  assert(is_on_curve(*r1));
   mpz_clear(x1);
   mpz_clear(x2);
   mpz_clear(x3);
