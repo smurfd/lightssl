@@ -4,9 +4,18 @@
 #ifndef DEFS_H
 #define DEFS_H 1
 
+struct big_t {
+  char *d;    // store the digits
+  int length; // length of the number
+  int sign;   // positive or negative?
+};
+
+typedef struct big_t ubig_t;
 typedef uint64_t u64;
 typedef uint8_t  u08;
 typedef unsigned char b08;
+
+#define BIGLEN 1024
 
 // SSL
 #define SEVENFFF 0x7fffffffffffffff
@@ -68,5 +77,12 @@ typedef unsigned char b08;
   ((u64)(RAND()) << 22) ^ \
   ((u64)(RAND()) <<  9) ^ \
   ((u64)(RAND()) >>  4)
+
+void big_init(struct big_t **b);
+void big_set(struct big_t **b, char* str);
+void big_print(struct big_t **b);
+void big_end(struct big_t **b);
+void big_sub(struct big_t **b1, struct big_t **b2, struct big_t **r);
+void big_add(struct big_t **b1, struct big_t **b2, struct big_t **r);
 
 #endif

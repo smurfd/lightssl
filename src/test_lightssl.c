@@ -51,5 +51,23 @@ int main(int argc, char **argv) {
   free(out);
   // Crypt
   lightcrypt_init();
+
+  struct big_t *biggy, *biggy2, *res;
+
+  big_init(&biggy);
+  big_init(&biggy2);
+  big_init(&res);
+
+  big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
+  big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
+
+  big_add(&biggy, &biggy2, &res);
+  big_print(&res);
+  big_sub(&biggy2, &biggy, &res);
+  big_print(&res);
+
+  big_end(&res);
+  big_end(&biggy2);
+  big_end(&biggy);
   return 0;
 }
