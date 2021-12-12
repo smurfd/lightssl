@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "defs.h"
+#include "lightdefs.h"
 
 u64 sha[80] = {
   0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
@@ -54,107 +54,3 @@ u64 sha_init[BYTE] = {
   0x9b05688c2b3e6c1fULL,
   0x1f83d9abfb41bd6bULL,
   0x5be0cd19137e2179ULL};
-
-void big_init(struct big_t **b) {
-  *b = (struct big_t*)malloc(BIGLEN);
-  (*b)->d = (char*) malloc(BIGLEN);
-}
-
-void big_set(struct big_t **b, char* str) {
-  memcpy((*b)->d, str, strlen(str));
-}
-
-void big_print(struct big_t **b) {
-  printf("%s\n", (*b)->d);
-}
-
-void big_end(struct big_t **b) {
-  free((*b)->d);
-  free(*b);
-}
-
-void big_add(struct big_t **b1, struct big_t **b2, struct big_t **r) {
-  int min, mix, max, carry, newd, m;
-  char *ps1, *ps2;
-
-  carry = 0;
-  m = 0;
-
-  min = strlen((*b1)->d);
-  max = strlen((*b2)->d);
-  ps1 = (*b2)->d;
-  ps2 = (*b1)->d;
-
-  if (((*b1)->d[0] == '9' || (*b2)->d[0] == '9') && (max == min)) {
-    (*r)->d[0] = '1';
-    m = 1;
-  }
-
-  if (min > max) {
-    min = strlen((*b2)->d);
-    max = strlen((*b1)->d);
-    ps1 = (*b1)->d;
-    ps2 = (*b2)->d;
-  }
-  mix = max - min;
-
-  for (int i=0; i<mix; i++) {
-    (*r)->d[i] = ps1[i];
-  }
-
-  for (int i=0; i<min; i++) {
-    newd = (ps1[max-1-i]+ps2[min-1-i])-'0'+carry;
-    if (carry == 1) {
-      carry = 0;
-    }
-    if (newd > '9') {
-      carry = 1;
-      newd = newd - 10;
-    }
-    (*r)->d[max-1-i] = newd;
-  }
-
-  (*r)->d[max+m] = '\0';
-}
-
-void big_sub(struct big_t **b1, struct big_t **b2, struct big_t **r) {
-  int min, mix, max, carry, newd, m;
-  char *ps1, *ps2;
-
-  carry = 0;
-  m = 0;
-
-  min = strlen((*b1)->d);
-  max = strlen((*b2)->d);
-  ps1 = (*b2)->d;
-  ps2 = (*b1)->d;
-
-  if (min > max) {
-    min = strlen((*b2)->d);
-    max = strlen((*b1)->d);
-    ps1 = (*b1)->d;
-    ps2 = (*b2)->d;
-  }
-  mix = max - min;
-
-  for (int i=0; i<mix; i++) {
-    (*r)->d[i] = ps1[i];
-  }
-
-  for (int i=0; i<min; i++) {
-    newd = (ps1[max-1-i]-ps2[min-1-i])+'0'+carry;
-    if (carry != 0) {
-      carry = 0;
-    }
-    if (newd < '0') {
-      carry = -1;
-      newd = newd + 10;
-    } else if (newd > '9') {
-      carry = 1;
-      newd = newd - 10;
-    }
-    (*r)->d[max-1-i] = newd;
-  }
-
-  (*r)->d[max+m] = '\0';
-}

@@ -1,0 +1,28 @@
+//                                                                            //
+#include <stdbool.h>
+
+#ifndef LIGHTBIG_H
+#define LIGHTBIG_H 1
+
+#define BIGLEN 1024
+
+struct big_t {
+  char *d;    // store the digits
+  int length; // length of the number
+  bool neg;   // positive or negative?
+};
+
+typedef struct big_t bigint_t;
+
+void big_init(bigint_t **b);
+void big_set(bigint_t **b, char* str);
+void big_cls(bigint_t **b);
+void big_print(bigint_t **b);
+void big_end(bigint_t **b);
+void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r);
+void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r);
+void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r);
+void big_div(bigint_t **b1, bigint_t **b2, bigint_t **r);
+void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r);
+
+#endif

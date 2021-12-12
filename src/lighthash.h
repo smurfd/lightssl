@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "defs.h"
+#include "lightdefs.h"
 
 #ifndef LIGHTHASH_H
 #define LIGHTHASH_H 1

@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <gmp.h>
-#include "defs.h"
+#include "lightdefs.h"
 
 // Read: https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/
 // Read: https://andrea.corbellini.name/2015/05/23/elliptic-curve-cryptography-finite-fields-and-discrete-logarithms/

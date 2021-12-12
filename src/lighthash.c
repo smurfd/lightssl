@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "lighthash.h"
-#include "defs.h"
+#include "lightdefs.h"
 
 extern u64 sha[80];
 extern u64 sha_init[BYTE];

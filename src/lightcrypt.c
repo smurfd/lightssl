@@ -11,7 +11,7 @@
 #include <time.h>
 #include <gmp.h>
 #include "lightcrypt.h"
-#include "defs.h"
+#include "lightdefs.h"
 
 void lightcrypt_init() {
   unsigned __int128 big1 = 123456788;

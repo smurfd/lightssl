@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include "lightbig.h"
 #include "lightssl.h"
 #include "lighthash.h"
 #include "lightcrypt.h"
@@ -13,6 +14,7 @@ int main(int argc, char **argv) {
   b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
+  bigint_t *biggy, *biggy2, *res, *solution;
 
   const char* in = "smurfd";
   const char* rh = "555cfc37fc24d4971de9b091ef"\
@@ -52,22 +54,53 @@ int main(int argc, char **argv) {
   // Crypt
   lightcrypt_init();
 
-  struct big_t *biggy, *biggy2, *res;
-
   big_init(&biggy);
   big_init(&biggy2);
   big_init(&res);
+  big_init(&solution);;
 
   big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
   big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
 
   big_add(&biggy, &biggy2, &res);
   big_print(&res);
+  big_set(&solution, "9222213222222223333334166678678678666667867868686868789978789789778768687119901209901198678755");
+  assert(strcmp(res->d, solution->d) == 0);
+
   big_sub(&biggy2, &biggy, &res);
   big_print(&res);
+  big_set(&solution, "9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+  big_set(&solution, "-9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "34");
+  big_set(&biggy2, "11");
+  big_set(&solution, "45");
+  big_add(&biggy, &biggy2, &res);
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "11");
+  big_set(&biggy2, "34");
+  big_set(&solution, "45");
+  big_add(&biggy, &biggy2, &res);
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "34");
+  big_set(&biggy2, "11");
+  big_set(&solution, "23");
+  big_sub(&biggy, &biggy2, &res);
+  assert(strcmp(res->d, solution->d) == 0);
 
   big_end(&res);
   big_end(&biggy2);
   big_end(&biggy);
+
   return 0;
 }
