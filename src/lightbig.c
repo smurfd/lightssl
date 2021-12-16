@@ -130,7 +130,61 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
 }
 
 void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
+  int min, mix, max, carry, newd, m, len, d1, d2, x, y, count;
+  char *ps1, *ps2;
+  bigint_t *tmp, *tmpr, *rr;
 
+  carry = 0;
+  m = 0;
+  big_init(&rr);
+  big_init(&tmp);
+  big_init(&tmpr);
+  d1 = strlen((*b1)->d);
+  d2 = strlen((*b2)->d);
+  count = d1 + d2 - 1;
+  if (((*b1)->neg == true && (*b2)->neg == true) || ((*b1)->neg == false && (*b2)->neg == false)) {
+    (*r)->neg = false;
+  } else {
+    (*r)->neg = true;
+    (*r)->d[0] = '-';
+    m = 1;
+  }
+  for (int j=d2-1; j>=0; j--) {
+    for (int i=d1-1; i>=0; i--) {
+      char str1[2] = {(*b1)->d[i] , '\0'};
+      char str2[5] = "";
+      count = count - 1;
+      x = (int)(*b1)->d[i]-'0';
+      y = (int)(*b2)->d[j]-'0';
+      (*rr).d[count] = (*rr).d[count] + carry + x*y;
+      carry = 0;
+      for(;;) {
+        for (;;) {
+          if ((*rr).d[count] < '0') {
+            (*rr).d[count] = (*rr).d[count] + '0';
+          } else {
+            break;
+          }
+        }
+        if ((*rr).d[count] > '9') {
+          (*rr).d[count] = (*rr).d[count] - '9' -1;
+          carry = carry + 1;
+        } else {
+          if ((*rr).d[count] < '0') {
+            (*rr).d[count] = (*rr).d[count] + '0';
+          }
+          break;
+        }
+
+        if ((*rr).d[count] < '0') {
+          (*rr).d[count] = (*rr).d[count] + '0';
+        }
+      }
+    }
+    count = count + (d1-1);
+  }
+  (*r)->d[d1+d2-1] = '\0';
+  (*r) = *(&rr);
 }
 
 void big_div(bigint_t **b1, bigint_t **b2, bigint_t **r) {

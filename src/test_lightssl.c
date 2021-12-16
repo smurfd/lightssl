@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
   // Crypt
   lightcrypt_init();
 
+  // Big number
   big_init(&biggy);
   big_init(&biggy2);
   big_init(&res);
@@ -98,9 +99,48 @@ int main(int argc, char **argv) {
   big_sub(&biggy, &biggy2, &res);
   assert(strcmp(res->d, solution->d) == 0);
 
+  big_cls(&res);
+  big_set(&biggy, "34");
+  big_set(&biggy2, "11");
+  big_set(&solution, "374");
+  big_mul(&biggy, &biggy2, &res);
+  printf("---\n");
+  big_print(&res);
+  printf("---\n");
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "123");
+  big_set(&biggy2, "321");
+  big_set(&solution, "39483");
+  big_mul(&biggy, &biggy2, &res);
+  printf("---\n");
+  big_print(&res);
+  printf("---\n");
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "123456");
+  big_set(&biggy2, "654321");
+  big_set(&solution, "80779853376");
+  big_mul(&biggy, &biggy2, &res);
+  printf("---\n");
+  big_print(&res);
+  printf("---\n");
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
+  big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
+  big_set(&solution, "10246910958128268693916631472829548730195298865205805295248171928840995630206654276591188107806120144189700371037426747541472468434747817753423563299873235240318870130333116");
+  big_mul(&biggy, &biggy2, &res);
+  printf("---\n");
+  big_print(&res);
+  printf("---\n");
+  assert(strcmp(res->d, solution->d) == 0); // This assert fails, but quite close to the real nr,
+                                            // has todo with diff in length of biggy and biggy2??
   big_end(&res);
   big_end(&biggy2);
   big_end(&biggy);
-
   return 0;
 }
