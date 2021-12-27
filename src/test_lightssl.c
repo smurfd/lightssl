@@ -73,11 +73,6 @@ int main(int argc, char **argv) {
   big_set(&solution, "9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
   assert(strcmp(res->d, solution->d) == 0);
 
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_set(&solution, "-9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
-  assert(strcmp(res->d, solution->d) == 0);
-
   big_cls(&res);
   big_set(&biggy, "34");
   big_set(&biggy2, "11");
@@ -97,6 +92,19 @@ int main(int argc, char **argv) {
   big_set(&biggy2, "11");
   big_set(&solution, "23");
   big_sub(&biggy, &biggy2, &res);
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "340");
+  big_set(&biggy2, "11");
+  big_set(&solution, "010");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+  for (int i=0; i<29; i++) {
+    big_sub(&res, &biggy2, &res);
+    big_print(&res);
+  }
+  big_print(&res);
   assert(strcmp(res->d, solution->d) == 0);
 
   big_cls(&res);
@@ -173,10 +181,80 @@ int main(int argc, char **argv) {
   big_set(&biggy2, "123");
   big_set(&solution, "1904");
   big_div(&biggy, &biggy2, &c);
-  // assert(c == 1904); // This assert faile...
+  assert(c == 1904);
+
+  big_cls(&res);
+  big_set(&biggy, "000100101");
+  big_print(&biggy);
+  big_print(&res);
+  big_crop_zeros(&biggy, &res);
+  big_print(&res);
+
+  big_cls(&res);
+  big_set(&biggy, "11");
+  big_set(&biggy2, "12");
+  big_set(&solution, "-1");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "600");
+  big_set(&biggy2, "22");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "234241");
+  big_set(&biggy2, "246");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "234241");
+  big_set(&biggy2, "246");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "600");
+  big_set(&biggy2, "22");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "512");
+  big_set(&biggy2, "22");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "490");
+  big_set(&biggy2, "22");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "490");
+  big_set(&biggy2, "522");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+
+  printf("//////\n");
+  big_cls(&res);
+  big_set(&biggy, "226000");
+  big_set(&biggy2, "123");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
 
   big_end(&res);
   big_end(&biggy2);
-  big_end(&biggy);
   return 0;
 }
