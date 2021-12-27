@@ -15,6 +15,10 @@
 // TODO: unlimited(...) arguments per op?
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
+void big_print(bigint_t **b) {
+  printf("%s\n", (*b)->d);
+}
+
 void big_init(bigint_t **b) {
   *b = (bigint_t*)malloc(BIGLEN);
   (*b)->d = (char*) malloc(BIGLEN);
@@ -32,17 +36,34 @@ void big_set_size(bigint_t **b, char* str, uint64_t size) {
   memcpy((*b)->d, str, strlen(str));
 }
 
+void big_set_negative(bigint_t **b1, bigint_t **r) {
+  if ((*b1)->neg == true) {
+    char *tmpr;
+    tmpr = (char*) malloc(strlen((*b1)->d)+1);
+    tmpr[0]='-';
+    for (int i=0; i<(int)strlen((*b1)->d); i++) {
+      tmpr[i+1] = (*b1)->d[i];
+    }
+    tmpr[strlen((*b1)->d)+2]='\0';
+    big_set_size(r, tmpr, sizeof(tmpr));
+    (*r)->neg = true;
+    if (tmpr) {
+      free(tmpr);
+    }
+  }
+}
+
 void big_cls(bigint_t **b) {
   memset((*b)->d, 0, strlen((*b)->d));
 }
 
-void big_print(bigint_t **b) {
-  printf("%s\n", (*b)->d);
-}
-
 void big_end(bigint_t **b) {
-  free((*b)->d);
-  free(*b);
+  if ((*b)->d) {
+    free((*b)->d);
+  }
+  if (*b) {
+    free(*b);
+  }
 }
 
 void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
@@ -89,64 +110,142 @@ void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   (*r)->d[max+m] = '\0';
 }
 
+void big_crop_zeros(bigint_t **b1, bigint_t **r) {
+  int len, co;
+  len = strlen((*b1)->d);
+  co = 0;
+  while ((*b1)->d[co] == '0') {
+    co = co + 1;
+  }
+  for (int i=0; i<len-co; i++) {
+    (*r)->d[i] = (*b1)->d[i+co];
+  }
+  if (co == 0) {
+    (*r) = (*b1);
+  } else {
+    (*r)->d[len-co] = '\0';
+  }
+}
+
+int big_cmp(bigint_t **b1, bigint_t **b2) {
+  // TODO: wayyyy better finegrained comparison
+  int l1, l2,l10, l20, i, j, k; // -1=smaller, 0=alike, 1=bigger
+  l1 = strlen((*b1)->d);
+  l2 = strlen((*b2)->d);
+  l10 = 0;
+  l20 = 0;
+  i = 0;
+
+  l1 = l1 - l10;
+  l2 = l2 - l20;
+  if (l1 > l2) {
+    return -1;
+  } else if(l1 < l2) {
+    return 1;
+  }
+
+  while (i < l1) {
+    j = (*b1)->d[i];
+    k = (*b2)->d[i];
+    if (j < k) {
+      return -1;
+    } else if (j > k) {
+      return 1;
+    }
+    i = i + 1;
+  }
+  return 0;
+}
+
 void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
-  int min, mix, max, carry, newd, m;
+  int min, mix, max, newd, k, j, co;
   char *ps1, *ps2;
+  bigint_t *tmp, *zero;
+  bool neg = false;
+  // TODO: this fails :
+  // 1111111911123123123111112312313131313234423234234223213131564345654345643456543 -
+  // 9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212
 
-  carry = 0;
-  m = 0;
-
+  big_init(&tmp);
+  // We make a "bad" assumption
   min = strlen((*b1)->d);
   max = strlen((*b2)->d);
   ps1 = (*b2)->d;
   ps2 = (*b1)->d;
 
+  // Usually this is true after the bad assumption
   if (min >= max) {
     min = strlen((*b2)->d);
     max = strlen((*b1)->d);
     ps1 = (*b1)->d;
     ps2 = (*b2)->d;
-  } else {
-    (*r)->neg = true;
-    (*r)->d[0] = '-';
-    m = 1;
-  }
-  mix = max - min;
-
-  for (int i=0; i<mix; i++) {
-    (*r)->d[i+m] = ps1[i];
   }
 
-  for (int i=0; i<min; i++) {
-    newd = (ps1[max-i-1]-ps2[min-i-1])+'0'+carry;
-    if (carry != 0) { // reset the carry
-      carry = 0;
-    }
+  // If strings are the same length and the 1st letter is smaller in the 1st number,
+  // it will be a negative number in the end. we make it easier for ourself.
+  if (ps1[0] < ps2[0] && max == min) {
+    neg = true;
+    min = strlen((*b1)->d);
+    max = strlen((*b2)->d);
+    ps1 = (*b2)->d;
+    ps2 = (*b1)->d;
+  }
+
+  j = min-1;
+  k = max-1;
+  co = k;
+  while(j>=0 && k>=0 && co >= 0) {
+    int tmp1, co1, co2;
+    newd = ps1[k] - ps2[j] + '0';
     if (newd < '0') {
-      carry = -1;
-      newd = newd + 10;
-      if (max-i-3+m >= 0) {
-        if (ps1[max-i-3+m] >= '1' && ps1[max-i-3+m] <= '9') {
-          (*r)->d[max-i-3+m] = (ps1[max-i-3])+carry;
-        } else if (ps1[max-i-3+m] == '0') {
+      if (k-1 < 0) {
+        if (co == 0 && co == 0) {
+          newd = '0'-newd+'0';
         }
+        neg = true;
       } else {
-        carry = -1;
-        (*r)->d[max-i-3+m] = (ps1[max-3-i])+carry;
-      }
-    } else if (newd > '9') {
-      carry = 1;
-      newd = newd - 10;
-    } else if (max-i-3+m >= 0) {
-      if (ps1[max-i-3+m] == '0') {
-        if (ps1[max-i-2+m] == '0') {
-          (*r)->neg = true;
+        ps1[k-1] = ps1[k-1] - 1;
+        ps1[k] = ps1[k] + 10;
+        if (co != 0 && ps1[k-1] < '0') {
+          int x = k - 1;
+          while(ps1[x] < '0') {
+            if (x != k-1 && ps1[x+1] < '0') {
+              ps1[x+1] = ps1[x+1] + 10;
+            } else {
+              ps1[x] = ps1[x] + 10;
+            }
+            x = x - 1;
+            ps1[x] = ps1[x] - 1;
+          }
         }
+        newd = ps1[k] - ps2[j] + '0';
       }
     }
-    (*r)->d[max-i-1+m] = newd;
+    (*r)->d[co] = newd;
+    if (newd == '0' && k == 0) {
+      big_crop_zeros(r, &tmp);
+      (*r) = &(*tmp);
+    }
+    j = j - 1;
+    k = k - 1;
+    co = co - 1;
   }
-  (*r)->d[max+m] = '\0';
+  if (neg == true) {
+    (*tmp) = *(*r);
+    (*tmp).neg = true;
+    big_set_negative(&tmp, r);
+  }
+  if (j!=0) {
+    for (int i=k; i>=0; i--) {
+      (*r)->d[co] = ps1[i];
+      if (ps1[i] < '0') {
+        (*r)->d[co] = (*r)->d[co] + 10;
+      }
+      co = co - 1;
+    }
+  }
+
+  (*r)->d[max] = '\0';
 }
 
 void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
@@ -227,7 +326,7 @@ void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
             tmpr[1]='0';
           }
           for (int i=0; i<(int)strlen((*rr).d); i++) {
-            tmpr[i+2] = (*rr).d[i];
+            tmpr[i+1] = (*rr).d[i];
           }
           tmpr[strlen((*rr).d)+2]='\0';
           big_set_size(&rr, tmpr, sizeof(tmpr));
@@ -252,43 +351,31 @@ void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   }
 
   (*r) = *(&rr);
-  big_print(r);
-}
-
-int big_cmp(bigint_t **b1, bigint_t **b2) {
-  // TODO: wayyyy better finegrained comparison
-  int l1, l2, i, j, k; // -1=smaller, 0=alike, 1=bigger
-  l1 = strlen((*b1)->d);
-  l2 = strlen((*b2)->d);
-  if (l1 > l2) {
-    return -1;
-  } else if(l1 < l2) {
-    return 1;
-  }
-  for (i=0; i<l1-1; i++) {
-    j = (*b1)->d[i];
-    k = (*b2)->d[i];
-    if (j<k) {
-      return -1;
-    }
-  }
-  return 0;
 }
 
 void big_div_u(bigint_t **b1, bigint_t **b2, uint64_t *co) {
-  int xxx = 1;
-  bigint_t *rr1, *rr2;
+  int xxx = 0;
+  bigint_t *rr1, *rr2, *zero, *tmp;
+
   big_init(&rr1);
   big_init(&rr2);
+  big_init(&tmp);
+  big_init(&zero);
+  big_set(&zero, "0");
   (*rr1) = *(*b1);
+  *co = 0;
 
-  while ((*rr2).neg == false || xxx >= 0) {
-    xxx = big_cmp(&rr1, b2);
+  while ((*rr2).neg == false) {
+    big_crop_zeros(&rr1, &tmp);
+    (*rr1) = (*tmp);
     big_sub(&rr1, b2, &rr2);
+    if ((*rr2).neg == true || strlen((*b2)->d) > strlen((*rr2).d)) {
+      break;
+    }
     *co = *co+1;
-    (*rr1) = (*rr2);
+    big_set(&rr1, (*rr2).d);
   }
-  *co = *co-1;
+  *co = *co + 1;
 }
 
 void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
@@ -300,4 +387,8 @@ void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
 
   // should be positive values before this
   big_div_u(b1, b2, co);
+}
+
+void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r) {
+
 }
