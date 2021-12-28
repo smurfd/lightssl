@@ -154,7 +154,6 @@ int main(int argc, char **argv) {
   big_mul(&biggy, &biggy2, &res);
   printf("---\n");
   big_print(&res);
-  big_print(&solution); // makes it easier to compare manually
   printf("---\n");
   // assert(strcmp(res->d, solution->d) == 0); // This assert fails, but quite close to the real nr,
                                                // maby has todo with to many numbers?
@@ -242,6 +241,14 @@ int main(int argc, char **argv) {
   big_set(&biggy, "226000");
   big_set(&biggy2, "123");
   big_set(&solution, "225877");
+  big_sub(&biggy, &biggy2, &res);
+  big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
+
+  big_cls(&res);
+  big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
+  big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
+  big_set(&solution, "-9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
   assert(strcmp(res->d, solution->d) == 0);

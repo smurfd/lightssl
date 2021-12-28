@@ -1,3 +1,4 @@
+//                                                                            //
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -184,9 +185,6 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   char *ps1, *ps2;
   bigint_t *tmp;
   bool neg = false;
-  // TODO: this fails :
-  // 1111111911123123123111112312313131313234423234234223213131564345654345643456543 -
-  // 9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212
 
   big_init(&tmp);
   // We make a "bad" assumption
@@ -205,7 +203,7 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
 
   // If strings are the same length and the 1st letter is smaller in the 1st number,
   // it will be a negative number in the end. we make it easier for ourself.
-  if (ps1[0] < ps2[0] && max == min) {
+  if ((ps1[0] < ps2[0] && max == min) || strlen((*b1)->d)<strlen((*b2)->d)) {
     neg = true;
     min = strlen((*b1)->d);
     max = strlen((*b2)->d);
@@ -220,7 +218,7 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
     newd = ps1[k] - ps2[j] + '0';
     if (newd < '0') {
       if (k-1 < 0) {
-        if (co == 0 && co == 0) {
+        if (co == 0) {
           newd = '0'-newd+'0';
         }
         neg = true;
@@ -251,12 +249,8 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
     k = k - 1;
     co = co - 1;
   }
-  if (neg == true) {
-    (*tmp) = *(*r);
-    (*tmp).neg = true;
-    big_set_negative(&tmp, r);
-  }
-  if (j!=0) {
+
+  if (j!=0 && j!=k) {
     for (int i=k; i>=0; i--) {
       (*r)->d[co] = ps1[i];
       if (ps1[i] < '0') {
@@ -266,7 +260,19 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
     }
   }
 
-  (*r)->d[max] = '\0';
+  if (neg == true) {
+    (*tmp) = *(*r);
+    (*tmp).neg = true;
+    (*r)->neg = true;
+    big_set_negative(&tmp, r);
+    if (strlen(ps1)==2) {
+      (*r)->d[strlen(ps1)] = '\0';
+    } else {
+      (*r)->d[strlen(ps1)+1] = '\0';
+    }
+  } else {
+    (*r)->d[max] = '\0';
+  }
 }
 
 //
