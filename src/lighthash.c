@@ -10,6 +10,7 @@
 extern u64 sha[80];
 extern u64 sha_init[BYTE];
 
+//
 // "Construct"
 char* lighthash_new(const char* in) {
   b08 digest[DIGEST_SIZE];
@@ -28,6 +29,7 @@ char* lighthash_new(const char* in) {
   return buf;
 }
 
+//
 // Initialize
 void lighthash_init() {
   for (int i=0; i<BYTE; i++) {
@@ -37,6 +39,7 @@ void lighthash_init() {
   m_tot_len = 0;
 }
 
+//
 // Update
 void lighthash_update(const b08 *msg, u08 len) {
   u08 block_nb;
@@ -61,6 +64,7 @@ void lighthash_update(const b08 *msg, u08 len) {
   m_tot_len += (block_nb + 1) << 7;
 }
 
+//
 // Finalize
 void lighthash_finalize(b08 *digest) {
   u08 block_nb;
@@ -79,6 +83,7 @@ void lighthash_finalize(b08 *digest) {
   }
 }
 
+//
 // Transform
 void lighthash_transform(const b08 *msg, u08 blocknb) {
   u64 w[80];
@@ -114,6 +119,7 @@ void lighthash_transform(const b08 *msg, u08 blocknb) {
   }
 }
 
+//
 // Verify hash
 bool lighthash_verify(const char *hash, const char *ver_hash) {
   if (strcasecmp(hash, ver_hash) == 0) {

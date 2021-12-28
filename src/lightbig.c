@@ -15,10 +15,14 @@
 // TODO: unlimited(...) arguments per op?
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
+//
+// Print the number
 void big_print(bigint_t **b) {
   printf("%s\n", (*b)->d);
 }
 
+//
+// Initialize the struct and malloc memory for it
 void big_init(bigint_t **b) {
   *b = (bigint_t*)malloc(BIGLEN);
   (*b)->d = (char*) malloc(BIGLEN);
@@ -26,16 +30,22 @@ void big_init(bigint_t **b) {
   (*b)->neg = false;
 }
 
+//
+// Set the number to a specific string
 void big_set(bigint_t **b, char* str) {
   memset((*b)->d, 0, strlen((*b)->d));
   memcpy((*b)->d, str, strlen(str));
 }
 
+//
+// Set the number to a specific string and a size
 void big_set_size(bigint_t **b, char* str, uint64_t size) {
   memset((*b)->d, 0, size);
   memcpy((*b)->d, str, strlen(str));
 }
 
+//
+// Set the number string to negative
 void big_set_negative(bigint_t **b1, bigint_t **r) {
   if ((*b1)->neg == true) {
     char *tmpr;
@@ -53,10 +63,14 @@ void big_set_negative(bigint_t **b1, bigint_t **r) {
   }
 }
 
+//
+// Clear the number
 void big_cls(bigint_t **b) {
   memset((*b)->d, 0, strlen((*b)->d));
 }
 
+//
+// Free the malloced memory
 void big_end(bigint_t **b) {
   if ((*b)->d) {
     free((*b)->d);
@@ -66,6 +80,8 @@ void big_end(bigint_t **b) {
   }
 }
 
+//
+// Add big numbers
 void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int min, mix, max, carry, newd, m;
   char *ps1, *ps2;
@@ -110,6 +126,8 @@ void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   (*r)->d[max+m] = '\0';
 }
 
+//
+// Remove leading zeros
 void big_crop_zeros(bigint_t **b1, bigint_t **r) {
   int len, co;
   len = strlen((*b1)->d);
@@ -127,6 +145,8 @@ void big_crop_zeros(bigint_t **b1, bigint_t **r) {
   }
 }
 
+//
+// Compare numbers. Return -1 is b1 is smaller, 0 they are alike, 1 b1 is bigger
 int big_cmp(bigint_t **b1, bigint_t **b2) {
   // TODO: wayyyy better finegrained comparison
   int l1, l2,l10, l20, i, j, k; // -1=smaller, 0=alike, 1=bigger
@@ -157,6 +177,8 @@ int big_cmp(bigint_t **b1, bigint_t **b2) {
   return 0;
 }
 
+//
+// Subtract big numbers
 void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int min, max, newd, k, j, co;
   char *ps1, *ps2;
@@ -247,6 +269,8 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   (*r)->d[max] = '\0';
 }
 
+//
+// Multiply big numbers
 void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int carry, m, d1, d2, count, c1, c2, c3, cc, cmax, dig, newdig, newdig2;
   bigint_t *rr;
@@ -352,8 +376,17 @@ void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   (*r) = *(&rr);
 }
 
-void big_div_u(bigint_t **b1, bigint_t **b2, uint64_t *co) {
+//
+// Divide big numbers
+void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
   bigint_t *rr1, *rr2, *zero, *tmp;
+  if (strcmp((*b2)->d, "0") == 0) {
+    printf("division by zero, no good!\n");
+  }
+  // Check if (*b2)->d < 0
+  // Check if (*b1)->d < 0
+
+  // should be positive values before this
 
   big_init(&rr1);
   big_init(&rr2);
@@ -376,17 +409,8 @@ void big_div_u(bigint_t **b1, bigint_t **b2, uint64_t *co) {
   *co = *co + 1;
 }
 
-void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
-  if (strcmp((*b2)->d, "0") == 0) {
-    printf("division by zero, no good!\n");
-  }
-  // Check if (*b2)->d < 0
-  // Check if (*b1)->d < 0
-
-  // should be positive values before this
-  big_div_u(b1, b2, co);
-}
-
+//
+// Modulo on big numbers
 void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int min, max;
   char *ps1, *ps2;

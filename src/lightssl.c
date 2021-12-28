@@ -14,12 +14,17 @@
 
 // TODO: rework variable names to differ from functionnames
 // TODO: rework listen server loop
+
+//
+// Print hello on server
 void lightssl_print_hello(struct hello *hi) {
   printf("Hello: %d %d %llu %d %d %d %llu\n",
     hi->server, hi->tls_v, hi->rnd, hi->ciph_avail[0],
     hi->ciph_select[0], hi->compress, hi->session_id);
 }
 
+//
+// Initialize server
 int lightssl_srv_init(const char *host, const char *port) {
   int ssock = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in saddr;
@@ -33,6 +38,8 @@ int lightssl_srv_init(const char *host, const char *port) {
   return ssock;
 }
 
+//
+// Server handler
 void *lightssl_srv_handler(void *sdesc) {
   int s = *(int*)sdesc;
   b08 avail[] = {TLSCIPHER};
@@ -60,6 +67,8 @@ void *lightssl_srv_handler(void *sdesc) {
   return 0;
 }
 
+//
+// Server listener
 int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
   int csock = 1;
   int *new_sock;
@@ -79,14 +88,20 @@ int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
   return csock;
 }
 
+//
+// Server send message
 void lightssl_srv_send(int csock, const char *msg) {
   send(csock, msg, strlen(msg), 0);
 }
 
+//
+// Server receive message
 void lightssl_srv_recv(int csock, char **data) {
   recv(csock, &data, sizeof(data), 0);
 }
 
+//
+// Initialize Client
 int lightssl_cli_init(const char *host, const char *port) {
   int csock = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in saddr;
@@ -103,18 +118,26 @@ int lightssl_cli_init(const char *host, const char *port) {
   return csock;
 }
 
+//
+// Client receive message
 void lightssl_cli_recv(int csock, char **data) {
   recv(csock, data, sizeof(data), 0);
 }
 
+//
+// Client send message
 void lightssl_cli_send(int csock, const char *msg) {
   send(csock, msg, strlen(msg), 0);
 }
 
+//
+// Client end session
 void lightssl_cli_end(int csock) {
   close(csock);
 }
 
+//
+// Set hello message
 struct hello* lightssl_hs_set_hello(struct hello *hi, bool srv, int tls,
   u64 r, b08 avail[], b08 sel[], b08 c, u64 sess) {
   hi->server = srv;
@@ -127,6 +150,8 @@ struct hello* lightssl_hs_set_hello(struct hello *hi, bool srv, int tls,
   return hi;
 }
 
+//
+// Send Handshake hello message
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
   if (srv) {
     printf("Sending Hello from server\n");
@@ -139,6 +164,8 @@ b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
   return 0;
 }
 
+//
+// Receive Handshake hello message
 struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi) {
   int r, r_tot;
   if (srv) {

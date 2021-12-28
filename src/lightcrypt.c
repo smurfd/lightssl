@@ -13,6 +13,8 @@
 #include "lightcrypt.h"
 #include "lightdefs.h"
 
+//
+// Initialize crypt
 void lightcrypt_init() {
   unsigned __int128 big1 = 123456788;
   __uint128_t big2 = 123456788;
@@ -47,6 +49,8 @@ void lightcrypt_init() {
   mpz_clear(k22);
 }
 
+//
+// Inverse modulo?
 void inverse_mod(mpz_t k, mpz_t pi, mpz_t *tmp) {
   mpz_t s, old_s, t, old_t, r, old_r, zero, one, gcd, x, y, tmp2, tmp3, neg, nk, quot;
   mpz_inits(s, t, r, old_s, old_t, old_r, zero, one, gcd, x, y, tmp2, tmp3, neg, nk, quot, NULL);
@@ -120,6 +124,8 @@ void inverse_mod(mpz_t k, mpz_t pi, mpz_t *tmp) {
   mpz_clear(nk);
 }
 
+//
+// Check if points is aligned with the curve
 bool is_on_curve(struct tuple point) {
   mpz_t x, y, tmpy, tmpx, tmpx2, tmpcx, tmpxy, tmpc, tmpcc, tmp1, tmp2, zero, ca, cb,null1;
   mpz_inits(x, y, tmpy, tmpx, tmpx2, tmpcx, tmpxy, tmpc, tmpcc, tmp1, tmp2, zero, ca, cb, null1, NULL);
@@ -166,6 +172,8 @@ bool is_on_curve(struct tuple point) {
   return bret;
 }
 
+//
+// Set point to negative
 void point_neg(struct tuple point, struct tuple *rest) {
   mpz_t x, y, negy, result, neg1, ymo;
 
@@ -193,6 +201,8 @@ void point_neg(struct tuple point, struct tuple *rest) {
   mpz_clear(ymo);
 }
 
+//
+// Add points
 void point_add(struct tuple p1, struct tuple p2, struct tuple *r1) {
   mpz_t x1, y1, x2, y2, x3, y3, yn, m, tw, tr, tmptr, tmpx, tmpc, tmpca, tmpcp, tmp2y, neg, tt, zero;
   mpz_inits(x1, y1, x2, y2, x3, y3, yn, m, tw, tr, tmptr, tmpx, tmpc, tmpca, tmpcp, tmp2y, neg, tt, zero,NULL);
@@ -267,6 +277,8 @@ void point_add(struct tuple p1, struct tuple p2, struct tuple *r1) {
   mpz_clear(zero);
 }
 
+//
+// Multiply scalars
 void scalar_mult(mpz_t kk, struct tuple point, struct tuple *tt) {
   struct tuple rest, adde;
   mpz_t x1, p1, p2, kk2, cn, result, result2, addend, addend2, zero, one, neg, nk;
@@ -315,12 +327,16 @@ void scalar_mult(mpz_t kk, struct tuple point, struct tuple *tt) {
   mpz_clear(nk);
 }
 
+//
+// Initialize private key
 void private_key(mpz_t *key) {
   gmp_randstate_t ran;
   gmp_randinit_default(ran);
   mpz_urandomm(*key, ran, curve.n);
 }
 
+//
+// Initialize public key
 void public_key(mpz_t privkey, struct tuple *pubkey) {
   scalar_mult(privkey, curve.g, pubkey);
 }
