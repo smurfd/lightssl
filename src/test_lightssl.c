@@ -185,10 +185,10 @@ int main(int argc, char **argv) {
 
   big_cls(&res);
   big_set(&biggy, "000100101");
-  big_print(&biggy);
-  big_print(&res);
+  big_set(&solution, "100101");
   big_crop_zeros(&biggy, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
   big_cls(&res);
   big_set(&biggy, "11");
@@ -198,61 +198,53 @@ int main(int argc, char **argv) {
   big_print(&res);
   assert(strcmp(res->d, solution->d) == 0);
 
-  printf("//////\n");
   big_cls(&res);
   big_set(&biggy, "600");
   big_set(&biggy2, "22");
+  big_set(&solution, "578");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
-  printf("//////\n");
   big_cls(&res);
   big_set(&biggy, "234241");
   big_set(&biggy2, "246");
+  big_set(&solution, "233995");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
-  printf("//////\n");
-  big_cls(&res);
-  big_set(&biggy, "234241");
-  big_set(&biggy2, "246");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-
-  printf("//////\n");
-  big_cls(&res);
-  big_set(&biggy, "600");
-  big_set(&biggy2, "22");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-
-  printf("//////\n");
   big_cls(&res);
   big_set(&biggy, "512");
   big_set(&biggy2, "22");
+  big_set(&solution, "490");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
-  printf("//////\n");
   big_cls(&res);
   big_set(&biggy, "490");
   big_set(&biggy2, "22");
+  big_set(&solution, "468");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
-  printf("//////\n");
   big_cls(&res);
   big_set(&biggy, "490");
   big_set(&biggy2, "522");
+  big_set(&solution, "-32");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
-  printf("//////\n");
   big_cls(&res);
   big_set(&biggy, "226000");
   big_set(&biggy2, "123");
+  big_set(&solution, "225877");
   big_sub(&biggy, &biggy2, &res);
   big_print(&res);
+  assert(strcmp(res->d, solution->d) == 0);
 
   big_end(&res);
   big_end(&biggy2);
