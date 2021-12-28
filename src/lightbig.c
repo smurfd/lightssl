@@ -158,9 +158,9 @@ int big_cmp(bigint_t **b1, bigint_t **b2) {
 }
 
 void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
-  int min, mix, max, newd, k, j, co;
+  int min, max, newd, k, j, co;
   char *ps1, *ps2;
-  bigint_t *tmp, *zero;
+  bigint_t *tmp;
   bool neg = false;
   // TODO: this fails :
   // 1111111911123123123111112312313131313234423234234223213131564345654345643456543 -
@@ -195,7 +195,6 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   k = max-1;
   co = k;
   while(j>=0 && k>=0 && co >= 0) {
-    int tmp1, co1, co2;
     newd = ps1[k] - ps2[j] + '0';
     if (newd < '0') {
       if (k-1 < 0) {
@@ -354,7 +353,6 @@ void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
 }
 
 void big_div_u(bigint_t **b1, bigint_t **b2, uint64_t *co) {
-  int xxx = 0;
   bigint_t *rr1, *rr2, *zero, *tmp;
 
   big_init(&rr1);
@@ -390,5 +388,15 @@ void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
 }
 
 void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r) {
+  int min, max;
+  char *ps1, *ps2;
 
+  min = strlen((*b1)->d);
+  max = strlen((*b2)->d);
+  ps1 = (*b2)->d;
+  ps2 = (*b1)->d;
+
+  if ((*r)->d == NULL) {
+
+  }
 }
