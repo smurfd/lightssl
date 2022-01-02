@@ -322,6 +322,7 @@ void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
   bigint_t *rr1, *rr2, *zero, *tmp;
   int l;
   char *c;
+  // TODO: not working 100%
   // Check if (*b2)->d < 0
   // Check if (*b1)->d < 0
 
@@ -373,6 +374,8 @@ void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   }
 }
 
+//
+// Assert that res == solution
 void big_assert(bigint_t **res, bigint_t **solution) {
   char *s1 = (char*) malloc((*res)->length);
   char *s2 = (char*) malloc((*solution)->length);
@@ -383,6 +386,9 @@ void big_assert(bigint_t **res, bigint_t **solution) {
   free(s1);
 }
 
+//
+// Multiply big numbers
+// From : https://gist.github.com/anonymous/aba0a2d1194d2cd0967a
 void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int carry=0;
   int tmp;
