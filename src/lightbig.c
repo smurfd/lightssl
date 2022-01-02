@@ -18,63 +18,61 @@
 
 //
 // Return a string from int array
-char* big_get_str(bigint_t **b, char **str) {
-  for (int i=0; i<(*b)->length; i++) {
-    (*str)[i] = (*b)->d[i];
+void big_get_str(bigint_t **b1, char **str) {
+  for (int i=0; i<(*b1)->length; i++) {
+    (*str)[i] = (*b1)->d[i];
   }
-  (*str)[(*b)->length] = '\0';
-  return *str;
+  (*str)[(*b1)->length] = '\0';
 }
 
 //
 // Print the number
-void big_print(bigint_t **b) {
-  char *c = (char*) malloc((*b)->length);
-  big_get_str(b, &c);
-  printf("%s\n", big_get_str(b, &c));
+void big_print(bigint_t **b1) {
+  char *c = (char*) malloc((*b1)->length);
+  big_get_str(b1, &c);
+  printf("%s\n", c);
   free(c);
 }
 
 //
 // Initialize the struct and malloc memory for it
-void big_init(bigint_t **b) {
-  *b = (bigint_t*)malloc(BIGLEN);
-  (*b)->d = (int*) malloc(BIGLEN);
-  (*b)->length = 0;
-  (*b)->neg = false;
+void big_init(bigint_t **b1) {
+  *b1 = (bigint_t*) malloc(BIGLEN);
+  (*b1)->d = (int*) malloc(BIGLEN);
+  (*b1)->length = 0;
+  (*b1)->neg = false;
 }
 
 //
 // Set the number to a specific string
-void big_set(bigint_t **b, char* str) {
+void big_set(bigint_t **b1, char* str) {
   int len = strlen(str);
-  (*b)->length = len;
+  (*b1)->length = len;
   if (len == 0) {
-    printf("Empty string\n");
     len = BIGLEN;
   }
   int *d = (int*) malloc (sizeof(int)*(len+1));
   for (int i=0; i<len; i++) {
     d[i] = str[i];
   }
-  memset((*b)->d, 0, BIGLEN);
-  memcpy((*b)->d, d, sizeof(int)*(len));
+  memset((*b1)->d, 0, BIGLEN);
+  memcpy((*b1)->d, d, sizeof(int)*(len));
   free(d);
 }
 
 //
 // Set the number to a specific string and a size
-void big_set_size(bigint_t **b, char* str, uint64_t size) {
+void big_set_size(bigint_t **b1, char* str, uint64_t size) {
   int len = strlen(str);
   int *d;
   size = len;
-  (*b)->length = len;
+  (*b1)->length = len;
   d = (int*) malloc (sizeof(int)*len+1);
   for (int i=0; i<len; i++) {
     d[i] = (int)str[i];
   }
-  memset((*b)->d, 0, BIGLEN);
-  memcpy((*b)->d, d, sizeof(len)*len);
+  memset((*b1)->d, 0, BIGLEN);
+  memcpy((*b1)->d, d, sizeof(len)*len);
   free(d);
 }
 
@@ -99,18 +97,18 @@ void big_set_negative(bigint_t **b1, bigint_t **r) {
 
 //
 // Clear the number
-void big_cls(bigint_t **b) {
-  memset((*b)->d, 0, 1024);
+void big_cls(bigint_t **b1) {
+  memset((*b1)->d, 0, BIGLEN);
 }
 
 //
 // Free the malloced memory
-void big_end(bigint_t **b) {
-  if ((*b)->d) {
-    free((*b)->d);
+void big_end(bigint_t **b1) {
+  if ((*b1)->d) {
+    free((*b1)->d);
   }
-  if (*b) {
-    free(*b);
+  if (*b1) {
+    free(*b1);
   }
 }
 
@@ -175,7 +173,7 @@ void big_crop_zeros(bigint_t **b1, bigint_t **r) {
     (*r) = (*b1);
     (*r)->length = (*b1)->length;
   }
-  
+
   (*r)->length = len-co;
 }
 
@@ -376,11 +374,11 @@ void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r) {
 
 //
 // Assert that res == solution
-void big_assert(bigint_t **res, bigint_t **solution) {
-  char *s1 = (char*) malloc((*res)->length);
-  char *s2 = (char*) malloc((*solution)->length);
-  big_get_str(res, &s1);
-  big_get_str(solution, &s2);
+void big_assert(bigint_t **b1, bigint_t **b2) {
+  char *s1 = (char*) malloc((*b1)->length);
+  char *s2 = (char*) malloc((*b2)->length);
+  big_get_str(b1, &s1);
+  big_get_str(b2, &s2);
   assert(strcmp(s1, s2) == 0);
   free(s2);
   free(s1);
@@ -413,15 +411,15 @@ void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
       (*r)->d[k] = (*r)->d[k] + tmp % 10;
       carry = carry + (*r)->d[k] / 10;
       (*r)->d[k] = (*r)->d[k] % 10;
-      j = j - 1; 
+      j = j - 1;
       k = k - 1;
     } 
     i = i - 1;
-  } 
-  
+  }
+
   while((*r)->d[0] == 0) {
-    (*r)->length--; 
-    (*r)->d++; 
+    (*r)->length--;
+    (*r)->d++;
   }
   for (int i=0; i<(*r)->length; i++) {
     (*r)->d[i]=(*r)->d[i] + '0';
