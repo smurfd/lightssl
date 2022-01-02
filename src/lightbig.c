@@ -17,16 +17,29 @@
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
 //
+// Return a string from int array
+char* big_get_str(bigint_t **b, char **str) {
+  for (int i=0; i<(*b)->length; i++) {
+    (*str)[i] = (*b)->d[i];
+  }
+  (*str)[(*b)->length] = '\0';
+  return *str;
+}
+
+//
 // Print the number
 void big_print(bigint_t **b) {
-  printf("%s\n", (*b)->d);
+  char *c = (char*) malloc((*b)->length);
+  big_get_str(b, &c);
+  printf("%s\n", big_get_str(b, &c));
+  free(c);
 }
 
 //
 // Initialize the struct and malloc memory for it
 void big_init(bigint_t **b) {
   *b = (bigint_t*)malloc(BIGLEN);
-  (*b)->d = (char*) malloc(BIGLEN);
+  (*b)->d = (int*) malloc(BIGLEN);
   (*b)->length = 0;
   (*b)->neg = false;
 }
@@ -34,15 +47,35 @@ void big_init(bigint_t **b) {
 //
 // Set the number to a specific string
 void big_set(bigint_t **b, char* str) {
-  memset((*b)->d, 0, strlen((*b)->d));
-  memcpy((*b)->d, str, strlen(str));
+  int len = strlen(str);
+  (*b)->length = len;
+  if (len == 0) {
+    printf("Empty string\n");
+    len = BIGLEN;
+  }
+  int *d = (int*) malloc (sizeof(int)*(len+1));
+  for (int i=0; i<len; i++) {
+    d[i] = str[i];
+  }
+  memset((*b)->d, 0, BIGLEN);
+  memcpy((*b)->d, d, sizeof(int)*(len));
+  free(d);
 }
 
 //
 // Set the number to a specific string and a size
 void big_set_size(bigint_t **b, char* str, uint64_t size) {
-  memset((*b)->d, 0, size);
-  memcpy((*b)->d, str, strlen(str));
+  int len = strlen(str);
+  int *d;
+  size = len;
+  (*b)->length = len;
+  d = (int*) malloc (sizeof(int)*len+1);
+  for (int i=0; i<len; i++) {
+    d[i] = (int)str[i];
+  }
+  memset((*b)->d, 0, BIGLEN);
+  memcpy((*b)->d, d, sizeof(len)*len);
+  free(d);
 }
 
 //
@@ -50,12 +83,12 @@ void big_set_size(bigint_t **b, char* str, uint64_t size) {
 void big_set_negative(bigint_t **b1, bigint_t **r) {
   if ((*b1)->neg == true) {
     char *tmpr;
-    tmpr = (char*) malloc(strlen((*b1)->d)+1);
+    tmpr = (char*) malloc((*b1)->length+1);
     tmpr[0]='-';
-    for (int i=0; i<(int)strlen((*b1)->d); i++) {
+    for (int i=0; i<(*b1)->length; i++) {
       tmpr[i+1] = (*b1)->d[i];
     }
-    tmpr[strlen((*b1)->d)+2]='\0';
+
     big_set_size(r, tmpr, sizeof(tmpr));
     (*r)->neg = true;
     if (tmpr) {
@@ -67,7 +100,7 @@ void big_set_negative(bigint_t **b1, bigint_t **r) {
 //
 // Clear the number
 void big_cls(bigint_t **b) {
-  memset((*b)->d, 0, strlen((*b)->d));
+  memset((*b)->d, 0, 1024);
 }
 
 //
@@ -85,13 +118,13 @@ void big_end(bigint_t **b) {
 // Add big numbers
 void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int min, mix, max, carry, newd, m;
-  char *ps1, *ps2;
+  int *ps1, *ps2;
 
   carry = 0;
   m = 0;
 
-  min = strlen((*b1)->d);
-  max = strlen((*b2)->d);
+  min = (*b1)->length;
+  max = (*b2)->length;
   ps1 = (*b2)->d;
   ps2 = (*b1)->d;
 
@@ -101,8 +134,8 @@ void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   }
 
   if (min > max) {
-    min = strlen((*b2)->d);
-    max = strlen((*b1)->d);
+    min = (*b2)->length;
+    max = (*b1)->length;
     ps1 = (*b1)->d;
     ps2 = (*b2)->d;
   }
@@ -123,15 +156,14 @@ void big_add(bigint_t **b1, bigint_t **b2, bigint_t **r) {
     }
     (*r)->d[max-1-i] = newd;
   }
-
-  (*r)->d[max+m] = '\0';
+  (*r)->length = max + m;
 }
 
 //
 // Remove leading zeros
 void big_crop_zeros(bigint_t **b1, bigint_t **r) {
   int len, co;
-  len = strlen((*b1)->d);
+  len = (*b1)->length;
   co = 0;
   while ((*b1)->d[co] == '0') {
     co = co + 1;
@@ -141,9 +173,10 @@ void big_crop_zeros(bigint_t **b1, bigint_t **r) {
   }
   if (co == 0) {
     (*r) = (*b1);
-  } else {
-    (*r)->d[len-co] = '\0';
+    (*r)->length = (*b1)->length;
   }
+  
+  (*r)->length = len-co;
 }
 
 //
@@ -151,8 +184,8 @@ void big_crop_zeros(bigint_t **b1, bigint_t **r) {
 int big_cmp(bigint_t **b1, bigint_t **b2) {
   // TODO: wayyyy better finegrained comparison
   int l1, l2,l10, l20, i, j, k; // -1=smaller, 0=alike, 1=bigger
-  l1 = strlen((*b1)->d);
-  l2 = strlen((*b2)->d);
+  l1 = (*b1)->length;
+  l2 = (*b2)->length;
   l10 = 0;
   l20 = 0;
   i = 0;
@@ -182,31 +215,31 @@ int big_cmp(bigint_t **b1, bigint_t **b2) {
 // Subtract big numbers
 void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int min, max, newd, k, j, co;
-  char *ps1, *ps2;
+  int *ps1, *ps2;
   bigint_t *tmp;
   bool neg = false;
 
   big_init(&tmp);
   // We make a "bad" assumption
-  min = strlen((*b1)->d);
-  max = strlen((*b2)->d);
+  min = (*b1)->length;
+  max = (*b2)->length;
   ps1 = (*b2)->d;
   ps2 = (*b1)->d;
 
   // Usually this is true after the bad assumption
   if (min >= max) {
-    min = strlen((*b2)->d);
-    max = strlen((*b1)->d);
+    min = (*b2)->length;
+    max = (*b1)->length;
     ps1 = (*b1)->d;
     ps2 = (*b2)->d;
   }
 
   // If strings are the same length and the 1st letter is smaller in the 1st number,
   // it will be a negative number in the end. we make it easier for ourself.
-  if ((ps1[0] < ps2[0] && max == min) || strlen((*b1)->d)<strlen((*b2)->d)) {
+  if ((ps1[0] < ps2[0] && max == min) || (*b1)->length < (*b2)->length) {
     neg = true;
-    min = strlen((*b1)->d);
-    max = strlen((*b2)->d);
+    min = (*b1)->length;
+    max = (*b2)->length;
     ps1 = (*b2)->d;
     ps2 = (*b1)->d;
   }
@@ -242,8 +275,10 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
     }
     (*r)->d[co] = newd;
     if (newd == '0' && k == 0) {
+      int l = (*r)->length;
       big_crop_zeros(r, &tmp);
       (*r) = &(*tmp);
+      (*r)->length = l;
     }
     j = j - 1;
     k = k - 1;
@@ -262,133 +297,31 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r) {
 
   if (neg == true) {
     (*tmp) = *(*r);
+    int l = (*r)->length;
+    (*tmp).length = l;
     (*tmp).neg = true;
     (*r)->neg = true;
     big_set_negative(&tmp, r);
-    if (strlen(ps1)==2) {
-      (*r)->d[strlen(ps1)] = '\0';
-    } else {
-      (*r)->d[strlen(ps1)+1] = '\0';
-    }
-  } else {
-    (*r)->d[max] = '\0';
-  }
-}
-
-//
-// Multiply big numbers
-void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
-  int carry, m, d1, d2, count, c1, c2, c3, cc, cmax, dig, newdig, newdig2;
-  bigint_t *rr;
-
-  big_init(&rr);
-  big_cls(&rr);
-  carry = 0;
-  m = 0;
-  d1 = strlen((*b1)->d);
-  d2 = strlen((*b2)->d);
-  count = d1 + d2 - 1;
-  if (((*b1)->neg == true && (*b2)->neg == true) || ((*b1)->neg == false && (*b2)->neg == false)) {
-    (*r)->neg = false;
-  } else {
+    (*r)->length = l+1;
     (*r)->neg = true;
-    (*r)->d[0] = '-';
-    m = 1;
+    if (ps1[1]!=0) {
+      (*r)->length = l;
+      (*r)->neg = true;
+    } else {
+      (*r)->length = l+1;
+      (*r)->neg = true;
+    }
+  } else {
+    (*r)->length = max;
   }
-
-  c1 = d1-1;
-  c2 = d2-1;
-  cmax = (d1-1)+(d2-1);
-  c3 = cmax;
-  cc = 0;
-  dig = 0;
-  newdig = 0;
-  newdig2 = 0;
-  carry = 0;
-
-  for (;;) {
-    // Control loop
-    if (c2 < 0) {
-      cc = cc + 1;
-      c3 = cmax - cc;
-      c2 = d2 - 1;
-      c1 = c1 - 1;
-      if (c1 < 0) {
-        break;
-      }
-    }
-
-    newdig = ((*b2)->d[c2]-'0')*((*b1)->d[c1]-'0') + '0';
-    // Check if character * character exceeds 1 character as result
-    if (newdig >= '0' && newdig <= '9') {
-      dig = newdig;
-    } else if (newdig > '9') {
-      dig = newdig-('0'*(int)(newdig / '0'));
-      if (dig > 9) {
-        (*rr).d[c3-1] = (*rr).d[c3-1] + (dig / 10);
-        carry = (int)(dig / 10);
-        dig = dig - (carry*10);
-        carry = 0;
-      }
-      dig = dig + '0';
-      if (c2 == 0) {
-        dig = dig + carry;
-        carry = 0;
-      }
-    }
-
-    newdig2 = (*rr).d[c3] + dig;
-    carry = 0;
-    // Check if character + possible other character + carry exceeds 1 character
-    if (newdig2 >= '0' && newdig2 <= '9') {
-      dig = newdig2;
-    } else if (newdig2 > '9') {
-      dig = newdig2-('0'*(newdig2/'0'));
-      if (dig > 9) {
-        if (c1 == 0 && c2 == 0) {
-          char *tmpr;
-          tmpr = (char*) malloc(sizeof((*rr).d+32));
-          tmpr[0]='1';
-          if ((*rr).d[0]>='0' && (*rr).d[0] <='9') {
-            tmpr[1]=(*rr).d[0];
-          } else {
-            tmpr[1]='0';
-          }
-          for (int i=0; i<(int)strlen((*rr).d); i++) {
-            tmpr[i+1] = (*rr).d[i];
-          }
-          tmpr[strlen((*rr).d)+2]='\0';
-          big_set_size(&rr, tmpr, sizeof(tmpr));
-          free(tmpr);
-          c3 = c3 + 1;
-        } else {
-          (*rr).d[c3-1] = (*rr).d[c3-1] + (dig / 10);
-        }
-        carry = (int)(dig / 10);
-        dig = dig - (carry*10);
-        carry = 0;
-      }
-      dig = dig + '0';
-      if (c2 == 0) {
-        dig = dig + carry;
-        carry = 0;
-      }
-    }
-    (*rr).d[c3] = dig;
-    c2 = c2 - 1;
-    c3 = c3 - 1;
-  }
-
-  (*r) = *(&rr);
 }
 
 //
 // Divide big numbers
 void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
   bigint_t *rr1, *rr2, *zero, *tmp;
-  if (strcmp((*b2)->d, "0") == 0) {
-    printf("division by zero, no good!\n");
-  }
+  int l;
+  char *c;
   // Check if (*b2)->d < 0
   // Check if (*b1)->d < 0
 
@@ -400,33 +333,91 @@ void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co) {
   big_init(&zero);
   big_set(&zero, "0");
   (*rr1) = *(*b1);
+  (*rr1).length = (*b1)->length;
   *co = 0;
-
   while ((*rr2).neg == false) {
+    l = (*rr1).length;
     big_crop_zeros(&rr1, &tmp);
+    l = (*tmp).length;
     (*rr1) = (*tmp);
+    (*rr1).length = (*tmp).length;
+   
     big_sub(&rr1, b2, &rr2);
-    if ((*rr2).neg == true || strlen((*b2)->d) > strlen((*rr2).d)) {
+    if ((*rr2).neg == true || (*b2)->length > (*rr2).length) {
       break;
     }
     *co = *co+1;
-    big_set(&rr1, (*rr2).d);
+    c = (char*) malloc(BIGLEN);
+    big_get_str(&rr2, &c);
+    big_set(&rr1, c);
+    (*rr1).length = (*rr2).length;
+    (*rr1).neg = (*rr2).neg;
+    free(c);
   }
-  *co = *co + 1;
+  *co = *co -1;
 }
 
 //
 // Modulo on big numbers
 void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r) {
   int min, max;
-  char *ps1, *ps2;
+  int *ps1, *ps2;
 
-  min = strlen((*b1)->d);
-  max = strlen((*b2)->d);
+  min = (*b1)->length;
+  max = (*b2)->length;
   ps1 = (*b2)->d;
   ps2 = (*b1)->d;
 
   if ((*r)->d == NULL) {
 
+  }
+}
+
+void big_assert(bigint_t **res, bigint_t **solution) {
+  char *s1 = (char*) malloc((*res)->length);
+  char *s2 = (char*) malloc((*solution)->length);
+  big_get_str(res, &s1);
+  big_get_str(solution, &s2);
+  assert(strcmp(s1, s2) == 0);
+  free(s2);
+  free(s1);
+}
+
+void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r) {
+  int carry=0;
+  int tmp;
+  int push_left = 0;
+  (*r)->length = (*b1)->length + (*b2)->length;
+  int i = (*b1)->length - 1;
+  int j = (*b2)->length - 1;
+  int k = (*r)->length - 1;
+
+  while (i >= 0) {
+    k = (*r)->length - 1 - push_left;
+    j = (*r)->length - 1;
+    push_left = push_left + 1;
+    while(j >= 0 || carry > 0) {
+      if(j >= 0) {
+        tmp = ((*b1)->d[i]-'0') * ((*b2)->d[j]-'0');
+      } else {
+        tmp = 0;
+      }
+      tmp = tmp + carry;
+      carry = tmp / 10;
+      (*r)->d[k] = (*r)->d[k] + tmp % 10;
+      carry = carry + (*r)->d[k] / 10;
+      (*r)->d[k] = (*r)->d[k] % 10;
+      j = j - 1; 
+      k = k - 1;
+    } 
+    i = i - 1;
+  } 
+  
+  while((*r)->d[0] == 0) {
+    (*r)->length--; 
+    (*r)->d++; 
+  }
+  for (int i=0; i<(*r)->length; i++) {
+    (*r)->d[i]=(*r)->d[i] + '0';
   }
 }

@@ -7,13 +7,14 @@
 #define BIGLEN 2048
 
 struct big_t {
-  char *d;    // store the digits
+  int *d;    // store the digits
   int length; // length of the number
   bool neg;   // positive or negative?
 };
 
 typedef struct big_t bigint_t;
 
+char* big_get_str(bigint_t **b, char **str);
 int big_cmp(bigint_t **b1, bigint_t **b2);
 void big_print(bigint_t **b);
 void big_init(bigint_t **b);
@@ -28,5 +29,6 @@ void big_sub(bigint_t **b1, bigint_t **b2, bigint_t **r);
 void big_mul(bigint_t **b1, bigint_t **b2, bigint_t **r);
 void big_div(bigint_t **b1, bigint_t **b2, uint64_t *co);
 void big_mod(bigint_t **b1, bigint_t **b2, bigint_t **r);
+void big_assert(bigint_t **res, bigint_t **solution);
 
 #endif
