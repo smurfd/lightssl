@@ -49,232 +49,104 @@ int main(int argc, char **argv) {
       lightssl_cli_end(cl);
       free(hs_srv_recv);
       free(hs_cli);
+    } else if (strcmp(argv[1], "big") == 0) {
+      bigint_t *ac, *ad, *a1;
+      big_set("21739871283971298371298371289371298371298371298371298371293", &ac);
+	    assert(strcmp("21739871283971298371298371289371298371298371298371298371293", big_get(ac)) == 0);
+
+      big_set("000123000", &ac);
+	    assert(strcmp("123000", big_get(ac)) == 0);
+
+      big_set("000", &ac);
+	    assert(strcmp("0", big_get(ac)) == 0);
+      big_set("", &ac);
+	    assert(strcmp("0", big_get(ac)) == 0);
+
+      big_init(&a1);
+      big_set("11111111111111111111111111111111111111111111111111111111111000", &ac);
+      big_set("33333333333333333333333333333333333333333333333333333333333789", &ad);
+      big_add(ac, ad, &a1);
+	    assert(strcmp("44444444444444444444444444444444444444444444444444444444444789", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("512", &ac);
+      big_set("512", &ad);
+      big_add(ac, ad, &a1);
+	    assert(strcmp("1024", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("2048", &ac);
+      big_set("8", &ad);
+      big_mul(ac, ad, &a1);
+      assert(strcmp("16384", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("1024", &ac);
+      big_set("16", &ad);
+      big_mul(ac, ad, &a1);
+	    assert(strcmp("16384", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("1111111911123123123111112312313131313234423234234223213131564345654345643456543", &ac);
+      big_set("9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212", &ad);
+      big_mul(ac, ad, &a1);
+      assert(strcmp(
+        "1024691095812826869391663147282954873019529886520580529524817192884099563"\
+        "0206654276591188107806120144189700371037426747541472468434747817753423563"\
+        "299873235240318870130333116", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212", &ac);
+      big_set("1111111911123123123111112312313131313234423234234223213131564345654345643456543", &ad);
+      big_add(ac, ad, &a1);
+      assert(strcmp("9222213222222223333334166678678678666667867868686868789978789789778768687119901209901198678755",
+        big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("600", &ac);
+      big_set("22", &ad);
+      big_sub(ac, ad, &a1);
+      assert(strcmp("578", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("578", &ac);
+      big_set("22", &ad);
+      big_sub(ac, ad, &a1);
+      assert(strcmp("556", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("268", &ac);
+      big_set("122", &ad);
+      big_sub(ac, ad, &a1);
+      assert(strcmp("146", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("600", &ac);
+      big_set("22", &ad);
+      big_div(ac, ad, &a1);
+      assert(strcmp("27", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("10", &ac);
+      big_set("3", &ad);
+      big_div(ac, ad, &a1);
+      assert(strcmp("3", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("10", &ac);
+      big_set("3", &ad);
+      big_mod(ac, ad, &a1);
+      assert(strcmp("1", big_get(a1)) == 0);
+
+      big_set("100", &ac);
+      big_set("63", &ad);
+      big_mod(ac, ad, &a1);
+      assert(strcmp("37", big_get(a1)) == 0);
+
+      printf("OK!\n");
+    } else if (strcmp(argv[1], "crypt") == 0) {
+      lightcrypt_init();
     }
   }
   free(out);
-  // Crypt
-  lightcrypt_init();
-
-  // Big number
-  big_init(&biggy);
-  big_init(&biggy2);
-  big_init(&res);
-  big_init(&solution);
-
-  big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
-  big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
-  big_print(&biggy);
-  big_print(&biggy2);
-  big_add(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_set(&solution, "9222213222222223333334166678678678666667867868686868789978789789778768687119901209901198678755");
-  big_assert(&res, &solution);
-
-  big_sub(&biggy2, &biggy, &res);
-  big_print(&res);
-  big_set(&solution, "9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "34");
-  big_set(&biggy2, "11");
-  big_set(&solution, "45");
-  big_add(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "11");
-  big_set(&biggy2, "34");
-  big_set(&solution, "45");
-  big_add(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "34");
-  big_set(&biggy2, "11");
-  big_set(&solution, "23");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "340");
-  big_set(&biggy2, "11");
-  big_set(&solution, "010");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  for (int i=0; i<29; i++) {
-    big_sub(&res, &biggy2, &res);
-    big_print(&res);
-  }
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "34");
-  big_set(&biggy2, "11");
-  big_set(&solution, "374");
-  big_mul(&biggy, &biggy2, &res);
-  printf("---\n");
-  big_print(&res);
-  printf("--- 1111\n");
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "123");
-  big_set(&biggy2, "321");
-  big_set(&solution, "39483");
-  big_mul(&biggy, &biggy2, &res);
-  printf("---\n");
-  big_print(&res);
-  printf("---\n");
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy2, "123456");
-  big_set(&biggy, "654321");
-  big_set(&solution, "80779853376");
-  big_mul(&biggy, &biggy2, &res);
-  printf("---\n");
-  big_print(&res);
-  printf("---\n");
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "23");
-  big_set(&biggy2, "321");
-  big_set(&solution, "7383");
-  big_mul(&biggy, &biggy2, &res);
-  printf("---\n");
-  big_print(&res);
-  printf("---\n");
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
-  big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
-  big_set(&solution, "10246910958128268693916631472829548730195298865205805295248171928840995630206654276591188107806120144189700371037426747541472468434747817753423563299873235240318870130333116");
-  big_mul(&biggy, &biggy2, &res);
-  printf("---\n");
-  big_print(&res);
-  big_print(&solution); // makes it easier to compare manually
-  printf("---\n");
-  big_assert(&res, &solution);
-  //assert(strcmp(res->d, solution->d) == 0); // This assert fails, but quite close to the real nr,
-                                               // maby has todo with to many numbers?
-
-  c = 0;
-  big_cls(&res);
-  big_set(&biggy, "666");
-  big_set(&biggy2, "22");
-  big_set(&solution, "30");
-  big_div(&biggy, &biggy2, &c);
-  assert(c == 31);
-
-  c = 0;
-  big_cls(&res);
-  big_set(&biggy, "222");
-  big_set(&biggy2, "11");
-  big_set(&solution, "20");
-  big_div(&biggy, &biggy2, &c);
-  assert(c == 20);
-
-  c = 0;
-  big_cls(&res);
-  big_set(&biggy, "234241");
-  big_set(&biggy2, "123");
-  big_set(&solution, "1904");
-  big_div(&biggy, &biggy2, &c);
-  //assert(c == 1904);
-
-  big_cls(&res);
-  big_set(&biggy, "000100101");
-  big_set(&solution, "100101");
-  big_crop_zeros(&biggy, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "11");
-  big_set(&biggy2, "12");
-  big_set(&solution, "-1");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "600");
-  big_set(&biggy2, "22");
-  big_set(&solution, "578");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "234241");
-  big_set(&biggy2, "246");
-  big_set(&solution, "233995");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "512");
-  big_set(&biggy2, "22");
-  big_set(&solution, "490");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "490");
-  big_set(&biggy2, "22");
-  big_set(&solution, "468");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "490");
-  big_set(&biggy2, "522");
-  big_set(&solution, "-32");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "226000");
-  big_set(&biggy2, "123");
-  big_set(&solution, "225877");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_assert(&res, &solution);
-
-  big_cls(&res);
-  big_set(&biggy, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
-  big_set(&biggy2, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
-  big_set(&solution, "-9222213222222221111110344432432432444443243242424242321132321321332342423991209901209911765669");
-  big_sub(&biggy, &biggy2, &res);
-  big_print(&res);
-  big_print(&solution);
-  big_assert(&res, &solution);
-
-  bigint_t *res2, *solution2;
-  big_init(&res2);
-  big_init(&solution2);
-  big_cls(&res);
-  big_set(&biggy2, "1111111911123123123111112312313131313234423234234223213131564345654345643456543");
-  big_set(&biggy, "9222213222222222222222255555555555555555555555555555555555555555555555555555555555555555222212");
-
-  big_set(&solution2, "10246910958128268693916631472829548730195298865205805295248171928840995630206654276591188107806120144189700371037426747541472468434747817753423563299873235240318870130333116");
-  big_mul(&biggy, &biggy2, &res2);
-  printf("---\n");
-  big_print(&res2);
-  big_print(&solution2); // makes it easier to compare manually
-  big_assert(&res2, &solution2);
-
-  big_end(&res);
-  big_end(&biggy2);
 }
