@@ -16,3 +16,5 @@ test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
 
 test('server', test_lightssl, args: ['server'])
 test('client', test_lightssl, args: ['client'])
+test('big', test_lightssl, args: ['big'])
+test('crypt', test_lightssl, args: ['crypt'])
