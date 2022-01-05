@@ -1,11 +1,11 @@
 //                                                                            //
+#ifndef LIGHTSSL_H
+#define LIGHTSSL_H 1
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 #include "lightdefs.h"
-
-#ifndef LIGHTSSL_H
-#define LIGHTSSL_H 1
 
 struct hello {
   bool server;       // is the hello comming from server?
@@ -39,7 +39,6 @@ struct hello* lightssl_hs_set_hello(struct hello *hs, bool srv, int tls,
   u64 r, b08 avail[], b08 sel[], b08 c, u64 sess);
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi);
 struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi);
-
 #endif
 
 /*

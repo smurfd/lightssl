@@ -13,11 +13,15 @@
 // TODO: unlimited(...) arguments per op?
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
+//
+// Initialize a bigint
 void big_init(bigint_t **a) {
   (*a) = malloc(sizeof(bigint_t));
   (*a)->neg = false;
 }
 
+//
+// Clear a bigint
 void big_end(bigint_t **a) {
   if ((*a)->dig) {
     free((*a)->dig);
@@ -25,6 +29,8 @@ void big_end(bigint_t **a) {
   }
 } 
 
+//
+// Set a bigint from string
 void big_set(char *a, bigint_t **b) {
   big_init(b);
 
@@ -47,6 +53,8 @@ void big_set(char *a, bigint_t **b) {
   }
 }
 
+//
+// Get string from bigint
 char *big_get(bigint_t *a) {
   char *b = malloc(a->len * sizeof(char));
   for(int i = 0; i < a->len; i++) {
@@ -55,6 +63,8 @@ char *big_get(bigint_t *a) {
   return b;
 }
 
+//
+// Bigint addition
 void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
   big_init(c);
   (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
@@ -88,6 +98,8 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
   }
 }
 
+//
+// Bigint multiplication
 void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
   big_init(c);
   (*c)->len = a->len + b->len;
@@ -126,6 +138,8 @@ void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
   }
 }
 
+//
+// Bigint subtraction
 void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
   big_init(c);
   (*c)->len = (a->len > b->len ? a->len : b->len);
@@ -168,6 +182,8 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
   }
 }
 
+//
+// Bigint division
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   bigint_t *c;
   big_init(&c);
@@ -206,6 +222,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   }
 }
 
+//
+// Bigint modulo
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   bigint_t *c;
   big_init(&c);
@@ -229,12 +247,15 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   }
 }
 
-void big_print(bigint_t **b1) {
-  char *c = (char*) malloc((*b1)->len);
-  printf("%s\n", big_get(*b1));
+//
+// Print a bigint
+void big_print(bigint_t **a) {
+  char *c = (char*) malloc((*a)->len);
+  printf("%s\n", big_get(*a));
   free(c);
 }
 
+// Assert
 void big_assert(bigint_t **b1, bigint_t **b2) {
   assert(strcmp(big_get(*b1), big_get(*b2)) == 0);
 }

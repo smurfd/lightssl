@@ -1,8 +1,8 @@
 //                                                                            //
-#include <stdint.h>
-
 #ifndef LIGHTDEFS_H
 #define LIGHTDEFS_H 1
+
+#include <stdint.h>
 
 typedef uint64_t u64;
 typedef uint8_t  u08;
@@ -68,5 +68,4 @@ typedef unsigned char b08;
   ((u64)(RAND()) << 22) ^ \
   ((u64)(RAND()) <<  9) ^ \
   ((u64)(RAND()) >>  4)
-
 #endif

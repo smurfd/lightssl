@@ -1,8 +1,8 @@
 //                                                                            //
-#include <stdbool.h>
-
 #ifndef LIGHTBIG_H
 #define LIGHTBIG_H 1
+
+#include <stdbool.h>
 
 #define BIGLEN 2048
 
@@ -22,4 +22,5 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c);
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d);
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e);
 void big_assert(bigint_t **b1, bigint_t **b2);
+void big_print(bigint_t **a);
 #endif
