@@ -10,12 +10,10 @@
 #include "lightcrypt.h"
 
 int main(int argc, char **argv) {
-  uint64_t c;
   char *out = NULL;
   b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
-  bigint_t *biggy, *biggy2, *res, *solution;
 
   const char* in = "smurfd";
   const char* rh = "555cfc37fc24d4971de9b091ef"\

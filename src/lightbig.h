@@ -13,6 +13,7 @@ typedef struct {
 } bigint_t;
 
 void big_init(bigint_t **a);
+void big_end(bigint_t **a);
 void big_set(char *a, bigint_t **b);
 char *big_get(bigint_t *a);
 void big_add(bigint_t *a, bigint_t *b, bigint_t **c);

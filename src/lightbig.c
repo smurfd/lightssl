@@ -18,6 +18,13 @@ void big_init(bigint_t **a) {
   (*a)->neg = false;
 }
 
+void big_end(bigint_t **a) {
+  if ((*a)->dig) {
+    free((*a)->dig);
+    free((*a));
+  }
+} 
+
 void big_set(char *a, bigint_t **b) {
   big_init(b);
 
@@ -173,7 +180,6 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   int i = a->len - 1;
   int j = b->len - 1;
   int k = c->len - 1;
-  int carry = 0, tmp;
 
   big_set(big_get(a), &c);
   c->neg = false;
@@ -206,7 +212,6 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   bigint_t *d;
   big_init(&d);
   big_init(e);
-  int co = 0;
 
   c->len = (a->len > b->len ? a->len : b->len);
   c->dig = malloc(c->len * sizeof(int));
@@ -214,10 +219,6 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   d->dig = malloc(d->len * sizeof(int));
   (*e)->len = (a->len > b->len ? a->len : b->len);
   (*e)->dig = malloc((*e)->len * sizeof(int));
-  int i = a->len - 1;
-  int j = b->len - 1;
-  int k = c->len - 1;
-  int carry = 0, tmp;
 
   big_div(a, b, &c);
   big_mul(b, c, &d);
@@ -230,11 +231,11 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
 
 void big_print(bigint_t **b1) {
   char *c = (char*) malloc((*b1)->len);
-  printf("%s\n", big_get(b1));
+  printf("%s\n", big_get(*b1));
   free(c);
 }
 
 void big_assert(bigint_t **b1, bigint_t **b2) {
-  assert(strcmp(big_get(b1), big_get(b2)) == 0);
+  assert(strcmp(big_get(*b1), big_get(*b2)) == 0);
 }
 
