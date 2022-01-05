@@ -9,12 +9,21 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <time.h>
-#include <gmp.h>
+//#include <gmp.h>
 #include "lightcrypt.h"
 #include "lightdefs.h"
 
 //
 // Initialize crypt
+void lightcrypt_init() {
+  printf("Cryptic stuff\n");
+
+  bigint_t *a;
+  big_init(&a);
+
+  big_end(&a);
+}
+/*
 void lightcrypt_init() {
   unsigned __int128 big1 = 123456788;
   __uint128_t big2 = 123456788;
@@ -340,3 +349,4 @@ void private_key(mpz_t *key) {
 void public_key(mpz_t privkey, struct tuple *pubkey) {
   scalar_mult(privkey, curve.g, pubkey);
 }
+*/

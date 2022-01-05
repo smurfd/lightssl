@@ -5,8 +5,12 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include <gmp.h>
+//#include <gmp.h>
 #include "lightdefs.h"
+#include "lightbig.h"
+
+#ifndef LIGHTCRYPT_H
+#define LIGHTCRYPT_H 1
 
 // Read: https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/
 // Read: https://andrea.corbellini.name/2015/05/23/elliptic-curve-cryptography-finite-fields-and-discrete-logarithms/
@@ -23,9 +27,24 @@
 
 // went back to port the ecdhe.py
 
-#ifndef LIGHTCRYPT_H
-#define LIGHTCRYPT_H 1
+typedef struct {
+  bigint_t p1;
+  bigint_t p2;
+  bool empty;
+} bigtup_t;
 
+typedef struct {
+  char name[10];
+  bigint_t p;
+  uint8_t a;
+  uint8_t b;
+  bigint_t n;
+  uint8_t h;
+  bigtup_t g;
+} curve_t;
+
+void lightcrypt_init();
+/*
 struct tuple {
   mpz_t p1;
   mpz_t p2;
@@ -50,5 +69,5 @@ void point_add(struct tuple p1, struct tuple p2, struct tuple *r1);
 void scalar_mult(mpz_t kk, struct tuple point, struct tuple *tt);
 void private_key(mpz_t *key);
 void public_key(mpz_t privkey, struct tuple *pubkey);
-
+*/
 #endif
