@@ -195,6 +195,9 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   str = (char*) malloc(sizeof(int));
   sprintf(str, "%d", co);
   big_set(str, d);
+  if (str) {
+    free(str);
+  }
 }
 
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
@@ -219,6 +222,10 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   big_div(a, b, &c);
   big_mul(b, c, &d);
   big_sub(a, d, e);
+
+  if (c->dig) {
+    free(c->dig);
+  }
 }
 
 void big_print(bigint_t **b1) {
