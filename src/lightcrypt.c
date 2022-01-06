@@ -17,7 +17,7 @@
 void lightcrypt_init() {
   printf("Cryptic stuff\n");
   char *s = malloc(512);
-  curve_t *c = malloc(sizeof(curve_t));
+  struct curve *c = malloc(sizeof(struct curve));
   c->g = malloc(sizeof(bigtup_t));
   bigint_t *a;
   big_init(&(c->p));
@@ -100,5 +100,61 @@ void lightcrypt_privkey(bigint_t **privkey) {
 //
 // Initialize public key
 void lightcrypt_pubkey(bigint_t *privkey, bigtup_t **pubkey) {
-  //scalar_mult(privkey, curve.g, pubkey);
+  lightcrypt_scalar_mul(privkey, curve_t.g, pubkey);
+}
+
+void lightcrypt_scalar_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret) {
+  assert(lightcrypt_oncurve(&point));
+}
+
+bool lightcrypt_oncurve(bigtup_t **p) {
+  bool ret = false;
+  char *ca = NULL, *cb = NULL;
+  bigint_t *x, *y, *res, *res1, *resxx, *resyy, *resxxx, *bca, *bcb;
+  big_init(&x);
+  big_init(&y);
+  big_init(&res);
+  big_init(&res1);
+  big_init(&resxx);
+  big_init(&resyy);
+  big_init(&resxxx);
+  big_init(&bca);
+  big_init(&bcb);
+  if ((*p) == NULL) {
+    return true;
+  }
+  (*p)->p1 = &(*x);
+  (*p)->p2 = &(*y);
+  sprintf(ca, "%d", curve_t.a);
+  sprintf(cb, "%d", curve_t.b);
+  big_set(ca, &bca);
+  big_set(ca, &bcb);
+  big_mul(x, x, &resxx);         // x*x
+  big_mul(x, resxx, &resxxx);    // (x*x)*x
+  big_mul(y, y, &resyy);         // y*y
+  big_sub(resyy, resxxx, &res);  // ((y*y)-((x*x)*x))
+
+  big_mul(bca, x, &resxx);       // curve.a*x
+  big_sub(res, resxx, &res1);    // ((y*y)-((x*x)*x))-(curve.a*x)
+  big_sub(res1, bcb, &resyy);    // (((y*y)-((x*x)*x))-(curve.a*x)-curve.b)
+
+  big_mod(resyy, curve_t.p, &res1); // % curve.p
+
+  if ((*res1).len == 1 && (*res1).dig[0] == 0) {
+    ret = true;
+  }
+
+  big_end(&bcb);
+  big_end(&bca);
+  big_end(&resxxx);
+  big_end(&resyy);
+  big_end(&resxx);
+  big_end(&res1);
+  big_end(&res);
+  big_end(&y);
+  big_end(&x);
+  // Python
+  //x, y = point
+  // return (((y * y) - ((x * x) * x)) - (curve.a * x) - curve.b) % curve.p == 0
+  return ret;
 }

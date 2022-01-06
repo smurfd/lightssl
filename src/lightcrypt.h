@@ -32,7 +32,7 @@ typedef struct {
   bool empty;
 } bigtup_t;
 
-typedef struct {
+struct curve {
   char name[10];
   bigint_t *p;
   uint8_t a;
@@ -47,4 +47,6 @@ void lightcrypt_rand(bigint_t **p);
 void lightcrypt_rand_t(bigtup_t **p);
 void lightcrypt_privkey(bigint_t **privkey);
 void lightcrypt_pubkey(bigint_t *privkey, bigtup_t **pubkey);
+void lightcrypt_scalar_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret);
+bool lightcrypt_oncurve(bigtup_t **p);
 #endif
