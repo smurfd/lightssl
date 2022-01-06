@@ -1,7 +1,7 @@
 # lightssl
 Do SSL really need to be so hard?
 
-# Compile lightssl
+### Compile lightssl
 
 ```bash
 meson build
@@ -11,7 +11,7 @@ meson test
 ```
 `./build.sh` has those parts in it
 
-# Run client and server
+### Run client and server
 In one terminal run
 ```
 ./build/test_lightssl server
@@ -21,7 +21,7 @@ In another teerminal run
 ./build/test_lightssl client
 ```
 
-# Use lightssl in your project
+### Use lightssl in your project
 ```c
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
-# Compile your project
+### Compile your project
 ```bash
 cp src/*.h ../newproj/src
 cp build/*.a ../newproj/src
