@@ -123,9 +123,7 @@ void lightcrypt_point_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret) {
     addend = point;
     while (key) {
       bigint_t *k1, *k2, *t;
-      big_init(&k1);
-      big_init(&k2);
-      big_init(&t);
+      big_init_m(3, &k1, &k2, &t);
       big_set("2", &t);
       big_mod(key, t, &k1);
       if (k1) {
@@ -134,9 +132,7 @@ void lightcrypt_point_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret) {
       lightcrypt_point_add(addend, addend, &addend);
       big_div(key, t, &k2);
       (*key) = (*k2);
-      big_end(&t);
-      big_end(&k2);
-      big_end(&k1);
+      big_end_m(3, &t, &k2, &k1);
     }
     assert(lightcrypt_oncurve(*ret));
   }
@@ -149,11 +145,7 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
   bigtup_t *m=NULL, *y12p=NULL, *cpp=NULL, *yp2p=NULL, *x12pp=NULL, *x12ppp=NULL;
   assert(lightcrypt_oncurve(point1));
   assert(lightcrypt_oncurve(point2));
-
-  big_init(&x1);
-  big_init(&x2);
-  big_init(&y1);
-  big_init(&y2);
+  big_init_m(4, &x1, &x2, &y1, &y2);
 
   (*x1) = *(*point1).p1;
   (*y1) = *(*point1).p2;
@@ -172,12 +164,7 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     bigint_t *y12, *yp2, *xx1, *xx3, *x3, *xx3ca, *cab;
     char *ca = NULL;
     sprintf(ca, "%d", curve_t.a);
-    big_init(&y12);
-    big_init(&x3);
-    big_init(&yp2);
-    big_init(&xx1);
-    big_init(&xx3);
-    big_init(&xx3ca);
+    big_init_m(6, &y12, &x3, &yp2, &xx1, &xx3, &xx3ca);
     big_set("3", &x3);
     big_set(ca, &cab);
     big_add(y1, y1, &y12); // 2*y1
@@ -189,18 +176,11 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     big_add(xx3, cab, &xx3ca);  //
     big_mul(xx3ca, yp2p->p1, &m->p1);
     big_mul(xx3ca, yp2p->p2, &m->p2);
-    big_end(&xx3ca);
-    big_end(&xx3);
-    big_end(&xx1);
-    big_end(&yp2);
-    big_end(&x3);
-    big_end(&y12);
+    big_end_m(6, &xx3ca, &xx3, &xx1, &yp2, &x3, &y12);
     // m = (3 * x1 * x1 + curve.a) * inverse_mod(2 * y1, curve.p)
   } else if ((*x1).dig != (*x2).dig) {
     bigint_t *y12, *x12, *x12p;
-    big_init(&y12);
-    big_init(&x12);
-    big_init(&x12p);
+    big_init_m(3, &y12, &x12, &x12p);
     big_sub(x1, x2, &x12);
     big_sub(y1, y2, &y12);
     (*x12pp).p1 = y12;
@@ -208,9 +188,7 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     lightcrypt_point_imd(x12pp, cpp, &x12ppp);
     big_mul(y12, x12ppp->p1, &m->p1);
     big_mul(y12, x12ppp->p2, &m->p2);
-    big_end(&x12p);
-    big_end(&x12);
-    big_end(&y12);
+    big_end_m(3, &x12p, &x12, &y12);
     // m = (y1 - y2) * inverse_mod(x1 - x2, curve.p)
   } else {
     bigint_t *x12;
@@ -236,12 +214,7 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     // y3 = y1 + m * (x3 - x1)
     // result = (x3 % curve.p, -y3 % curve.p)
   }
-
-  big_end(&y2);
-  big_end(&y1);
-  big_end(&x2);
-  big_end(&x1);
-
+  big_end_m(4, &y2, &y1, &x2, &y1);
   assert(lightcrypt_oncurve(*ret));
 }
 
@@ -253,8 +226,7 @@ void lightcrypt_point_neg(bigtup_t *point, bigtup_t **ret) {
     ret = NULL;
   } else {
     bigint_t *x, *y, *ycp;
-    big_init(&x);
-    big_init(&y);
+    big_init_m(3, &x, &y, &ycp);
     (*x) = *(*point).p1;
     (*y) = *(*point).p2;
 
@@ -264,8 +236,7 @@ void lightcrypt_point_neg(bigtup_t *point, bigtup_t **ret) {
     (*ret)->p2 = ycp;
 
     assert(lightcrypt_oncurve(*ret));
-    big_end(&y);
-    big_end(&x);
+    big_end_m(3, &ycp, &y, &x);
   }
 }
 
@@ -284,15 +255,7 @@ bool lightcrypt_oncurve(bigtup_t *point) {
   bool ret = false;
   char *ca = NULL, *cb = NULL;
   bigint_t *x, *y, *res, *res1, *resxx, *resyy, *resxxx, *bca, *bcb;
-  big_init(&x);
-  big_init(&y);
-  big_init(&res);
-  big_init(&res1);
-  big_init(&resxx);
-  big_init(&resyy);
-  big_init(&resxxx);
-  big_init(&bca);
-  big_init(&bcb);
+  big_init_m(9, &x, &y, &res, &res1, &resxx, &resyy, &resxxx, &bca, &bcb);
   if (point == NULL) {
     return true;
   }
@@ -316,15 +279,6 @@ bool lightcrypt_oncurve(bigtup_t *point) {
   if ((*res1).len == 1 && (*res1).dig[0] == 0) {
     ret = true;
   }
-
-  big_end(&bcb);
-  big_end(&bca);
-  big_end(&resxxx);
-  big_end(&resyy);
-  big_end(&resxx);
-  big_end(&res1);
-  big_end(&res);
-  big_end(&y);
-  big_end(&x);
+  big_end_m(9, &bcb, &bca, &resxxx, &resyy, &resxx, &res1, &res, &y, &x);
   return ret;
 }

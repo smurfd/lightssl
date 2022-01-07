@@ -9,33 +9,45 @@
 
 // TODO: obviously huge room for improvement
 // TODO: handle hex not just base 10
-// TODO: handle negative numbers
-// TODO: unlimited(...) arguments per op?
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
 //
 // Initialize a bigint
 void big_init(bigint_t **a) {
-  // TODO: init array of bigint_t?
-  // bigint_t *x1, *x2, *x3;
-  // void* arr[] = {*x1, *x2, *x3}
-  // big_init_m(arr);
   (*a) = malloc(sizeof(bigint_t));
   (*a)->neg = false;
 }
 
 //
+// Initialize several bigint
+void big_init_m(int len, ...) {
+  va_list valist;
+  va_start(valist, len);
+  for (int i=0; i<len; i++) {
+    big_init(va_arg(valist, bigint_t**));
+  }
+  va_end(valist);
+}
+
+//
 // Clear a bigint
 void big_end(bigint_t **a) {
-  // TODO: end array of bigint_t?
-  // bigint_t *x1, *x2, *x3;
-  // void* arr[] = {*x1, *x2, *x3}
-  // big_end_m(arr);
   if ((*a)->dig) {
     free((*a)->dig);
     free((*a));
   }
-} 
+}
+
+//
+// Clear several bigint
+void big_end_m(int len, ...) {
+  va_list valist;
+  va_start(valist, len);
+  for (int i=0; i<len; i++) {
+    big_end(va_arg(valist, bigint_t**));
+  }
+  va_end(valist);
+}
 
 //
 // Set a bigint from string
@@ -233,11 +245,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
 //
 // Bigint modulo
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
-  bigint_t *c;
-  big_init(&c);
-  bigint_t *d;
-  big_init(&d);
-  big_init(e);
+  bigint_t *c, *d;
+  big_init_m(3, &c, &d, e);
 
   c->len = (a->len > b->len ? a->len : b->len);
   c->dig = malloc(c->len * sizeof(int));
