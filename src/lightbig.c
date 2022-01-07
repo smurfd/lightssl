@@ -16,6 +16,10 @@
 //
 // Initialize a bigint
 void big_init(bigint_t **a) {
+  // TODO: init array of bigint_t?
+  // bigint_t *x1, *x2, *x3;
+  // void* arr[] = {*x1, *x2, *x3}
+  // big_init_m(arr);
   (*a) = malloc(sizeof(bigint_t));
   (*a)->neg = false;
 }
@@ -23,6 +27,10 @@ void big_init(bigint_t **a) {
 //
 // Clear a bigint
 void big_end(bigint_t **a) {
+  // TODO: end array of bigint_t?
+  // bigint_t *x1, *x2, *x3;
+  // void* arr[] = {*x1, *x2, *x3}
+  // big_end_m(arr);
   if ((*a)->dig) {
     free((*a)->dig);
     free((*a));
