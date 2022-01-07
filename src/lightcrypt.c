@@ -100,14 +100,121 @@ void lightcrypt_privkey(bigint_t **privkey) {
 //
 // Initialize public key
 void lightcrypt_pubkey(bigint_t *privkey, bigtup_t **pubkey) {
-  lightcrypt_scalar_mul(privkey, curve_t.g, pubkey);
+  lightcrypt_point_mul(privkey, curve_t.g, pubkey);
 }
 
-void lightcrypt_scalar_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret) {
-  assert(lightcrypt_oncurve(&point));
+//
+// Multiplication of points
+void lightcrypt_point_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret) {
+  bigint_t *kcn;
+  bigtup_t *addend;
+
+  assert(lightcrypt_oncurve(point));
+  big_init(&kcn);
+  big_mod(key, curve_t.n, &kcn);
+  if ((*kcn).dig[0] == 0 || point == NULL) {
+    ret = NULL;
+  } else if (key->neg == true) {
+    bigtup_t *npoint;
+    lightcrypt_point_neg(point, &npoint);
+    lightcrypt_point_mul(key, npoint, ret);
+  } else {
+    ret = NULL;
+    addend = point;
+    while (key) {
+      bigint_t *k1, *k2, *t;
+      big_init(&k1);
+      big_init(&k2);
+      big_init(&t);
+      big_set("2", &t);
+      big_mod(key, t, &k1);
+      if (k1) {
+        lightcrypt_point_add(*ret, addend, ret);
+      }
+      lightcrypt_point_add(addend, addend, &addend);
+      big_div(key, t, &k2);
+      (*key) = (*k2);
+      big_end(&t);
+      big_end(&k2);
+      big_end(&k1);
+    }
+    assert(lightcrypt_oncurve(*ret));
+  }
 }
 
-bool lightcrypt_oncurve(bigtup_t **p) {
+//
+// Add two points
+void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
+  bigint_t *x1, *x2, *y1, *y2;
+  assert(lightcrypt_oncurve(point1));
+  assert(lightcrypt_oncurve(point2));
+
+  big_init(&x1);
+  big_init(&x2);
+  big_init(&y1);
+  big_init(&y2);
+
+  (*x1) = *(*point1).p1;
+  (*y1) = *(*point1).p2;
+  (*x2) = *(*point2).p1;
+  (*y2) = *(*point2).p2;
+
+  if (point1 == NULL) {
+    (*ret) = point2;
+  } else if (point2 == NULL) {
+    (*ret) = point1;
+  } else if ((*x1).dig == (*x2).dig && !((*y1).dig == (*y2).dig)) {
+    (*ret) = NULL;
+  } else if ((*x1).dig == (*x2).dig) {
+    // m = (3 * x1 * x1 + curve.a) * inverse_mod(2 * y1, curve.p)
+  } else if ((*x1).dig != (*x2).dig) {
+    // m = (y1 - y2) * inverse_mod(x1 - x2, curve.p)
+  } else {
+    // x3 = m * m - x1 - x2
+    // y3 = y1 + m * (x3 - x1)
+    // result = (x3 % curve.p, -y3 % curve.p)
+  }
+  big_end(&y2);
+  big_end(&y1);
+  big_end(&x2);
+  big_end(&x1);
+
+  assert(lightcrypt_oncurve(ret));
+}
+
+//
+// Negate the point
+void lightcrypt_point_neg(bigtup_t *point, bigtup_t **ret) {
+  assert(lightcrypt_oncurve(point));
+  if (point == NULL) {
+    ret = NULL;
+  } else {
+    bigint_t *x, *y, *ycp;
+    big_init(&x);
+    big_init(&y);
+    (*x) = *(*point).p1;
+    (*y) = *(*point).p2;
+
+    (*ret)->p1 = x;
+    (*y).neg = true;
+    big_mod(y, curve_t.p, &ycp);
+    (*ret)->p2 = ycp;
+
+    assert(lightcrypt_oncurve(*ret));
+    big_end(&y);
+    big_end(&x);
+  }
+}
+
+//
+// Inverse modulo
+void lightcrypt_point_imd(bigtup_t *key, bigtup_t *point, bigtup_t **ret) {
+
+}
+
+//
+// Check if point is on curve
+bool lightcrypt_oncurve(bigtup_t *point) {
   bool ret = false;
   char *ca = NULL, *cb = NULL;
   bigint_t *x, *y, *res, *res1, *resxx, *resyy, *resxxx, *bca, *bcb;
@@ -120,11 +227,11 @@ bool lightcrypt_oncurve(bigtup_t **p) {
   big_init(&resxxx);
   big_init(&bca);
   big_init(&bcb);
-  if ((*p) == NULL) {
+  if (point == NULL) {
     return true;
   }
-  (*p)->p1 = &(*x);
-  (*p)->p2 = &(*y);
+  (*x) = *(*point).p1;
+  (*y) = *(*point).p2;
   sprintf(ca, "%d", curve_t.a);
   sprintf(cb, "%d", curve_t.b);
   big_set(ca, &bca);
@@ -153,8 +260,5 @@ bool lightcrypt_oncurve(bigtup_t **p) {
   big_end(&res);
   big_end(&y);
   big_end(&x);
-  // Python
-  //x, y = point
-  // return (((y * y) - ((x * x) * x)) - (curve.a * x) - curve.b) % curve.p == 0
   return ret;
 }

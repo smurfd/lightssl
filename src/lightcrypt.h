@@ -47,6 +47,9 @@ void lightcrypt_rand(bigint_t **p);
 void lightcrypt_rand_t(bigtup_t **p);
 void lightcrypt_privkey(bigint_t **privkey);
 void lightcrypt_pubkey(bigint_t *privkey, bigtup_t **pubkey);
-void lightcrypt_scalar_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret);
-bool lightcrypt_oncurve(bigtup_t **p);
+void lightcrypt_point_mul(bigint_t *key, bigtup_t *point, bigtup_t **ret);
+void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret);
+void lightcrypt_point_neg(bigtup_t *point, bigtup_t **ret);
+void lightcrypt_point_imd(bigtup_t *key, bigtup_t *point, bigtup_t **ret);
+bool lightcrypt_oncurve(bigtup_t *point);
 #endif
