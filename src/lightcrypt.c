@@ -177,7 +177,6 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     big_mul(xx3ca, yp2p->p1, &m->p1);
     big_mul(xx3ca, yp2p->p2, &m->p2);
     big_end_m(6, &xx3ca, &xx3, &xx1, &yp2, &x3, &y12);
-    // m = (3 * x1 * x1 + curve.a) * inverse_mod(2 * y1, curve.p)
   } else if ((*x1).dig != (*x2).dig) {
     bigint_t *y12, *x12, *x12p;
     big_init_m(3, &y12, &x12, &x12p);
@@ -189,7 +188,6 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     big_mul(y12, x12ppp->p1, &m->p1);
     big_mul(y12, x12ppp->p2, &m->p2);
     big_end_m(3, &x12p, &x12, &y12);
-    // m = (y1 - y2) * inverse_mod(x1 - x2, curve.p)
   } else {
     bigint_t *x12;
     bigtup_t *mm=NULL, *x3=NULL, *y3=NULL, *x31=NULL, *y1m=NULL;
@@ -210,9 +208,6 @@ void lightcrypt_point_add(bigtup_t *point1, bigtup_t *point2, bigtup_t **ret) {
     big_mod(x3->p1, curve_t.p, &(*ret)->p1);
     big_mod(y3->p1, curve_t.p, &(*ret)->p2);
     big_end(&x12);
-    // x3 = m * m - x1 - x2
-    // y3 = y1 + m * (x3 - x1)
-    // result = (x3 % curve.p, -y3 % curve.p)
   }
   big_end_m(4, &y2, &y1, &x2, &y1);
   assert(lightcrypt_oncurve(*ret));
@@ -243,10 +238,84 @@ void lightcrypt_point_neg(bigtup_t *point, bigtup_t **ret) {
 //
 // Inverse modulo
 void lightcrypt_point_imd(bigtup_t *key, bigtup_t *point, bigtup_t **ret) {
-  bigtup_t *t1=NULL, *t2=NULL, *t3=NULL; // tmp to avoid warnings
-  t1=key;
-  t2=point;
-  ret=&t3;
+  if (key->p1->dig[0] == 0 && key->p2->dig[0] == 0) {
+    // Should never happen, division by zero is bad
+  }
+
+  if (key->p1->neg || key->p2->neg) {
+    bigtup_t *r = NULL;
+    big_init(&r->p1);
+    big_init(&r->p2);
+    key->p1->neg = true;
+    key->p2->neg = true;
+    lightcrypt_point_imd(key, point, &r);
+    big_sub(point->p1, r->p1, &(*ret)->p1);
+    big_sub(point->p2, r->p2, &(*ret)->p2);
+    big_end(&r->p2);
+    big_end(&r->p1);
+  } else {
+    bigtup_t *r = NULL, *s = NULL, *t = NULL, *or = NULL, *os = NULL, *ot = NULL;
+    big_set("0", &(*s).p1);
+    big_set("0", &(*s).p2);
+    big_set("1", &(*os).p1);
+    big_set("1", &(*os).p2);
+
+    big_set("1", &(*t).p1);
+    big_set("1", &(*t).p2);
+    big_set("0", &(*ot).p1);
+    big_set("0", &(*ot).p2);
+
+    (*r).p1 = (*point).p1;
+    (*r).p2 = (*point).p2;
+    (*or).p1 = (*key).p1;
+    (*or).p2 = (*key).p2;
+
+    while(r->p1->dig[0] != 0 && r->p2->dig[0] != 0) {
+      bigtup_t *q = NULL, *qr = NULL, *qs = NULL, *qt = NULL, *ort = NULL, *ost = NULL, *ott = NULL, *rt = NULL, *st = NULL, *tt = NULL;
+      big_div(or->p1, r->p1, &q->p1);
+      big_div(or->p2, r->p2, &q->p2);
+      (*ort) = (*or);
+      (*ost) = (*os);
+      (*ott) = (*ot);
+      (*rt) = (*r);
+      (*st) = (*s);
+      (*tt) = (*t);
+
+      (*or) = (*r);
+      (*os) = (*s);
+      (*ot) = (*t);
+
+      big_mul(q->p1, rt->p1, &qr->p1);
+      big_mul(q->p2, rt->p2, &qr->p2);
+      big_mul(q->p1, st->p1, &qs->p1);
+      big_mul(q->p2, st->p2, &qs->p2);
+      big_mul(q->p1, tt->p1, &qt->p1);
+      big_mul(q->p2, tt->p2, &qt->p2);
+
+      big_sub(ort->p1, qr->p1, &r->p1);
+      big_sub(ort->p2, qr->p2, &r->p2);
+      big_sub(ost->p1, qs->p1, &s->p1);
+      big_sub(ost->p2, qs->p2, &s->p2);
+      big_sub(ott->p1, qt->p1, &t->p1);
+      big_sub(ott->p2, qt->p2, &t->p2);
+    }
+    bigtup_t *rr = NULL, *ss = NULL, *tt = NULL, *kss = NULL, *kssp = NULL;
+    (*rr) = (*or);
+    (*ss) = (*os);
+    (*tt) = (*ot);
+    assert(rr->p1->dig[0] == 1);
+    assert(rr->p2->dig[0] == 1);
+
+    big_mul(key->p1, ss->p1, &kss->p1);
+    big_mul(key->p2, ss->p2, &kss->p2);
+    big_mod(kss->p1, point->p1, &kssp->p1);
+    big_mod(kss->p2, point->p2, &kssp->p2);
+    assert(kssp->p1->dig[0] == 1);
+    assert(kssp->p2->dig[0] == 1);
+
+    big_mod(ss->p1, point->p1, &(*ret)->p1);
+    big_mod(ss->p2, point->p2, &(*ret)->p2);
+  }
 }
 
 //
