@@ -26,4 +26,5 @@ void big_print(bigint_t **a);
 
 void big_init_m(int len, ...);
 void big_end_m(int len, ...);
+void big_set_m(int len, ...);
 #endif

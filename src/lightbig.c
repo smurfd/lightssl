@@ -50,6 +50,17 @@ void big_end_m(int len, ...) {
 }
 
 //
+// Set several bigint
+void big_set_m(int len, ...) {
+  va_list valist;
+  va_start(valist, len);
+  for (int i=0; i<len; i++) {
+    big_set("", va_arg(valist, bigint_t**));
+  }
+  va_end(valist);
+}
+
+//
 // Set a bigint from string
 void big_set(char *a, bigint_t **b) {
   big_init(b);
