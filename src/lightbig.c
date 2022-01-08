@@ -255,7 +255,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   (*e)->len = (a->len > b->len ? a->len : b->len);
   (*e)->dig = malloc((*e)->len * sizeof(int));
 
-  big_div(a, b, &c);
+  big_div(a, b, &c); // endless loop here when run from crypt
   big_mul(b, c, &d);
   big_sub(a, d, e);
 
