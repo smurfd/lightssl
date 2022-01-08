@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: install dep
+      run: apt update && apt install meson
     - name: meson build
       run: meson build
     - name: cd build
