@@ -407,11 +407,10 @@ bool lightcrypt_oncurve(struct curve *cur, bigtup_t *point) {
   big_sub(res1, bcb, &resyy);    // (((y*y)-((x*x)*x))-(curve.a*x)-curve.b)
   big_print(&resyy);
   big_print(&cur->p);
-  printf("endless loop next step... why?\n");
   big_mod(resyy, cur->p, &res1); // % curve.p
   if ((*res1).len == 1 && (*res1).dig[0] == 0) {
     ret = true;
   }
-  big_end_m(9, &bcb, &bca, &resxxx, &resyy, &resxx, &res1, &res, &y, &x);
+  //big_end_m(9, &bcb, &bca, &resxxx, &resyy, &resxx, &res1, &res, &y, &x);
   return ret;
 }

@@ -32,8 +32,10 @@ void big_init_m(int len, ...) {
 //
 // Clear a bigint
 void big_end(bigint_t **a) {
-  if ((*a)->dig) {
+  if ((*a)->dig != NULL) {
     free((*a)->dig);
+  }
+  if ((*a) != NULL) {
     free((*a));
   }
 }
@@ -163,7 +165,7 @@ void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
     i--;
   }
 
-  while((*c)->dig[0] == 0) {
+  while((*c)->dig[0] == 0 && (*c)->len >= 0) {
     (*c)->len--;
     (*c)->dig++;
   }
@@ -215,26 +217,26 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
 
 //
 // Bigint division
-void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
-  bigint_t *c;
+void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
+  bigint_t *c, *e, *f;
   big_init(&c);
+  big_init(&e);
+  big_init(&f);
   big_init(d);
   char *str;
-  int co = 0;
+  uint64_t co = 0;
 
   c->len = (a->len > b->len ? a->len : b->len);
   c->dig = malloc(c->len * sizeof(int));
-  int i = a->len - 1;
-  int j = b->len - 1;
-  int k = c->len - 1;
 
+  big_set_m(2, &e, &f);
   big_set(big_get(a), &c);
+  big_set(big_get(a), &f);
   c->neg = false;
   while (c->len >= b->len && c->neg == false) {
-    big_sub(c, b, &c);
-    i--;
-    j--;
-    k--;
+    big_set_m(1, &e);
+    big_sub(c, b, &e);
+    (*c) = (*e);
     if(c->dig[0] == 0) {
       c->len--;
       c->dig++;
@@ -245,12 +247,70 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   if (c->neg == true) {
      co--;
   }
-  str = (char*) malloc(sizeof(int));
-  sprintf(str, "%d", co);
+  str = (char*) malloc(sizeof(uint64_t));
+  sprintf(str, "%llu", co);
   big_set(str, d);
   if (str) {
     free(str);
   }
+}
+
+void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
+  int len = strlen(big_get(a))-strlen(big_get(b));
+  bigint_t *c, *e, *w, *res;
+  big_init_m(4, &c, &e, &w, &res);
+  big_set_m(4, &c, &e, &w, &res);
+  (*c) = (*a);
+  (*e) = (*b);
+  (*w) = (*c);
+  for (int i=0; i<len; i++) {
+    (*e) = (*b);
+    int len1 = strlen(big_get(c));
+    int len2 = strlen(big_get(e));
+    int len3 = len1-len2-1;
+    if (len3 > 0) {
+      char *cc = malloc(2568);
+      strcpy(cc, big_get(e));
+      if (len1 >= len3 + 4) {
+        len3 = len1-4;
+      }
+      for (int j=0; j<=len3; j++) {
+        cc[len2+j] = '0';
+      }
+      cc[len3+1] = '\0';
+      big_set(cc, &e);
+      bigint_t *v, *x, *y, *z, *f;
+      big_init_m(5, &v, &x, &y, &z, &f);
+      big_set_m(5, &v, &x, &y, &z, &f);
+      (*w) = (*c);
+      (*x) = (*e);
+      big_div_x(w, x, &y);
+      char *ccc = malloc(12048);
+      strcpy(ccc, big_get(y));
+      (*res).dig[i] = ccc[0]-'0';
+      (*res).len = i+1;
+      big_mul(x, y, &z);
+      big_set(big_get(w), &f);
+      big_sub(w, z, &v);
+      (*c) = (*v);
+      free(ccc);
+      free(cc);
+    } else {
+      bigint_t *ff;
+      big_init_m(1, &ff);
+      big_set_m(1, &ff);
+      big_set(big_get(c), &ff);
+      big_div_x(ff, b, d);
+      (*res).len = i+1;
+      for (uint64_t j=0; j<strlen(big_get(*d)); j++) {
+        (*res).dig[i+j] = (*d)->dig[j];
+        (*res).len = i+1+j;
+      }
+      big_end_m(1, &ff);
+      break;
+    }
+  }
+  (*d) = &(*res);
 }
 
 //
@@ -266,7 +326,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   (*e)->len = (a->len > b->len ? a->len : b->len);
   (*e)->dig = malloc((*e)->len * sizeof(int));
 
-  big_div(a, b, &c); // endless loop here when run from crypt
+  big_div(a, b, &c);
   big_mul(b, c, &d);
   big_sub(a, d, e);
 
