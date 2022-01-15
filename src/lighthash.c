@@ -15,6 +15,7 @@ extern u64 sha_init[BYTE];
 char* lighthash_new(const char* in) {
   b08 digest[DIGEST_SIZE];
   char* buf;
+
   memset(digest,0,DIGEST_SIZE);
   buf = (char*) malloc(2 * DIGEST_SIZE + 1);
   buf[2 * DIGEST_SIZE] = 0;
@@ -32,7 +33,7 @@ char* lighthash_new(const char* in) {
 //
 // Initialize
 void lighthash_init() {
-  for (int i=0; i<BYTE; i++) {
+  for (int i = 0; i < BYTE; i++) {
     m_h[i] = sha_init[i];
   }
   m_len = 0;
@@ -42,9 +43,9 @@ void lighthash_init() {
 //
 // Update
 void lighthash_update(const b08 *msg, u08 len) {
-  u08 block_nb;
-  u08 new_len, rem_len, tmp_len;
+  u08 block_nb, new_len, rem_len, tmp_len;
   const b08 *shifted_message;
+
   tmp_len = SHA512_BLOCK_SIZE - m_len;
   rem_len = len < tmp_len ? len : tmp_len;
   memcpy(&m_block[m_len], msg, rem_len);
@@ -67,9 +68,8 @@ void lighthash_update(const b08 *msg, u08 len) {
 //
 // Finalize
 void lighthash_finalize(b08 *digest) {
-  u08 block_nb;
-  u08 pm_len;
-  u08 len_b;
+  u08 block_nb, pm_len, len_b;
+
   block_nb = 1 + ((SHA512_BLOCK_SIZE - 17) < (m_len % SHA512_BLOCK_SIZE));
   len_b = (m_tot_len + m_len) << 3;
   pm_len = block_nb << 7;
@@ -90,7 +90,8 @@ void lighthash_transform(const b08 *msg, u08 blocknb) {
   u64 wv[BYTE];
   u64 t1, t2;
   const b08 *sub_block;
-  for (int i = 0; i < (int) blocknb; i++) {
+
+  for (int i = 0; i < (int)blocknb; i++) {
     sub_block = msg + (i << 7);
     for (int j = 0; j < 16; j++) {
       SHA2_PACK64(&sub_block[j << 3], &w[j]);
@@ -114,7 +115,7 @@ void lighthash_transform(const b08 *msg, u08 blocknb) {
       wv[0] = t1 + t2;
     }
     for (int j = 0; j < BYTE; j++) {
-       m_h[j] += wv[j];
+      m_h[j] += wv[j];
     }
   }
 }

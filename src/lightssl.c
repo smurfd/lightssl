@@ -48,7 +48,7 @@ void *lightssl_srv_handler(void *sdesc) {
   struct hello *hs_srv;
   struct hello *hs_cli_recv;
 
-  if (s==-1) {
+  if (s == -1) {
     return (void*)-1;
   }
 
@@ -73,13 +73,15 @@ int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
   int csock = 1;
   int *new_sock;
   int c = sizeof(struct sockaddr_in);
+
   listen(ssock, 3);
-  while(csock >= 1) {
+  while (csock >= 1) {
     csock = accept(ssock, (struct sockaddr*)&cli, (socklen_t*)&c);
     pthread_t sniffer_thread;
     new_sock = (int*)malloc(sizeof *new_sock);
     *new_sock = csock;
-    if (pthread_create(&sniffer_thread, NULL, lightssl_srv_handler, (void*)new_sock) < 0) {
+    if (pthread_create(&sniffer_thread, NULL, lightssl_srv_handler,
+        (void*)new_sock) < 0) {
       printf("error\n");
       return -1;
     }
@@ -103,14 +105,14 @@ void lightssl_srv_recv(int csock, char **data) {
 //
 // Initialize Client
 int lightssl_cli_init(const char *host, const char *port) {
-  int csock = socket(AF_INET, SOCK_STREAM, 0);
+  int cs, csock = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in saddr;
 
   saddr.sin_family = AF_INET;
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
 
-  int cs = connect(csock, (struct sockaddr*)&saddr, sizeof(saddr));
+  cs = connect(csock, (struct sockaddr*)&saddr, sizeof(saddr));
   if (cs < 0) {
     printf("Connection error\n");
     exit(1);
@@ -139,7 +141,7 @@ void lightssl_cli_end(int csock) {
 //
 // Set hello message
 struct hello* lightssl_hs_set_hello(struct hello *hi, bool srv, int tls,
-  u64 r, b08 avail[], b08 sel[], b08 c, u64 sess) {
+    u64 r, b08 avail[], b08 sel[], b08 c, u64 sess) {
   hi->server = srv;
   hi->tls_v = tls; // will be 4 = TLS1.3
   hi->rnd = r;
@@ -168,6 +170,7 @@ b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
 // Receive Handshake hello message
 struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi) {
   int r, r_tot;
+
   if (srv) {
     printf("Receiving Hello from client\n");
   } else {
@@ -175,10 +178,12 @@ struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi) {
   }
   r_tot = 0;
   r = 0;
-  while((u64)r_tot < sizeof(struct hello)) {
+  while ((u64)r_tot < sizeof(struct hello)) {
     r = recv(csock, hi, sizeof(struct hello), 0);
-    if(r==-1) break;
-    if (r>0) {
+    if (r == -1) {
+      break;
+    }
+    if (r > 0) {
       r_tot = r_tot + r;
     }
   }
