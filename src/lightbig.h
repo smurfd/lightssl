@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 
-#define BIGLEN 2048
+#define BIGLEN 12048
 
 typedef struct {
   int *dig;

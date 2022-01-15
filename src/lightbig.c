@@ -9,6 +9,8 @@
 
 // TODO: obviously huge room for improvement
 // TODO: handle hex not just base 10
+// TODO: sometimes malloc error when 1st run after build
+// TODO: free()
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
 //
@@ -89,7 +91,7 @@ void big_set(char *a, bigint_t **b) {
 //
 // Get string from bigint
 char *big_get(bigint_t *a) {
-  char *b = malloc(a->len * sizeof(char));
+  char *b = malloc(BIGLEN);
   for(int i = 0; i < a->len; i++) {
     b[i] = a->dig[i] + '0';
   }
@@ -256,6 +258,7 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
 }
 
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
+  int len123=0;
   int len = strlen(big_get(a))-strlen(big_get(b));
   bigint_t *c, *e, *w, *res;
   big_init_m(4, &c, &e, &w, &res);
@@ -263,13 +266,14 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   (*c) = (*a);
   (*e) = (*b);
   (*w) = (*c);
+
   for (int i=0; i<len; i++) {
     (*e) = (*b);
     int len1 = strlen(big_get(c));
     int len2 = strlen(big_get(e));
     int len3 = len1-len2-1;
     if (len3 > 0) {
-      char *cc = malloc(2568);
+      char *cc = malloc(BIGLEN);
       strcpy(cc, big_get(e));
       if (len1 >= len3 + 4) {
         len3 = len1-4;
@@ -285,16 +289,46 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
       (*w) = (*c);
       (*x) = (*e);
       big_div_x(w, x, &y);
-      char *ccc = malloc(12048);
+      char *ccc = malloc(BIGLEN);
       strcpy(ccc, big_get(y));
-      (*res).dig[i] = ccc[0]-'0';
-      (*res).len = i+1;
+      int clen = strlen(ccc);
+      for (int k=0; k<clen;k++) {
+        if (i == 0 && clen > 1) {
+          for (uint64_t l=0;l<strlen(ccc);l++)
+            (*res).dig[l] = ccc[l]-'0';
+          (*res).len = strlen(ccc);
+          len123 = strlen(ccc);
+          break;
+        } else if (clen > 1) {
+          bigint_t *tmp = NULL, *tmp2 = NULL;
+          big_init_m(2, &tmp, &tmp2);
+          char *ccc1 = malloc(BIGLEN);
+          strcpy(ccc1, big_get(res));
+          if (clen > 3 && i > 1) {
+            ccc1[clen] = '0';
+            ccc1[clen+1] = '\0';
+          }
+          big_set(ccc1, &tmp);
+          big_set(ccc, &tmp2);
+          big_add(tmp2, tmp, &res);
+          if ((*res).dig[len123] == 0) {
+             len123--;
+             (*res).len = len123+1;
+          }
+          break;
+        } else {
+          (*res).dig[len123] = ccc[k]-'0';
+        }
+      }
+      (*res).len = len123;
       big_mul(x, y, &z);
       big_set(big_get(w), &f);
       big_sub(w, z, &v);
       (*c) = (*v);
-      free(ccc);
-      free(cc);
+      (*w) = (*f);
+      len123++;
+      //free(ccc);
+      //free(cc);
     } else {
       bigint_t *ff;
       big_init_m(1, &ff);
