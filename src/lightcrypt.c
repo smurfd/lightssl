@@ -16,15 +16,13 @@
 //
 // Initialize crypt
 void lightcrypt_init() {
-  bigint_t *priv;
+  bigint_t *priv, *a;
   bigtup_t *publ = NULL;
   char *s = malloc(512);
-  struct curve *c = malloc(sizeof(struct curve));
+  struct curve *c = malloc(sizeof(struct curve)*BIGLEN);
 
   c->g = malloc(sizeof(bigtup_t));
-  bigint_t *a;
-  big_init(&(c->p));
-  big_init(&(c->n));
+  big_init_m(2, &(c->p), &(c->n));
 
   big_init(&a);
   // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
@@ -55,31 +53,26 @@ void lightcrypt_init() {
   (*c).b = 7;
   (*c).h = 1;
 
-  big_print(&(*c).p);
-  big_print(&(*c).g->p1);
-  big_print(&(*c).g->p2);
-  big_print(&(*c).n);
   lightcrypt_rand_t(&(*c).g);
-
-  big_print(&(*c).g->p1);
-  big_print(&(*c).g->p2);
   big_init(&priv);
-  big_set("", &priv);
+  big_set_m(1, &priv);
   lightcrypt_init_t(&publ);
   lightcrypt_privkey(&priv);
-  big_print(&priv);
 
+  printf("------ \n");
   lightcrypt_pubkey(&(*c), priv, &publ);
+  printf("------ \n");
+  printf("priv: %s\n", big_get(priv));
   lightcrypt_end_t(&publ);
   big_end(&priv);
   big_end(&a);
-  if (c) {
-    free(c);
-  }
-  if (c->g) {
+  if (c->g != NULL) {
     free(c->g);
   }
-  if (s) {
+  if (c != NULL) {
+    free(c);
+  }
+  if (s != NULL) {
     free(s);
   }
 }
@@ -90,7 +83,9 @@ void lightcrypt_init_t(bigtup_t **p) {
 }
 
 void lightcrypt_end_t(bigtup_t **p) {
-  free((*p));
+  if ((*p) != NULL) {
+    free((*p));
+  }
 }
 
 void lightcrypt_init_t_m(int len, ...) {
@@ -159,10 +154,10 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
   bigtup_t *addend=NULL;
 
   lightcrypt_init_t(&addend);
-  assert(lightcrypt_oncurve(cur, point));
+  //assert(lightcrypt_oncurve(cur, point));
   big_init(&kcn);
   big_set("", &kcn);
-  big_mod(key, cur->n, &kcn); // this causes endless loop?
+  big_mod(key, cur->n, &kcn);
   if ((*kcn).dig[0] == 0 || point == NULL) {
     ret = NULL;
   } else if (key->neg == true) {
@@ -170,7 +165,7 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
     lightcrypt_init_t(&npoint);
     lightcrypt_point_neg(cur, point, &npoint);
     lightcrypt_point_mul(cur, key, npoint, ret);
-    lightcrypt_end_t(&npoint);
+    //lightcrypt_end_t(&npoint);
   } else {
     ret = NULL;
     addend = point;
@@ -180,17 +175,26 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
       big_set_m(2, &k1, &k2);
       big_set("2", &t);
       big_mod(key, t, &k1);
+
       if (k1) {
-        lightcrypt_point_add(cur, *ret, addend, ret);
+        bigtup_t *r = NULL;
+        lightcrypt_init_t_m(1, &r);
+        if (ret != NULL) {
+          (*r) = *(*ret);
+        }
+        lightcrypt_point_add(cur, r, addend, ret);
       }
-      lightcrypt_point_add(cur, addend, addend, &addend);
+      bigtup_t *ad = NULL;
+      lightcrypt_init_t_m(1, &ad);
+      lightcrypt_point_add(cur, addend, addend, &ad);
       big_div(key, t, &k2);
       (*key) = (*k2);
-      big_end_m(3, &t, &k2, &k1);
+      addend = ad;
+      //big_end_m(3, &t, &k2, &k1);
     }
     assert(lightcrypt_oncurve(cur, *ret));
   }
-  lightcrypt_end_t(&addend);
+  //lightcrypt_end_t(&addend);
 }
 
 //
@@ -201,7 +205,7 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
   bigtup_t *m=NULL, *y12p=NULL, *cpp=NULL, *yp2p=NULL, *x12pp=NULL, *x12ppp=NULL;
 
   assert(lightcrypt_oncurve(cur, point1));
-  assert(lightcrypt_oncurve(cur, point2));
+  //assert(lightcrypt_oncurve(cur, point2));
   big_init_m(4, &x1, &x2, &y1, &y2);
   lightcrypt_init_t_m(6, &m, &y12p, &cpp, &yp2p, &x12pp, &x12ppp);
   big_set_m(4, &x1, &x2, &y1, &y2);
@@ -212,16 +216,16 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
   (*y2) = *(*point2).p2;
   (*cpp).p1 = curve_t.p;
   (*cpp).p2 = NULL;
-
   if (point1 == NULL) {
     (*ret) = point2;
   } else if (point2 == NULL) {
     (*ret) = point1;
-  } else if ((*x1).dig == (*x2).dig && !((*y1).dig == (*y2).dig)) {
+  } else if (memcmp((*x1).dig, (*x2).dig, sizeof(int)) == 0 &&
+      memcmp((*y1).dig, (*y2).dig, sizeof(int)) != 0) {
     (*ret) = NULL;
-  } else if ((*x1).dig == (*x2).dig) {
+  } else if (memcmp((*x1).dig, (*x2).dig, sizeof(int))==0) {
     bigint_t *y12, *yp2, *xx1, *xx3, *x3, *xx3ca, *cab;
-    char *ca = NULL;
+    char *ca = (char*) malloc(500);
 
     sprintf(ca, "%d", cur->a);
     big_init_m(6, &y12, &x3, &yp2, &xx1, &xx3, &xx3ca);
@@ -237,7 +241,7 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
     big_add(xx3, cab, &xx3ca);  //
     big_mul(xx3ca, yp2p->p1, &m->p1);
     big_mul(xx3ca, yp2p->p2, &m->p2);
-    big_end_m(6, &xx3ca, &xx3, &xx1, &yp2, &x3, &y12);
+    //big_end_m(6, &xx3ca, &xx3, &xx1, &yp2, &x3, &y12);
   } else if ((*x1).dig != (*x2).dig) {
     bigint_t *y12, *x12, *x12p;
 
@@ -250,7 +254,7 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
     lightcrypt_point_imd(cur, x12pp, cpp, &x12ppp);
     big_mul(y12, x12ppp->p1, &m->p1);
     big_mul(y12, x12ppp->p2, &m->p2);
-    big_end_m(3, &x12p, &x12, &y12);
+    //big_end_m(3, &x12p, &x12, &y12);
   } else {
     bigint_t *x12;
     bigtup_t *mm=NULL, *x3=NULL, *y3=NULL, *x31=NULL, *y1m=NULL;
@@ -274,10 +278,10 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
     big_mod(x3->p1, cur->p, &(*ret)->p1);
     big_mod(y3->p1, cur->p, &(*ret)->p2);
     lightcrypt_end_t_m(5, &mm, &x3, &y3, &x31, &y1m);
-    big_end(&x12);
+    //big_end(&x12);
   }
-  lightcrypt_end_t_m(6, &m, &y12p, &cpp, &yp2p, &x12pp, &x12ppp);
-  big_end_m(4, &y2, &y1, &x2, &y1);
+  //lightcrypt_end_t_m(6, &m, &y12p, &cpp, &yp2p, &x12pp, &x12ppp);
+  //big_end_m(4, &y2, &y1, &x2, &y1);
   assert(lightcrypt_oncurve(cur, *ret));
 }
 
@@ -301,7 +305,7 @@ void lightcrypt_point_neg(struct curve *cur, bigtup_t *point, bigtup_t **ret) {
     (*ret)->p2 = ycp;
 
     assert(lightcrypt_oncurve(cur, *ret));
-    big_end_m(3, &ycp, &y, &x);
+//    big_end_m(3, &ycp, &y, &x);
   }
 }
 
@@ -310,15 +314,23 @@ void lightcrypt_point_neg(struct curve *cur, bigtup_t *point, bigtup_t **ret) {
 void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
     bigtup_t **ret) {
   if (key->p1->dig[0] == 0 && key->p2->dig[0] == 0) {
+    printf("ZAROOOO DIVISION\n");
     // Should never happen, division by zero is bad
+  }
+
+  if (key->p1 == NULL) {
+  } else {
+    key->p1->neg = true;
+  }
+  if (key->p2 == NULL) {
+  } else {
+    key->p2->neg = true;
   }
 
   if (key->p1->neg || key->p2->neg) {
     bigtup_t *r = NULL;
 
     lightcrypt_init_t_m(1, &r);
-    key->p1->neg = true;
-    key->p2->neg = true;
     lightcrypt_point_imd(cur, key, point, &r);
     big_sub(point->p1, r->p1, &(*ret)->p1);
     big_sub(point->p2, r->p2, &(*ret)->p2);
@@ -342,9 +354,8 @@ void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
     (*or).p2 = (*key).p2;
 
     while (r->p1->dig[0] != 0 && r->p2->dig[0] != 0) {
-      bigtup_t *q = NULL, *qr = NULL, *qs = NULL, *qt = NULL, *ort = NULL,
-          *ost = NULL;
-      bigtup_t *ott = NULL, *rt = NULL, *st = NULL, *tt = NULL;
+      bigtup_t *q = NULL, *qr = NULL, *qs = NULL, *qt = NULL, *ort = NULL;
+      bigtup_t *ott = NULL, *rt = NULL, *st = NULL, *tt = NULL, *ost = NULL;
 
       lightcrypt_init_t_m(10, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
       big_div(or->p1, r->p1, &q->p1);
@@ -373,7 +384,7 @@ void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
       big_sub(ost->p2, qs->p2, &s->p2);
       big_sub(ott->p1, qt->p1, &t->p1);
       big_sub(ott->p2, qt->p2, &t->p2);
-      lightcrypt_end_t_m(10, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
+//      lightcrypt_end_t_m(10, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
     }
     bigtup_t *rr = NULL, *ss = NULL, *tt = NULL, *kss = NULL, *kssp = NULL;
 
@@ -393,8 +404,8 @@ void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
 
     big_mod(ss->p1, point->p1, &(*ret)->p1);
     big_mod(ss->p2, point->p2, &(*ret)->p2);
-    lightcrypt_end_t_m(5, &rr, &ss, &tt, &kss, &kssp);
-    lightcrypt_end_t_m(6, &r, &s, &t, &or, &os, &ot);
+//    lightcrypt_end_t_m(5, &rr, &ss, &tt, &kss, &kssp);
+//    lightcrypt_end_t_m(6, &r, &s, &t, &or, &os, &ot);
   }
 }
 
@@ -410,8 +421,14 @@ bool lightcrypt_oncurve(struct curve *cur, bigtup_t *point) {
   if (point == NULL) {
     return true;
   }
-  (*x) = *(*point).p1;
-  (*y) = *(*point).p2;
+  if ((*point).p1 == NULL||(*point).p2 == NULL) {
+    return true;
+  }
+  if (strcmp("0", big_get((*point).p1)) == 0||strcmp("0", big_get((*point).p2)) == 0) {
+    return true;
+  }
+  (*x) = *(*point).p1; // x or y seeems to be zero/null
+  (*y) = *(*point).p2; //
   ca = malloc(512);
   cb = malloc(512);
   sprintf(ca, "%d", cur->a);
@@ -422,16 +439,16 @@ bool lightcrypt_oncurve(struct curve *cur, bigtup_t *point) {
   big_mul(x, resxx, &resxxx);    // (x*x)*x
   big_mul(y, y, &resyy);         // y*y
   big_sub(resyy, resxxx, &res);  // ((y*y)-((x*x)*x))
-
   big_mul(bca, x, &resxx);       // curve.a*x
+
   big_sub(res, resxx, &res1);    // ((y*y)-((x*x)*x))-(curve.a*x)
   big_sub(res1, bcb, &resyy);    // (((y*y)-((x*x)*x))-(curve.a*x)-curve.b)
-  big_print(&resyy);
-  big_print(&cur->p);
   big_mod(resyy, cur->p, &res1); // % curve.p
   if ((*res1).len == 1 && (*res1).dig[0] == 0) {
     ret = true;
   }
-  big_end_m(9, &bcb, &bca, &resxxx, &resyy, &resxx, &res1, &res, &y, &x);
+  if (cb) free(cb);
+  if (ca) free(ca);
+  //big_end_m(9, &bcb, &bca, &resxxx, &resyy, &resxx, &res1, &res, &y, &x);
   return ret;
 }
