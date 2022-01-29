@@ -104,9 +104,13 @@ void big_set(char *a, bigint_t **b) {
 // Get string from bigint
 char *big_get(bigint_t *a) {
   char *b = malloc(BIGLEN);
-
+  int mod = 0;
+  if (a->neg == true) {
+    mod = 1;
+    b[0] = '-';
+  }
   for (int i = 0; i < a->len; i++) {
-    b[i] = a->dig[i] + '0';
+    b[i+mod] = a->dig[i] + '0';
   }
   return b;
 }
@@ -234,7 +238,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     } else if (b->len > a->len) {
       (*d).len = b->len;
       (*d).dig = malloc((*d).len * sizeof(int));
-
+      (*c)->neg = true;
       for (int f=0; f<(*d).len; f++) {
         (*d).dig[f] = (*b).dig[f];
       }
@@ -243,7 +247,6 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     } else {
       (*d).len = a->len;
       (*d).dig = malloc((*d).len * sizeof(int));
-
       for (int f=0; f<(*d).len; f++) {
         (*d).dig[f] = (*a).dig[f];
       }
