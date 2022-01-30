@@ -229,36 +229,50 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     if (a->len > b->len) {
       (*d).len = a->len;
       (*d).dig = malloc((*d).len * sizeof(int));
-
+      (*e).len = b->len;
+      (*e).dig = malloc((*e).len * sizeof(int));
       for (int f=0; f<(*d).len; f++) {
         (*d).dig[f] = (*a).dig[f];
       }
+      for (int f=0; f<(*e).len; f++) {
+        (*e).dig[f] = (*b).dig[f];
+      }
       i = d->len - 1;
-      j = b->len - 1;
+      j = e->len - 1;
     } else if (b->len > a->len) {
       (*d).len = b->len;
       (*d).dig = malloc((*d).len * sizeof(int));
+      (*e).len = a->len;
+      (*e).dig = malloc((*e).len * sizeof(int));
       (*c)->neg = true;
       for (int f=0; f<(*d).len; f++) {
         (*d).dig[f] = (*b).dig[f];
       }
+      for (int f=0; f<(*e).len; f++) {
+        (*e).dig[f] = (*a).dig[f];
+      }
       i = d->len - 1;
-      j = a->len - 1;
+      j = e->len - 1;
     } else {
       (*d).len = a->len;
       (*d).dig = malloc((*d).len * sizeof(int));
+      (*e).len = b->len;
+      (*e).dig = malloc((*e).len * sizeof(int));
       for (int f=0; f<(*d).len; f++) {
         (*d).dig[f] = (*a).dig[f];
       }
+      for (int f=0; f<(*e).len; f++) {
+        (*e).dig[f] = (*b).dig[f];
+      }
       i = d->len - 1;
-      j = b->len - 1;
+      j = e->len - 1;
     }
 
     carry = 0;
     k = (*c)->len - 1;
     while (i >= 0 || j >= 0 || carry > 0) {
       if (i >= 0 && j >= 0) {
-        tmp = (*d).dig[i]-b->dig[j];
+        tmp = (*d).dig[i]-(*e).dig[j];
         if (tmp < 0) {
           if (i == 0 && j == 0) {
             (*c)->neg = true;
@@ -269,7 +283,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       } else if (i >= 0) {
         tmp = d->dig[i];
       } else if (j >= 0) {
-        tmp = b->dig[j];
+        tmp = e->dig[j];
       } else {
         tmp = 0;
       }
@@ -422,6 +436,10 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         big_end_m(1, &ff);
         break;
       }
+    }
+    while ((*res).dig[0] == 0 && (*res).len >= 0) {
+      (*res).len--;
+      (*res).dig++;
     }
     (*d) = &(*res);
   }
