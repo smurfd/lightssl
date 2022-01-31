@@ -17,6 +17,9 @@ char *big_get(bigint_t *a);
 void big_init(bigint_t **a);
 void big_end(bigint_t **a);
 void big_set(char *a, bigint_t **b);
+void big_clear_zero(bigint_t **b);
+void big_clear_zero2(bigint_t **b);
+void big_clear_zeros(bigint_t **b);
 
 // Operations
 void big_add(bigint_t *a, bigint_t *b, bigint_t **c);
