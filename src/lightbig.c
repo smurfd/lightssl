@@ -258,8 +258,16 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     c = NULL;
   } else if (strcmp(big_get(a), "0") == 0) {
     (*c) = &(*b);
-//  } else if (strcmp(big_get(b), "0") == 0) { // FIXME: why fail?
-//    (*c) = &(*a);
+    if ((*c)->dig[0] == 0 && (*c)->len != 1) {
+      (*c)->len--;
+      (*c)->dig++;
+    }
+  } else if (strcmp(big_get(b), "0") == 0) {
+    (*c) = &(*a);
+    if ((*c)->dig[0] == 0 && (*c)->len != 1) {
+      (*c)->len--;
+      (*c)->dig++;
+    }
   } else {
     (*c)->len = (a->len > b->len ? a->len : b->len);
     (*c)->dig = malloc((*c)->len * sizeof(int));
