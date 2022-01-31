@@ -202,6 +202,31 @@ int main(int argc, char **argv) {
           "4861526030969502847027596217666059704067859675",
           big_get(a1))==0);
 
+      big_init(&a1);
+      big_set("-5", &ac);
+      big_set("0", &ad);
+      big_add(ac, ad, &a1);
+      assert(strcmp("-5", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("0", &ac);
+      big_set("3", &ad);
+      big_sub(ac, ad, &a1);
+      assert(strcmp("3", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("-5", &ac);
+      big_set("-5", &ad);
+      big_sub(ac, ad, &a1);
+      assert(strcmp("0", big_get(a1)) == 0);
+
+      printf("-----\n");
+      big_init(&a1);
+      big_set("-5", &ac);
+      big_set("-5", &ad);
+      big_add(ac, ad, &a1);
+      assert(strcmp("10", big_get(a1)) == 0);
+
       printf("OK!\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
       lightcrypt_init();

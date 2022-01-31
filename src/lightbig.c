@@ -74,6 +74,10 @@ void big_set(char *a, bigint_t **b) {
 
   skip = 0;
   big_init(b);
+  if (a[0] == '-') {
+    (*b)->neg = true;
+    skip++;
+  }
   if (strcmp("0", a) == 0) {
     (*b)->len = 1;
     (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
@@ -106,7 +110,8 @@ char *big_get(bigint_t *a) {
   char *b = malloc(BIGLEN);
   int mod = 0;
 
-  if (a->neg == true) {
+  // -3 is digit for '-'?
+  if (a->neg == true && a->dig[0] != -3) {
     mod = 1;
     b[0] = '-';
   }
@@ -120,13 +125,29 @@ char *big_get(bigint_t *a) {
 // Bigint addition
 void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry;
-
   carry = 0;
   big_init(c);
+  if ((*a).neg && (*b).neg) {
+    char *a1 = malloc(BIGLEN);
+    char *b1 = malloc(BIGLEN);
+    bigint_t *aa, *bb;
+    sprintf(a1, "%s", big_get(a));
+    sprintf(b1, "%s", big_get(b));
+    big_init_m(2, &aa, &bb);
+    big_set(a1, &aa);
+    big_set(b1, &bb);
+    (*aa).neg = false;
+    (*bb).neg = false;
+    big_add(aa, bb, c);
+  } else
   if (a == NULL) {
     c = NULL;
   } else if (b == NULL) {
     c = NULL;
+  } else if (strcmp(big_get(a), "0") == 0) {
+    (*c) = &(*b);
+  } else if (strcmp(big_get(b), "0") == 0) {
+    (*c) = &(*a);
   } else {
     (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
     (*c)->dig = malloc((*c)->len * sizeof(int));
@@ -219,10 +240,26 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
   bigint_t *d, *e;
 
   big_init_m(3, c, &d, &e);
+  if ((*a).neg && (*b).neg) {
+    char *a1 = malloc(BIGLEN);
+    char *b1 = malloc(BIGLEN);
+    bigint_t *aa, *bb;
+    sprintf(a1, "%s", big_get(a));
+    sprintf(b1, "%s", big_get(b));
+    big_init_m(2, &aa, &bb);
+    big_set(a1, &aa);
+    big_set(b1, &bb);
+    (*aa).neg = false;
+    big_sub(aa, bb, c);
+  } else
   if (a == NULL) {
     c = NULL;
   } else if (b == NULL) {
     c = NULL;
+  } else if (strcmp(big_get(a), "0") == 0) {
+    (*c) = &(*b);
+//  } else if (strcmp(big_get(b), "0") == 0) { // FIXME: why fail?
+//    (*c) = &(*a);
   } else {
     (*c)->len = (a->len > b->len ? a->len : b->len);
     (*c)->dig = malloc((*c)->len * sizeof(int));
@@ -296,7 +333,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       k--;
     }
 
-    if ((*c)->dig[0] == 0) {
+    if ((*c)->dig[0] == 0 && (*c)->len != 1) {
       (*c)->len--;
       (*c)->dig++;
     }
