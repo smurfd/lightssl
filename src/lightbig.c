@@ -77,6 +77,16 @@ void big_copy(bigint_t *a, bigint_t **b) {
     (*b)->dig[f] = (*a).dig[f];
   }
 }
+
+void big_copy_ref(bigint_t *a, bigint_t **b) {
+  (*b)->neg = (*a).neg;
+  (*b)->len = (*a).len;
+  big_alloc(&(*b));
+  for (int l=0; l<(*a).len; l++) {
+    (*b)->dig[l] = (*a).dig[l];
+  }
+}
+
 //
 // Set a bigint from string
 void big_set(char *a, bigint_t **b) {
@@ -286,10 +296,10 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
   } else if (b == NULL) {
     c = NULL;
   } else if (strcmp(big_get(a), "0") == 0) {
-    (*c) = &(*b);
+    big_copy_ref(b, c);
     big_clear_zero2(&(*c));
   } else if (strcmp(big_get(b), "0") == 0) {
-    (*c) = &(*a);
+    big_copy_ref(a, c);
     big_clear_zero2(&(*c));
   } else {
     (*c)->len = (a->len > b->len ? a->len : b->len);
@@ -319,12 +329,8 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       big_alloc(&d);
       (*e).len = b->len;
       big_alloc(&e);
-      for (int f = 0; f < (*d).len; f++) {
-        (*d).dig[f] = (*a).dig[f];
-      }
-      for (int f = 0; f < (*e).len; f++) {
-        (*e).dig[f] = (*b).dig[f];
-      }
+      big_copy(a, &d);
+      big_copy(b, &e);
       i = d->len - 1;
       j = e->len - 1;
     }
@@ -381,7 +387,7 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   while (c->len >= b->len && c->neg == false) {
     big_set_m(1, &e);
     big_sub(c, b, &e);
-    (*c) = (*e);
+    big_copy_ref(e, &c);
     big_clear_zero(&c);
     co++;
   }
@@ -410,11 +416,11 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     len = strlen(big_get(a)) - strlen(big_get(b));
     big_init_m(4, &c, &e, &w, &res);
     big_set_m(4, &c, &e, &w, &res);
-    (*c) = (*a);
-    (*e) = (*b);
-    (*w) = (*c);
+    big_copy_ref(a, &c);
+    big_copy_ref(b, &e);
+    big_copy_ref(c, &w);
     for (int i = 0; i < len; i++) {
-      (*e) = (*b);
+      big_copy_ref(b, &e);
       int len1 = strlen(big_get(c));
       int len2 = strlen(big_get(e));
       int len3 = len1-len2-1;
@@ -436,8 +442,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         bigint_t *v, *x, *y, *z, *f;
         big_init_m(5, &v, &x, &y, &z, &f);
         big_set_m(5, &v, &x, &y, &z, &f);
-        (*w) = (*c);
-        (*x) = (*e);
+        big_copy_ref(c, &w);
+        big_copy_ref(e, &x);
         big_div_x(w, x, &y);
         strcpy(ccc, big_get(y));
         clen = strlen(ccc);
@@ -482,8 +488,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         big_mul(x, y, &z);
         big_set(big_get(w), &f);
         big_sub(w, z, &v);
-        (*c) = (*v);
-        (*w) = (*f);
+        big_copy_ref(v, &c);
+        big_copy_ref(f, &w);
         len123++;
       } else {
         bigint_t *ff;
@@ -503,7 +509,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
       }
     }
     big_clear_zeros(&res);
-    (*d) = &(*res);
+    big_copy_ref(res, d);
   }
 }
 
@@ -524,7 +530,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     big_alloc(&d);
 
     big_set_m(1, &f);
-    (*f) = (*a);
+    big_copy_ref(a, &f);
     big_div(a, b, &c);
     big_mul(c, b, &d);
     (*e)->len = (f->len > d->len ? f->len : d->len);
