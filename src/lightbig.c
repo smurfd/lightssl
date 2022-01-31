@@ -82,21 +82,21 @@ void big_set(char *a, bigint_t **b) {
     (*b)->len = 1;
     (*b)->dig = calloc(BIGLEN, sizeof(int));
   } else {
-  while (a[skip] == '0') {
-    skip++;
-  }
-
-  (*b)->len = strlen(a) - skip;
-  if ((*b)->len == 0) {
-    (*b)->len++;
-    (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
-    (*b)->dig[0] = 0;
-  } else {
-    (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
-    for (int i = 0; i < (*b)->len; i++) {
-      (*b)->dig[i] = a[skip + i] - '0';
+    while (a[skip] == '0') {
+      skip++;
     }
-  }
+
+    (*b)->len = strlen(a) - skip;
+    if ((*b)->len == 0) {
+      (*b)->len++;
+      (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
+      (*b)->dig[0] = 0;
+    } else {
+      (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
+      for (int i = 0; i < (*b)->len; i++) {
+        (*b)->dig[i] = a[skip + i] - '0';
+      }
+    }
   }
 }
 
@@ -105,6 +105,7 @@ void big_set(char *a, bigint_t **b) {
 char *big_get(bigint_t *a) {
   char *b = malloc(BIGLEN);
   int mod = 0;
+
   if (a->neg == true) {
     mod = 1;
     b[0] = '-';
@@ -231,10 +232,10 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       (*d).dig = malloc((*d).len * sizeof(int));
       (*e).len = b->len;
       (*e).dig = malloc((*e).len * sizeof(int));
-      for (int f=0; f<(*d).len; f++) {
+      for (int f = 0; f < (*d).len; f++) {
         (*d).dig[f] = (*a).dig[f];
       }
-      for (int f=0; f<(*e).len; f++) {
+      for (int f = 0; f < (*e).len; f++) {
         (*e).dig[f] = (*b).dig[f];
       }
       i = d->len - 1;
@@ -245,10 +246,10 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       (*e).len = a->len;
       (*e).dig = malloc((*e).len * sizeof(int));
       (*c)->neg = true;
-      for (int f=0; f<(*d).len; f++) {
+      for (int f = 0; f < (*d).len; f++) {
         (*d).dig[f] = (*b).dig[f];
       }
-      for (int f=0; f<(*e).len; f++) {
+      for (int f = 0; f < (*e).len; f++) {
         (*e).dig[f] = (*a).dig[f];
       }
       i = d->len - 1;
@@ -258,10 +259,10 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       (*d).dig = malloc((*d).len * sizeof(int));
       (*e).len = b->len;
       (*e).dig = malloc((*e).len * sizeof(int));
-      for (int f=0; f<(*d).len; f++) {
+      for (int f = 0; f < (*d).len; f++) {
         (*d).dig[f] = (*a).dig[f];
       }
-      for (int f=0; f<(*e).len; f++) {
+      for (int f = 0; f < (*e).len; f++) {
         (*e).dig[f] = (*b).dig[f];
       }
       i = d->len - 1;
@@ -314,8 +315,8 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
 
   co = 0;
   big_init_m(4, d, &c, &e, &f);
-  c->len = (a->len > b->len ? a->len : b->len);
-  c->dig = malloc(c->len * sizeof(int));
+  (*d)->len = (a->len > b->len ? a->len : b->len);
+  (*d)->dig = malloc((*d)->len * sizeof(int));
 
   big_set_m(2, &e, &f);
   big_set(big_get(a), &c);
@@ -371,8 +372,9 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
 
         strcpy(cc, big_get(e));
         if (len1 >= len3 + 4) {
-          len3 = len1-4;
+          len3 = len1 - 4;
         }
+        // fill out with zeros, hack to save tons of iterations
         for (int j = 0; j <= len3; j++) {
           cc[len2+j] = '0';
         }
@@ -387,6 +389,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         strcpy(ccc, big_get(y));
         clen = strlen(ccc);
         for (int k = 0; k < clen; k++) {
+          // 1st run, populate result with big-num divs ie first nums in result
           if (i == 0 && clen > 1) {
             for (uint64_t l = 0; l < strlen(ccc); l++) {
               (*res).dig[l] = ccc[l] - '0';
@@ -398,7 +401,9 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             bigint_t *tmp = NULL, *tmp2 = NULL;
             big_init_m(2, &tmp, &tmp2);
             char *ccc1 = malloc(BIGLEN);
+
             strcpy(ccc1, big_get(res));
+            // FIXME: Why this hack?
             if (clen > 3 && i > 1) {
               ccc1[clen] = '0';
               ccc1[clen+1] = '\0';
@@ -406,12 +411,17 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             big_set(ccc1, &tmp);
             big_set(ccc, &tmp2);
             big_add(tmp2, tmp, &res);
+            // FIXME: Why this hack?
             if ((*res).dig[len123] == 0) {
               len123--;
               (*res).len = len123 + 1;
             }
             break;
           } else {
+            // FIXME: Why this hack?
+            if (i==1 && clen == 1 && len123 > 4) {
+              len123--;
+            }
             (*res).dig[len123] = ccc[k] - '0';
           }
         }
@@ -427,11 +437,13 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         big_init_m(1, &ff);
         big_set_m(1, &ff);
         big_set(big_get(c), &ff);
-        big_div_x(ff, b, d);
-        (*res).len = i+1;
-        for (uint64_t j = 0; j < strlen(big_get(*d)); j++) {
-          (*res).dig[i+j] = (*d)->dig[j];
-          (*res).len = i + 1 + j;
+        big_div_x(c, b, d);
+        if (strcmp(big_get(*d), "0") != 0) {
+          (*res).len = i + 1;
+          for (uint64_t j = 0; j < strlen(big_get(*d)); j++) {
+            (*res).dig[i+j] = (*d)->dig[j];
+            (*res).len = i + j + 1;
+          }
         }
         big_end_m(1, &ff);
         break;
