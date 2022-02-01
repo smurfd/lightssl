@@ -51,16 +51,16 @@ int main(int argc, char **argv) {
       bigint_t *ac, *ad, *a1;
       big_set("21739871283971298371298371289371298371298371298371298"\
           "371293", &ac);
-	  assert(strcmp("21739871283971298371298371289371298371298371298"\
+	     assert(strcmp("21739871283971298371298371289371298371298371298"\
           "371298371293", big_get(ac)) == 0);
 
       big_set("000123000", &ac);
-	  assert(strcmp("123000", big_get(ac)) == 0);
+	    assert(strcmp("123000", big_get(ac)) == 0);
 
       big_set("000", &ac);
-	  assert(strcmp("0", big_get(ac)) == 0);
+	    assert(strcmp("0", big_get(ac)) == 0);
       big_set("", &ac);
-	  assert(strcmp("0", big_get(ac)) == 0);
+	    assert(strcmp("0", big_get(ac)) == 0);
 
       big_init(&a1);
       big_set("11111111111111111111111111111111111111111111111111111"\
@@ -68,14 +68,14 @@ int main(int argc, char **argv) {
       big_set("33333333333333333333333333333333333333333333333333333"\
           "333333789", &ad);
       big_add(ac, ad, &a1);
-	  assert(strcmp("44444444444444444444444444444444444444444444444"\
+	    assert(strcmp("44444444444444444444444444444444444444444444444"\
           "444444444444789", big_get(a1)) == 0);
 
       big_init(&a1);
       big_set("512", &ac);
       big_set("512", &ad);
       big_add(ac, ad, &a1);
-	  assert(strcmp("1024", big_get(a1)) == 0);
+	    assert(strcmp("1024", big_get(a1)) == 0);
 
       big_init(&a1);
       big_set("2048", &ac);
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
       big_set("1024", &ac);
       big_set("16", &ad);
       big_mul(ac, ad, &a1);
-	  assert(strcmp("16384", big_get(a1)) == 0);
+	    assert(strcmp("16384", big_get(a1)) == 0);
 
       big_init(&a1);
       big_set("11111119111231231231111123123131313132344232342342232"\
