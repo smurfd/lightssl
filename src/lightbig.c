@@ -72,12 +72,15 @@ void big_alloc(bigint_t **b) {
   (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
 }
 
+//
+// Copy data
 void big_copy(bigint_t *a, bigint_t **b) {
   for (int f = 0; f < (*a).len; f++) {
     (*b)->dig[f] = (*a).dig[f];
   }
 }
 
+// Copy data refs, replaces (*a) = (*b)
 void big_copy_ref(bigint_t *a, bigint_t **b) {
   (*b)->neg = (*a).neg;
   (*b)->len = (*a).len;
@@ -186,40 +189,41 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
     (*aa).neg = false;
     (*bb).neg = false;
     big_add(aa, bb, c);
-  } else
-  if (a == NULL) {
-    c = NULL;
-  } else if (b == NULL) {
-    c = NULL;
-  } else if (strcmp(big_get(a), "0") == 0) {
-    (*c) = &(*b);
-  } else if (strcmp(big_get(b), "0") == 0) {
-    (*c) = &(*a);
   } else {
-    (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
-    big_alloc(&(*c));
-    i = a->len - 1;
-    j = b->len - 1;
-    k = (*c)->len - 1;
+    if (a == NULL) {
+      c = NULL;
+    } else if (b == NULL) {
+      c = NULL;
+    } else if (strcmp(big_get(a), "0") == 0) {
+      big_copy_ref(b, c);
+    } else if (strcmp(big_get(b), "0") == 0) {
+      big_copy_ref(a, c);
+    } else {
+      (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
+      big_alloc(&(*c));
+      i = a->len - 1;
+      j = b->len - 1;
+      k = (*c)->len - 1;
 
-    while (i >= 0 || j >= 0 || carry > 0) {
-      if (i >= 0 && j >= 0) {
-        tmp = a->dig[i] + b->dig[j];
-      } else if (i >= 0) {
-        tmp = a->dig[i];
-      } else if (j >= 0) {
-        tmp = b->dig[j];
-      } else {
-        tmp = 0;
+      while (i >= 0 || j >= 0 || carry > 0) {
+        if (i >= 0 && j >= 0) {
+          tmp = a->dig[i] + b->dig[j];
+        } else if (i >= 0) {
+          tmp = a->dig[i];
+        } else if (j >= 0) {
+          tmp = b->dig[j];
+        } else {
+          tmp = 0;
+        }
+        tmp += carry;
+        carry = tmp / 10;
+        (*c)->dig[k] = tmp % 10;
+        i--;
+        j--;
+        k--;
       }
-      tmp += carry;
-      carry = tmp / 10;
-      (*c)->dig[k] = tmp % 10;
-      i--;
-      j--;
-      k--;
+      big_clear_zero(&(*c));
     }
-    big_clear_zero(&(*c));
   }
 }
 
@@ -290,80 +294,81 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     big_set(b1, &bb);
     (*aa).neg = false;
     big_sub(aa, bb, c);
-  } else
-  if (a == NULL) {
-    c = NULL;
-  } else if (b == NULL) {
-    c = NULL;
-  } else if (strcmp(big_get(a), "0") == 0) {
-    big_copy_ref(b, c);
-    big_clear_zero2(&(*c));
-  } else if (strcmp(big_get(b), "0") == 0) {
-    big_copy_ref(a, c);
-    big_clear_zero2(&(*c));
   } else {
-    (*c)->len = (a->len > b->len ? a->len : b->len);
-    big_alloc(&(*c));
-
-    if (a->len > b->len) {
-      (*d).len = a->len;
-      big_alloc(&d);
-      (*e).len = b->len;
-      big_alloc(&e);
-      big_copy(a, &d);
-      big_copy(b, &e);
-      i = d->len - 1;
-      j = e->len - 1;
-    } else if (b->len > a->len) {
-      (*d).len = b->len;
-      big_alloc(&d);
-      (*e).len = a->len;
-      big_alloc(&e);
-      (*c)->neg = true;
-      big_copy(b, &d);
-      big_copy(a, &e);
-      i = d->len - 1;
-      j = e->len - 1;
+    if (a == NULL) {
+      c = NULL;
+    } else if (b == NULL) {
+      c = NULL;
+    } else if (strcmp(big_get(a), "0") == 0) {
+      big_copy_ref(b, c);
+      big_clear_zero2(&(*c));
+    } else if (strcmp(big_get(b), "0") == 0) {
+      big_copy_ref(a, c);
+      big_clear_zero2(&(*c));
     } else {
-      (*d).len = a->len;
-      big_alloc(&d);
-      (*e).len = b->len;
-      big_alloc(&e);
-      big_copy(a, &d);
-      big_copy(b, &e);
-      i = d->len - 1;
-      j = e->len - 1;
-    }
+      (*c)->len = (a->len > b->len ? a->len : b->len);
+      big_alloc(&(*c));
 
-    carry = 0;
-    k = (*c)->len - 1;
-    while (i >= 0 || j >= 0 || carry > 0) {
-      if (i >= 0 && j >= 0) {
-        tmp = (*d).dig[i]-(*e).dig[j];
-        if (tmp < 0) {
-          if (i == 0 && j == 0) {
-            (*c)->neg = true;
-          }
-          tmp += 10;
-          d->dig[i-1] -= 1;
-        }
-      } else if (i >= 0) {
-        tmp = d->dig[i];
-      } else if (j >= 0) {
-        tmp = e->dig[j];
+      if (a->len > b->len) {
+        (*d).len = a->len;
+        big_alloc(&d);
+        (*e).len = b->len;
+        big_alloc(&e);
+        big_copy(a, &d);
+        big_copy(b, &e);
+        i = d->len - 1;
+        j = e->len - 1;
+      } else if (b->len > a->len) {
+        (*d).len = b->len;
+        big_alloc(&d);
+        (*e).len = a->len;
+        big_alloc(&e);
+        (*c)->neg = true;
+        big_copy(b, &d);
+        big_copy(a, &e);
+        i = d->len - 1;
+        j = e->len - 1;
       } else {
-        tmp = 0;
+        (*d).len = a->len;
+        big_alloc(&d);
+        (*e).len = b->len;
+        big_alloc(&e);
+        big_copy(a, &d);
+        big_copy(b, &e);
+        i = d->len - 1;
+        j = e->len - 1;
       }
-      tmp -= carry;
-      carry = tmp / 10;
-      (*c)->dig[k] = tmp % 10;
-      i--;
-      j--;
-      k--;
-    }
-    big_clear_zero2(&(*c));
-    if (j > i) {
-      (*c)->neg = true;
+
+      carry = 0;
+      k = (*c)->len - 1;
+      while (i >= 0 || j >= 0 || carry > 0) {
+        if (i >= 0 && j >= 0) {
+          tmp = (*d).dig[i]-(*e).dig[j];
+          if (tmp < 0) {
+            if (i == 0 && j == 0) {
+              (*c)->neg = true;
+            }
+            tmp += 10;
+            d->dig[i-1] -= 1;
+          }
+        } else if (i >= 0) {
+          tmp = d->dig[i];
+        } else if (j >= 0) {
+          tmp = e->dig[j];
+        } else {
+          tmp = 0;
+        }
+        tmp -= carry;
+        carry = tmp / 10;
+        (*c)->dig[k] = tmp % 10;
+        i--;
+        j--;
+        k--;
+      }
+      big_clear_zero2(&(*c));
+      if (j > i) {
+        (*c)->neg = true;
+      }
     }
   }
 }
