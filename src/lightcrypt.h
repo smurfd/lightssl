@@ -48,6 +48,7 @@ void lightcrypt_init_t(bigtup_t **p);
 void lightcrypt_end_t(bigtup_t **p);
 void lightcrypt_init_t_m(int len, ...);
 void lightcrypt_end_t_m(int len, ...);
+void lightcrypt_copy_t(bigtup_t *a, bigtup_t **b);
 #endif
 
 // Read: https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/

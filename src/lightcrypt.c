@@ -110,6 +110,13 @@ void lightcrypt_end_t_m(int len, ...) {
 }
 
 //
+// Copy a tuple
+void lightcrypt_copy_t(bigtup_t *a, bigtup_t **b) {
+  big_copy_ref((*a).p1, &(*b)->p1);
+  big_copy_ref((*a).p2, &(*b)->p2);
+}
+
+//
 // Randomize to a bigint
 void lightcrypt_rand(bigint_t **p) {
   char *s = malloc(512);
@@ -182,8 +189,7 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
         bigtup_t *r = NULL;
         lightcrypt_init_t_m(1, &r);
         if (ret != NULL) {
-          big_copy_ref((*ret)->p1, &(*r).p1);
-          big_copy_ref((*ret)->p2, &(*r).p2);
+          lightcrypt_copy_t(*ret, &r);
         }
         lightcrypt_point_add(cur, r, addend, ret);
       }
@@ -220,15 +226,12 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
   big_copy_ref(curve_t.p, &cpp->p1);
   big_copy_ref(NULL, &cpp->p2);
   if (point1 == NULL) {
-    big_copy_ref(point2->p1, &(*ret)->p1);
-    big_copy_ref(point2->p2, &(*ret)->p2);
+    lightcrypt_copy_t(point2, ret);
   } else if (point2 == NULL) {
-    big_copy_ref(point1->p1, &(*ret)->p1);
-    big_copy_ref(point1->p2, &(*ret)->p2);
+    lightcrypt_copy_t(point1, ret);
   } else if (memcmp((*x1).dig, (*x2).dig, sizeof(int)) == 0 &&
       memcmp((*y1).dig, (*y2).dig, sizeof(int)) != 0) {
-    big_copy_ref(NULL, &(*ret)->p1);
-    big_copy_ref(NULL, &(*ret)->p2);
+    lightcrypt_copy_t(NULL, ret);
   } else if (memcmp((*x1).dig, (*x2).dig, sizeof(int))==0) {
     bigint_t *y12, *yp2, *xx1, *xx3, *x3, *xx3ca, *cab;
     char *ca = (char*) malloc(500);
@@ -355,10 +358,8 @@ void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
     big_set("1", &(*t).p2);
     big_set("0", &(*ot).p1);
     big_set("0", &(*ot).p2);
-    big_copy_ref(point->p1, &r->p1);
-    big_copy_ref(point->p2, &r->p2);
-    big_copy_ref(key->p1, &or->p1);
-    big_copy_ref(key->p2, &or->p2);
+    lightcrypt_copy_t(point, &r);
+    lightcrypt_copy_t(key, &or);
 
     while (r->p1->dig[0] != 0 && r->p2->dig[0] != 0) {
       bigtup_t *q = NULL, *qr = NULL, *qs = NULL, *qt = NULL, *ort = NULL;
@@ -367,26 +368,17 @@ void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
       lightcrypt_init_t_m(10, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
       big_div(or->p1, r->p1, &q->p1);
       big_div(or->p2, r->p2, &q->p2);
-      big_copy_ref(or->p1, &ort->p1);
-      big_copy_ref(or->p2, &ort->p2);
-      big_copy_ref(os->p1, &ost->p1);
-      big_copy_ref(os->p2, &ost->p2);
-      big_copy_ref(ot->p1, &ott->p1);
-      big_copy_ref(ot->p2, &ott->p2);
+      lightcrypt_copy_t(or, &ort);
+      lightcrypt_copy_t(os, &ost);
+      lightcrypt_copy_t(ot, &ott);
 
-      big_copy_ref(r->p1, &rt->p1);
-      big_copy_ref(r->p2, &rt->p2);
-      big_copy_ref(s->p1, &st->p1);
-      big_copy_ref(s->p2, &st->p2);
-      big_copy_ref(t->p1, &tt->p1);
-      big_copy_ref(t->p2, &tt->p2);
+      lightcrypt_copy_t(r, &rt);
+      lightcrypt_copy_t(s, &st);
+      lightcrypt_copy_t(t, &tt);
       
-      big_copy_ref(r->p1, &or->p1);
-      big_copy_ref(r->p2, &or->p2);
-      big_copy_ref(s->p1, &os->p1);
-      big_copy_ref(s->p2, &os->p2);
-      big_copy_ref(t->p1, &ot->p1);
-      big_copy_ref(t->p2, &ot->p2);
+      lightcrypt_copy_t(r, &or);
+      lightcrypt_copy_t(s, &os);
+      lightcrypt_copy_t(t, &ot);
 
       big_mul(q->p1, rt->p1, &qr->p1);
       big_mul(q->p2, rt->p2, &qr->p2);
@@ -406,12 +398,10 @@ void lightcrypt_point_imd(struct curve *cur, bigtup_t *key, bigtup_t *point,
     bigtup_t *rr = NULL, *ss = NULL, *tt = NULL, *kss = NULL, *kssp = NULL;
 
     lightcrypt_init_t_m(5, &rr, &ss, &tt, &kss, &kssp);
-    big_copy_ref(or->p1, &rr->p1);
-    big_copy_ref(or->p2, &rr->p2);
-    big_copy_ref(os->p1, &ss->p1);
-    big_copy_ref(os->p2, &ss->p2);
-    big_copy_ref(ot->p1, &tt->p1);
-    big_copy_ref(ot->p2, &tt->p2);
+    lightcrypt_copy_t(or, &rr);
+    lightcrypt_copy_t(os, &ss);
+    lightcrypt_copy_t(ot, &tt);
+
     assert(rr->p1->dig[0] == 1);
     assert(rr->p2->dig[0] == 1);
 
