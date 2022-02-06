@@ -307,11 +307,15 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       c = NULL;
     } else if (b == NULL) {
       c = NULL;
+    } else if (strcmp(big_get(a), "0") == 0 && strcmp(big_get(b), "0") == 0) {
+      big_set("0", c);
     } else if (strcmp(big_get(a), "0") == 0) {
       big_copy_ref(b, c);
+      (*c)->len = b->len;
       big_clear_zero2(&(*c));
     } else if (strcmp(big_get(b), "0") == 0) {
       big_copy_ref(a, c);
+      (*c)->len = a->len;
       big_clear_zero2(&(*c));
     } else {
       (*c)->len = (a->len > b->len ? a->len : b->len);
