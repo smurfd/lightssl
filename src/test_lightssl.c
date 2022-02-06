@@ -220,12 +220,19 @@ int main(int argc, char **argv) {
       big_sub(ac, ad, &a1);
       assert(strcmp("0", big_get(a1)) == 0);
 
-      printf("-----\n");
       big_init(&a1);
       big_set("-5", &ac);
       big_set("-5", &ad);
       big_add(ac, ad, &a1);
       assert(strcmp("10", big_get(a1)) == 0);
+
+      big_init(&a1);
+      big_set("37286503443888916570650794096490365355343842882500054"\
+          "693645072639621059063465", &ac);
+      big_set("2", &ad);
+      big_div(ac, ad, &a1);
+      assert(strcmp("18643251721944458285325397048245182677671921441"\
+          "250027346822536319810529531732", big_get(a1)) == 0);
 
       printf("OK!\n");
     } else if (strcmp(argv[1], "crypt") == 0) {

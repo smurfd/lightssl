@@ -10,6 +10,7 @@
 // TODO: obviously huge room for improvement
 // TODO: handle hex not just base 10
 // TODO: free()
+// TODO: add multifunctions to save lines like: a+b-c*d
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
 
 //
@@ -152,6 +153,10 @@ void big_clear_zeros(bigint_t **b) {
     (*b)->len--;
     (*b)->dig++;
   }
+  // if the string only contains zeros atleast save one
+  if (strcmp("", big_get(*b)) == 0) {
+    big_set("0", b);
+  }
 }
 
 //
@@ -293,7 +298,10 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     big_set(a1, &aa);
     big_set(b1, &bb);
     (*aa).neg = false;
+    (*bb).neg = false;
     big_sub(aa, bb, c);
+  } else if ((*a).neg || (*b).neg) {
+    big_add(a, b, c);
   } else {
     if (a == NULL) {
       c = NULL;
@@ -384,7 +392,6 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   big_init_m(4, d, &c, &e, &f);
   (*d)->len = (a->len > b->len ? a->len : b->len);
   big_alloc(d);
-
   big_set_m(2, &e, &f);
   big_set(big_get(a), &c);
   big_set(big_get(a), &f);
@@ -396,7 +403,6 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
     big_clear_zero(&c);
     co++;
   }
-
   if (c->neg == true) {
      co--;
   }
@@ -416,6 +422,12 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     d = NULL;
   } else if (b == NULL) {
     d = NULL;
+  } else if (strcmp(big_get(a), big_get(b)) == 0) {
+    big_set("1", d);
+  } else if (strcmp(big_get(a), big_get(b)) <= 0 && strlen(big_get(a)) == strlen(big_get(b))) {
+    big_set("0", d);
+  } else if (strcmp(big_get(b), "1") == 0) {
+    big_copy_ref(a, d);
   } else {
     len123 = 0;
     len = strlen(big_get(a)) - strlen(big_get(b));
@@ -424,6 +436,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     big_copy_ref(a, &c);
     big_copy_ref(b, &e);
     big_copy_ref(c, &w);
+
     for (int i = 0; i < len; i++) {
       big_copy_ref(b, &e);
       int len1 = strlen(big_get(c));
@@ -453,8 +466,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         strcpy(ccc, big_get(y));
         clen = strlen(ccc);
         for (int k = 0; k < clen; k++) {
-          // 1st run, populate result with big-num divs ie first nums in result
           if (i == 0 && clen > 1) {
+            // 1st run, populate result with big-num divs ie first nums in result
             for (uint64_t l = 0; l < strlen(ccc); l++) {
               (*res).dig[l] = ccc[l] - '0';
             }
@@ -462,18 +475,26 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             len123 = strlen(ccc);
             break;
           } else if (clen > 1) {
+            // If the number of divisions exceed 9 we do this
             bigint_t *tmp = NULL, *tmp2 = NULL;
             big_init_m(2, &tmp, &tmp2);
             char *ccc1 = malloc(BIGLEN);
 
+            // FIXME: merge with below if?
+            if ((*res).len < clen) {
+              (*res).len = clen;
+            }
             strcpy(ccc1, big_get(res));
-            // FIXME: Why this hack?
+            // This hack adds a 0 to thec 1st couple of numbers so they add upp correctly
             if (clen > 3 && i > 1) {
               ccc1[clen] = '0';
               ccc1[clen+1] = '\0';
             }
             big_set(ccc1, &tmp);
             big_set(ccc, &tmp2);
+            // FIXME: merge this with above if?
+            (*res).len = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
+            len123  = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
             big_add(tmp2, tmp, &res);
             // FIXME: Why this hack?
             if ((*res).dig[len123] == 0) {
@@ -482,9 +503,16 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             }
             break;
           } else {
-            // FIXME: Why this hack?
+            // Modify the where to position the next character depening on the above hacks
+            // to save repetitions
             if (i==1 && clen == 1 && len123 > 4) {
               len123--;
+            }
+            if (i==1 && clen == 1 && len123 == 3) {
+              len123--;
+            }
+            if (len123 > (*res).len && i > 4) {
+              (*res).len = len123+1;
             }
             (*res).dig[len123] = ccc[k] - '0';
           }
@@ -500,13 +528,18 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         bigint_t *ff;
         big_init_m(1, &ff);
         big_set_m(1, &ff);
+        big_clear_zeros(&c);
         big_set(big_get(c), &ff);
         big_div_x(c, b, d);
         if (strcmp(big_get(*d), "0") != 0) {
-          (*res).len = i + 1;
+          int mod = 1;
+          if (i > 4) {
+            mod = 2;
+          }
+          (*res).len = i + mod;
           for (uint64_t j = 0; j < strlen(big_get(*d)); j++) {
-            (*res).dig[i+j] = (*d)->dig[j];
-            (*res).len = i + j + 1;
+            (*res).dig[i+j+(mod-1)] = (*d)->dig[j];
+            (*res).len = i + j + mod;
           }
         }
         big_end_m(1, &ff);
@@ -529,11 +562,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     e = NULL;
   } else {
     big_init_m(4, &c, &d, &f, e);
-    c->len = (a->len > b->len ? a->len : b->len);
-    big_alloc(&c);
-    d->len = (a->len > b->len ? a->len : b->len);
-    big_alloc(&d);
-
+    big_set_m(1, &c, &d);
     big_set_m(1, &f);
     big_copy_ref(a, &f);
     big_div(a, b, &c);
