@@ -79,6 +79,7 @@ void big_copy(bigint_t *a, bigint_t **b) {
   for (int f = 0; f < (*a).len; f++) {
     (*b)->dig[f] = (*a).dig[f];
   }
+  (*b)->neg = (*a).neg;
 }
 
 // Copy data refs, replaces (*a) = (*b)

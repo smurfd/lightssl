@@ -10,20 +10,9 @@
 #include "lightcrypt.h"
 
 int main(int argc, char **argv) {
-  char *out = NULL;
   b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
-  const char* in = "smurfd";
-  const char* rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb201c"\
-      "bb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7e70f3d1";
-
-  out = (char*) malloc(100);
-  strcpy(out, lighthash_new(in));
-
-  // the hash of rh and the generated one match?
-  assert(lighthash_verify(out, rh));
-  printf("The hashes match!\nRealHash:  %s\nGenerated: %s\n", rh, out);
 
   if (argc == 2 && argv) {
     if (strcmp(argv[1], "server") == 0) {
@@ -243,7 +232,18 @@ int main(int argc, char **argv) {
       printf("OK!\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
       lightcrypt_init();
+    } else if (strcmp(argv[1], "hash") == 0) {
+      const char* in = "smurfd";
+      const char* rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb201c"\
+          "bb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7e70f3d1";
+      char *out = (char*) malloc(100);
+
+      strcpy(out, lighthash_new(in));
+
+      // the hash of rh and the generated one match?
+      assert(lighthash_verify(out, rh));
+      free(out);
+      printf("OK!\n");
     }
   }
-  free(out);
 }
