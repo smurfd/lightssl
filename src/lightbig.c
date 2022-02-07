@@ -166,7 +166,7 @@ char *big_get(bigint_t *a) {
   int mod = 0;
 
   // -3 is digit for '-'?
-  if (a->neg == true && a->dig[0] != -3) {
+  if (a->neg && a->dig[0] != -3) {
     mod = 1;
     b[0] = '-';
   }
@@ -193,6 +193,7 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
     big_set(b1, &bb);
     (*aa).neg = false;
     (*bb).neg = false;
+    (*c)->neg = true;
     big_add(aa, bb, c);
   } else {
     if (a == NULL) {
@@ -238,6 +239,13 @@ void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, push_left;
 
   big_init(c);
+  // Set result to correct sign
+  if ((*a).neg && (*b).neg) {
+    (*c)->neg = false;
+  } else if ((*a).neg || (*b).neg) {
+    (*c)->neg = true;
+  }
+
   if (a == NULL) {
     c = NULL;
   } else if (b==NULL) {
@@ -422,6 +430,11 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   int len, len123;
   bigint_t *c, *e, *w, *res;
 
+  // Set result to correct sign
+  if ((*a).neg || (*b).neg) {
+    (*d)->neg = true;
+  }
+
   if (a == NULL) {
     d = NULL;
   } else if (b == NULL) {
@@ -440,7 +453,10 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     big_copy_ref(a, &c);
     big_copy_ref(b, &e);
     big_copy_ref(c, &w);
-
+    // hack to run the below loop even if the numbers have the same length
+    if (len == 0) {
+      len = 1;
+    }
     for (int i = 0; i < len; i++) {
       big_copy_ref(b, &e);
       int len1 = strlen(big_get(c));
@@ -576,6 +592,10 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     big_sub(f, d, e);
     big_clear_zeros(&(*e));
   }
+}
+
+bool big_bit_and_one(bigint_t *a) {
+  return (*a).dig[(*a).len-1] & 1;
 }
 
 //
