@@ -308,8 +308,23 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     big_set(b1, &bb);
     (*aa).neg = false;
     (*bb).neg = false;
-    big_sub(aa, bb, c);
-  } else if ((*a).neg || (*b).neg) {
+    if (strcmp(a1, b1) < 0) {
+      big_sub(bb, aa, c);
+    } else {
+      big_sub(aa, bb, c);
+      (*c)->neg = false;
+    }
+  } else if ((*a).neg) {
+    big_add(a, b, c);
+    if ((*a).len < (*b).len) {
+      (*c)->neg = true;
+    }
+    if ((*a).len == (*b).len) {
+      if (strcmp(big_get(a), big_get(b)) < 0) {
+        (*c)->neg = true;
+      }
+    }
+  } else if ((*b).neg) {
     big_add(a, b, c);
   } else {
     if (a == NULL) {
@@ -319,12 +334,18 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     } else if (strcmp(big_get(a), "0") == 0 && strcmp(big_get(b), "0") == 0) {
       big_set("0", c);
     } else if (strcmp(big_get(a), "0") == 0) {
-      big_copy_ref(b, c);
-      (*c)->len = b->len;
+      bigint_t *f;
+      big_init_m(1, &f);
+      big_set_m(1, &f);
+      big_copy_ref(b, &f);
+      (*c)->len = f->len;
+      (*f).neg = true;
+      big_copy_ref(f, c);
       big_clear_zero2(&(*c));
+      big_end_m(1, &f);
     } else if (strcmp(big_get(b), "0") == 0) {
-      big_copy_ref(a, c);
       (*c)->len = a->len;
+      big_copy_ref(a, c);
       big_clear_zero2(&(*c));
     } else {
       (*c)->len = (a->len > b->len ? a->len : b->len);
@@ -381,7 +402,17 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
         }
         tmp -= carry;
         carry = tmp / 10;
-        (*c)->dig[k] = tmp % 10;
+        if (tmp % 10 < 0 && i < 2) {
+          (*c)->dig[k] = (tmp % 10) + 10;
+          if ((*c)->dig[k-1] > 0) {
+            (*c)->dig[k-1] = (*d).dig[k-1] - 1;
+          } else {
+            (*c)->dig[k-1] = (*d).dig[k-1] - 1;
+            break;
+          }
+        } else {
+          (*c)->dig[k] = tmp % 10;
+        }
         i--;
         j--;
         k--;
@@ -398,6 +429,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
 // Bigint division
 void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   char *str;
+  bool nm = false;
   uint64_t co;
   bigint_t *c, *e, *f;
 
@@ -407,9 +439,12 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   big_alloc(d);
   big_set_m(2, &e, &f);
   big_set(big_get(a), &c);
-  big_set(big_get(a), &f);
-  c->neg = false;
-  while (c->len >= b->len && c->neg == false) {
+  if (c->neg) {
+    nm = true;
+  }
+  while (c->len >= b->len && ((c->neg == false && nm == false) ||
+      (c->neg == true && nm == true))) {
+    big_init_m(1, &e);
     big_set_m(1, &e);
     big_sub(c, b, &e);
     big_copy_ref(e, &c);
@@ -454,6 +489,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     big_copy_ref(a, &c);
     big_copy_ref(b, &e);
     big_copy_ref(c, &w);
+
     // hack to run the below loop even if the numbers have the same length
     if (len == 0) {
       len = 1;
@@ -472,6 +508,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         if (len1 >= len3 + 4) {
           len3 = len1 - 4;
         }
+
         // fill out with zeros, hack to save tons of iterations
         for (int j = 0; j <= len3; j++) {
           cc[len2+j] = '0';
@@ -481,6 +518,14 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         bigint_t *v, *x, *y, *z, *f;
         big_init_m(5, &v, &x, &y, &z, &f);
         big_set_m(5, &v, &x, &y, &z, &f);
+        if (len < 4) {
+          (*e).len=len3+2;
+        } else {
+          if (len3+1>=len2)
+            (*e).len=len3+1;
+          else (*e).len = len2;
+        }
+
         big_copy_ref(c, &w);
         big_copy_ref(e, &x);
         big_div_x(w, x, &y);
@@ -507,7 +552,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             }
             strcpy(ccc1, big_get(res));
             // This hack adds a 0 to thec 1st couple of numbers so they add upp correctly
-            if (clen > 3 && i > 1) {
+            if (clen > 3 && i >= 1) {
               ccc1[clen] = '0';
               ccc1[clen+1] = '\0';
             }
@@ -526,10 +571,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
           } else {
             // Modify the where to position the next character depening on the above hacks
             // to save repetitions
-            if (i==1 && clen == 1 && len123 > 4) {
-              len123--;
-            }
-            if (i==1 && clen == 1 && len123 == 3) {
+            if (i==1 && clen == 1 && (len123 == 3 || len123 > 4)) {
               len123--;
             }
             if (len123 > (*res).len && i > 4) {
@@ -576,6 +618,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
 // Bigint modulo
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   bigint_t *c, *d, *f;
+  bool n = false;
 
   if (a == NULL) {
     e = NULL;
@@ -586,11 +629,24 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     big_set_m(1, &c, &d);
     big_set_m(1, &f);
     big_copy_ref(a, &f);
-    big_div(a, b, &c);
+    if ((*a).neg) {
+      (*f).neg = false;
+      n = true;
+    }
+    big_div(f, b, &c);
+    if (n) {
+      bigint_t *g;
+      big_init_m(1, &g);
+      big_set("1", &g);
+      big_add(c, g, &c);
+    }
+    if (n && (*c).neg == false) {
+      (*c).neg = true;
+    }
     big_mul(c, b, &d);
     (*e)->len = (f->len > d->len ? f->len : d->len);
     big_alloc(e);
-    big_sub(f, d, e);
+    big_sub(a, d, e);
     big_clear_zeros(&(*e));
   }
 }

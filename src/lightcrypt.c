@@ -221,8 +221,6 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
   big_copy_ref(point1->p2, &y1);
   big_copy_ref(point2->p1, &x2);
   big_copy_ref(point2->p2, &y2);
-  printf("p1  (%s, %s)\n", big_get(point1->p1), big_get(point1->p2));
-  printf("p2  (%s, %s)\n", big_get(point2->p1), big_get(point2->p2));
   if (strcmp(big_get(point1->p1), "0") == 0 && strcmp(big_get(point1->p2),"0") == 0) {
     if (ret == NULL) {
       lightcrypt_init_t_m(1, &ret);
@@ -326,73 +324,68 @@ void lightcrypt_point_imd(struct curve *cur, bigint_t **key, bigint_t *point,
     // Should never happen, division by zero is bad
   }
   if ((*key)->neg == true) {
-    bigint_t *r;// = NULL;
+    bigint_t *r;
     big_init_m(1, &r);
     (*key)->neg=false;
     lightcrypt_point_imd(cur, key, point, &r);
     big_sub(point, r, ret);
   } else {
-  bigint_t *r, *s, *t, *or, *os, *ot;
+    bigint_t *r, *s, *t, *or, *os, *ot;
 
-  big_init_m(6, &r, &s, &t, &or, &os, &ot);
-  big_set_m(6, &r, &s, &t, &or, &os, &ot);
+    big_init_m(6, &r, &s, &t, &or, &os, &ot);
+    big_set_m(6, &r, &s, &t, &or, &os, &ot);
 
-  big_set("0", &s);
-  big_set("1", &os);
+    big_set("0", &s);
+    big_set("1", &os);
 
-  big_set("1", &t);
-  big_set("0", &ot);
+    big_set("1", &t);
+    big_set("0", &ot);
 
-  big_copy_ref(point, &r);
-  big_copy_ref(*key, &or);
-  while (strcmp("0", big_get(r)) != 0) {
-    bigint_t *q, *qr, *qs, *qt, *ort, *ott, *rt, *st, *tt, *ost;
-    big_init_m(10, &q, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
-    big_set_m(10, &q, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
+    big_copy_ref(point, &r);
+    big_copy_ref(*key, &or);
+    while (strcmp("0", big_get(r)) != 0) {
+      bigint_t *q, *qr, *qs, *qt, *ort, *ott, *rt, *st, *tt, *ost;
+      big_init_m(10, &q, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
+      big_set_m(10, &q, &qr, &qs, &qt, &ort, &ost, &ott, &rt, &st, &tt);
 
-    // old_r, r = r, old_r - quotient * r
-    big_div(or, r, &q);     // q = or // r
-    printf("QQQ %s = %s // %s\n", big_get(q), big_get(or), big_get(r));
-    big_copy_ref(or, &ort); // old_rr = old_r
-    big_copy_ref(os, &ost);
-    big_copy_ref(ot, &ott);
+      big_div(or, r, &q);     // q = or // r
+      big_copy_ref(or, &ort); // old_rr = old_r
+      big_copy_ref(os, &ost);
+      big_copy_ref(ot, &ott);
 
-    big_copy_ref(r, &rt);   // rr = r
-    big_copy_ref(s, &st);
-    big_copy_ref(t, &tt);
+      big_copy_ref(r, &rt);   // rr = r
+      big_copy_ref(s, &st);
+      big_copy_ref(t, &tt);
 
-    big_copy_ref(r, &or);   // old_r = r
-    big_copy_ref(s, &os);
-    big_copy_ref(t, &ot);
+      big_copy_ref(r, &or);   // old_r = r
+      big_copy_ref(s, &os);
+      big_copy_ref(t, &ot);
 
-    big_mul(q, rt, &qr);   // qr = quotient*rr
-    big_mul(q, st, &qs);
-    big_mul(q, tt, &qt);
-    printf("RRR : %s - %s : %d\n", big_get(or), big_get(qr), r->neg);
-    big_sub(ort, qr, &r); // r = old_rr - qr
-    big_sub(ost, qs, &s);
-    big_sub(ott, qt, &t);
+      big_mul(q, rt, &qr);    // qr = quotient * rr
+      big_mul(q, st, &qs);
+      big_mul(q, tt, &qt);
+      big_sub(ort, qr, &r);   // r = old_rr - qr
+      big_sub(ost, qs, &s);
+      big_sub(ott, qt, &t);
+      big_clear_zeros(&r);
+    }
+    bigint_t *rr, *ss, *tt, *kss, *kssp;
+    big_init_m(5, &rr, &ss, &tt, &kss, &kssp);
+    big_set_m(5, &rr, &ss, &tt, &kss, &kssp);
 
-    big_clear_zeros(&r);
-  }
-  bigint_t *rr, *ss, *tt, *kss, *kssp;
-  big_init_m(5, &rr, &ss, &tt, &kss, &kssp);
-  big_set_m(5, &rr, &ss, &tt, &kss, &kssp);
+    big_copy_ref(or, &rr);
+    big_copy_ref(os, &ss);
+    big_copy_ref(ot, &tt);
 
-  big_copy_ref(or, &rr);
-  big_copy_ref(os, &ss);
-  big_copy_ref(ot, &tt);
+    assert(strcmp(big_get(rr), "1") == 0);
 
-  assert(strcmp(big_get(rr), "1") == 0);
+    big_mul(*key, ss, &kss);
+    big_mod(kss, point, &kssp);
+    assert(strcmp(big_get(kssp), "1") == 0);
 
-  big_mul(*key, ss, &kss);
-  printf("KSS:%s * %s = %s\n", big_get(*key), big_get(ss), big_get(kss));
-  big_mod(kss, point, &kssp);
-  printf("KSS:%s * %s = %s\n", big_get(*key), big_get(ss), big_get(kss));
-  printf("KSSP:%s mod %s = %s\n", big_get(kss), big_get(point), big_get(kssp));
-  assert(strcmp(big_get(kssp), "1") == 0); // this assertion fails
-
-  big_mod(ss, point, ret);
+    big_mod(ss, point, ret);
+    // FIXME: surviving 1st round, forcing failure to avoid loop, need to figure out why loop?
+    assert(1==2);
   }
 }
 
