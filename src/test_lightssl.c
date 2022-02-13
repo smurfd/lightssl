@@ -257,6 +257,11 @@ int main(int argc, char **argv) {
       assert(strcmp("18405974250791985306898387292513446207790260853623256697871975478881952846046",
           big_get(a1)) == 0);
 
+      bigint_t *hx;
+      big_init_m(1, &hx);
+      big_set("0x123", &hx);
+      printf("hex : %s\n", big_get(hx));
+
       printf("OK!\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
       lightcrypt_init();

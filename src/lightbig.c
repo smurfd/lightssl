@@ -103,6 +103,12 @@ void big_set(char *a, bigint_t **b) {
     (*b)->neg = true;
     skip++;
   }
+  if (a[0+skip] == '0' && a[1+skip] == 'x') {
+    (*b)->base = 16;
+    skip = skip + 2;
+  } else {
+    (*b)->base = 10;
+  }
   if (strcmp("0", a) == 0) {
     (*b)->len = 1;
     big_alloc(&(*b));
@@ -170,6 +176,11 @@ char *big_get(bigint_t *a) {
   if (a->neg && a->dig[0] != -3) {
     mod = 1;
     b[0] = '-';
+  }
+  if (a->base == 16) {
+    b[0+mod] = '0';
+    b[1+mod] = 'x';
+    mod = mod + 2;
   }
   for (int i = 0; i < a->len; i++) {
     b[i+mod] = a->dig[i] + '0';

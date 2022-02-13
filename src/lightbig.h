@@ -10,6 +10,7 @@ typedef struct {
   int *dig;
   int len;
   bool neg;
+  int base;
 } bigint_t;
 
 // Init
