@@ -129,7 +129,13 @@ void big_set(char *a, bigint_t **b) {
     } else {
       big_alloc(&(*b));
       for (int i = 0; i < (*b)->len; i++) {
-        (*b)->dig[i] = a[skip + i] - '0';
+        if (a[skip + i] - '0' < 10) {
+          (*b)->dig[i] = a[skip + i] - '0';
+        } else if (a[skip + i] - '0' <= 'F' - '0') {
+          (*b)->dig[i] = a[skip + i] - '0' - 7;
+        } else if (a[skip + i] - '0' < 'f' - '0') {
+          (*b)->dig[i] = a[skip + i] - '0' - 39;
+        }
       }
     }
   }
@@ -183,17 +189,45 @@ char *big_get(bigint_t *a) {
     mod = mod + 2;
   }
   for (int i = 0; i < a->len; i++) {
-    b[i+mod] = a->dig[i] + '0';
+    if (a->dig[i] < 10) {
+      b[i+mod] = a->dig[i] + '0';
+    } else {
+      b[i+mod] = (a->dig[i] % 'a') + 'a' - 10;
+    }
   }
   return b;
+}
+
+int big_get_hex(int a, int base) {
+  if (base == 16) {
+    if (a > 9) {
+      if (a % 'A' < 7) {
+        return 10 + (a % 'A');
+      }
+      if (a % 'a' < 7) {
+        return 10 + (a % 'a');
+      }
+    }
+  }
+  return a;
 }
 
 //
 // Bigint addition
 void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
-  int i, j, k, tmp, carry;
+  int i, j, k, tmp, carry, base;
+
+  if (a->base != 0) {
+    base = a->base;
+    if (a->base == 16) {
+      (*c)->base = 16;
+    }
+  } else {
+    base = 10;
+  }
   carry = 0;
   big_init(c);
+
   if ((*a).neg && (*b).neg) {
     char *a1 = malloc(BIGLEN);
     char *b1 = malloc(BIGLEN);
@@ -225,7 +259,7 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 
       while (i >= 0 || j >= 0 || carry > 0) {
         if (i >= 0 && j >= 0) {
-          tmp = a->dig[i] + b->dig[j];
+          tmp = big_get_hex(a->dig[i], a->base) + big_get_hex(b->dig[j], b->base);
         } else if (i >= 0) {
           tmp = a->dig[i];
         } else if (j >= 0) {
@@ -234,8 +268,8 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
           tmp = 0;
         }
         tmp += carry;
-        carry = tmp / 10;
-        (*c)->dig[k] = tmp % 10;
+        carry = tmp / base;
+        (*c)->dig[k] = tmp % base;
         i--;
         j--;
         k--;

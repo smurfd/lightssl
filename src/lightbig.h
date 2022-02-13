@@ -41,4 +41,6 @@ void big_copy_ref(bigint_t *a, bigint_t **b);
 void big_init_m(int len, ...);
 void big_end_m(int len, ...);
 void big_set_m(int len, ...);
+
+int big_get_hex(int a, int base);
 #endif
