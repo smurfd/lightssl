@@ -20,6 +20,19 @@ In another teerminal run
 ```
 ./build/test_lightssl client
 ```
+Test Big number math
+```
+./build/test_lightssl big
+```
+Test cryptography
+```
+./build/test_lightssl crypt
+```
+Test hashing
+```
+./build/test_lightssl hash
+```
+
 
 ### Use lightssl in your project
 ```c
