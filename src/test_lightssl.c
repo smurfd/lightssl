@@ -273,6 +273,18 @@ int main(int argc, char **argv) {
       (*a1).base = HEX;
       big_assert_str("0xb85c9", &a1);
 
+      big_init(&a1);
+      big_set("37286503443888916570650794096490365355343842882500054693645072639621059063465", &ac);
+      big_set("2", &ad);
+      big_div(ac, ad, &a1);
+      printf("a1=%s\n", big_get(a1));
+      //big_assert_str("0xb85c9", &a1);
+
+      big_set("300923130364674303566064152685592960036419222958287034092357419", &ac);
+      big_set("521205221864955451187670066261363906193068031158944893620680", &ad);
+      big_div(ac, ad, &a1);
+      printf("a1=%s\n", big_get(a1));
+
       printf("OK!\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
       lightcrypt_init();

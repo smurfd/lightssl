@@ -632,6 +632,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
               (*res).len = len123+1;
             }
             (*res).dig[len123] = ccc[k] - '0';
+            break;
           }
         }
         (*res).len = len123;
@@ -658,6 +659,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             (*res).dig[i + j + (mod - 1)] = (*d)->dig[j];
             (*res).len = i + j + mod;
           }
+        } else if (i == 2 && (*res).len == 2) {
+          (*res).len++;
         }
         big_end_m(1, &ff);
         break;

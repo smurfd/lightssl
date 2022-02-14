@@ -181,15 +181,17 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
     //lightcrypt_end_t(&npoint);
   } else {
     ret = NULL;
+    bigtup_t *r = NULL;
+    lightcrypt_init_t_m(1, &r);
     big_set_m(2, &addend->p1, &addend->p2);
     lightcrypt_copy_t(point, &addend);
-    while (key) {
+    while (!key->neg) {
       bigint_t *k1, *k2, *t;
       big_init_m(3, &k1, &k2, &t);
       big_set_m(2, &k1, &k2);
+      big_set("2", &t);
+      printf("key = %s\n", big_get(key));
       if (big_bit_and_one(key)) {
-        bigtup_t *r = NULL;
-        lightcrypt_init_t_m(1, &r);
         if (ret != NULL) {
           lightcrypt_copy_t(*ret, &r);
         }
@@ -297,7 +299,7 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1,
     }
     big_mod(mmm2x2, cur->p, &(*ret)->p1);
     big_mod(yx3, cur->p, &(*ret)->p2);
-    assert(lightcrypt_oncurve(cur, *ret));
+    assert(lightcrypt_oncurve(cur, *ret)); // fail here on 3rd time
     lightcrypt_end_t_m(5, &mm, &x3, &y3, &x31, &y1m);
   }
 }
@@ -385,7 +387,6 @@ void lightcrypt_point_imd(struct curve *cur, bigint_t **key,
     bigint_t *rr, *ss, *tt, *kss, *kssp;
     big_init_m(5, &rr, &ss, &tt, &kss, &kssp);
     big_set_m(5, &rr, &ss, &tt, &kss, &kssp);
-
     big_copy_ref(or, &rr);
     big_copy_ref(os, &ss);
     big_copy_ref(ot, &tt);
@@ -397,9 +398,6 @@ void lightcrypt_point_imd(struct curve *cur, bigint_t **key,
     assert(strcmp(big_get(kssp), "1") == 0);
 
     big_mod(ss, point, ret);
-    // FIXME: surviving 1st round, forcing failure to avoid loop,
-    //        need to figure out why loop?
-    assert(1==2);
   }
 }
 
