@@ -18,6 +18,7 @@
 void big_init(bigint_t **a) {
   (*a) = calloc(sizeof(bigint_t), sizeof(bigint_t));
   (*a)->neg = false;
+  (*a)->base = DEC;
 }
 
 //
@@ -80,12 +81,14 @@ void big_copy(bigint_t *a, bigint_t **b) {
     (*b)->dig[f] = (*a).dig[f];
   }
   (*b)->neg = (*a).neg;
+  (*b)->base = (*a).base;
 }
 
 // Copy data refs, replaces (*a) = (*b)
 void big_copy_ref(bigint_t *a, bigint_t **b) {
   (*b)->neg = (*a).neg;
   (*b)->len = (*a).len;
+  (*b)->base = (*a).base;
   big_alloc(&(*b));
   for (int l=0; l<(*a).len; l++) {
     (*b)->dig[l] = (*a).dig[l];
@@ -104,10 +107,10 @@ void big_set(char *a, bigint_t **b) {
     skip++;
   }
   if (a[0+skip] == '0' && a[1+skip] == 'x') {
-    (*b)->base = 16;
+    (*b)->base = HEX;
     skip = skip + 2;
   } else {
-    (*b)->base = 10;
+    (*b)->base = DEC;
   }
   if (strcmp("0", a) == 0) {
     (*b)->len = 1;
@@ -129,7 +132,7 @@ void big_set(char *a, bigint_t **b) {
     } else {
       big_alloc(&(*b));
       for (int i = 0; i < (*b)->len; i++) {
-        if (a[skip + i] - '0' < 10) {
+        if (a[skip + i] - '0' < DEC) {
           (*b)->dig[i] = a[skip + i] - '0';
         } else if (a[skip + i] - '0' <= 'F' - '0') {
           (*b)->dig[i] = a[skip + i] - '0' - 7;
@@ -183,13 +186,13 @@ char *big_get(bigint_t *a) {
     mod = 1;
     b[0] = '-';
   }
-  if (a->base == 16) {
+  if (a->base == HEX) {
     b[0+mod] = '0';
     b[1+mod] = 'x';
     mod = mod + 2;
   }
   for (int i = 0; i < a->len; i++) {
-    if (a->dig[i] < 10) {
+    if (a->dig[i] < DEC) {
       b[i+mod] = a->dig[i] + '0';
     } else {
       b[i+mod] = (a->dig[i] % 'a') + 'a' - 10;
@@ -199,7 +202,7 @@ char *big_get(bigint_t *a) {
 }
 
 int big_get_hex(int a, int base) {
-  if (base == 16) {
+  if (base == HEX) {
     if (a > 9) {
       if (a % 'A' < 7) {
         return 10 + (a % 'A');
@@ -219,11 +222,11 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 
   if (a->base != 0) {
     base = a->base;
-    if (a->base == 16) {
-      (*c)->base = 16;
+    if (a->base == HEX) {
+      (*c)->base = HEX;
     }
   } else {
-    base = 10;
+    base = DEC;
   }
   carry = 0;
   big_init(c);
@@ -259,7 +262,8 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 
       while (i >= 0 || j >= 0 || carry > 0) {
         if (i >= 0 && j >= 0) {
-          tmp = big_get_hex(a->dig[i], a->base) + big_get_hex(b->dig[j], b->base);
+          tmp = big_get_hex(a->dig[i], a->base) + big_get_hex(b->dig[j],
+              b->base);
         } else if (i >= 0) {
           tmp = a->dig[i];
         } else if (j >= 0) {
@@ -282,8 +286,16 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 //
 // Bigint multiplication
 void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
-  int i, j, k, tmp, carry, push_left;
+  int i, j, k, tmp, carry, push_left, base;
 
+  if (a->base != 0) {
+    base = a->base;
+    if (a->base == HEX) {
+      (*c)->base = HEX;
+    }
+  } else {
+    base = DEC;
+  }
   big_init(c);
   // Set result to correct sign
   if ((*a).neg && (*b).neg) {
@@ -317,15 +329,16 @@ void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
       j = b->len - 1;
       while (j >= 0 || carry > 0) {
         if (j >= 0) {
-          tmp = a->dig[i] * b->dig[j];
+          tmp = big_get_hex(a->dig[i], a->base) * big_get_hex(b->dig[j],
+              b->base);
         } else {
           tmp = 0;
         }
         tmp += carry;
-        carry = tmp / 10;
-        (*c)->dig[k] += tmp % 10;
-        carry += (*c)->dig[k] / 10;
-        (*c)->dig[k] = (*c)->dig[k] % 10;
+        carry = tmp / base;
+        (*c)->dig[k] += tmp % base;
+        carry += (*c)->dig[k] / base;
+        (*c)->dig[k] = (*c)->dig[k] % base;
         j--;
         k--;
       }
@@ -522,7 +535,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     d = NULL;
   } else if (strcmp(big_get(a), big_get(b)) == 0) {
     big_set("1", d);
-  } else if (strcmp(big_get(a), big_get(b)) <= 0 && strlen(big_get(a)) == strlen(big_get(b))) {
+  } else if (strcmp(big_get(a), big_get(b)) <= 0 && strlen(big_get(a)) ==
+        strlen(big_get(b))) {
     big_set("0", d);
   } else if (strcmp(big_get(b), "1") == 0) {
     big_copy_ref(a, d);
@@ -578,7 +592,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         clen = strlen(ccc);
         for (int k = 0; k < clen; k++) {
           if (i == 0 && clen > 1) {
-            // 1st run, populate result with big-num divs ie first nums in result
+            // 1st run, populate result with big-num divs ie first nums
+            // in result
             for (uint64_t l = 0; l < strlen(ccc); l++) {
               (*res).dig[l] = ccc[l] - '0';
             }
@@ -596,7 +611,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
               (*res).len = clen;
             }
             strcpy(ccc1, big_get(res));
-            // This hack adds a 0 to thec 1st couple of numbers so they add upp correctly
+            // This hack adds a 0 to thec 1st couple of numbers so they add
+            // upp correctly
             if (clen > 3 && i >= 1) {
               ccc1[clen] = '0';
               ccc1[clen+1] = '\0';
@@ -614,8 +630,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             }
             break;
           } else {
-            // Modify the where to position the next character depening on the above hacks
-            // to save repetitions
+            // Modify where to position the next character depening on the
+            // above hacks to save repetitions
             if (i==1 && clen == 1 && (len123 == 3 || len123 > 4)) {
               len123--;
             }
@@ -714,3 +730,6 @@ void big_assert(bigint_t **b1, bigint_t **b2) {
   assert(strcmp(big_get(*b1), big_get(*b2)) == 0);
 }
 
+void big_assert_str(char* str, bigint_t **b2) {
+  assert(strcmp(str, big_get(*b2)) == 0);
+}
