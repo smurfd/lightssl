@@ -578,10 +578,10 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         big_init_m(5, &v, &x, &y, &z, &f);
         big_set_m(5, &v, &x, &y, &z, &f);
         if (len < 4) {
-          (*e).len=len3+2;
+          (*e).len=len3 + 2;
         } else {
           if (len3+1>=len2)
-            (*e).len=len3+1;
+            (*e).len=len3 + 1;
           else (*e).len = len2;
         }
 
@@ -606,28 +606,21 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             big_init_m(2, &tmp, &tmp2);
             char *ccc1 = malloc(BIGLEN);
 
-            // FIXME: merge with below if?
             if ((*res).len < clen) {
               (*res).len = clen;
             }
+            len123  = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
             strcpy(ccc1, big_get(res));
             // This hack adds a 0 to thec 1st couple of numbers so they add
             // upp correctly
             if (clen > 3 && i >= 1) {
               ccc1[clen] = '0';
-              ccc1[clen+1] = '\0';
+              ccc1[clen + 1] = '\0';
             }
             big_set(ccc1, &tmp);
             big_set(ccc, &tmp2);
-            // FIXME: merge this with above if?
             (*res).len = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
-            len123  = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
             big_add(tmp2, tmp, &res);
-            // FIXME: Why this hack?
-            if ((*res).dig[len123] == 0) {
-              len123--;
-              (*res).len = len123 + 1;
-            }
             break;
           } else {
             // Modify where to position the next character depening on the
@@ -662,7 +655,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
           }
           (*res).len = i + mod;
           for (uint64_t j = 0; j < strlen(big_get(*d)); j++) {
-            (*res).dig[i+j+(mod-1)] = (*d)->dig[j];
+            (*res).dig[i + j + (mod - 1)] = (*d)->dig[j];
             (*res).len = i + j + mod;
           }
         }
@@ -680,7 +673,16 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   bigint_t *c, *d, *f;
   bool n = false;
+  int base;
 
+  if (a->base != 0) {
+    base = a->base;
+    if (a->base == HEX) {
+      (*e)->base = HEX;
+    }
+  } else {
+    base = DEC;
+  }
   if (a == NULL) {
     e = NULL;
   } else if (b == NULL) {
@@ -713,7 +715,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
 }
 
 bool big_bit_and_one(bigint_t *a) {
-  return (*a).dig[(*a).len-1] & 1;
+  return (*a).dig[(*a).len - 1] & 1;
 }
 
 //
