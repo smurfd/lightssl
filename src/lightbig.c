@@ -512,7 +512,7 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   if (c->neg == true) {
      co--;
   }
-  str = (char*) malloc(sizeof(uint64_t));
+  str = (char*) malloc(sizeof(uint64_t)); // here?
   sprintf(str, "%llu", co);
   big_set(str, d);
   if (str) {

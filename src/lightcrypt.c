@@ -60,6 +60,7 @@ void lightcrypt_init() {
   big_set_m(2, &(*publ).p1, &(*publ).p2);
   lightcrypt_privkey(&priv);
   lightcrypt_pubkey(&(*c), priv, &publ);
+  printf("pub : %s, %s\n", big_get((*publ).p1), big_get((*publ).p2));
   lightcrypt_end_t(&publ);
   big_end(&priv);
   big_end(&a);
@@ -154,10 +155,14 @@ void lightcrypt_privkey(bigint_t **privkey) {
 void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
     bigtup_t **pubkey) {
   lightcrypt_point_mul(cur, privkey, cur->g, pubkey);
-  printf("PUBK\n");
-  // should return:
-  // 114228706046720397033883399099126209430656953859958883131997376409144460418386 &
+  //printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
+  // should return(from python ecdhe.py):
+  // 114228706046720397033883399099126209430656953859958883131997376409144460418386,
   // 81307239155600299831502865374878345877638639799606025680292741045527875388961
+  //
+  // returns:
+  //55066263022277343669578718895168534326250603453777594175500187360389116729240,
+  //32670510020758816978083085130507043184471273380659243275938904335757337482424
 }
 
 //
@@ -183,8 +188,9 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
     printf("end mul 2\n");
     //lightcrypt_end_t(&npoint);
   } else {
-    ret = NULL;
+    //ret = NULL;
     bigtup_t *r = NULL;
+    //  bigtup_t *ad = NULL;
     lightcrypt_init_t_m(1, &r);
     big_set_m(2, &addend->p1, &addend->p2);
     lightcrypt_copy_t(point, &addend);
@@ -202,17 +208,27 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
       }
       bigtup_t *ad = NULL;
       lightcrypt_init_t_m(1, &ad);
+      big_init_m(2, (*ad).p1, (*ad).p2);
       printf("key2 = %s\n", big_get(key));
       lightcrypt_point_add(cur, addend, addend, &ad);
-      big_div(key, t, &k2);
-      big_copy_ref(k2, &key);
-      lightcrypt_copy_t(ad, &addend);
       printf("key3 = %s\n", big_get(key));
+      big_init_m(2, &t, &k2);
+      big_set_m(1, &k2);
+      big_set("2", &t);
+      // FIXME: malloc: Region cookie corrupted between this print and next
+      big_div(key, t, &k2);
+      printf("key4 = %s\n", big_get(key));
+      big_copy_ref(k2, &key);
+      printf("key5 = %s\n", big_get(key));
+      lightcrypt_copy_t(ad, &addend);
+      printf("key6 = %s\n", big_get(key));
       //lightcrypt_end_t(&ad);
       //big_end_m(3, &t, &k2, &k1);
     }
+    if (ret != NULL) {
+      assert(lightcrypt_oncurve(cur, *ret));
+    }
     printf("end mul loop\n");
-    assert(lightcrypt_oncurve(cur, *ret));
   }
   //lightcrypt_end_t(&addend);
 }
