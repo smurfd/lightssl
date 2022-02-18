@@ -11,8 +11,10 @@
 typedef struct {
   int *dig;
   int len;
-  bool neg;
   int base;
+  bool neg;
+  bool alloc_t;
+  bool alloc_d;
 } bigint_t;
 
 // Init

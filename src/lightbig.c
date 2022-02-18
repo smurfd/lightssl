@@ -19,6 +19,8 @@ void big_init(bigint_t **a) {
   (*a) = calloc(sizeof(bigint_t), sizeof(bigint_t));
   (*a)->neg = false;
   (*a)->base = DEC;
+  (*a)->alloc_t = true;
+  (*a)->alloc_d = false;
 }
 
 //
@@ -36,10 +38,10 @@ void big_init_m(int len, ...) {
 //
 // Clear a bigint
 void big_end(bigint_t **a) {
-  if ((*a)->dig != NULL) {
+  if ((*a)->alloc_d) {
     free((*a)->dig);
   }
-  if ((*a) != NULL) {
+  if ((*a)->alloc_t) {
     free((*a));
   }
 }
@@ -72,6 +74,7 @@ void big_set_m(int len, ...) {
 // Allocate memory for digits
 void big_alloc(bigint_t **b) {
   (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
+  (*b)->alloc_d = true;
 }
 
 //
