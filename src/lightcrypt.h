@@ -16,6 +16,7 @@ typedef struct {
   bigint_t *p1;
   bigint_t *p2;
   bool empty;
+  bool alloc_t;
 } bigtup_t;
 
 struct curve {

@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 
+#define MAXSTR 256
 #define BIGLEN 4096
 #define DEC 10
 #define HEX 16
@@ -50,4 +51,6 @@ void big_set_m(int len, ...);
 
 // Hex
 int big_get_hex(int a, int base);
+int big_check_set_base(bigint_t *a, bigint_t **b);
+
 #endif

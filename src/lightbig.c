@@ -181,7 +181,7 @@ void big_clear_zeros(bigint_t **b) {
 //
 // Get string from bigint
 char *big_get(bigint_t *a) {
-  char *b = malloc(BIGLEN);
+  char *b = malloc(BIGLEN); //
   int mod = 0;
 
   // -3 is digit for '-'?
@@ -223,20 +223,13 @@ int big_get_hex(int a, int base) {
 void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, base;
 
-  if (a->base != 0) {
-    base = a->base;
-    if (a->base == HEX) {
-      (*c)->base = HEX;
-    }
-  } else {
-    base = DEC;
-  }
+  base = big_check_set_base(a, c);
   carry = 0;
   big_init(c);
 
   if ((*a).neg && (*b).neg) {
-    char *a1 = malloc(BIGLEN);
-    char *b1 = malloc(BIGLEN);
+    char *a1 = malloc(MAXSTR);
+    char *b1 = malloc(MAXSTR);
     bigint_t *aa, *bb;
     sprintf(a1, "%s", big_get(a));
     sprintf(b1, "%s", big_get(b));
@@ -291,15 +284,8 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, push_left, base;
 
-  if (a->base != 0) {
-    base = a->base;
-    if (a->base == HEX) {
-      (*c)->base = HEX;
-    }
-  } else {
-    base = DEC;
-  }
   big_init(c);
+  base = big_check_set_base(a, c);
   // Set result to correct sign
   if ((*a).neg && (*b).neg) {
     (*c)->neg = false;
@@ -359,8 +345,8 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
 
   big_init_m(3, c, &d, &e);
   if ((*a).neg && (*b).neg) {
-    char *a1 = malloc(BIGLEN);
-    char *b1 = malloc(BIGLEN);
+    char *a1 = malloc(BIGLEN); //
+    char *b1 = malloc(BIGLEN); //
     bigint_t *aa, *bb;
     sprintf(a1, "%s", big_get(a));
     sprintf(b1, "%s", big_get(b));
@@ -497,16 +483,13 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   co = 0;
   big_init_m(4, d, &c, &e, &f);
   (*d)->len = (a->len > b->len ? a->len : b->len);
-  big_alloc(d);
-  big_set_m(2, &e, &f);
+  big_set_m(4, d, &c, &e, &f);
   big_set(big_get(a), &c);
   if (c->neg) {
     nm = true;
   }
   while (c->len >= b->len && ((c->neg == false && nm == false) ||
       (c->neg == true && nm == true))) {
-    big_init_m(1, &e);
-    big_set_m(1, &e);
     big_sub(c, b, &e);
     big_copy_ref(e, &c);
     big_clear_zero(&c);
@@ -515,7 +498,7 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   if (c->neg == true) {
      co--;
   }
-  str = (char*) malloc(sizeof(uint64_t)); // here?
+  str = (char*) malloc(MAXSTR);
   sprintf(str, "%llu", co);
   big_set(str, d);
   if (str) {
@@ -525,7 +508,9 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
 
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   int len, len123;
-  bigint_t *c, *e, *w, *res;
+  bigint_t *c, *e, *w, *res, *v, *x, *y, *z, *f, *tmp, *tmp2;
+  big_init_m(11, &v, &x, &y, &z, &f, &c, &e, &w, &res, &tmp, &tmp2);
+  big_set_m(11, &v, &x, &y, &z, &f, &c, &e, &w, &res, &tmp, &tmp2);
 
   // Set result to correct sign
   if ((*a).neg || (*b).neg) {
@@ -546,10 +531,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
   } else {
     len123 = 0;
     len = strlen(big_get(a)) - strlen(big_get(b));
-    big_init_m(4, &c, &e, &w, &res);
-    big_set_m(4, &c, &e, &w, &res);
     big_copy_ref(a, &c);
-    big_copy_ref(b, &e);
     big_copy_ref(c, &w);
 
     // hack to run the below loop even if the numbers have the same length
@@ -563,8 +545,8 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
       int len3 = len1-len2-1;
       if (len3 > 0) {
         int clen;
-        char *ccc = malloc(BIGLEN);
-        char *cc = malloc(BIGLEN);
+        char *ccc = malloc(MAXSTR);
+        char *cc = malloc(MAXSTR);
 
         strcpy(cc, big_get(e));
         if (len1 >= len3 + 4) {
@@ -577,15 +559,14 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         }
         cc[len3+1] = '\0';
         big_set(cc, &e);
-        bigint_t *v, *x, *y, *z, *f;
-        big_init_m(5, &v, &x, &y, &z, &f);
-        big_set_m(5, &v, &x, &y, &z, &f);
         if (len < 4) {
           (*e).len=len3 + 2;
         } else {
-          if (len3+1>=len2)
+          if (len3+1>=len2) {
             (*e).len=len3 + 1;
-          else (*e).len = len2;
+          } else {
+            (*e).len = len2;
+          }
         }
 
         big_copy_ref(c, &w);
@@ -605,9 +586,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             break;
           } else if (clen > 1) {
             // If the number of divisions exceed 9 we do this
-            bigint_t *tmp = NULL, *tmp2 = NULL;
-            big_init_m(2, &tmp, &tmp2);
-            char *ccc1 = malloc(BIGLEN);
+            char *ccc1 = malloc(MAXSTR);
 
             if ((*res).len < clen) {
               (*res).len = clen;
@@ -665,7 +644,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         } else if (i == 2 && (*res).len == 2) {
           (*res).len++;
         }
-        big_end_m(1, &ff);
+        //big_end_m(1, &ff);
         break;
       }
     }
@@ -677,26 +656,20 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
 //
 // Bigint modulo
 void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
-  bigint_t *c, *d, *f;
+  bigint_t *c, *d, *f, *g;
   bool n = false;
   int base;
 
-  if (a->base != 0) {
-    base = a->base;
-    if (a->base == HEX) {
-      (*e)->base = HEX;
-    }
-  } else {
-    base = DEC;
-  }
+  big_init_m(5, &c, &d, &f, e, &g);
+  big_set_m(4, &c, &d, &f, e);
+  big_set("1", &g);
+  base = big_check_set_base(a, e);
+
   if (a == NULL) {
     e = NULL;
   } else if (b == NULL) {
     e = NULL;
   } else {
-    big_init_m(4, &c, &d, &f, e);
-    big_set_m(1, &c, &d);
-    big_set_m(1, &f);
     big_copy_ref(a, &f);
     if ((*a).neg) {
       (*f).neg = false;
@@ -704,9 +677,6 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     }
     big_div(f, b, &c);
     if (n) {
-      bigint_t *g;
-      big_init_m(1, &g);
-      big_set("1", &g);
       big_add(c, g, &c);
     }
     if (n && (*c).neg == false) {
@@ -718,10 +688,24 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     big_sub(a, d, e);
     big_clear_zeros(&(*e));
   }
+  //big_end_m(4, &c, &d, &f, &g);
 }
 
 bool big_bit_and_one(bigint_t *a) {
   return (*a).dig[(*a).len - 1] & 1;
+}
+
+int big_check_set_base(bigint_t *a, bigint_t **b) {
+  int base;
+  if (a->base != 0) {
+    base = a->base;
+    if (a->base == HEX) {
+      (*b)->base = HEX;
+    }
+  } else {
+    base = DEC;
+  }
+  return base;
 }
 
 //
