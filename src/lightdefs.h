@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-typedef uint64_t u64;
+typedef u_int64_t u64;
 typedef uint8_t  u08;
 typedef unsigned char b08;
 

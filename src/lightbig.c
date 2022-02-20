@@ -477,7 +477,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
 void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   char *str = (char*) malloc(MAXSTR);
   bool nm = false;
-  uint64_t co;
+  u_int64_t co;
   bigint_t *c, *e, *f;
 
   co = 0;
@@ -573,7 +573,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
           if (i == 0 && clen > 1) {
             // 1st run, populate result with big-num divs ie first nums
             // in result
-            for (uint64_t l = 0; l < strlen(ccc); l++) {
+            for (u_int64_t l = 0; l < strlen(ccc); l++) {
               (*res).dig[l] = ccc[l] - '0';
             }
             (*res).len = strlen(ccc);
@@ -630,7 +630,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             mod = 2;
           }
           (*res).len = i + mod;
-          for (uint64_t j = 0; j < strlen(big_get(*d)); j++) {
+          for (u_int64_t j = 0; j < strlen(big_get(*d)); j++) {
             (*res).dig[i + j + (mod - 1)] = (*d)->dig[j];
             (*res).len = i + j + mod;
           }
