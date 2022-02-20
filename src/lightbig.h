@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define MAXSTR 256
-#define BIGLEN 4096
+#define BIGLEN 1024
 #define DEC 10
 #define HEX 16
 
@@ -43,6 +43,7 @@ void big_print(bigint_t **a);
 void big_alloc(bigint_t **b);
 void big_copy(bigint_t *a, bigint_t **b);
 void big_copy_ref(bigint_t *a, bigint_t **b);
+bool big_cmp(bigint_t *a, bigint_t *b);
 
 // Multi
 void big_init_m(int len, ...);
