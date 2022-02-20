@@ -259,7 +259,9 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
       big_copy_ref(a, c);
     } else {
       (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
-      big_alloc(&(*c));
+      if (!(*c)->alloc_d) {
+        big_alloc(&(*c));
+      }
       i = a->len - 1;
       j = b->len - 1;
       k = (*c)->len - 1;
@@ -357,7 +359,6 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
   big_set(big_get(b), &bb);
   big_copy_ref(b, &f);
   (*c)->len = f->len;
-
   if ((*a).neg && (*b).neg) {
     (*aa).neg = false;
     (*bb).neg = false;
@@ -397,11 +398,10 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
     } else {
       (*c)->len = (a->len > b->len ? a->len : b->len);
       big_alloc(&(*c));
-
       if (a->len > b->len) {
         (*d).len = a->len;
-        big_alloc(&d);
         (*e).len = b->len;
+        big_alloc(&d);
         big_alloc(&e);
         big_copy(a, &d);
         big_copy(b, &e);
@@ -409,8 +409,8 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
         j = e->len - 1;
       } else if (b->len > a->len) {
         (*d).len = b->len;
-        big_alloc(&d);
         (*e).len = a->len;
+        big_alloc(&d);
         big_alloc(&e);
         (*c)->neg = true;
         big_copy(b, &d);
@@ -419,8 +419,8 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
         j = e->len - 1;
       } else {
         (*d).len = a->len;
-        big_alloc(&d);
         (*e).len = b->len;
+        big_alloc(&d);
         big_alloc(&e);
         big_copy(a, &d);
         big_copy(b, &e);
@@ -598,6 +598,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             big_set(ccc, &tmp2);
             (*res).len = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
             big_add(tmp2, tmp, &res);
+            free(ccc1);
             break;
           } else {
             // Modify where to position the next character depening on the
@@ -675,7 +676,9 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     }
     big_mul(c, b, &d);
     (*e)->len = (f->len > d->len ? f->len : d->len);
-    big_alloc(e);
+    if (!(*e)->alloc_d) {
+      big_alloc(e);
+    }
     big_sub(a, d, e);
     big_clear_zeros(&(*e));
   }

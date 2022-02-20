@@ -181,23 +181,17 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
     lightcrypt_point_mul(cur, key, npoint, ret);
   } else {
     while (strcmp(big_get(key), "0") != 0) {
-      printf("key1 = %s\n", big_get(key));
       if (big_bit_and_one(key)) {
         if (ret != NULL) {
           lightcrypt_copy_t(*ret, &r);
         }
         lightcrypt_point_add(cur, r, addend, ret);
       }
-      printf("key2 = %s\n", big_get(key));
       lightcrypt_point_add(cur, addend, addend, &ad);
-      printf("key3 = %s\n", big_get(key));
       // FIXME: malloc: Region cookie corrupted between this print and next
       big_div(key, t, &k2);
-      printf("key4 = %s\n", big_get(key));
       big_copy_ref(k2, &key);
-      printf("key5 = %s\n", big_get(key));
       lightcrypt_copy_t(ad, &addend);
-      printf("key6 = %s\n", big_get(key));
     }
     if (ret != NULL) {
       //assert(lightcrypt_oncurve(cur, *ret));
