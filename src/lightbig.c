@@ -481,7 +481,6 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       }
     }
   }
-  big_end_m(3, &f, &aa, &bb);
 }
 
 //
