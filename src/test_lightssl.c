@@ -287,6 +287,7 @@ int main(int argc, char **argv) {
       printf("OK!\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
       lightcrypt_init();
+      printf("OK!\n");
     } else if (strcmp(argv[1], "hash") == 0) {
       const char* in = "smurfd";
       const char* rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb2"\

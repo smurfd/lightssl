@@ -16,8 +16,8 @@
 //
 // Initialize crypt
 void lightcrypt_init() {
-  bigint_t *priv, *a;
-  bigtup_t *publ = NULL;
+  bigint_t *priv, *priv2, *a;
+  bigtup_t *publ = NULL, *publ2 = NULL, *scal1 = NULL, *scal2 = NULL;
   char *s = malloc(512);
   struct curve *c = malloc(sizeof(struct curve));
 
@@ -51,9 +51,25 @@ void lightcrypt_init() {
   (*c).h = 1;
 
   lightcrypt_init_t(&publ);
-  lightcrypt_privkey(&priv);
+  lightcrypt_init_t(&publ2);
+  lightcrypt_init_t(&scal1);
+  lightcrypt_init_t(&scal2);
+  lightcrypt_privkey(&priv2);
+  big_set("372865034438889165706507940964903653553438428825000546936"\
+      "45072639621059063465", &priv);
   lightcrypt_pubkey(&(*c), priv, &publ);
+  lightcrypt_pubkey(&(*c), priv2, &publ2);
+
+  printf("-----\n");
   printf("pub : %s, %s\n", big_get((*publ).p1), big_get((*publ).p2));
+  printf("pub : %s, %s\n", big_get((*publ2).p1), big_get((*publ2).p2));
+  printf("-----\n");
+
+  lightcrypt_point_mul(&(*c), priv, publ2, &scal1);
+  lightcrypt_point_mul(&(*c), priv2, publ, &scal2);
+
+  printf("cmp1 %d\n", big_cmp(scal1->p1, scal2->p1));
+  printf("cmp2 %d\n", big_cmp(scal1->p2, scal2->p2));
 
   lightcrypt_end_t(&publ);
   big_end_m(6, &(*c).p, &(*c).n, &(*c).g->p1, &(*c).g->p2, &priv, &a);
@@ -138,10 +154,11 @@ void lightcrypt_rand_t(bigtup_t **p) {
 //
 // Initialize private key
 void lightcrypt_privkey(bigint_t **privkey) {
-//  lightcrypt_rand(privkey);
-  big_set("372865034438889165706507940964903653553438428825000546936"\
-      "45072639621059063465", privkey);
-  big_print(privkey);
+  lightcrypt_rand(privkey);
+  printf("PRIV:%s\n", big_get(*privkey));
+//  big_set("372865034438889165706507940964903653553438428825000546936"\
+//      "45072639621059063465", privkey);
+  //big_print(privkey);
 }
 
 //

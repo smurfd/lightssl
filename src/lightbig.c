@@ -16,7 +16,7 @@
 //
 // Initialize a bigint
 void big_init(bigint_t **a) {
-  (*a) = calloc(sizeof(bigint_t), sizeof(bigint_t));
+  (*a) = calloc(1, sizeof(bigint_t));
   (*a)->neg = false;
   (*a)->base = DEC;
   (*a)->alloc_t = true;
@@ -122,7 +122,7 @@ void big_set(char *a, bigint_t **b) {
 //
 // Allocate memory for digits
 void big_alloc(bigint_t **b) {
-  (*b)->dig = calloc((*b)->len * sizeof(int), sizeof(int));
+  (*b)->dig = calloc((*b)->len, sizeof(int));
   (*b)->alloc_d = true;
 }
 
@@ -239,7 +239,8 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
   big_init_m(2, &aa, &bb);
   base = big_check_set_base(a, c);
   carry = 0;
-  big_init(c);
+  memset((*c), 0, sizeof(bigint_t));
+  memset((*c)->dig, 0, (*c)->len*sizeof(int));
   big_set(big_get(a), &aa);
   big_set(big_get(b), &bb);
 
@@ -287,6 +288,7 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
       big_clear_zero(&(*c));
     }
   }
+  big_end_m(2, &aa, &bb);
 }
 
 //
@@ -294,7 +296,10 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, push_left, base;
 
-  big_init(c);
+  //big_init(c);
+  memset((*c), 0, sizeof(bigint_t));
+  memset((*c)->dig, 0, (*c)->len*sizeof(int));
+
   base = big_check_set_base(a, c);
   // Set result to correct sign
   if ((*a).neg && (*b).neg) {
@@ -308,14 +313,17 @@ void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
   } else if (b==NULL) {
     c = NULL;
   } else if ((*a).len == 1 && (*a).dig[0] == 0) {
+    big_end(&(*c));
     (*c)->len = 1;
     big_alloc(&(*c));
     big_set("0", c);
   } else if ((*b).len == 1 && (*b).dig[0] == 0) {
+    big_end(&(*c));
     (*c)->len = 1;
     big_alloc(&(*c));
     big_set("0", c);
   } else {
+    big_end(&(*c));
     (*c)->len = a->len + b->len;
     big_alloc(&(*c));
     i = a->len - 1;
@@ -353,11 +361,13 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry;
   bigint_t *d, *e, *f, *aa, *bb;
 
-  big_init_m(6, c, &d, &e, &f, &aa, &bb);
-  big_set_m(6, c, &d, &e, &f, &aa, &bb);
+  big_init_m(5, &d, &e, &f, &aa, &bb);
+  big_set_m(5, &d, &e, &f, &aa, &bb);
   big_set(big_get(a), &aa);
   big_set(big_get(b), &bb);
   big_copy_ref(b, &f);
+  memset((*c), 0, sizeof(bigint_t));
+  memset((*c)->dig, 0, (*c)->len*sizeof(int));
   (*c)->len = f->len;
   if ((*a).neg && (*b).neg) {
     (*aa).neg = false;
@@ -396,6 +406,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       big_copy_ref(a, c);
       big_clear_zero2(&(*c));
     } else {
+      big_end(&(*c));
       (*c)->len = (a->len > b->len ? a->len : b->len);
       big_alloc(&(*c));
       if (a->len > b->len) {
@@ -470,6 +481,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
       }
     }
   }
+  big_end_m(3, &f, &aa, &bb);
 }
 
 //
@@ -481,10 +493,13 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   bigint_t *c, *e, *f;
 
   co = 0;
-  big_init_m(4, d, &c, &e, &f);
+  big_init_m(3, &c, &e, &f);
   (*d)->len = (a->len > b->len ? a->len : b->len);
-  big_set_m(4, d, &c, &e, &f);
+  big_set_m(3, &c, &e, &f);
   big_set(big_get(a), &c);
+
+  memset((*d), 0, sizeof(bigint_t));
+  memset((*d)->dig, 0, (*d)->len*sizeof(int));
   if (c->neg) {
     nm = true;
   }
@@ -500,6 +515,7 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   }
   sprintf(str, "%llu", co);
   big_set(str, d);
+  free(str);
 }
 
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
@@ -652,8 +668,8 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
   bool n = false;
   int base;
 
-  big_init_m(5, &c, &d, &f, e, &g);
-  big_set_m(4, &c, &d, &f, e);
+  big_init_m(5, e, &c, &d, &f, &g);
+  big_set_m(4, e, &c, &d, &f);
   big_set("1", &g);
   base = big_check_set_base(a, e);
 
@@ -682,6 +698,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
     big_sub(a, d, e);
     big_clear_zeros(&(*e));
   }
+  big_end_m(2, &f, &g);
 }
 
 bool big_bit_and_one(bigint_t *a) {
