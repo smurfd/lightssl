@@ -19,6 +19,7 @@ void lightcrypt_init() {
   bigint_t *priv, *priv2, *a;
   bigtup_t *publ = NULL, *publ2 = NULL, *scal1 = NULL, *scal2 = NULL;
   char *s = malloc(512);
+  struct timespec remaining, request = {1, 0};
   struct curve *c = malloc(sizeof(struct curve));
 
   c->g = malloc(sizeof(bigtup_t));
@@ -54,10 +55,16 @@ void lightcrypt_init() {
   lightcrypt_init_t(&publ2);
   lightcrypt_init_t(&scal1);
   lightcrypt_init_t(&scal2);
+
+  big_alloc(&(*publ).p1);
+  big_alloc(&(*publ).p2);
+  lightcrypt_privkey(&priv);
   lightcrypt_privkey(&priv2);
-  big_set("372865034438889165706507940964903653553438428825000546936"\
-      "45072639621059063465", &priv);
+//  big_set("372865034438889165706507940964903653553438428825000546936"\
+//      "45072639621059063465", &priv);
+
   lightcrypt_pubkey(&(*c), priv, &publ);
+  nanosleep(&request, &remaining);
   lightcrypt_pubkey(&(*c), priv2, &publ2);
 
   printf("-----\n");
@@ -151,14 +158,28 @@ void lightcrypt_rand_t(bigtup_t **p) {
   free(s);
 }
 
+char* lightcrypt_getrandstr(int len) {
+  char *ret = calloc(1, len*sizeof(char));
+
+  srand(time(0));
+  char char1[] = "0123456789";
+  for (int i=0; i<len; i++) {
+    ret[i] = char1[rand() % (sizeof char1 - 1)];
+  }
+  return ret;
+}
+
+//
+// Randomize to a bigint
+void lightcrypt_random(bigint_t **p) {
+  big_init(p);
+  big_set(lightcrypt_getrandstr(80), &(*p));
+}
+
 //
 // Initialize private key
 void lightcrypt_privkey(bigint_t **privkey) {
-  lightcrypt_rand(privkey);
-  printf("PRIV:%s\n", big_get(*privkey));
-//  big_set("372865034438889165706507940964903653553438428825000546936"\
-//      "45072639621059063465", privkey);
-  //big_print(privkey);
+  lightcrypt_random(privkey);
 }
 
 //
@@ -166,7 +187,8 @@ void lightcrypt_privkey(bigint_t **privkey) {
 void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
     bigtup_t **pubkey) {
   lightcrypt_point_mul(cur, privkey, cur->g, pubkey);
-  //printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
+  printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
+  // FIXME: still an issue 
   // should return(from python ecdhe.py):
   // 114228706046720397033883399099126209430656953859958883131997376409144460418386,
   // 81307239155600299831502865374878345877638639799606025680292741045527875388961
