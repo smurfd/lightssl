@@ -691,7 +691,6 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
       (*c).neg = true;
     }
     big_mul(c, b, &d);
-    (*e)->len = (f->len > d->len ? f->len : d->len);
     if (!(*e)->alloc_d) {
       big_alloc(e);
     }

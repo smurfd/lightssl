@@ -60,8 +60,6 @@ void lightcrypt_init() {
   big_alloc(&(*publ).p2);
   lightcrypt_privkey(&priv);
   lightcrypt_privkey(&priv2);
-//  big_set("372865034438889165706507940964903653553438428825000546936"\
-//      "45072639621059063465", &priv);
 
   lightcrypt_pubkey(&(*c), priv, &publ);
   nanosleep(&request, &remaining);
@@ -188,7 +186,7 @@ void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
     bigtup_t **pubkey) {
   lightcrypt_point_mul(cur, privkey, cur->g, pubkey);
   printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
-  // FIXME: still an issue 
+  // FIXME: still an issue
   // should return(from python ecdhe.py):
   // 114228706046720397033883399099126209430656953859958883131997376409144460418386,
   // 81307239155600299831502865374878345877638639799606025680292741045527875388961
