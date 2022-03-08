@@ -184,6 +184,9 @@ void lightcrypt_privkey(bigint_t **privkey) {
 // Initialize public key
 void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
     bigtup_t **pubkey) {
+  printf("PRIV: %s\n", "32873365337033794512477405735997107923198513824305262159693765843969498982399885");//big_get(privkey));
+  printf("CUR-G : %s : %s\n", big_get(cur->g->p1), big_get(cur->g->p2));
+  big_set("32873365337033794512477405735997107923198513824305262159693765843969498982399885", &privkey);
   lightcrypt_point_mul(cur, privkey, cur->g, pubkey);
   printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
   // FIXME: still an issue
@@ -226,7 +229,7 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
       }
       lightcrypt_point_add(cur, addend, addend, &ad);
       // FIXME: malloc: Region cookie corrupted between this print and next
-      big_div(key, t, &k2);
+      big_div_2(key, t, &k2);
       big_copy_ref(k2, &key);
       lightcrypt_copy_t(ad, &addend);
     }
@@ -313,11 +316,14 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1,
     big_mul(mmm, mmm2x31, &mx31);
     big_add(y1, mx31, &yx3); // y3
 
-    yx3->neg = true;
+    if (yx3->neg) {
+      yx3->neg = false;
+    } else {
+      yx3->neg = true;
+    }
     lightcrypt_init_t_m(1, &ret);
     big_mod(mmm2x2, cur->p, &(*ret)->p1);
     big_mod(yx3, cur->p, &(*ret)->p2);
-    printf("ret (%s, %s)\n", big_get((*ret)->p1), big_get((*ret)->p2));
     //assert(lightcrypt_oncurve(cur, *ret));
   }
 }
@@ -376,7 +382,7 @@ void lightcrypt_point_imd(struct curve *cur, bigint_t **key,
     big_copy_ref(*key, &or);
 
     while (strcmp("0", big_get(r)) != 0) {
-      big_div(or, r, &q);     // q = or // r
+      big_div_2(or, r, &q);     // q = or // r
       big_copy_ref(or, &ort); // old_rr = old_r
       big_copy_ref(os, &ost);
       big_copy_ref(ot, &ott);

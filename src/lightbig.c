@@ -487,35 +487,137 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
 //
 // Bigint division
 void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
-  char *str = (char*) malloc(MAXSTR);
+  char *str1 = (char*) malloc(MAXSTR);
+  char *str2 = (char*) malloc(MAXSTR);
   bool nm = false;
-  u64 co;
-  bigint_t *c, *e, *f;
+  bigint_t *b1, *c, *e, *f, *count, *count2, *one;
 
-  co = 0;
-  big_init_m(3, &c, &e, &f);
+  big_init_m(7, &b1, &c, &e, &f, &count, &one, &count2);
   (*d)->len = (a->len > b->len ? a->len : b->len);
-  big_set_m(3, &c, &e, &f);
-  big_set(big_get(a), &c);
+  big_set_m(6, &b1, &e, &f, &count, &one, &count2);
+//  big_set(big_get(a), &c);
+//  big_set(big_get(b), &b1);
+  big_set("1", &one);
 
+  strcpy(str1, big_get(a));
+  strcpy(str2, big_get(b));
+  big_set(str1, &c);
+  big_set(str2, &b1);
   memset((*d), 0, sizeof(bigint_t));
   memset((*d)->dig, 0, (*d)->len*sizeof(int));
   if (c->neg) {
     nm = true;
   }
-  while (c->len >= b->len && ((c->neg == false && nm == false) ||
+  while (c->len >= b1->len && ((c->neg == false && nm == false) ||
       (c->neg == true && nm == true))) {
-    big_sub(c, b, &e);
+    big_sub(c, b1, &e);
     big_copy_ref(e, &c);
-    big_clear_zero(&c);
-    co++;
+    big_clear_zeros(&c);
+//    big_clear_zeros(&e);
+//    big_set(big_get(e), &c);
+//    (*c).len = (*e).len;
+    big_set(str2, &b1);
+
+    big_add(count, one, &count2);
+    big_copy_ref(count2, &count);
   }
   if (c->neg == true) {
-     co--;
+    big_sub(count, one, &count2);
+    big_copy_ref(count2, &count);
   }
-  sprintf(str, "%llu", co);
-  big_set(str, d);
-  free(str);
+  big_set(big_get(count), d);
+  free(str2);
+  free(str1);
+}
+
+void big_div_2(bigint_t *a, bigint_t *b, bigint_t **c) {
+  // This should work without fuckin hacks
+  // fill out b with zeros to be the same lenght as a then divide
+  // take that number add to c, then times b and subtract from a. repeat.
+  // 1234 // 3 = 411
+  // 1234 // 3000 = 0
+  // 1234 // 300 = 4  -- add to result
+  // 4 * 300 = 1200
+  // 1234 - 1200 = 34
+  // 34 // 30 = 1  -- add to result
+  // 1 * 30 = 30
+  // 34 - 30 = 4
+  // 4 // 3 = 1   -- add to result
+  // 3 * 1 = 3
+  // 4 - 3 = 1
+  // 1 // 3 == 0
+  bigint_t *a_tmp, *b_tmp, *c_tmp, *c_tmp2, *a_tmp2, *c_tmp3, *c_tmp4, *c_tmp5;
+  int len_a, len_b, len_diff;
+
+  big_init_m(8, &a_tmp, &b_tmp, &c_tmp, &c_tmp2, &a_tmp2, &c_tmp3, &c_tmp4, &c_tmp5);
+  big_set_m(8, &a_tmp, &b_tmp, &c_tmp, &c_tmp2, &a_tmp2, &c_tmp3, &c_tmp4, &c_tmp5);
+  big_copy_ref(a, &a_tmp);
+  big_copy_ref(b, &b_tmp);
+  big_set(big_get(b), &c_tmp);
+  // Set result to correct sign
+  if ((*a).neg || (*b).neg) {
+    (*c)->neg = true;
+  }
+
+  // if a or b is NULL we return NULL
+  // if a == b we return 1
+  // if a < b we return 0
+  // if b == 1 we return a
+  if (a == NULL) {
+    c = NULL;
+  } else if (b == NULL) {
+    c = NULL;
+  } else if (strcmp(big_get(a), big_get(b)) == 0) {
+    big_set("1", c);
+  } else if (strcmp(big_get(a), big_get(b)) <= 0 && strlen(big_get(a)) ==
+        strlen(big_get(b))) {
+    big_set("0", c);
+  } else if (strcmp(big_get(b), "1") == 0) {
+    big_copy_ref(a, c);
+  } else {
+    if (!(*c)->alloc_d) {
+      big_alloc(c);
+    }
+    len_diff = strlen(big_get(a_tmp)) - strlen(big_get(b_tmp));
+    big_set(big_get(c_tmp), &c_tmp3);
+    len_b = strlen(big_get(c_tmp));
+    for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
+      (*c_tmp).dig[len_b+i] = 0;
+      (*c_tmp).len++;
+    }
+    for (int j = 0; j <= len_diff; j++) {
+      if ((u64)(*c_tmp).len >= strlen(big_get(b_tmp))) {
+        (*c_tmp).len--;
+      }
+      big_set(big_get(c_tmp), &c_tmp3);
+      len_a = strlen(big_get(a_tmp));
+      len_b = strlen(big_get(c_tmp));
+      big_div_x(a_tmp, c_tmp, &c_tmp4);
+      big_set(big_get(c_tmp3), &c_tmp);
+      big_mul(c_tmp4, c_tmp, &c_tmp2);
+      big_sub(a_tmp, c_tmp2, &a_tmp2);
+      printf("sub %s\n", big_get(a_tmp));
+      printf("sub %s\n", big_get(c_tmp2));
+      printf("sub %s\n", big_get(a_tmp2));
+      big_clear_zeros(&a_tmp2);
+      if ((*c_tmp4).len > 1) {
+        for (int ii = 0; ii < (*c_tmp4).len; ii++) {
+          (*c_tmp5).dig[j+ii] = (*c_tmp4).dig[ii];
+          (*c_tmp5).len++;
+        }
+      } else {
+        (*c_tmp5).dig[j] = (*c_tmp4).dig[0];
+        (*c_tmp5).len++;
+      }
+      big_set(big_get(a_tmp2), &a_tmp);
+      big_set(big_get(c_tmp3), &c_tmp);
+    }
+
+    (*c_tmp5).len--;
+    big_clear_zeros(&c_tmp5);
+    big_copy_ref(c_tmp5, c);
+    //big_end_m(5, &a_tmp, &b_tmp, &c_tmp, &a_tmp2, &c_tmp4);
+  }
 }
 
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
@@ -529,6 +631,10 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     (*d)->neg = true;
   }
 
+  // if a or b is NULL we return NULL
+  // if a == b we return 1
+  // if a < b we return 0
+  // if b == 1 we return a
   if (a == NULL) {
     d = NULL;
   } else if (b == NULL) {
@@ -542,10 +648,10 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
     big_copy_ref(a, d);
   } else {
     len123 = 0;
+    // set the len to diff between a & b
     len = strlen(big_get(a)) - strlen(big_get(b));
     big_copy_ref(a, &c);
     big_copy_ref(c, &w);
-
     // hack to run the below loop even if the numbers have the same length
     if (len == 0) {
       len = 1;
@@ -560,15 +666,16 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         char *ccc = malloc(MAXSTR);
         char *cc = malloc(MAXSTR);
         strcpy(cc, big_get(e));
-        if (len1 >= len3 + 4) {
+        if (len1 >= len3 + 4) { // this is to speed up the hackery
           len3 = len1 - 4;
         }
 
-        // fill out with zeros, hack to save tons of iterations
+        // fill out the divisor with zeros,
+        // hack to save tons of iterations
         for (int j = 0; j <= len3; j++) {
           cc[len2+j] = '0';
         }
-        cc[len3+1] = '\0';
+        //cc[len3+1] = '\0';
         big_set(cc, &e);
         if (len < 4) {
           (*e).len=len3 + 2;
@@ -584,7 +691,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
         big_copy_ref(e, &x);
         big_div_x(w, x, &y);
         strcpy(ccc, big_get(y));
-        clen = strlen(ccc);
+        clen = strlen(ccc); // the number of iterations after filled out with 0s
         for (int k = 0; k < clen; k++) {
           if (i == 0 && clen > 1) {
             // 1st run, populate result with big-num divs ie first nums
@@ -596,34 +703,33 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
             len123 = strlen(ccc);
             break;
           } else if (clen > 1) {
-            // If the number of divisions exceed 9 we do this
+            // If the number of divisions exceed one digit
+
+            // FIXME: For some reason we hit this in the middle of a long number
+            //        and then the start gets "reset"
             char *ccc1 = malloc(MAXSTR);
 
-            if ((*res).len < clen) {
-              (*res).len = clen;
-            }
-            len123  = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
             strcpy(ccc1, big_get(res));
-            // This hack adds a 0 to thec 1st couple of numbers so they add
+            // This hack adds a 0 to the 1st couple of numbers so they add
             // upp correctly
-            if (clen > 3 && i >= 1) {
-              ccc1[clen] = '0';
-              ccc1[clen + 1] = '\0';
+            if (clen >= 4) {
+              len123 = len123 - 2;
+              if (len123 < clen)
+                len123 = clen;
             }
             big_set(ccc1, &tmp);
             big_set(ccc, &tmp2);
-            (*res).len = strlen(ccc) > strlen(ccc1) ? strlen(ccc):strlen(ccc1);
             big_add(tmp2, tmp, &res);
             free(ccc1);
             break;
           } else {
-            // Modify where to position the next character depening on the
-            // above hacks to save repetitions
+            // Modify where to position the next character depending on the
+            // above hacks to save iterations
             if (i==1 && clen == 1 && (len123 == 3 || len123 > 4)) {
               len123--;
             }
             if (len123 > (*res).len && i > 4) {
-              (*res).len = len123+1;
+              (*res).len = len+len123+1;
             }
             (*res).dig[len123] = ccc[k] - '0';
             break;
@@ -691,6 +797,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
       (*c).neg = true;
     }
     big_mul(c, b, &d);
+    (*e)->len = (*b).len;
     if (!(*e)->alloc_d) {
       big_alloc(e);
     }

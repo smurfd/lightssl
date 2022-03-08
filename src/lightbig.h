@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 
-#define MAXSTR 256
+#define MAXSTR 512
 #define BIGLEN 1024
 #define DEC 10
 #define HEX 16
@@ -35,7 +35,7 @@ void big_mod(bigint_t *a, bigint_t *b, bigint_t **e);
 void big_div(bigint_t *a, bigint_t *b, bigint_t **d);
 void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d);
 bool big_bit_and_one(bigint_t *a);
-
+void big_div_2(bigint_t *a, bigint_t *b, bigint_t **c);
 // Assets
 void big_assert(bigint_t **b1, bigint_t **b2);
 void big_assert_str(char* str, bigint_t **b2);
