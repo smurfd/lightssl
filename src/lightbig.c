@@ -141,7 +141,7 @@ bool big_cmp(bigint_t *a, bigint_t *b) {
 
 //
 // Copy data
-void big_copy(bigint_t *a, bigint_t **b) {
+void big_copy(const bigint_t *a, bigint_t **b) {
   for (int f = 0; f < (*a).len; f++) {
     (*b)->dig[f] = (*a).dig[f];
   }
@@ -149,8 +149,9 @@ void big_copy(bigint_t *a, bigint_t **b) {
   (*b)->base = (*a).base;
 }
 
+//
 // Copy data refs, replaces (*a) = (*b)
-void big_copy_ref(bigint_t *a, bigint_t **b) {
+void big_copy_ref(const bigint_t *a, bigint_t **b) {
   (*b)->neg = (*a).neg;
   (*b)->len = (*a).len;
   (*b)->base = (*a).base;
@@ -193,7 +194,7 @@ void big_clear_zeros(bigint_t **b) {
 
 //
 // Get string from bigint
-char *big_get(bigint_t *a) {
+char *big_get(const bigint_t *a) {
   char *b = malloc(BIGLEN); //
   int mod = 0;
 
@@ -217,6 +218,8 @@ char *big_get(bigint_t *a) {
   return b;
 }
 
+//
+// Get Hex value
 int big_get_hex(int a, int base) {
   if (base == HEX) {
     if (a > 9) {
@@ -233,7 +236,7 @@ int big_get_hex(int a, int base) {
 
 //
 // Bigint addition
-void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
+void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, base;
   bigint_t *aa, *bb;
 
@@ -294,10 +297,9 @@ void big_add(bigint_t *a, bigint_t *b, bigint_t **c) {
 
 //
 // Bigint multiplication
-void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
+void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, push_left, base;
 
-  //big_init(c);
   memset((*c), 0, sizeof(bigint_t));
   memset((*c)->dig, 0, (*c)->len*sizeof(int));
 
@@ -358,7 +360,7 @@ void big_mul(bigint_t *a, bigint_t *b, bigint_t **c) {
 
 //
 // Bigint subtraction
-void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
+void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry;
   bigint_t *d, *e, *f, *aa, *bb;
 
@@ -486,7 +488,7 @@ void big_sub(bigint_t *a, bigint_t *b, bigint_t **c) {
 
 //
 // Bigint division
-void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
+void big_div_x(const bigint_t *a, const bigint_t *b, bigint_t **d) {
   char *str1 = (char*) malloc(MAXSTR);
   char *str2 = (char*) malloc(MAXSTR);
   bool nm = false;
@@ -495,8 +497,6 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   big_init_m(7, &b1, &c, &e, &f, &count, &one, &count2);
   (*d)->len = (a->len > b->len ? a->len : b->len);
   big_set_m(6, &b1, &e, &f, &count, &one, &count2);
-//  big_set(big_get(a), &c);
-//  big_set(big_get(b), &b1);
   big_set("1", &one);
 
   strcpy(str1, big_get(a));
@@ -513,9 +513,6 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
     big_sub(c, b1, &e);
     big_copy_ref(e, &c);
     big_clear_zeros(&c);
-//    big_clear_zeros(&e);
-//    big_set(big_get(e), &c);
-//    (*c).len = (*e).len;
     big_set(str2, &b1);
 
     big_add(count, one, &count2);
@@ -530,7 +527,7 @@ void big_div_x(bigint_t *a, bigint_t *b, bigint_t **d) {
   free(str1);
 }
 
-void big_div_2(bigint_t *a, bigint_t *b, bigint_t **c) {
+void big_div_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   // This should work without fuckin hacks
   // fill out b with zeros to be the same lenght as a then divide
   // take that number add to c, then times b and subtract from a. repeat.
@@ -620,7 +617,7 @@ void big_div_2(bigint_t *a, bigint_t *b, bigint_t **c) {
   }
 }
 
-void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
+void big_div(const bigint_t *a, const bigint_t *b, bigint_t **d) {
   int len, len123;
   bigint_t *c, *e, *w, *res, *v, *x, *y, *z, *f, *tmp, *tmp2, *ff;
   big_init_m(12, &v, &x, &y, &z, &f, &c, &e, &w, &res, &tmp, &tmp2, &ff);
@@ -769,7 +766,7 @@ void big_div(bigint_t *a, bigint_t *b, bigint_t **d) {
 
 //
 // Bigint modulo
-void big_mod(bigint_t *a, bigint_t *b, bigint_t **e) {
+void big_mod(const bigint_t *a, const bigint_t *b, bigint_t **e) {
   bigint_t *c, *d, *f, *g;
   bool n = false;
   int base;
@@ -811,7 +808,7 @@ bool big_bit_and_one(bigint_t *a) {
   return (*a).dig[(*a).len - 1] & 1;
 }
 
-int big_check_set_base(bigint_t *a, bigint_t **b) {
+int big_check_set_base(const bigint_t *a, bigint_t **b) {
   int base;
   if (a->base != 0) {
     base = a->base;
@@ -826,11 +823,8 @@ int big_check_set_base(bigint_t *a, bigint_t **b) {
 
 //
 // Print a bigint
-void big_print(bigint_t **a) {
-  char *c = (char*) malloc((*a)->len);
-
+void big_print(const bigint_t **a) {
   printf("%s\n", big_get(*a));
-  free(c);
 }
 
 // Assert
