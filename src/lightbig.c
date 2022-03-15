@@ -890,7 +890,6 @@ void big_sub_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       }
       big_clear_zeros(c);
       if (j > i) {
-        printf("NEG\n");
         (*c)->neg = true;
       }
     }
@@ -971,8 +970,6 @@ void big_div_x_2(const bigint_t *a, const bigint_t *b, bigint_t **d) {
   char *str = (char*) malloc(MAXSTR);
   char *aaa = (char*) malloc(MAXSTR);
   char *bbb = (char*) malloc(MAXSTR);
-  char *aaa1 = (char*) malloc(MAXSTR);
-  char *bbb1 = (char*) malloc(MAXSTR);
   char *str1 = (char*) malloc(MAXSTR);
   bool nm = false;
   u64 co;
@@ -993,20 +990,31 @@ void big_div_x_2(const bigint_t *a, const bigint_t *b, bigint_t **d) {
   if (aa->neg) {
     nm = true;
   }
-  while ((aa->len >= bb->len) && e->neg == false) {
+  //printf("%s / %s : %d %d\n", aaa, bbb, aa->len, bb->len);
+  //printf("------\n");
+  while ((aa->len >= bb->len) && (e->neg == false && aa->neg == false)) {
+   // char *str1 = (char*) malloc(MAXSTR);
+  //big_alloc_2(&e, MAXSTR);
     big_sub_2(aa, bb, &e);
-    big_set_2(bbb, &bb);
+    //big_set_2(bbb, &bb);
     big_get_2(e, str1);
+    big_get_2(aa, aaa);
+  memset(e->dig, 0, e->len*sizeof(int));
+  memset(aa->dig, 0, aa->len*sizeof(int));
     big_set_2(str1, &aa);
+//    printf("bbb : %s:%s  %d  %d : %d %d\n", aaa, str1,aa->neg,e->neg, aa->len, bb->len);//big_cmp(e, bb));
+memset(aaa, 0, strlen(aaa));
     aa->neg = e->neg;
     aa->len = e->len;
-    bb->len = b->len;
+    //bb->len = b->len;
     co++;
-    if (co > 200) {
+/*    if (co > 200) {
       // This shouldnt happen
       printf("this shulndt happen\n");
       exit(0);
-    }
+    }*/
+    //free(str1);
+    //big_end_m(1, &e);
   }
   if (aa->neg == true) {
      co--;
@@ -1098,15 +1106,17 @@ void big_div_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       if ((u64)(*bb).len > (u64)(*b).len) {
         (*bb).len--;
       }
+      //printf("len : %llu %llu : %d : %d\n", (u64)bb->len, (u64)b->len, bb->len, len_diff);
       len_a = (*aa).len;
       len_b = (*bb).len;
       big_div_x_2(aa, bb, &cc);
-      big_mul_2(cc, bb, &cc1);
-      big_sub_2(aa, cc1, &aa1);
-
-      big_clear_zeros(&aa1);
-      big_get_2(aa1, aaa);
-      big_set_2(aaa, &aa);
+      if ((*cc).dig[0] != 0 && (*cc).len == 1) {
+        big_mul_2(bb, cc, &cc1);
+        big_sub_2(aa, cc1, &aa1);
+        big_clear_zeros(&aa1);
+        big_get_2(aa1, aaa);
+        big_set_2(aaa, &aa);
+      }
       if ((*cc).len > 1) {
         for (int ii = 0; ii < (*cc).len; ii++) {
           (*c)->dig[j + ii] = (*cc).dig[ii];
@@ -1279,8 +1289,7 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **d) {
 //
 // Bigint modulo
 void big_mod_2(const bigint_t *a, const bigint_t *b, bigint_t **e) {
-  bigint_t *c, *d, *f, *g;
-  bigint_t *aa, *bb, *cc, *cc1;
+  bigint_t *aa, *bb, *cc, *cc1, *g;
   bool n = false;
   int base;
   char *aaa = (char*) malloc(MAXSTR);
