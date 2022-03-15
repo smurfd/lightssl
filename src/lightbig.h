@@ -37,6 +37,7 @@ void big_mul_2(const bigint_t *a, const bigint_t *b, bigint_t **c);
 void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c);
 void big_sub_2(const bigint_t *a, const bigint_t *b, bigint_t **c);
 void big_mod(const bigint_t *a, const bigint_t *b, bigint_t **e);
+void big_mod_2(const bigint_t *a, const bigint_t *b, bigint_t **e);
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **d);
 void big_div_x(const bigint_t *a, const bigint_t *b, bigint_t **d);
 void big_div_x_2(const bigint_t *a, const bigint_t *b, bigint_t **d);
