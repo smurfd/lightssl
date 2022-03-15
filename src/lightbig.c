@@ -121,9 +121,62 @@ void big_set(char *a, bigint_t **b) {
 }
 
 //
+// Set a bigint from string
+void big_set_2(char *a, bigint_t **b) {
+  int skip = 0;
+
+  (*b)->neg = false;
+  (*b)->base = DEC;
+  if (a[0] == '-') {
+    (*b)->neg = true;
+    skip++;
+  }
+  if (a[0 + skip] == '0' && a[1 + skip] == 'x') {
+    (*b)->base = HEX;
+    skip = skip + 2;
+  } else {
+    (*b)->base = DEC;
+  }
+  if (strcmp("0", a) == 0) {
+    (*b)->len = 1;
+    (*b)->dig[0] = 0;
+  } else if (strcmp("", a) == 0) {
+    (*b)->len = 1;
+  } else {
+    while (a[skip] == '0') {
+      skip++;
+    }
+
+    (*b)->len = strlen(a) - skip;
+    if ((*b)->len == 0) {
+      (*b)->len++;
+      (*b)->dig[0] = 0;
+    } else {
+      for (int i = 0; i < (*b)->len; i++) {
+        if (a[skip + i] - '0' < DEC) {
+          (*b)->dig[i] = a[skip + i] - '0';
+        } else if (a[skip + i] - '0' <= 'F' - '0') {
+          (*b)->dig[i] = a[skip + i] - '0' - 7;
+        } else if (a[skip + i] - '0' < 'f' - '0') {
+          (*b)->dig[i] = a[skip + i] - '0' - 39;
+        }
+      }
+    }
+  }
+}
+
+
+//
 // Allocate memory for digits
 void big_alloc(bigint_t **b) {
   (*b)->dig = calloc((*b)->len, sizeof(int));
+  (*b)->alloc_d = true;
+}
+
+//
+// Allocate memory for digits
+void big_alloc_2(bigint_t **b, int len) {
+  (*b)->dig = calloc(len, sizeof(int));
   (*b)->alloc_d = true;
 }
 
@@ -195,7 +248,7 @@ void big_clear_zeros(bigint_t **b) {
 //
 // Get string from bigint
 char *big_get(const bigint_t *a) {
-  char *b = malloc(BIGLEN); //
+  char *b = (char*) malloc(BIGLEN); //
   int mod = 0;
 
   // -3 is digit for '-'?
@@ -217,6 +270,34 @@ char *big_get(const bigint_t *a) {
   }
   return b;
 }
+
+//
+// Get string from bigint
+void big_get_2(const bigint_t *a, char *b) {
+  int mod = 0;
+
+  // Reset outparam
+  memset(b, 0, strlen(b));
+
+  // -3 is digit for '-'?
+  if (a->neg && a->dig[0] != -3) {
+    mod = 1;
+    b[0] = '-';
+  }
+  if (a->base == HEX) {
+    b[0+mod] = '0';
+    b[1+mod] = 'x';
+    mod = mod + 2;
+  }
+  for (int i = 0; i < a->len; i++) {
+    if (a->dig[i] < DEC) {
+      b[i+mod] = a->dig[i] + '0';
+    } else {
+      b[i+mod] = (a->dig[i] % 'a') + 'a' - 10;
+    }
+  }
+}
+
 
 //
 // Get Hex value
@@ -296,6 +377,70 @@ void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 }
 
 //
+// Bigint addition
+void big_add_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
+  int i, j, k, tmp, carry, base;
+  bigint_t *aa, *bb;
+  char *aaa = (char*) malloc (MAXSTR);
+  char *bbb = (char*) malloc (MAXSTR);
+
+  big_init_m(2, &aa, &bb);
+  big_alloc_2(&aa, MAXSTR);
+  big_alloc_2(&bb, MAXSTR);
+  big_alloc_2(c, MAXSTR);
+  base = big_check_set_base(a, c);
+  carry = 0;
+
+  // reset output parameter
+//  memset((*c)->dig, 0, (*c)->len*sizeof(int));
+  (*c)->neg = false;
+
+  big_get_2(a, aaa);
+  big_get_2(b, bbb);
+  big_set_2(aaa, &aa);
+  big_set_2(bbb, &bb);
+
+  if ((*a).neg && (*b).neg) {
+    (*c)->neg = true;
+  }
+    if (a == NULL || b == NULL) {
+      c = NULL;
+    } else if (strcmp(aaa, "0") == 0) {
+      big_copy_ref(bb, c);
+    } else if (strcmp(bbb, "0") == 0) {
+      big_copy_ref(aa, c);
+    } else {
+      (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
+      i = a->len - 1;
+      j = b->len - 1;
+      k = (*c)->len - 1;
+
+      while (i >= 0 || j >= 0 || carry > 0) {
+        if (i >= 0 && j >= 0) {
+          tmp = big_get_hex(aa->dig[i], aa->base) + big_get_hex(bb->dig[j],
+              bb->base);
+        } else if (i >= 0) {
+          tmp = a->dig[i];
+        } else if (j >= 0) {
+          tmp = b->dig[j];
+        } else {
+          tmp = 0;
+        }
+        tmp += carry;
+        carry = tmp / base;
+        (*c)->dig[k] = tmp % base;
+        i--;
+        j--;
+        k--;
+      }
+      big_clear_zeros(c);
+    }
+  if (bbb) free(bbb);
+  if (aaa) free(aaa);
+  big_end_m(2, &aa, &bb);
+}
+
+//
 // Bigint multiplication
 void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, push_left, base;
@@ -359,54 +504,152 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 }
 
 //
+// Bigint multiplication
+void big_mul_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
+  int i, j, k, tmp, carry, push_left, base;
+  char *aaa = (char*) malloc (MAXSTR);
+  char *bbb = (char*) malloc (MAXSTR);
+  bigint_t *aa, *bb;
+
+  big_init_m(2, &aa, &bb);
+  big_alloc_2(&aa, MAXSTR);
+  big_alloc_2(&bb, MAXSTR);
+  big_alloc_2(c, MAXSTR);
+
+  base = big_check_set_base(a, c);
+  carry = 0;
+
+  // reset output parameter
+  memset((*c)->dig, 0, (*c)->len*sizeof(int));
+  (*c)->neg = false;
+
+  big_get_2(a, aaa);
+  big_get_2(b, bbb);
+  big_set_2(aaa, &aa);
+  big_set_2(bbb, &bb);
+
+  //base = big_check_set_base(a, c);
+  // Set result to correct sign
+  if ((*aa).neg && (*bb).neg) {
+    (*c)->neg = false;
+  } else if ((*aa).neg || (*bb).neg) {
+    (*c)->neg = true;
+  }
+
+  if (a == NULL || b==NULL) {
+    c = NULL;
+  } else if ((*aa).len == 1 && (*aa).dig[0] == 0) {
+    //big_end(&(*c));
+    (*c)->len = 1;
+    //big_alloc(&(*c));
+    big_set("0", c);
+  } else if ((*bb).len == 1 && (*bb).dig[0] == 0) {
+    //big_end(&(*c));
+    (*c)->len = 1;
+    //big_alloc(&(*c));
+    big_set("0", c);
+  } else {
+    //big_end(&(*c));
+    (*c)->len = aa->len + bb->len;
+   // big_alloc(&(*c));
+    i = aa->len - 1;
+    j = bb->len - 1;
+    k = (*c)->len - 1;
+    carry = 0;
+    push_left = 0;
+    while (i >= 0) {
+      k = (*c)->len - 1 - push_left++;
+      j = bb->len - 1;
+      while (j >= 0 || carry > 0) {
+        if (j >= 0) {
+          tmp = big_get_hex(aa->dig[i], aa->base) * big_get_hex(bb->dig[j],
+              bb->base);
+        } else {
+          tmp = 0;
+        }
+        tmp += carry;
+        carry = tmp / base;
+        (*c)->dig[k] += tmp % base;
+        carry += (*c)->dig[k] / base;
+        (*c)->dig[k] = (*c)->dig[k] % base;
+        j--;
+        k--;
+      }
+      i--;
+    }
+    big_clear_zeros(c);
+  }
+}
+
+//
 // Bigint subtraction
 void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry;
-  bigint_t *d, *e, *f, *aa, *bb;
+  bigint_t *d, *e, *aa, *bb; //*f;
+  char *aaa = (char*) malloc(MAXSTR);
+  char *bbb = (char*) malloc(MAXSTR);
+  bool bret = false;
 
-  big_init_m(5, &d, &e, &f, &aa, &bb);
-  big_set_m(5, &d, &e, &f, &aa, &bb);
-  big_set(big_get(a), &aa);
-  big_set(big_get(b), &bb);
-  big_copy_ref(b, &f);
+  big_init_m(4, &d, &e, &aa, &bb);
+  big_set_m(2, &d, &e);//, &f);//, &aa, &bb);
+  strcpy(aaa, big_get(a));
+  strcpy(bbb, big_get(b));
+  big_set(aaa, &aa);
+  big_set(bbb, &bb);
+      big_copy(aa, &d);
+      big_copy(bb, &e);
+
+  //big_copy_ref(b, &f);
   memset((*c), 0, sizeof(bigint_t));
   memset((*c)->dig, 0, (*c)->len*sizeof(int));
-  (*c)->len = f->len;
+  //(*c)->len = f->len;
   if ((*a).neg && (*b).neg) {
+  // Handle if both a & b is negative
     (*aa).neg = false;
     (*bb).neg = false;
-    if (strcmp(big_get(a), big_get(b)) < 0) {
-      big_sub(bb, aa, c);
+    if (strcmp(aaa, bbb) < 0) {
+      big_copy(bb, &d);
+      big_copy(aa, &e);
+      //big_sub(bb, aa, c);
     } else {
-      big_sub(aa, bb, c);
+      big_copy(aa, &d);
+      big_copy(bb, &e);
+      //big_sub(aa, bb, c);
       (*c)->neg = false;
     }
-  } else if ((*a).neg) {
-    big_add(a, b, c);
-    if ((*a).len < (*b).len) {
+  } else if ((*a).neg || (*b).neg) {
+    // Handle if only a or b is negative
+    big_add(aa, bb, c);
+    //big_add(a, b, c);
+    bret = true;
+    if ((*a).len < (*b).len || (*a).len > (*b).len) {
       (*c)->neg = true;
     }
     if ((*a).len == (*b).len) {
-      if (strcmp(big_get(a), big_get(b)) < 0) {
+      if (strcmp(aaa, bbb) < 0) {
         (*c)->neg = true;
       }
     }
-  } else if ((*b).neg) {
-    big_add(a, b, c);
-  } else {
+//  } else if ((*b).neg) {
+//    big_add(a, b, c);
+  }// else {
+  if (bret == false) {
     if (a == NULL) {
       c = NULL;
     } else if (b == NULL) {
       c = NULL;
-    } else if (strcmp(big_get(a), "0") == 0 && strcmp(big_get(b), "0") == 0) {
+    } else if (strcmp(aaa, "0") == 0 && strcmp(bbb, "0") == 0) {
       big_set("0", c);
-    } else if (strcmp(big_get(a), "0") == 0) {
-      (*f).neg = true;
-      big_copy_ref(f, c);
+    } else if (strcmp(aaa, "0") == 0) {
+      (*bb).neg = true;
+      //(*f).neg = true;
+      //big_copy_ref(f, c);
+      big_copy_ref(bb, c);
       big_clear_zero2(&(*c));
-    } else if (strcmp(big_get(b), "0") == 0) {
+    } else if (strcmp(bbb, "0") == 0) {
       (*c)->len = a->len;
-      big_copy_ref(a, c);
+      big_copy_ref(aa, c);
+      //big_copy_ref(a, c);
       big_clear_zero2(&(*c));
     } else {
       big_end(&(*c));
@@ -415,29 +658,54 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       if (a->len > b->len) {
         (*d).len = a->len;
         (*e).len = b->len;
-        big_alloc(&d);
-        big_alloc(&e);
-        big_copy(a, &d);
-        big_copy(b, &e);
+        //big_alloc(&d);
+        //big_alloc(&e);
+//  memset(d, 0, sizeof(bigint_t));
+//  memset((*d).dig, 0, (*d).len*sizeof(int));
+//  memset(e, 0, sizeof(bigint_t));
+//  memset((*e).dig, 0, (*e).len*sizeof(int));
+
+        //big_copy(a, &d);
+        //big_copy_ref(a, &d);
+        big_copy_ref(aa, &d);
+        //big_copy(b, &e);
+        //big_copy_ref(b, &e);
+        big_copy_ref(bb, &e);
         i = d->len - 1;
         j = e->len - 1;
       } else if (b->len > a->len) {
         (*d).len = b->len;
         (*e).len = a->len;
-        big_alloc(&d);
-        big_alloc(&e);
+        //big_alloc(&d);
+        //big_alloc(&e);
+//  memset(d, 0, sizeof(bigint_t));
+//  memset((*d).dig, 0, (*d).len*sizeof(int));
+//  memset(e, 0, sizeof(bigint_t));
+//  memset((*e).dig, 0, (*e).len*sizeof(int));
         (*c)->neg = true;
-        big_copy(b, &d);
-        big_copy(a, &e);
+        //big_copy(b, &d);
+        //big_copy_ref(b, &d);
+        big_copy_ref(bb, &d);
+        //big_copy(a, &e);
+        //big_copy_ref(a, &e);
+        big_copy_ref(aa, &e);
         i = d->len - 1;
         j = e->len - 1;
       } else {
         (*d).len = a->len;
         (*e).len = b->len;
-        big_alloc(&d);
-        big_alloc(&e);
-        big_copy(a, &d);
-        big_copy(b, &e);
+        //big_alloc(&d);
+        //big_alloc(&e);
+//  memset(d, 0, sizeof(bigint_t));
+//  memset((*d).dig, 0, (*d).len*sizeof(int));
+//  memset(e, 0, sizeof(bigint_t));
+//  memset((*e).dig, 0, (*e).len*sizeof(int));
+        //big_copy(a, &d);
+        //big_copy_ref(a, &d);
+        big_copy_ref(aa, &d);
+        //big_copy(b, &e);
+        //big_copy_ref(b, &e);
+        big_copy_ref(bb, &e);
         i = d->len - 1;
         j = e->len - 1;
       }
@@ -446,7 +714,7 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       k = (*c)->len - 1;
       while (i >= 0 || j >= 0 || carry > 0) {
         if (i >= 0 && j >= 0) {
-          tmp = (*d).dig[i]-(*e).dig[j];
+          tmp = (*d).dig[i] - (*e).dig[j];
           if (tmp < 0) {
             if (i == 0 && j == 0) {
               (*c)->neg = true;
@@ -483,7 +751,149 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         (*c)->neg = true;
       }
     }
+    }
+  //}
+  //big_end_m(3, &f, &aa, &bb);
+  if (bbb) free(bbb);
+  if (aaa) free(aaa);
+}
+
+//
+// Bigint addition
+void big_sub_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
+  int i, j, k, tmp, carry, base;
+  bigint_t *aa, *bb;
+  char *aaa = (char*) malloc(MAXSTR);
+  char *bbb = (char*) malloc(MAXSTR);
+
+  big_init_m(2, &aa, &bb);
+  big_alloc_2(&aa, MAXSTR);
+  big_alloc_2(&bb, MAXSTR);
+  big_alloc_2(c, MAXSTR);
+
+  big_get_2(a, aaa);
+  big_get_2(b, bbb);
+  big_set_2(aaa, &aa);
+  big_set_2(bbb, &bb);
+
+  base = big_check_set_base(a, c);
+  carry = 0;
+
+  // reset output parameter
+  memset((*c)->dig, 0, (*c)->len*sizeof(int));
+  (*c)->neg = false;
+
+  (*c)->len = (*a).len;
+  if ((*a).neg && (*b).neg) {
+    (*aa).neg = false;
+    (*bb).neg = false;
+    if (strcmp(aaa, bbb) < 0) {
+      big_sub_2(bb, aa, c);
+    } else {
+      big_sub_2(aa, bb, c);
+      (*c)->neg = false;
+    }
+  } else if ((*a).neg || (*b).neg) {
+    big_add_2(aa, bb, c);
+    if ((*a).len < (*b).len || (*a).len > (*b).len) {
+      (*c)->neg = true;
+    }
+    if ((*a).len == (*b).len) {
+      if (strcmp(aaa, bbb) < 0) {
+        (*c)->neg = true;
+      }
+    }
+  } else {
+    if (a == NULL || b == NULL) {
+      c = NULL;
+    } else if (strcmp(aaa, "0") == 0 && strcmp(bbb, "0") == 0) {
+      big_set("0", c);
+    } else if (strcmp(aaa, "0") == 0) {
+      (*bb).neg = true;
+      big_copy_ref(bb, c);
+      big_clear_zero2(c);
+    } else if (strcmp(bbb, "0") == 0) {
+      (*c)->len = a->len;
+      big_copy_ref(aa, c);
+      big_clear_zero2(c);
+    } else {
+      (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
+
+      if (a->len > b->len) {
+        memset((*aa).dig, 0, (*aa).len * sizeof(int));
+        memset((*bb).dig, 0, (*bb).len * sizeof(int));
+        big_set_2(aaa, &aa);
+        big_set_2(bbb, &bb);
+        (*aa).len = a->len;
+        (*bb).len = b->len;
+        i = (*aa).len - 1;
+        j = (*bb).len - 1;
+      } else if (b->len > a->len) {
+        memset((*aa).dig, 0, (*aa).len * sizeof(int));
+        memset((*bb).dig, 0, (*bb).len * sizeof(int));
+        (*c)->neg = true;
+        big_set_2(bbb, &aa);
+        big_set_2(aaa, &bb);
+        (*aa).len = b->len;
+        (*bb).len = a->len;
+        i = (*aa).len - 1;
+        j = (*bb).len - 1;
+      } else {
+        memset((*aa).dig, 0, (*aa).len * sizeof(int));
+        memset((*bb).dig, 0, (*bb).len * sizeof(int));
+        big_set_2(aaa, &aa);
+        big_set_2(bbb, &bb);
+        (*aa).len = a->len;
+        (*bb).len = b->len;
+        i = (*aa).len - 1;
+        j = (*bb).len - 1;
+      }
+      k = (*c)->len - 1;
+      carry = 0;
+      while (i >= 0 || j >= 0 || carry > 0) {
+        if (i >= 0 && j >= 0) {
+          tmp = big_get_hex((*aa).dig[i], (*aa).base) - big_get_hex((*bb).dig[j],
+              (*bb).base);
+          if (tmp < 0) {
+            if (i == 0 && j == 0) {
+              (*c)->neg = true;
+            }
+            tmp += 10;
+            (*aa).dig[i - 1] -= 1;
+          }
+        } else if (i >= 0) {
+          tmp = (*aa).dig[i];
+        } else if (j >= 0) {
+          tmp = (*bb).dig[j];
+        } else {
+          tmp = 0;
+        }
+        tmp -= carry;
+        carry = tmp / base;
+        if (tmp % base < 0 && i < 2) {
+          (*c)->dig[k] = (tmp % base) + base;
+          if ((*c)->dig[k - 1] > 0) {
+            (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
+          } else {
+            (*c)->dig[k - 1] = 0;
+            break;
+          }
+        } else {
+          (*c)->dig[k] = tmp % base;
+        }
+        i--;
+        j--;
+        k--;
+      }
+      big_clear_zeros(c);
+      if (j > i) {
+        (*c)->neg = true;
+      }
+    }
   }
+  if (bbb) free(bbb);
+  if (aaa) free(aaa);
+  big_end_m(2, &aa, &bb);
 }
 
 //
@@ -492,6 +902,7 @@ void big_div_x(const bigint_t *a, const bigint_t *b, bigint_t **d) {
   char *str1 = (char*) malloc(MAXSTR);
   char *str2 = (char*) malloc(MAXSTR);
   bool nm = false;
+  int coo = 0;
   bigint_t *b1, *c, *e, *f, *count, *count2, *one;
 
   big_init_m(7, &b1, &c, &e, &f, &count, &one, &count2);
@@ -501,30 +912,96 @@ void big_div_x(const bigint_t *a, const bigint_t *b, bigint_t **d) {
 
   strcpy(str1, big_get(a));
   strcpy(str2, big_get(b));
-  big_set(str1, &c);
+big_set(big_get(a), &c);
+//  big_set(str1, &c);
   big_set(str2, &b1);
   memset((*d), 0, sizeof(bigint_t));
-  memset((*d)->dig, 0, (*d)->len*sizeof(int));
-  if (c->neg) {
+  memset((*d)->dig, 0, (*d)->len * sizeof(int));
+  if ((*a).neg) {
     nm = true;
   }
-  while (c->len >= b1->len && ((c->neg == false && nm == false) ||
-      (c->neg == true && nm == true))) {
-    big_sub(c, b1, &e);
+  while ( (c->len >= b->len) &&
+       ((c->neg == false && nm == false) || (c->neg == true && nm == true) ))  {
+    big_sub_2(c, b1, &e);
+    printf("SUB : %s - %s = %s\n", big_get(c), big_get(b1), big_get(e));
+// memset((*c).dig, 0, (*c).len * sizeof(int));
     big_copy_ref(e, &c);
+// memset((*e).dig, 0, (*e).len * sizeof(int));
     big_clear_zeros(&c);
+    //big_clear_zeros(&e);
     big_set(str2, &b1);
-
+    //(*c).len = (*e).len;
+    //printf("len : %d %d %d %d : %d : %d\n", c->len, b1->len, c->neg, nm, (c->neg == false && nm == false), (c->neg == true && nm == true));
     big_add(count, one, &count2);
     big_copy_ref(count2, &count);
+    coo++;
+    //if (c->neg) break;
   }
   if (c->neg == true) {
-    big_sub(count, one, &count2);
+    big_sub_2(count, one, &count2);
+    //big_init(&count);
     big_copy_ref(count2, &count);
   }
+  if ((*count).len > 2) {
+    if (c->neg == true) printf("NEG\n");
+    printf("cooo = %d %s\n", coo, big_get(count));
+    printf("%s // %s\n", big_get(a), big_get(b));
+    //exit(0);
+  }
   big_set(big_get(count), d);
-  free(str2);
-  free(str1);
+  if (str2) {
+    free(str2);
+  }
+  if (str1) {
+    free(str1);
+  }
+}
+
+//
+// Bigint division
+void big_div_x_2(const bigint_t *a, const bigint_t *b, bigint_t **d) {
+  char *str = (char*) malloc(MAXSTR);
+  char *aaa = (char*) malloc(MAXSTR);
+  char *bbb = (char*) malloc(MAXSTR);
+  bool nm = false;
+  u64 co;
+  bigint_t *aa, *e, *f, *bb;
+
+//  strcpy(aaa, big_get(a));
+//  strcpy(bbb, big_get(b));
+  big_get_2(a, aaa);
+  big_get_2(b, bbb);
+  printf("DIV B=%s %s\n", aaa, bbb);
+  exit(0);
+  co = 0;
+  big_init_m(4, &aa, &e, &f, &bb);
+  (*d)->len = (a->len > b->len ? a->len : b->len);
+  big_set_m(2, &e, &f);
+  big_set(aaa, &aa);
+  big_set(bbb, &bb);
+
+  printf("DIV B=%s\n", big_get(b));
+  memset((*d), 0, sizeof(bigint_t));
+  memset((*d)->dig, 0, (*d)->len*sizeof(int));
+  if (aa->neg) {
+    nm = true;
+  }
+  while (aa->len >= bb->len && ((aa->neg == false && nm == false) ||
+      (aa->neg == true && nm == true))) {
+    big_sub_2(aa, bb, &e);
+    big_copy_ref(e, &aa);
+    big_clear_zero(&aa);
+    co++;
+  }
+  if (aa->neg == true) {
+     co--;
+  }
+  sprintf(str, "%llu", co);
+  big_set(str, d);
+  if (bbb) free(bbb);
+  if (aaa) free(aaa);
+  if (str) free(str);
+  //printf("DIV B=%s\n", big_get(bb));
 }
 
 void big_div_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
@@ -544,63 +1021,70 @@ void big_div_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   // 4 - 3 = 1
   // 1 // 3 == 0
   bigint_t *a_tmp, *b_tmp, *c_tmp, *c_tmp2, *a_tmp2, *c_tmp3, *c_tmp4, *c_tmp5;
-  int len_a, len_b, len_diff;
+  int len_a, len_b, len_diff, mod;
+  char *aaa = (char*) malloc(MAXSTR);
+  char *bbb = (char*) malloc(MAXSTR);
 
   big_init_m(8, &a_tmp, &b_tmp, &c_tmp, &c_tmp2, &a_tmp2, &c_tmp3, &c_tmp4, &c_tmp5);
   big_set_m(8, &a_tmp, &b_tmp, &c_tmp, &c_tmp2, &a_tmp2, &c_tmp3, &c_tmp4, &c_tmp5);
   big_copy_ref(a, &a_tmp);
   big_copy_ref(b, &b_tmp);
-  big_set(big_get(b), &c_tmp);
+  big_get_2(a, aaa);
+  big_get_2(b, bbb);
+  big_set(bbb, &c_tmp);
+
   // Set result to correct sign
   if ((*a).neg || (*b).neg) {
     (*c)->neg = true;
   }
-
+  mod = 0;
   // if a or b is NULL we return NULL
   // if a == b we return 1
   // if a < b we return 0
   // if b == 1 we return a
-  if (a == NULL) {
+  if (a == NULL || b == NULL) {
     c = NULL;
-  } else if (b == NULL) {
-    c = NULL;
-  } else if (strcmp(big_get(a), big_get(b)) == 0) {
+  } else if (strcmp(aaa, bbb) == 0) {
     big_set("1", c);
-  } else if (strcmp(big_get(a), big_get(b)) <= 0 && strlen(big_get(a)) ==
-        strlen(big_get(b))) {
+  } else if (strcmp(aaa, bbb) <= 0 && strlen(aaa) == strlen(bbb)) {
     big_set("0", c);
-  } else if (strcmp(big_get(b), "1") == 0) {
+  } else if (strcmp(bbb, "1") == 0) {
     big_copy_ref(a, c);
   } else {
     if (!(*c)->alloc_d) {
-      big_alloc(c);
+      big_alloc_2(c, MAXSTR);
     }
-    len_diff = strlen(big_get(a_tmp)) - strlen(big_get(b_tmp));
+    len_diff = strlen(aaa) - strlen(bbb);
+    printf("%s // %s\n", aaa, bbb);
+    exit(0);
     big_set(big_get(c_tmp), &c_tmp3);
     len_b = strlen(big_get(c_tmp));
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
-      (*c_tmp).dig[len_b+i] = 0;
+      (*c_tmp).dig[len_b + i] = 0;
       (*c_tmp).len++;
     }
     for (int j = 0; j <= len_diff; j++) {
       if ((u64)(*c_tmp).len >= strlen(big_get(b_tmp))) {
         (*c_tmp).len--;
       }
+      printf("DIV1 : %s // %s\n", big_get(a_tmp), big_get(c_tmp));
       big_set(big_get(c_tmp), &c_tmp3);
       len_a = strlen(big_get(a_tmp));
       len_b = strlen(big_get(c_tmp));
-      big_div_x(a_tmp, c_tmp, &c_tmp4);
+      big_div_x_2(a_tmp, c_tmp, &c_tmp4);
+      printf("DIV2 : %s // %s\n", big_get(a_tmp), big_get(c_tmp));
       big_set(big_get(c_tmp3), &c_tmp);
       big_mul(c_tmp4, c_tmp, &c_tmp2);
-      big_sub(a_tmp, c_tmp2, &a_tmp2);
-      printf("sub %s\n", big_get(a_tmp));
-      printf("sub %s\n", big_get(c_tmp2));
-      printf("sub %s\n", big_get(a_tmp2));
+      printf("DIV3 : %s // %s\n", big_get(a_tmp), big_get(c_tmp));
+      big_sub_2(a_tmp, c_tmp2, &a_tmp2);
+      printf("DIV4 : %s // %s\n", big_get(a_tmp), big_get(c_tmp));
       big_clear_zeros(&a_tmp2);
+      printf("DIV5 : %s // %s\n", big_get(a_tmp), big_get(c_tmp));
       if ((*c_tmp4).len > 1) {
         for (int ii = 0; ii < (*c_tmp4).len; ii++) {
-          (*c_tmp5).dig[j+ii] = (*c_tmp4).dig[ii];
+          (*c_tmp5).dig[j + ii] = (*c_tmp4).dig[ii];
           (*c_tmp5).len++;
+          mod++;
         }
       } else {
         (*c_tmp5).dig[j] = (*c_tmp4).dig[0];
@@ -615,6 +1099,8 @@ void big_div_2(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     big_copy_ref(c_tmp5, c);
     //big_end_m(5, &a_tmp, &b_tmp, &c_tmp, &a_tmp2, &c_tmp4);
   }
+  if (bbb) free(bbb);
+  if (aaa) free(aaa);
 }
 
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **d) {
