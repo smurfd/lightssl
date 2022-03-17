@@ -519,9 +519,9 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       }
     }
   }
-  big_end_str(bbb);
-  big_end_str(aaa);
-  big_end_m(2, &aa, &bb);
+//  big_end_str(bbb);
+//  big_end_str(aaa);
+//  big_end_m(2, &aa, &bb);
 }
 
 //
@@ -564,10 +564,10 @@ void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   }
   big_set(str, c);
   (*c)->len = strlen(str);
-  big_end_m(4, &aa, &bb, &co1, &one);
-  big_end_str(bbb);
-  big_end_str(aaa);
-  big_end_str(str);
+//  big_end_m(4, &aa, &bb, &co1, &one);
+//  big_end_str(bbb);
+//  big_end_str(aaa);
+//  big_end_str(str);
 }
 
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
@@ -645,9 +645,10 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     (*c)->len--;
     big_clear_zeros(c);
   }
-  big_end_str(bbb);
-  big_end_str(aaa);
-  big_end_m(3, &aa, &bb, &cc);
+
+//  big_end_str(bbb);
+//  big_end_str(aaa);
+//  big_end_m(3, &aa, &bb, &cc);
 }
 
 //
