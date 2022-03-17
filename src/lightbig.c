@@ -177,26 +177,16 @@ bool big_cmp_str(char *str, bigint_t *a) {
 }
 
 //
-// Copy data
-void big_copy(const bigint_t *a, bigint_t **b) {
-  for (int f = 0; f < (*a).len; f++) {
-    (*b)->dig[f] = (*a).dig[f];
-  }
-  (*b)->neg = (*a).neg;
-  (*b)->base = (*a).base;
-  (*b)->len = (*a).len;
-}
-
-//
-// Copy data refs, replaces (*a) = (*b)
+// Copy data references
 void big_copy_ref(const bigint_t *a, bigint_t **b) {
+  char *bbb = (char*) malloc (MAXSTR);
+
+  big_alloc_max_m(1, b);
+  big_get(a, bbb);
+  big_set(bbb, b);
   (*b)->neg = (*a).neg;
   (*b)->len = (*a).len;
   (*b)->base = (*a).base;
-  big_alloc(&(*b));
-  for (int l = 0; l < (*a).len; l++) {
-    (*b)->dig[l] = (*a).dig[l];
-  }
 }
 
 //
@@ -268,10 +258,10 @@ int big_get_hex(int a, int base) {
 //
 // Bigint addition
 void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
-  int i, j, k, tmp, carry, base;
-  bigint_t *aa, *bb;
   char *aaa = (char*) malloc (MAXSTR);
   char *bbb = (char*) malloc (MAXSTR);
+  int i, j, k, tmp, carry, base;
+  bigint_t *aa, *bb;
 
   big_init_m(2, &aa, &bb);
   big_alloc_max_m(3, &aa, &bb, c);
@@ -401,10 +391,10 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 //
 // Bigint subtraction
 void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
-  int i, j, k, tmp, carry, base;
-  bigint_t *aa, *bb;
   char *aaa = (char*) malloc(MAXSTR);
   char *bbb = (char*) malloc(MAXSTR);
+  int i, j, k, tmp, carry, base;
+  bigint_t *aa, *bb;
 
   big_init_m(2, &aa, &bb);
   big_alloc_max_m(3, &aa, &bb, c);
@@ -537,11 +527,11 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 //
 // Bigint division
 void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
+  bigint_t *aa, *e, *f, *bb, *co1, *co2, *one;
+  char *str1 = (char*) malloc(MAXSTR);
   char *str = (char*) malloc(MAXSTR);
   char *aaa = (char*) malloc(MAXSTR);
   char *bbb = (char*) malloc(MAXSTR);
-  char *str1 = (char*) malloc(MAXSTR);
-  bigint_t *aa, *e, *f, *bb, *co1, *co2, *one;
 
   big_get(a, aaa);
   big_get(b, bbb);
@@ -581,21 +571,6 @@ void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 }
 
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
-  // This should work without fuckin hacks
-  // fill out b with zeros to be the same lenght as a then divide
-  // take that number add to c, then times b and subtract from a. repeat.
-  // 1234 // 3 = 411
-  // 1234 // 3000 = 0
-  // 1234 // 300 = 4  -- add to result
-  // 4 * 300 = 1200
-  // 1234 - 1200 = 34
-  // 34 // 30 = 1  -- add to result
-  // 1 * 30 = 30
-  // 34 - 30 = 4
-  // 4 // 3 = 1   -- add to result
-  // 3 * 1 = 3
-  // 4 - 3 = 1
-  // 1 // 3 == 0
   bigint_t *aa, *bb, *cc, *cc1, *aa1;
   int len_b, len_diff;
   char *aaa = (char*) malloc(MAXSTR);

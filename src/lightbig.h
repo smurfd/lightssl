@@ -41,7 +41,6 @@ void big_assert_str(char* str, bigint_t **b2);
 void big_print(const bigint_t **a);
 void big_alloc(bigint_t **b);
 void big_alloc_len(bigint_t **b, int len);
-void big_copy(const bigint_t *a, bigint_t **b);
 void big_copy_ref(const bigint_t *a, bigint_t **b);
 bool big_cmp(bigint_t *a, bigint_t *b);
 bool big_cmp_str(char *str, bigint_t *a);
