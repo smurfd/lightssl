@@ -131,9 +131,21 @@ void big_alloc(bigint_t **b) {
 
 //
 // Allocate memory for digits
-void big_alloc_2(bigint_t **b, int len) {
+void big_alloc_len(bigint_t **b, int len) {
   (*b)->dig = calloc(len, sizeof(int));
   (*b)->alloc_d = true;
+}
+
+//
+// Allocate max memory for digits
+void big_alloc_max_m(int len, ...) {
+  va_list valist;
+
+  va_start(valist, len);
+  for (int i = 0; i < len; i++) {
+    big_alloc_len(va_arg(valist, bigint_t**), MAXSTR);
+  }
+  va_end(valist);
 }
 
 //
@@ -194,7 +206,7 @@ void big_clear_zeros(bigint_t **b) {
   bigint_t *bb;
 
   big_init_m(1, &bb);
-  big_alloc_2(&bb, MAXSTR);
+  big_alloc_max_m(1, &bb);
   while ((*b)->dig[0] == 0 && (*b)->len >= 0) {
     (*b)->len--;
     (*b)->dig++;
@@ -262,9 +274,7 @@ void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   char *bbb = (char*) malloc (MAXSTR);
 
   big_init_m(2, &aa, &bb);
-  big_alloc_2(&aa, MAXSTR);
-  big_alloc_2(&bb, MAXSTR);
-  big_alloc_2(c, MAXSTR);
+  big_alloc_max_m(3, &aa, &bb, c);
   base = big_check_set_base(a, c);
   carry = 0;
   (*c)->neg = false;
@@ -323,9 +333,7 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   bigint_t *aa, *bb;
 
   big_init_m(2, &aa, &bb);
-  big_alloc_2(&aa, MAXSTR);
-  big_alloc_2(&bb, MAXSTR);
-  big_alloc_2(c, MAXSTR);
+  big_alloc_max_m(3, &aa, &bb, c);
 
   base = big_check_set_base(a, c);
   carry = 0;
@@ -391,7 +399,7 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 }
 
 //
-// Bigint subtraction 
+// Bigint subtraction
 void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   int i, j, k, tmp, carry, base;
   bigint_t *aa, *bb;
@@ -399,9 +407,7 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   char *bbb = (char*) malloc(MAXSTR);
 
   big_init_m(2, &aa, &bb);
-  big_alloc_2(&aa, MAXSTR);
-  big_alloc_2(&bb, MAXSTR);
-  big_alloc_2(c, MAXSTR);
+  big_alloc_max_m(3, &aa, &bb, c);
 
   big_get(a, aaa);
   big_get(b, bbb);
@@ -445,12 +451,10 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       (*bb).neg = true;
       big_copy_ref(bb, c);
       big_clear_zeros(c);
-      //big_clear_zero2(c);
     } else if (strcmp(bbb, "0") == 0) {
       (*c)->len = a->len;
       big_copy_ref(aa, c);
       big_clear_zeros(c);
-      //big_clear_zero2(c);
     } else {
       (*c)->len = (a->len > b->len ? a->len : b->len);
       if (a->len > b->len) {
@@ -537,21 +541,18 @@ void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   char *aaa = (char*) malloc(MAXSTR);
   char *bbb = (char*) malloc(MAXSTR);
   char *str1 = (char*) malloc(MAXSTR);
-  bigint_t *aa, *e, *f, *bb;
-  u64 co;
+  bigint_t *aa, *e, *f, *bb, *co1, *co2, *one;
 
   big_get(a, aaa);
   big_get(b, bbb);
-  co = 0;
-  big_init_m(4, &aa, &e, &f, &bb);
-  big_alloc_2(&aa, MAXSTR);
-  big_alloc_2(&bb, MAXSTR);
-  big_alloc_2(&e, MAXSTR);
-  big_alloc_2(c, MAXSTR);
+  big_init_m(7, &aa, &e, &f, &bb, &co1, &co2, &one);
+  big_alloc_max_m(7, &aa, &bb, &co1, &co2, &one, &e, c);
   big_set(aaa, &aa);
   big_set(bbb, &bb);
   aa->len = a->len;
   bb->len = b->len;
+  big_set("1", &one);
+  big_set("0", &co1);
   while ((aa->len >= bb->len) && (e->neg == false && aa->neg == false)) {
     big_sub(aa, bb, &e);
     big_get(e, str1);
@@ -559,15 +560,21 @@ void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     big_set(str1, &aa);
     aa->neg = e->neg;
     aa->len = e->len;
-    co++;
+
+    // co++
+    big_add(co1, one, &co2);
+    big_get(co2, str);
+    big_set(str, &co1);
   }
   if (aa->neg == true) {
-     co--;
+    // co--
+    big_sub(co1, one, &co2);
+    big_get(co2, str);
+    big_set(str, &co1);
   }
-  sprintf(str, "%llu", co);
   big_set(str, c);
   (*c)->len = strlen(str);
-  big_end_m(2, &aa, &bb);
+  big_end_m(4, &aa, &bb, &co1, &one);
   big_end_str(bbb);
   big_end_str(aaa);
   big_end_str(str);
@@ -595,12 +602,7 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   char *bbb = (char*) malloc(MAXSTR);
 
   big_init_m(5, &aa, &bb, &cc, &aa1, &cc1);
-  big_alloc_2(&aa, MAXSTR);
-  big_alloc_2(&bb, MAXSTR);
-  big_alloc_2(&cc, MAXSTR);
-  big_alloc_2(&aa1, MAXSTR);
-  big_alloc_2(&cc1, MAXSTR);
-  big_alloc_2(c, MAXSTR);
+  big_alloc_max_m(6, &aa, &bb, &cc, &aa1, &cc1, c);
 
   // reset output parameter
   (*c)->neg = false;
@@ -682,12 +684,7 @@ void big_mod(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   bool n = false;
 
   big_init_m(6, &aa, &bb, &cc, &cc1, &g, c);
-  big_alloc_2(&aa, MAXSTR);
-  big_alloc_2(&bb, MAXSTR);
-  big_alloc_2(&cc, MAXSTR);
-  big_alloc_2(&cc1, MAXSTR);
-  big_alloc_2(&g, MAXSTR);
-  big_alloc_2(c, MAXSTR);
+  big_alloc_max_m(6, &aa, &bb, &cc, &cc1, &g, c);
 
   (*c)->neg = false;
   (*c)->len = 1;
@@ -755,7 +752,7 @@ void big_print(const bigint_t **a) {
   bigint_t *aa;
 
   big_init_m(1, &aa);
-  big_alloc_2(&aa, MAXSTR);
+  big_alloc_max_m(1, &aa);
   big_get(*a, aaa);
   printf("%s\n", aaa);
 

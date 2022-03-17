@@ -41,8 +41,7 @@ int main(int argc, char **argv) {
       bigint_t *ac, *ad, *a1, *ac1, *ad1;
 
       big_init_m(5, &ac, &ad, &a1, &ac1, &ad1);
-      big_alloc_2(&ac, MAXSTR);
-      big_alloc_2(&ad, MAXSTR);
+      big_alloc_max_m(2, &ac, &ad);
       big_set("1234", &ac);
       big_set("2173987128397129837129837128937129837129837129837129837129321739871283971298371298371289371298371298371298371298371293", &ad);
       big_get(ad, cc);
@@ -242,9 +241,7 @@ int main(int argc, char **argv) {
       big_div(ac, ad, &a1);
       big_assert_str("577", &a1);
 
-      big_alloc_2(&ac, MAXSTR);
-      big_alloc_2(&ad, MAXSTR);
-
+      big_alloc_max_m(2, &ac, &ad);
       big_set("977831680815396008051953620868336321350460074412926936453701305"\
           "3060780535564424316462375269467718074378386672111032446309228292315"\
           "5195553231284779451989130560241037445839460215375857597677332187354"\
