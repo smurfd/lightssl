@@ -66,8 +66,8 @@ void lightcrypt_init() {
   lightcrypt_pubkey(&(*c), priv2, &publ2);
 
   printf("-----\n");
-  printf("pub : %s, %s\n", big_get((*publ).p1), big_get((*publ).p2));
-  printf("pub : %s, %s\n", big_get((*publ2).p1), big_get((*publ2).p2));
+//  printf("pub : %s, %s\n", big_get((*publ).p1), big_get((*publ).p2));
+//  printf("pub : %s, %s\n", big_get((*publ2).p1), big_get((*publ2).p2));
   printf("-----\n");
 
   lightcrypt_point_mul(&(*c), priv, publ2, &scal1);
@@ -185,10 +185,10 @@ void lightcrypt_privkey(bigint_t **privkey) {
 void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
     bigtup_t **pubkey) {
   printf("PRIV: %s\n", "32873365337033794512477405735997107923198513824305262159693765843969498982399885");//big_get(privkey));
-  printf("CUR-G : %s : %s\n", big_get(cur->g->p1), big_get(cur->g->p2));
+//  printf("CUR-G : %s : %s\n", big_get(cur->g->p1), big_get(cur->g->p2));
   big_set("32873365337033794512477405735997107923198513824305262159693765843969498982399885", &privkey);
   lightcrypt_point_mul(cur, privkey, cur->g, pubkey);
-  printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
+//  printf("PUBK: (%s, %s)\n", big_get((*pubkey)->p1), big_get((*pubkey)->p2));
   // FIXME: still an issue
   // should return(from python ecdhe.py):
   // 114228706046720397033883399099126209430656953859958883131997376409144460418386,
@@ -220,7 +220,7 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
     lightcrypt_point_neg(cur, point, &npoint);
     lightcrypt_point_mul(cur, key, npoint, ret);
   } else {
-    while (strcmp(big_get(key), "0") != 0) {
+    while (big_cmp_str("0", key) == 0) {
       if (big_bit_and_one(key)) {
         if (ret != NULL) {
           lightcrypt_copy_t(*ret, &r);
@@ -229,7 +229,7 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key,
       }
       lightcrypt_point_add(cur, addend, addend, &ad);
       // FIXME: malloc: Region cookie corrupted between this print and next
-      big_div_2(key, t, &k2);
+      big_div(key, t, &k2);
       big_copy_ref(k2, &key);
       lightcrypt_copy_t(ad, &addend);
     }
@@ -272,15 +272,17 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1,
   big_copy_ref(point1->p2, &y1);
   big_copy_ref(point2->p1, &x2);
   big_copy_ref(point2->p2, &y2);
-  if (strcmp(big_get(point1->p1), "0") == 0 && strcmp(big_get(
-        point1->p2), "0") == 0) {
+//  if (strcmp(big_get(point1->p1), "0") == 0 && strcmp(big_get(
+//        point1->p2), "0") == 0) {
+  if (big_cmp_str("0", point1->p1) && big_cmp_str("0", point1->p2)) {
     if (ret == NULL) {
       lightcrypt_init_t_m(1, &ret);
     }
     lightcrypt_copy_t(point2, ret);
     bret = true;
-  } else if (strcmp(big_get(point2->p1), "0") == 0 &&
-        strcmp(big_get(point2->p2), "0") == 0) {
+  } else if (big_cmp_str("0", point2->p1) && big_cmp_str("0", point2->p2)) {
+//  } else if (strcmp(big_get(point2->p1), "0") == 0 &&
+//        strcmp(big_get(point2->p2), "0") == 0) {
     lightcrypt_copy_t(point1, ret);
     bret = true;
   } else if (big_cmp(x1, x2) && !big_cmp(y1, y2)) {
@@ -381,8 +383,8 @@ void lightcrypt_point_imd(struct curve *cur, bigint_t **key,
     big_copy_ref(point, &r);
     big_copy_ref(*key, &or);
 
-    while (strcmp("0", big_get(r)) != 0) {
-      big_div_2(or, r, &q);     // q = or // r
+    while (big_cmp_str("0", r) == 0) {
+      big_div(or, r, &q);     // q = or // r
       big_copy_ref(or, &ort); // old_rr = old_r
       big_copy_ref(os, &ost);
       big_copy_ref(ot, &ott);
@@ -439,8 +441,9 @@ bool lightcrypt_oncurve(struct curve *cur, bigtup_t *point) {
   if ((*point).p1 == NULL||(*point).p2 == NULL) {
     return true;
   }
-  if (strcmp("0", big_get((*point).p1)) == 0||strcmp("0",
-      big_get((*point).p2)) == 0) {
+//  if (strcmp("0", big_get((*point).p1)) == 0||strcmp("0",
+//      big_get((*point).p2)) == 0) {
+  if (big_cmp_str("0", (*point).p1) || big_cmp_str("0", (*point).p2)) {
     return true;
   }
   big_copy_ref(point->p1, &x);
