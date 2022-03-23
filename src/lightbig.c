@@ -39,9 +39,11 @@ void big_init_m(int len, ...) {
 void big_end(bigint_t **a) {
   if ((*a)->alloc_d) {
     free((*a)->dig);
+    (*a)->alloc_d = false;
   }
   if ((*a)->alloc_t) {
     free((*a));
+    (*a)->alloc_t = false;
   }
 }
 
