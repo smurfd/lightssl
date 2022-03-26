@@ -3,16 +3,18 @@
 #define LIGHTBIG_H 1
 
 #include <stdbool.h>
+#include "lightdefs.h"
 
 #define MAXSTR 512
 #define BIGLEN 1024
 #define DEC 10
 #define HEX 16
+#define LEN sizeof(i08)
 
 typedef struct {
-  int *dig;
+  i08 *dig;
   int len;
-  int base;
+  i08 base;
   bool neg;
   bool alloc_t;
   bool alloc_d;
@@ -33,6 +35,8 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c);
 void big_mod(const bigint_t *a, const bigint_t *b, bigint_t **c);
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c);
 void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c);
+void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c);
+void big_sub_internal(const bigint_t *a, const bigint_t *b, bigint_t **c);
 bool big_bit_and_one(bigint_t *a);
 
 // Assets
@@ -41,18 +45,20 @@ void big_assert_str(char* str, bigint_t **b2);
 void big_print(const bigint_t **a);
 void big_alloc(bigint_t **b);
 void big_alloc_len(bigint_t **b, int len);
+void big_copy(const bigint_t *a, bigint_t **c);
 void big_copy_ref(const bigint_t *a, bigint_t **b);
-bool big_cmp(bigint_t *a, bigint_t *b);
-bool big_cmp_str(char *str, bigint_t *a);
+bool big_cmp(const bigint_t *a, const bigint_t *b);
+bool big_cmp_str(char *str, const bigint_t *a);
 
 // Multi
 void big_init_m(int len, ...);
 void big_end_m(int len, ...);
 void big_set_m(int len, ...);
+void big_alloc_m(int len, ...);
 void big_alloc_max_m(int len, ...);
 
 // Hex
-int big_get_hex(int a, int base);
-int big_check_set_base(const bigint_t *a, bigint_t **b);
+i08 big_get_hex(i08 a, i08 base);
+i08 big_check_set_base(const bigint_t *a, bigint_t **b);
 
 #endif

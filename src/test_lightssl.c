@@ -38,10 +38,10 @@ int main(int argc, char **argv) {
       free(hs_cli);
     } else if (strcmp(argv[1], "big") == 0) {
       char *cc = (char*) malloc(MAXSTR);
-      bigint_t *ac, *ad, *a1, *ac1, *ad1;
+      bigint_t *ac, *ad, *a1;
 
-      big_init_m(5, &ac, &ad, &a1, &ac1, &ad1);
-      big_alloc_max_m(2, &ac, &ad);
+      big_init_m(3, &ac, &ad, &a1);
+      big_alloc_max_m(3, &ac, &ad, &a1);
 
       // Sanity checks
       big_set("21739871283971298371298371289371298371298371298371298371293",
@@ -233,7 +233,6 @@ int main(int argc, char **argv) {
       big_div(ac, ad, &a1);
       big_assert_str("577", &a1);
 
-      big_alloc_max_m(2, &ac, &ad);
       big_set("977831680815396008051953620868336321350460074412926936453701305"\
           "3060780535564424316462375269467718074378386672111032446309228292315"\
           "5195553231284779451989130560241037445839460215375857597677332187354"\
@@ -274,6 +273,13 @@ int main(int argc, char **argv) {
           "3923621183144968799380292173671165888872943803960117391190749270059"\
           "2982131530147912079948541749035857752315481732903160988470021", &a1);
 
+      for (int ii=0;ii<50000;ii++) {
+        big_set("600", &ac);
+        big_set("22", &ad);
+        big_div_internal(ac, ad, &a1);
+        big_assert_str("27", &a1);
+      }
+
       // Modulo tests
       big_set("10", &ac);
       big_set("3", &ad);
@@ -285,7 +291,7 @@ int main(int argc, char **argv) {
       big_mod(ac, ad, &a1);
       big_assert_str("37", &a1);
 
-     // Hex tests
+      // Hex tests
       big_set("0x123", &ac);
       big_set("0xa23", &ad);
       big_mul(ac, ad, &a1);

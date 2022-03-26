@@ -4,7 +4,8 @@
 
 #include <stdint.h>
 
-typedef long long unsigned int u64;//u_int64_t u64;
+typedef long long unsigned int u64;
+typedef int8_t  i08;
 typedef uint8_t  u08;
 typedef unsigned char b08;
 
