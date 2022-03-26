@@ -626,7 +626,7 @@ void big_sub_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   if (j > i) {
     (*c)->neg = true;
   }
-  big_end_m(2, &aa, &bb);
+//  big_end_m(2, &aa, &bb);
 }
 
 //
