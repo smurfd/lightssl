@@ -27,6 +27,8 @@ void big_end(bigint_t **a);
 void big_end_str(char *a);
 void big_set(char *a, bigint_t **b);
 void big_clear_zeros(bigint_t **b);
+void big_free(bigint_t **a);
+void big_final(bigint_t **a);
 
 // Operations
 void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c);
@@ -56,6 +58,8 @@ void big_end_m(int len, ...);
 void big_set_m(int len, ...);
 void big_alloc_m(int len, ...);
 void big_alloc_max_m(int len, ...);
+void big_free_m(int len, ...);
+void big_final_m(int len, ...);
 
 // Hex
 i08 big_get_hex(i08 a, i08 base);

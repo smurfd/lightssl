@@ -31,9 +31,9 @@ struct curve {
 
 // Crypt
 void lightcrypt_init();
-void lightcrypt_rand(bigint_t **p);
-void lightcrypt_rand_t(bigtup_t **p);
-char* lightcrypt_getrandstr(int len);
+//void lightcrypt_rand(bigint_t **p);
+//void lightcrypt_rand_t(bigtup_t **p);
+void lightcrypt_getrandstr(int len, char *ret);
 void lightcrypt_random(bigint_t **p);
 void lightcrypt_privkey(bigint_t **privkey);
 void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey, bigtup_t **pubkey);

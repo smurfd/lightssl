@@ -9,6 +9,14 @@
 #include "lighthash.h"
 #include "lightcrypt.h"
 
+void big_resize(bigint_t **a, int len) {
+  if ((*a)->alloc_d) {
+    free((*a)->dig);
+  }
+  (*a)->len = len;
+  big_alloc_len(&(*a), len);
+}
+
 int main(int argc, char **argv) {
   b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};

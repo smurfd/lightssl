@@ -35,6 +35,47 @@ void big_init_m(int len, ...) {
 }
 
 //
+// Free a bigint
+void big_free(bigint_t **a) {
+  if ((*a)->alloc_d) {
+    (*a)->alloc_d = false;
+    free((*a)->dig);
+  }
+}
+
+//
+// Free several bigint
+void big_free_m(int len, ...) {
+  va_list valist;
+
+  va_start(valist, len);
+  for (int i = 0; i < len; i++) {
+    big_free(va_arg(valist, bigint_t**));
+  }
+  va_end(valist);
+}
+
+//
+// Finalize bigint
+void big_final(bigint_t **a) {
+  if ((*a)->alloc_t) {
+    (*a)->alloc_t = false;
+    free((*a));
+  }
+}
+
+//
+// Finalize several bigint
+void big_final_m(int len, ...) {
+  va_list valist;
+
+  va_start(valist, len);
+  for (int i = 0; i < len; i++) {
+    big_final(va_arg(valist, bigint_t**));
+  }
+  va_end(valist);
+}
+//
 // Clear a bigint
 void big_end(bigint_t **a) {
   if ((*a)->alloc_d) {
@@ -183,7 +224,7 @@ bool big_cmp_str(char *str, const bigint_t *a) {
     return false;
   }
   for (int i = 0; i < (*a).len; i++) {
-    if ((*a).dig[i] != str[i]) {
+    if ((*a).dig[i] != (str[i] - '0')) {
       return false;
     }
   }
@@ -234,7 +275,8 @@ void big_clear_zeros(bigint_t **b) {
     big_set("0", b);
   }
 
-  big_end_m(1, bb);
+  big_free_m(1, &bb);
+  big_final_m(1, &bb);
   big_end_str(bbb);
 }
 
@@ -344,7 +386,8 @@ void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     }
     big_clear_zeros(c);
   }
-  big_end_m(2, &aa, &bb);
+  big_free_m(2, &bb, &aa);
+  big_final_m(2, &bb, &aa);
 }
 
 //
@@ -374,6 +417,8 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   // Set result to correct sign
   if ((*aa).neg && (*bb).neg) {
     (*c)->neg = false;
+    (*aa).neg = false;
+    (*bb).neg = false;
   } else if ((*aa).neg || (*bb).neg) {
     (*c)->neg = true;
   }
@@ -415,7 +460,8 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     }
     big_clear_zeros(c);
   }
-  big_end_m(2, &aa, &bb);
+  big_free_m(2, &bb, &aa);
+  big_final_m(2, &bb, &aa);
 }
 
 //
@@ -442,120 +488,124 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   big_end_str(aaa);
   base = big_check_set_base(a, c);
   carry = 0;
-
   // reset output parameter
   memset((*c)->dig, 0, (*c)->len * LEN);
   (*c)->neg = false;
   (*c)->len = (*a).len;
-  if ((*a).neg && (*b).neg) {
-    (*aa).neg = false;
-    (*bb).neg = false;
-    if (cmp < 0) {
-      big_sub(bb, aa, c);
-    } else {
-      big_sub(aa, bb, c);
-      (*c)->neg = false;
-    }
-  } else if ((*a).neg || (*b).neg) {
-    (*aa).neg = false;
-    (*bb).neg = false;
-    big_add(aa, bb, c);
-    if ((*a).len < (*b).len || (*a).len > (*b).len) {
-      (*c)->neg = true;
-    }
-    if ((*a).len == (*b).len) {
-      if (cmp < 0) {
-        (*c)->neg = true;
-      }
-    }
+  if (cmp == 0) { // both a and b are the same
+    big_set("0", c);
   } else {
-    if (a == NULL || b == NULL) {
-      c = NULL;
-    } else if (cmpa == 0 && cmpb == 0) {
-      big_set("0", c);
-    } else if (cmpa == 0) {
-      (*bb).neg = true;
-      big_copy_ref(bb, c);
-      big_clear_zeros(c);
-    } else if (cmpb == 0) {
-      (*c)->len = a->len;
-      big_copy_ref(aa, c);
-      big_clear_zeros(c);
-    } else {
-      (*c)->len = (a->len > b->len ? a->len : b->len);
-      if (a->len > b->len) {
-        memset((*aa).dig, 0, (*aa).len * LEN);
-        memset((*bb).dig, 0, (*bb).len * LEN);
-        big_copy(a, &aa);
-        big_copy(b, &bb);
-        (*aa).len = a->len;
-        (*bb).len = b->len;
-        i = (*aa).len - 1;
-        j = (*bb).len - 1;
-      } else if (b->len > a->len) {
-        memset((*aa).dig, 0, (*aa).len * LEN);
-        memset((*bb).dig, 0, (*bb).len * LEN);
-        (*c)->neg = true;
-        big_copy(a, &aa);
-        big_copy(b, &bb);
-        (*aa).len = b->len;
-        (*bb).len = a->len;
-        i = (*aa).len - 1;
-        j = (*bb).len - 1;
+    if ((*a).neg && (*b).neg) {
+      (*aa).neg = false;
+      (*bb).neg = false;
+      if (cmp < 0) {
+        big_sub(bb, aa, c);
       } else {
-        memset((*aa).dig, 0, (*aa).len * LEN);
-        memset((*bb).dig, 0, (*bb).len * LEN);
-        big_copy(a, &aa);
-        big_copy(b, &bb);
-        (*aa).len = a->len;
-        (*bb).len = b->len;
-        i = (*aa).len - 1;
-        j = (*bb).len - 1;
+        big_sub(aa, bb, c);
+        (*c)->neg = false;
       }
-      k = (*c)->len - 1;
-      carry = 0;
-      while (i >= 0 || j >= 0 || carry > 0) {
-        if (i >= 0 && j >= 0) {
-          tmp = big_get_hex((*aa).dig[i], (*aa).base) - big_get_hex((*bb).dig[j],
-              (*bb).base);
-          if (tmp < 0) {
-            if (i == 0 && j == 0) {
-              (*c)->neg = true;
-            }
-            tmp += 10;
-            (*aa).dig[i - 1] -= 1;
-          }
-        } else if (i >= 0) {
-          tmp = (*aa).dig[i];
-        } else if (j >= 0) {
-          tmp = (*bb).dig[j];
-        } else {
-          tmp = 0;
-        }
-        tmp -= carry;
-        carry = tmp / base;
-        if (tmp % base < 0 && i < 2) {
-          (*c)->dig[k] = (tmp % base) + base;
-          if ((*c)->dig[k - 1] > 0) {
-            (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
-          } else {
-            (*c)->dig[k - 1] = 0;
-            break;
-          }
-        } else {
-          (*c)->dig[k] = tmp % base;
-        }
-        i--;
-        j--;
-        k--;
-      }
-      big_clear_zeros(c);
-      if (j > i) {
+    } else if ((*a).neg || (*b).neg) {
+      (*aa).neg = false;
+      (*bb).neg = false;
+      big_add(aa, bb, c);
+      if ((*a).len < (*b).len || (*a).len > (*b).len) {
         (*c)->neg = true;
+      }
+      if ((*a).len == (*b).len) {
+        if (cmp < 0) {
+          (*c)->neg = true;
+        }
+      }
+    } else {
+      if (a == NULL || b == NULL) {
+        c = NULL;
+      } else if (cmpa == 0 && cmpb == 0) {
+        big_set("0", c);
+      } else if (cmpa == 0) {
+        (*bb).neg = true;
+        big_copy_ref(bb, c);
+        big_clear_zeros(c);
+      } else if (cmpb == 0) {
+        (*c)->len = a->len;
+        big_copy_ref(aa, c);
+        big_clear_zeros(c);
+      } else {
+        (*c)->len = (a->len > b->len ? a->len : b->len);
+        if (a->len > b->len) {
+          memset((*aa).dig, 0, (*aa).len * LEN);
+          memset((*bb).dig, 0, (*bb).len * LEN);
+          big_copy(a, &aa);
+          big_copy(b, &bb);
+          (*aa).len = a->len;
+          (*bb).len = b->len;
+          i = (*aa).len - 1;
+          j = (*bb).len - 1;
+        } else if (b->len > a->len) {
+          memset((*aa).dig, 0, (*aa).len * LEN);
+          memset((*bb).dig, 0, (*bb).len * LEN);
+          (*c)->neg = true;
+          big_copy(a, &aa);
+          big_copy(b, &bb);
+          (*aa).len = b->len;
+          (*bb).len = a->len;
+          i = (*aa).len - 1;
+          j = (*bb).len - 1;
+        } else {
+          memset((*aa).dig, 0, (*aa).len * LEN);
+          memset((*bb).dig, 0, (*bb).len * LEN);
+          big_copy(a, &aa);
+          big_copy(b, &bb);
+          (*aa).len = a->len;
+          (*bb).len = b->len;
+          i = (*aa).len - 1;
+          j = (*bb).len - 1;
+        }
+        k = (*c)->len - 1;
+        carry = 0;
+        while (i >= 0 || j >= 0 || carry > 0) {
+          if (i >= 0 && j >= 0) {
+            tmp = big_get_hex((*aa).dig[i], (*aa).base) - big_get_hex((*bb).dig[j],
+                (*bb).base);
+            if (tmp < 0) {
+              if (i == 0 && j == 0) {
+                (*c)->neg = true;
+              }
+              tmp += 10;
+              (*aa).dig[i - 1] -= 1;
+            }
+          } else if (i >= 0) {
+            tmp = (*aa).dig[i];
+          } else if (j >= 0) {
+            tmp = (*bb).dig[j];
+          } else {
+            tmp = 0;
+          }
+          tmp -= carry;
+          carry = tmp / base;
+          if (tmp % base < 0 && i < 2) {
+            (*c)->dig[k] = (tmp % base) + base;
+            if ((*c)->dig[k - 1] > 0) {
+              (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
+            } else {
+              (*c)->dig[k - 1] = 0;
+              break;
+            }
+          } else {
+            (*c)->dig[k] = tmp % base;
+          }
+          i--;
+          j--;
+          k--;
+        }
+        big_clear_zeros(c);
+        if (j > i) {
+          (*c)->neg = true;
+        }
       }
     }
   }
-//  big_end_m(2, &aa, &bb);
+//  big_free_m(2, &bb, &aa);
+//  big_final_m(2, &bb, &aa);
 }
 
 //
@@ -584,56 +634,61 @@ void big_sub_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   i = (*aa).len - 1;
   j = (*bb).len - 1;
   k = (*c)->len - 1;
-  carry = 0;
-  while (i >= 0 || j >= 0 || carry > 0) {
-    if (i >= 0 && j >= 0) {
-      tmp = big_get_hex((*aa).dig[i], (*aa).base) - big_get_hex((*bb).dig[j],
-          (*bb).base);
-      if (tmp < 0) {
-        if (i == 0 && j == 0) {
-          (*c)->neg = true;
+
+  if (big_cmp(a, b)) { // both a and b are the same
+    big_set("0", c);
+  } else {
+    while (i >= 0 || j >= 0 || carry > 0) {
+      if (i >= 0 && j >= 0) {
+        tmp = big_get_hex((*aa).dig[i], (*aa).base) - big_get_hex((*bb).dig[j],
+            (*bb).base);
+        if (tmp < 0) {
+          if (i == 0 && j == 0) {
+            (*c)->neg = true;
+          }
+          tmp += 10;
+          (*aa).dig[i - 1] -= 1;
         }
-        tmp += 10;
-        (*aa).dig[i - 1] -= 1;
-      }
-    } else if (i >= 0) {
-      tmp = (*aa).dig[i];
-    } else if (j >= 0) {
-      tmp = (*bb).dig[j];
-    } else {
-      tmp = 0;
-    }
-    tmp -= carry;
-    carry = tmp / base;
-    if (tmp % base < 0 && i < 2) {
-      (*c)->dig[k] = (tmp % base) + base;
-      if ((*c)->dig[k - 1] > 0) {
-        (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
+      } else if (i >= 0) {
+        tmp = (*aa).dig[i];
+      } else if (j >= 0) {
+        tmp = (*bb).dig[j];
       } else {
-        (*c)->dig[k - 1] = 0;
-        break;
+        tmp = 0;
       }
-    } else {
-      (*c)->dig[k] = tmp % base;
+      tmp -= carry;
+      carry = tmp / base;
+      if (tmp % base < 0 && i < 2) {
+        (*c)->dig[k] = (tmp % base) + base;
+        if ((*c)->dig[k - 1] > 0) {
+          (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
+        } else {
+          (*c)->dig[k - 1] = 0;
+          break;
+        }
+      } else {
+        (*c)->dig[k] = tmp % base;
+      }
+      i--;
+      j--;
+      k--;
     }
-    i--;
-    j--;
-    k--;
+    big_clear_zeros(c);
+    if (j > i) {
+      (*c)->neg = true;
+    }
   }
-  big_clear_zeros(c);
-  if (j > i) {
-    (*c)->neg = true;
-  }
-//  big_end_m(2, &aa, &bb);
+  big_free_m(2, &bb, &aa);
+  big_final_m(2, &bb, &aa);
 }
 
 //
 // Bigint division
 void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
-  bigint_t *aa = NULL, *e = NULL, *f = NULL, *bb = NULL;
+  bigint_t *aa = NULL, *e = NULL, *bb = NULL;
   bigint_t *co1 = NULL, *co2 = NULL, *one = NULL;
 
-  big_init_m(7, &aa, &e, &f, &bb, &co1, &co2, &one);
+  big_init_m(6, &aa, &e, &bb, &co1, &co2, &one);
   (*aa).len = (*a).len;
   (*bb).len = (*b).len;
   (*e).len = (*a).len;
@@ -665,8 +720,8 @@ void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     big_copy(co2, &co1);
   }
   big_copy(co2, c);
-
-//  big_end_m(4, &aa, &bb, &co1, &one);
+//  big_free_m(4, &one, &co1, &bb, &aa);
+//  big_final_m(4, &one, &co1, &bb, &aa);
 }
 
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
@@ -757,8 +812,8 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     (*c)->len--;
     big_clear_zeros(c);
   }
-
-//  big_end_m(3, &aa, &bb, &cc);
+//  big_free_m(5, &cc1, &aa1, &cc, &bb, &aa);
+//  big_final_m(5, &cc1, &aa1, &cc, &bb, &aa);
 }
 
 //
@@ -776,11 +831,11 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   (*aa1).len = (*a).len;
   (*aa2).len = (*a).len;
   (*cc1).len = (*a).len;
-  big_alloc_m(6, &aa, &bb, &cc, &aa1, &cc1, &aa2);
+  (*e).len = (*a).len;
+  big_alloc_m(7, &aa, &bb, &cc, &aa1, &cc1, &aa2, &e);
   big_alloc_len(&one, 1);
   big_alloc_len(&co1, 1);
   big_alloc_len(&co2, 1);
-  big_alloc_len(&e, 1);
 
   // reset output parameter
   (*c)->neg = false;
@@ -822,7 +877,6 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         (*bb).len--;
       }
       len_b = (*bb).len;
-
       big_set("1", &one);
       big_set("0", &co1);
       aa->neg = false;
@@ -864,8 +918,11 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     (*c)->len--;
     big_clear_zeros(c);
   }
+//  big_free_m(3, &co2, &co1, &one);
+  big_free_m(6, &aa2, &cc1, &aa1, &cc, &bb, &aa);
+//  big_final_m(3, &co2, &co1, &one);
+  big_final_m(6, &aa2, &cc1, &aa1, &cc, &bb, &aa);
 
-  big_end_m(6, &aa, &bb, &cc, &aa1, &cc1, &aa2);
 }
 
 //
@@ -912,8 +969,10 @@ void big_mod(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     big_sub(aa, cc1, c);
     big_clear_zeros(c);
   }
-
-  big_end_m(2, &aa, &bb);
+//  big_free_m(3, &g, &cc1, &cc);
+  big_free_m(2, &bb, &aa);
+//  big_final_m(3, &g, &cc1, &cc);
+  big_final_m(2, &bb, &aa);
 }
 
 //
@@ -949,7 +1008,8 @@ void big_print(const bigint_t **a) {
   big_get(*a, aaa);
   printf("%s\n", aaa);
 
-  big_end_m(1, &aa);
+  big_free_m(1, &aa);
+  big_final_m(1, &aa);
   big_end_str(aaa);
 }
 
