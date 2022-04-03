@@ -244,7 +244,7 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1,
     big_copy_ref(point1->p2, &y1);
     big_copy_ref(point2->p1, &x2);
     big_copy_ref(point2->p2, &y2);
- 
+
     if (big_cmp(x1, x2) && !big_cmp(y1, y2)) {
       bret = true;
       ret = NULL;
