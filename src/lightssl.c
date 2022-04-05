@@ -1,16 +1,16 @@
 //                                                                            //
-#include <stdbool.h>
+#include "lightssl.h"
+#include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-#include "lightssl.h"
+#include <unistd.h>
 
 // TODO: rework variable names to differ from functionnames
 // TODO: rework listen server loop
@@ -18,9 +18,8 @@
 //
 // Print hello on server
 void lightssl_print_hello(struct hello *hi) {
-  printf("Hello: %d %d %llu %d %d %d %llu\n",
-    hi->server, hi->tls_v, hi->rnd, hi->ciph_avail[0],
-    hi->ciph_select[0], hi->compress, hi->session_id);
+  printf("Hello: %d %d %llu %d %d %d %llu\n", hi->server, hi->tls_v, hi->rnd,
+         hi->ciph_avail[0], hi->ciph_select[0], hi->compress, hi->session_id);
 }
 
 //
@@ -34,14 +33,14 @@ int lightssl_srv_init(const char *host, const char *port) {
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
 
-  bind(ssock, (struct sockaddr*)&saddr, sizeof(saddr));
+  bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr));
   return ssock;
 }
 
 //
 // Server handler
 void *lightssl_srv_handler(void *sdesc) {
-  int s = *(int*)sdesc;
+  int s = *(int *)sdesc;
   b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
@@ -49,13 +48,13 @@ void *lightssl_srv_handler(void *sdesc) {
   struct hello *hs_cli_recv;
 
   if (s == -1) {
-    return (void*)-1;
+    return (void *)-1;
   }
 
-  hs_srv = (struct hello*) malloc(sizeof(struct hello));
-  hs_cli_recv = (struct hello*) malloc(sizeof(struct hello));
-  lightssl_hs_set_hello(hs_srv, true, TLSVERSION, 1337, avail, select,
-    compress, 13371337);
+  hs_srv = (struct hello *)malloc(sizeof(struct hello));
+  hs_cli_recv = (struct hello *)malloc(sizeof(struct hello));
+  lightssl_hs_set_hello(hs_srv, true, TLSVERSION, 1337, avail, select, compress,
+                        13371337);
   lightssl_hs_send_hi(s, true, hs_srv);
   lightssl_hs_recv_hi(s, true, hs_cli_recv);
   lightssl_print_hello(hs_cli_recv);
@@ -76,12 +75,12 @@ int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
 
   listen(ssock, 3);
   while (csock >= 1) {
-    csock = accept(ssock, (struct sockaddr*)&cli, (socklen_t*)&c);
+    csock = accept(ssock, (struct sockaddr *)&cli, (socklen_t *)&c);
     pthread_t sniffer_thread;
-    new_sock = (int*)malloc(sizeof *new_sock);
+    new_sock = (int *)malloc(sizeof *new_sock);
     *new_sock = csock;
     if (pthread_create(&sniffer_thread, NULL, lightssl_srv_handler,
-        (void*)new_sock) < 0) {
+                       (void *)new_sock) < 0) {
       printf("error\n");
       return -1;
     }
@@ -112,7 +111,7 @@ int lightssl_cli_init(const char *host, const char *port) {
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
 
-  cs = connect(csock, (struct sockaddr*)&saddr, sizeof(saddr));
+  cs = connect(csock, (struct sockaddr *)&saddr, sizeof(saddr));
   if (cs < 0) {
     printf("Connection error\n");
     exit(1);
@@ -134,19 +133,17 @@ void lightssl_cli_send(int csock, const char *msg) {
 
 //
 // Client end session
-void lightssl_cli_end(int csock) {
-  close(csock);
-}
+void lightssl_cli_end(int csock) { close(csock); }
 
 //
 // Set hello message
-struct hello* lightssl_hs_set_hello(struct hello *hi, bool srv, int tls,
-    u64 r, b08 avail[], b08 sel[], b08 c, u64 sess) {
+struct hello *lightssl_hs_set_hello(struct hello *hi, bool srv, int tls, u64 r,
+                                    b08 avail[], b08 sel[], b08 c, u64 sess) {
   hi->server = srv;
   hi->tls_v = tls; // will be 4 = TLS1.3
   hi->rnd = r;
   hi->ciph_avail[0] = avail[0]; // will only use 1 cipher
-  hi->ciph_select[0] = sel[0]; // will only use 1 cipher
+  hi->ciph_select[0] = sel[0];  // will only use 1 cipher
   hi->compress = c;
   hi->session_id = sess;
   return hi;
@@ -168,7 +165,7 @@ b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
 
 //
 // Receive Handshake hello message
-struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi) {
+struct hello *lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi) {
   int r, r_tot;
 
   if (srv) {

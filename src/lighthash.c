@@ -1,31 +1,31 @@
 //                                                                            //
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 #include "lighthash.h"
 #include "lightdefs.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern u64 sha[80];
 extern u64 sha_init[BYTE];
 
 //
 // "Construct"
-char* lighthash_new(const char* in) {
+char *lighthash_new(const char *in) {
   b08 digest[DIGEST_SIZE];
-  char* buf;
+  char *buf;
 
-  memset(digest,0,DIGEST_SIZE);
-  buf = (char*) malloc(2 * DIGEST_SIZE + 1);
+  memset(digest, 0, DIGEST_SIZE);
+  buf = (char *)malloc(2 * DIGEST_SIZE + 1);
   buf[2 * DIGEST_SIZE] = 0;
 
   lighthash_init();
-  lighthash_update((b08*)in, strlen(in));
+  lighthash_update((b08 *)in, strlen(in));
   lighthash_finalize(digest);
 
   for (int i = 0; i < DIGEST_SIZE; i++) {
-    sprintf(buf+i*2, "%02x", digest[i]);
+    sprintf(buf + i * 2, "%02x", digest[i]);
   }
   return buf;
 }
@@ -78,7 +78,7 @@ void lighthash_finalize(b08 *digest) {
   SHA2_UNPACK32(len_b, m_block + pm_len - 4);
   lighthash_transform(m_block, block_nb);
 
-  for (int i = 0 ; i < BYTE; i++) {
+  for (int i = 0; i < BYTE; i++) {
     SHA2_UNPACK64(m_h[i], &digest[i << 3]);
   }
 }
@@ -97,7 +97,7 @@ void lighthash_transform(const b08 *msg, u08 blocknb) {
       SHA2_PACK64(&sub_block[j << 3], &w[j]);
     }
     for (int j = 16; j < 80; j++) {
-      w[j] = SHA512_F4(w[j -  2]) + w[j -  7] + SHA512_F3(w[j - 15]) + w[j - 16];
+      w[j] = SHA512_F4(w[j - 2]) + w[j - 7] + SHA512_F3(w[j - 15]) + w[j - 16];
     }
     for (int j = 0; j < BYTE; j++) {
       wv[j] = m_h[j];

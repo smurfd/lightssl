@@ -2,8 +2,8 @@
 #ifndef LIGHTBIG_H
 #define LIGHTBIG_H 1
 
-#include <stdbool.h>
 #include "lightdefs.h"
+#include <stdbool.h>
 
 #define MAXSTR 512
 #define BIGLEN 1024
@@ -43,7 +43,7 @@ bool big_bit_and_one(bigint_t *a);
 
 // Assets
 void big_assert(bigint_t **b1, bigint_t **b2);
-void big_assert_str(char* str, bigint_t **b2);
+void big_assert_str(char *str, bigint_t **b2);
 void big_print(const bigint_t **a);
 void big_alloc(bigint_t **b);
 void big_alloc_len(bigint_t **b, int len);

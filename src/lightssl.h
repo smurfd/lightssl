@@ -2,19 +2,19 @@
 #ifndef LIGHTSSL_H
 #define LIGHTSSL_H 1
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <sys/socket.h>
 #include "lightdefs.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <sys/socket.h>
 
 struct hello {
-  bool server;       // is the hello comming from server?
-  b08 tls_v;         // 4 = TLS1.3
-  u64 rnd;           // random number
-  b08 ciph_avail[1]; // available ciphers
-  b08 ciph_select[1];// Selected ciphers, will use only SHA512
-  b08 compress;      // compression type
-  u64 session_id;    // session id
+  bool server;        // is the hello comming from server?
+  b08 tls_v;          // 4 = TLS1.3
+  u64 rnd;            // random number
+  b08 ciph_avail[1];  // available ciphers
+  b08 ciph_select[1]; // Selected ciphers, will use only SHA512
+  b08 compress;       // compression type
+  u64 session_id;     // session id
 };
 
 struct handshake {
@@ -24,23 +24,23 @@ struct handshake {
 void lightssl_print_hello(struct hello *hi);
 
 // Server
-int  lightssl_srv_init(const char *host, const char *port);
+int lightssl_srv_init(const char *host, const char *port);
 void *lightssl_srv_handler(void *sdesc);
-int  lightssl_srv_listen(int ssock, struct sockaddr *cli);
+int lightssl_srv_listen(int ssock, struct sockaddr *cli);
 void lightssl_srv_send(int csock, const char *msg);
 void lightssl_srv_recv(int csock, char **data);
 
 // Client
-int  lightssl_cli_init(const char *host, const char *port);
+int lightssl_cli_init(const char *host, const char *port);
 void lightssl_cli_send(int csock, const char *msg);
 void lightssl_cli_recv(int csock, char **data);
 void lightssl_cli_end(int csock);
 
 // Handshake
-struct hello* lightssl_hs_set_hello(struct hello *hs, bool srv, int tls,
-  u64 r, b08 avail[], b08 sel[], b08 c, u64 sess);
+struct hello *lightssl_hs_set_hello(struct hello *hs, bool srv, int tls, u64 r,
+                                    b08 avail[], b08 sel[], b08 c, u64 sess);
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi);
-struct hello* lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi);
+struct hello *lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi);
 #endif
 
 /*
@@ -74,5 +74,7 @@ https://en.wikipedia.org/wiki/Transport_Layer_Security
 */
 
 // TODO
-// Read: https://dev.to/techschoolguru/a-complete-overview-of-ssl-tls-and-its-cryptographic-system-36pd
-// Read: https://dev.to/techschoolguru/how-to-create-sign-ssl-tls-certificates-2aai
+// Read:
+// https://dev.to/techschoolguru/a-complete-overview-of-ssl-tls-and-its-cryptographic-system-36pd
+// Read:
+// https://dev.to/techschoolguru/how-to-create-sign-ssl-tls-certificates-2aai
