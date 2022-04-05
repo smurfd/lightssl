@@ -9,12 +9,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/*
-void big_resize(bigint_t **a, int len) {
-  (*a)->dig = (i08*) realloc((*a)->dig, len);
-  (*a)->len = len;
-}
-*/
 int main(int argc, char **argv) {
   b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};

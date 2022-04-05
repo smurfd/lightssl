@@ -111,8 +111,9 @@ void big_end_m(int len, ...) {
 //
 // resize
 void big_resize(bigint_t **a, int len) {
-  //(*a)->dig = (i08*) realloc((*a)->dig, len+1);
-  //(*a)->len = len+1;
+  if ((*a)->alloc_t) {
+  //(*a)->dig = (i08*) realloc((*a)->dig, (*a)->len*LEN);
+}
 }
 
 //
@@ -497,6 +498,7 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   big_end_str(aaa);
   base = big_check_set_base(a, c);
   carry = 0;
+
   // reset output parameter
   memset((*c)->dig, 0, (*c)->len * LEN);
   (*c)->neg = false;
@@ -547,6 +549,8 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
           big_copy(b, &bb);
           (*aa).len = a->len;
           (*bb).len = b->len;
+  big_resize(&aa, (*aa).len);
+  big_resize(&bb, (*bb).len);
           i = (*aa).len - 1;
           j = (*bb).len - 1;
         } else if (b->len > a->len) {
@@ -557,6 +561,8 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
           big_copy(b, &bb);
           (*aa).len = b->len;
           (*bb).len = a->len;
+  big_resize(&aa, (*aa).len);
+  big_resize(&bb, (*bb).len);
           i = (*aa).len - 1;
           j = (*bb).len - 1;
         } else {
@@ -566,6 +572,8 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
           big_copy(b, &bb);
           (*aa).len = a->len;
           (*bb).len = b->len;
+  big_resize(&aa, (*aa).len);
+  big_resize(&bb, (*bb).len);
           i = (*aa).len - 1;
           j = (*bb).len - 1;
         }
