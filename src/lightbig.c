@@ -109,6 +109,13 @@ void big_end_m(int len, ...) {
 }
 
 //
+// resize
+void big_resize(bigint_t **a, int len) {
+  //(*a)->dig = (i08*) realloc((*a)->dig, len+1);
+  //(*a)->len = len+1;
+}
+
+//
 // Set several bigint
 void big_set_m(int len, ...) {
   va_list valist;
@@ -150,6 +157,7 @@ void big_set(char *a, bigint_t **b) {
     (*b)->len = strlen(a) - skip;
     if ((*b)->len == 0) {
       (*b)->len++;
+      big_resize(b, (*b)->len);
       (*b)->dig[0] = 0;
     } else {
       for (int i = 0; i < (*b)->len; i++) {
@@ -267,6 +275,7 @@ void big_clear_zeros(bigint_t **b) {
   big_alloc_m(1, &bb);
   while ((*b)->dig[0] == 0 && (*b)->len >= 0) {
     (*b)->len--;
+    big_resize(b, (*b)->len);
     (*b)->dig++;
   }
   // if the string only contains zeros atleast save one
@@ -786,10 +795,12 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
       (*bb).dig[len_b + i] = 0;
       (*bb).len++;
+      big_resize(&bb, (*bb).len);
     }
     for (int j = 0; j <= len_diff; j++) {
       if ((u64)(*bb).len > (u64)(*b).len) {
         (*bb).len--;
+        big_resize(&bb, (*bb).len);
       }
       len_b = (*bb).len;
       big_div_sub(aa, bb, &cc);
@@ -803,13 +814,16 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         for (int ii = 0; ii < (*cc).len; ii++) {
           (*c)->dig[j + ii] = (*cc).dig[ii];
           (*c)->len++;
+          big_resize(c, (*c)->len);
         }
       } else {
         (*c)->dig[j] = (*cc).dig[0];
         (*c)->len++;
+        big_resize(c, (*c)->len);
       }
     }
     (*c)->len--;
+    big_resize(c, (*c)->len);
     big_clear_zeros(c);
   }
 //  big_free_m(5, &cc1, &aa1, &cc, &bb, &aa);
@@ -871,10 +885,12 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
       (*bb).dig[len_b + i] = 0;
       (*bb).len++;
+      big_resize(&bb, (*bb).len);
     }
     for (int j = 0; j <= len_diff; j++) {
       if ((u64)(*bb).len >= (u64)(*b).len) {
         (*bb).len--;
+        big_resize(&bb, (*bb).len);
       }
       len_b = (*bb).len;
       big_set("1", &one);
@@ -909,13 +925,16 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         for (int ii = 0; ii < (*cc).len; ii++) {
           (*c)->dig[j + ii] = (*cc).dig[ii];
           (*c)->len++;
+          big_resize(c, (*c)->len);
         }
       } else {
         (*c)->dig[j] = (*cc).dig[0];
         (*c)->len++;
+        big_resize(c, (*c)->len);
       }
     }
     (*c)->len--;
+    big_resize(c, (*c)->len);
     big_clear_zeros(c);
   }
 //  big_free_m(3, &co2, &co1, &one);

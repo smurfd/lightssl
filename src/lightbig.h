@@ -51,7 +51,7 @@ void big_copy(const bigint_t *a, bigint_t **c);
 void big_copy_ref(const bigint_t *a, bigint_t **b);
 bool big_cmp(const bigint_t *a, const bigint_t *b);
 bool big_cmp_str(char *str, const bigint_t *a);
-
+void big_resize(bigint_t **a, int len);
 // Multi
 void big_init_m(int len, ...);
 void big_end_m(int len, ...);
