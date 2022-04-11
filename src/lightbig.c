@@ -15,7 +15,8 @@
 //
 // Initialize a bigint
 void big_init(bigint_t **a) {
-  (*a) = calloc(1, sizeof(bigint_t));
+  //(*a) = calloc(1, sizeof(bigint_t));
+  (*a) = malloc(sizeof(bigint_t));
   (*a)->neg = false;
   (*a)->base = DEC;
   (*a)->alloc_t = true;
@@ -75,6 +76,7 @@ void big_final_m(int len, ...) {
   }
   va_end(valist);
 }
+
 //
 // Clear a bigint
 void big_end(bigint_t **a) {
@@ -111,8 +113,8 @@ void big_end_m(int len, ...) {
 //
 // resize
 void big_resize(bigint_t **a, int len) {
-  if ((*a)->alloc_t) {
-    //(*a)->dig = (i08*) realloc((*a)->dig, (*a)->len*LEN);
+  if ((*a)->alloc_d) {
+    (*a)->dig = realloc((*a)->dig, LEN*len);
   }
 }
 
@@ -151,14 +153,13 @@ void big_set(char *a, bigint_t **b) {
   } else if (strcmp("", a) == 0) {
     (*b)->len = 1;
   } else {
-    while (a[skip] == '0') {
+    while (a[skip] == '0') { // ignore 1st zeros
       skip++;
     }
 
     (*b)->len = strlen(a) - skip;
     if ((*b)->len == 0) {
       (*b)->len++;
-      big_resize(b, (*b)->len);
       (*b)->dig[0] = 0;
     } else {
       for (int i = 0; i < (*b)->len; i++) {
@@ -177,14 +178,16 @@ void big_set(char *a, bigint_t **b) {
 //
 // Allocate memory for digits
 void big_alloc(bigint_t **b) {
-  (*b)->dig = calloc((*b)->len, LEN);
+  //(*b)->dig = calloc((*b)->len, LEN);
+  (*b)->dig = malloc((*b)->len * LEN);
   (*b)->alloc_d = true;
 }
 
 //
 // Allocate memory for digits
 void big_alloc_len(bigint_t **b, int len) {
-  (*b)->dig = calloc(len, LEN);
+  //(*b)->dig = calloc(len, LEN);
+  (*b)->dig = malloc(len * LEN);
   (*b)->alloc_d = true;
 }
 
@@ -243,7 +246,7 @@ bool big_cmp_str(char *str, const bigint_t *a) {
 //
 // Copy one bigint to another
 void big_copy(const bigint_t *a, bigint_t **c) {
-  char *aaa = (char *)malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR);
 
   big_get(a, aaa);
   big_set(aaa, c);
@@ -254,7 +257,7 @@ void big_copy(const bigint_t *a, bigint_t **c) {
 //
 // Copy data references
 void big_copy_ref(const bigint_t *a, bigint_t **b) {
-  char *bbb = (char *)malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
 
   (*b)->len = (*a).len;
   big_alloc_m(1, b);
@@ -268,7 +271,7 @@ void big_copy_ref(const bigint_t *a, bigint_t **b) {
 //
 // Clear initial zeros
 void big_clear_zeros(bigint_t **b) {
-  char *bbb = (char *)malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
   bigint_t *bb = NULL;
 
   big_init_m(1, &bb);
@@ -276,7 +279,6 @@ void big_clear_zeros(bigint_t **b) {
   big_alloc_m(1, &bb);
   while ((*b)->dig[0] == 0 && (*b)->len >= 0) {
     (*b)->len--;
-    big_resize(b, (*b)->len);
     (*b)->dig++;
   }
   // if the string only contains zeros atleast save one
@@ -337,8 +339,8 @@ i08 big_get_hex(i08 a, i08 base) {
 //
 // Bigint addition
 void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
-  char *aaa = (char *)malloc(MAXSTR);
-  char *bbb = (char *)malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
   int i, j, k, tmp, carry, base, cmpa, cmpb;
   bigint_t *aa = NULL, *bb = NULL;
 
@@ -477,8 +479,8 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 //
 // Bigint subtraction
 void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
-  char *aaa = (char *)malloc(MAXSTR);
-  char *bbb = (char *)malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
   int i, j, k, tmp, carry, base, cmp, cmpa, cmpb;
   bigint_t *aa = NULL, *bb = NULL;
 
@@ -542,41 +544,20 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         big_clear_zeros(c);
       } else {
         (*c)->len = (a->len > b->len ? a->len : b->len);
-        if (a->len > b->len) {
-          memset((*aa).dig, 0, (*aa).len * LEN);
-          memset((*bb).dig, 0, (*bb).len * LEN);
+        if (a->len >= b->len) {
           big_copy(a, &aa);
           big_copy(b, &bb);
           (*aa).len = a->len;
           (*bb).len = b->len;
-          big_resize(&aa, (*aa).len);
-          big_resize(&bb, (*bb).len);
-          i = (*aa).len - 1;
-          j = (*bb).len - 1;
-        } else if (b->len > a->len) {
-          memset((*aa).dig, 0, (*aa).len * LEN);
-          memset((*bb).dig, 0, (*bb).len * LEN);
+        } else {
           (*c)->neg = true;
-          big_copy(a, &aa);
-          big_copy(b, &bb);
+          big_copy(a, &bb);
+          big_copy(b, &aa);
           (*aa).len = b->len;
           (*bb).len = a->len;
-          big_resize(&aa, (*aa).len);
-          big_resize(&bb, (*bb).len);
-          i = (*aa).len - 1;
-          j = (*bb).len - 1;
-        } else {
-          memset((*aa).dig, 0, (*aa).len * LEN);
-          memset((*bb).dig, 0, (*bb).len * LEN);
-          big_copy(a, &aa);
-          big_copy(b, &bb);
-          (*aa).len = a->len;
-          (*bb).len = b->len;
-          big_resize(&aa, (*aa).len);
-          big_resize(&bb, (*bb).len);
-          i = (*aa).len - 1;
-          j = (*bb).len - 1;
         }
+        i = (*aa).len - 1;
+        j = (*bb).len - 1;
         k = (*c)->len - 1;
         carry = 0;
         while (i >= 0 || j >= 0 || carry > 0) {
@@ -744,8 +725,8 @@ void big_div_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   bigint_t *aa = NULL, *bb = NULL, *cc = NULL, *cc1 = NULL, *aa1 = NULL;
   int len_a, len_b, len_diff, cmp, cmp1;
-  char *aaa = (char *)malloc(MAXSTR);
-  char *bbb = (char *)malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
 
   big_init_m(5, &aa, &bb, &cc, &aa1, &cc1);
   (*aa).len = (*a).len;
@@ -803,12 +784,10 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
       (*bb).dig[len_b + i] = 0;
       (*bb).len++;
-      big_resize(&bb, (*bb).len);
     }
     for (int j = 0; j <= len_diff; j++) {
       if ((u64)(*bb).len > (u64)(*b).len) {
         (*bb).len--;
-        big_resize(&bb, (*bb).len);
       }
       len_b = (*bb).len;
       big_div_sub(aa, bb, &cc);
@@ -822,16 +801,13 @@ void big_div(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         for (int ii = 0; ii < (*cc).len; ii++) {
           (*c)->dig[j + ii] = (*cc).dig[ii];
           (*c)->len++;
-          big_resize(c, (*c)->len);
         }
       } else {
         (*c)->dig[j] = (*cc).dig[0];
         (*c)->len++;
-        big_resize(c, (*c)->len);
       }
     }
     (*c)->len--;
-    big_resize(c, (*c)->len);
     big_clear_zeros(c);
   }
   //  big_free_m(5, &cc1, &aa1, &cc, &bb, &aa);
@@ -893,12 +869,10 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
       (*bb).dig[len_b + i] = 0;
       (*bb).len++;
-      big_resize(&bb, (*bb).len);
     }
     for (int j = 0; j <= len_diff; j++) {
       if ((u64)(*bb).len >= (u64)(*b).len) {
         (*bb).len--;
-        big_resize(&bb, (*bb).len);
       }
       len_b = (*bb).len;
       big_set("1", &one);
@@ -933,16 +907,13 @@ void big_div_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         for (int ii = 0; ii < (*cc).len; ii++) {
           (*c)->dig[j + ii] = (*cc).dig[ii];
           (*c)->len++;
-          big_resize(c, (*c)->len);
         }
       } else {
         (*c)->dig[j] = (*cc).dig[0];
         (*c)->len++;
-        big_resize(c, (*c)->len);
       }
     }
     (*c)->len--;
-    big_resize(c, (*c)->len);
     big_clear_zeros(c);
   }
   //  big_free_m(3, &co2, &co1, &one);
@@ -1023,7 +994,7 @@ i08 big_check_set_base(const bigint_t *a, bigint_t **b) {
 //
 // Print a bigint
 void big_print(const bigint_t **a) {
-  char *aaa = (char *)malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR);
   bigint_t *aa = NULL;
 
   big_init_m(1, &aa);
@@ -1040,8 +1011,8 @@ void big_print(const bigint_t **a) {
 //
 // Assert two bigints are the same
 void big_assert(bigint_t **b1, bigint_t **b2) {
-  char *aaa = (char *)malloc(MAXSTR);
-  char *bbb = (char *)malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
 
   big_get(*b1, aaa);
   big_get(*b2, bbb);
@@ -1054,7 +1025,7 @@ void big_assert(bigint_t **b1, bigint_t **b2) {
 //
 // Assert a string and bigint is the same
 void big_assert_str(char *str, bigint_t **b2) {
-  char *bbb = (char *)malloc(MAXSTR);
+  char *bbb = malloc(MAXSTR);
 
   big_get(*b2, bbb);
   assert(strcmp(str, bbb) == 0);
