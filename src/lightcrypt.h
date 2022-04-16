@@ -37,12 +37,18 @@ void lightcrypt_getrandstr(int len, char *ret);
 void lightcrypt_random(bigint_t **p);
 void lightcrypt_privkey(bigint_t **privkey);
 void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey, bigtup_t **pubkey);
-void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
+void lightcrypt_point_mul(struct curve *cur,
+                          bigint_t *key,
+                          bigtup_t *point,
                           bigtup_t **ret);
-void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
+void lightcrypt_point_add(struct curve *cur,
+                          bigtup_t *point1,
+                          bigtup_t *point2,
                           bigtup_t **ret);
 void lightcrypt_point_neg(struct curve *cur, bigtup_t *point, bigtup_t **ret);
-void lightcrypt_point_imd(struct curve *cur, bigint_t **key, bigint_t *point,
+void lightcrypt_point_imd(struct curve *cur,
+                          bigint_t **key,
+                          bigint_t *point,
                           bigint_t **ret);
 bool lightcrypt_oncurve(struct curve *cur, bigtup_t *point);
 

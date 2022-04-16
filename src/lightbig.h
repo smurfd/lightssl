@@ -7,9 +7,9 @@
 
 #define MAXSTR 512
 #define BIGLEN 1024
-#define DEC 10
-#define HEX 16
-#define LEN sizeof(i08)
+#define DEC    10
+#define HEX    16
+#define LEN    sizeof(i08)
 
 typedef struct {
   i08 *dig;
@@ -51,7 +51,8 @@ void big_copy(const bigint_t *a, bigint_t **c);
 void big_copy_ref(const bigint_t *a, bigint_t **b);
 bool big_cmp(const bigint_t *a, const bigint_t *b);
 bool big_cmp_str(char *str, const bigint_t *a);
-void big_resize(bigint_t **a, int len);
+void big_resize(bigint_t **a, int old_len, int new_len);
+
 // Multi
 void big_init_m(int len, ...);
 void big_end_m(int len, ...);

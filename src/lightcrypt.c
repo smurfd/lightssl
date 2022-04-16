@@ -22,10 +22,10 @@ void lightcrypt_init() {
   struct curve *curv = malloc(sizeof(struct curve));
 
   lightcrypt_init_t_m(5, &curv->g, &publ1, &publ2, &scal1, &scal2);
-  big_init_m(7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2,
-             &tmp);
-  big_alloc_max_m(7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1,
-                  &priv2, &tmp);
+  big_init_m(
+    7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2, &tmp);
+  big_alloc_max_m(
+    7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2, &tmp);
   big_set_m(6, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2);
 
   // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
@@ -96,7 +96,7 @@ void lightcrypt_init() {
 }
 
 void lightcrypt_init_t(bigtup_t **p) {
-  (*p) = malloc(sizeof(bigtup_t));
+  (*p)          = malloc(sizeof(bigtup_t));
   (*p)->alloc_t = true;
   big_init_m(2, &(*p)->p1, &(*p)->p2);
   big_alloc_max_m(2, &(*p)->p1, &(*p)->p2);
@@ -157,11 +157,14 @@ void lightcrypt_random(bigint_t **p) {
 
 //
 // Initialize private key
-void lightcrypt_privkey(bigint_t **privkey) { lightcrypt_random(privkey); }
+void lightcrypt_privkey(bigint_t **privkey) {
+  lightcrypt_random(privkey);
+}
 
 //
 // Initialize public key
-void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
+void lightcrypt_pubkey(struct curve *cur,
+                       bigint_t *privkey,
                        bigtup_t **pubkey) {
   big_set("32873365337033794512477405735997107923198513824305262159693765843969"
           "498982399885",
@@ -171,7 +174,9 @@ void lightcrypt_pubkey(struct curve *cur, bigint_t *privkey,
 
 //
 // Multiplication of points
-void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
+void lightcrypt_point_mul(struct curve *cur,
+                          bigint_t *key,
+                          bigtup_t *point,
                           bigtup_t **ret) {
   bigtup_t *addend = NULL, *ad = NULL, *r = NULL, *npoint = NULL;
   bigint_t *kcn, *k1, *k2, *two;
@@ -227,11 +232,13 @@ void lightcrypt_point_mul(struct curve *cur, bigint_t *key, bigtup_t *point,
 
 //
 // Add two points
-void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
+void lightcrypt_point_add(struct curve *cur,
+                          bigtup_t *point1,
+                          bigtup_t *point2,
                           bigtup_t **ret) {
   bigint_t *x1, *x2, *x3, *y1, *y2, *y3, *m, *mm, *mmm;
   bigtup_t *result = NULL;
-  bool bret = false;
+  bool bret        = false;
 
   big_init_m(5, &x1, &x2, &y1, &y2, &m);
   big_alloc_max_m(4, &x1, &x2, &y1, &y2);
@@ -254,7 +261,7 @@ void lightcrypt_point_add(struct curve *cur, bigtup_t *point1, bigtup_t *point2,
 
     if (big_cmp(x1, x2) && !big_cmp(y1, y2)) {
       bret = true;
-      ret = NULL;
+      ret  = NULL;
     }
     if (!bret) {
       if (big_cmp(x1, x2)) {
@@ -386,11 +393,13 @@ void lightcrypt_point_neg(struct curve *cur, bigtup_t *point, bigtup_t **ret) {
 
 //
 // Inverse modulo
-void lightcrypt_point_imd(struct curve *cur, bigint_t **key, bigint_t *point,
+void lightcrypt_point_imd(struct curve *cur,
+                          bigint_t **key,
+                          bigint_t *point,
                           bigint_t **ret) {
   bigint_t *rr;
   bool bret = false;
-  char *cc = (char *)malloc(MAXSTR);
+  char *cc  = (char *)malloc(MAXSTR);
 
   big_init_m(1, &rr);
   big_alloc_max_m(1, &rr);
@@ -409,14 +418,38 @@ void lightcrypt_point_imd(struct curve *cur, bigint_t **key, bigint_t *point,
     }
     if (!bret) {
       bigint_t *r, *s, *t, *old_r, *old_s, *old_t, *old_rt, *old_tt, *old_st,
-          *qr, *qs, *qt, *quotient;
+        *qr, *qs, *qt, *quotient;
 
-      big_init_m(13, &r, &s, &t, &old_r, &old_s, &old_t, &old_rt, &old_st,
-                 &old_tt, &qr, &qs, &qt, &quotient);
-      big_alloc_max_m(13, &r, &s, &t, &old_r, &old_s, &old_t, &old_rt, &old_st,
-                      &old_tt, &qr, &qs, &qt, &quotient);
-      big_set_m(9, &r, &old_r, &quotient, &old_rt, &old_st, &old_tt, &qr, &qs,
-                &qt);
+      big_init_m(13,
+                 &r,
+                 &s,
+                 &t,
+                 &old_r,
+                 &old_s,
+                 &old_t,
+                 &old_rt,
+                 &old_st,
+                 &old_tt,
+                 &qr,
+                 &qs,
+                 &qt,
+                 &quotient);
+      big_alloc_max_m(13,
+                      &r,
+                      &s,
+                      &t,
+                      &old_r,
+                      &old_s,
+                      &old_t,
+                      &old_rt,
+                      &old_st,
+                      &old_tt,
+                      &qr,
+                      &qs,
+                      &qt,
+                      &quotient);
+      big_set_m(
+        9, &r, &old_r, &quotient, &old_rt, &old_st, &old_tt, &qr, &qs, &qt);
 
       big_set("0", &s);
       big_set("1", &old_s);
