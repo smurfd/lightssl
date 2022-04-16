@@ -10,14 +10,14 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-  b08 avail[]  = {TLSCIPHER};
+  b08 avail[] = {TLSCIPHER};
   b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
 
   if (argc == 2 && argv) {
     if (strcmp(argv[1], "server") == 0) {
       struct sockaddr *cli = NULL;
-      int s                = lightssl_srv_init("127.0.0.1", "12345");
+      int s = lightssl_srv_init("127.0.0.1", "12345");
 
       lightssl_srv_listen(s, cli);
     } else if (strcmp(argv[1], "client") == 0) {

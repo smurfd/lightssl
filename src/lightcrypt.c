@@ -96,7 +96,7 @@ void lightcrypt_init() {
 }
 
 void lightcrypt_init_t(bigtup_t **p) {
-  (*p)          = malloc(sizeof(bigtup_t));
+  (*p) = malloc(sizeof(bigtup_t));
   (*p)->alloc_t = true;
   big_init_m(2, &(*p)->p1, &(*p)->p2);
   big_alloc_max_m(2, &(*p)->p1, &(*p)->p2);
@@ -148,7 +148,7 @@ void lightcrypt_getrandstr(int len, char *ret) {
 //
 // Randomize to a bigint
 void lightcrypt_random(bigint_t **p) {
-  char *str = (char *)malloc(80);
+  char *str = malloc(80);
 
   lightcrypt_getrandstr(80, str);
   big_set(str, &(*p));
@@ -238,7 +238,7 @@ void lightcrypt_point_add(struct curve *cur,
                           bigtup_t **ret) {
   bigint_t *x1, *x2, *x3, *y1, *y2, *y3, *m, *mm, *mmm;
   bigtup_t *result = NULL;
-  bool bret        = false;
+  bool bret = false;
 
   big_init_m(5, &x1, &x2, &y1, &y2, &m);
   big_alloc_max_m(4, &x1, &x2, &y1, &y2);
@@ -261,12 +261,12 @@ void lightcrypt_point_add(struct curve *cur,
 
     if (big_cmp(x1, x2) && !big_cmp(y1, y2)) {
       bret = true;
-      ret  = NULL;
+      ret = NULL;
     }
     if (!bret) {
       if (big_cmp(x1, x2)) {
         bigint_t *y12, *three, *x1x1, *inv, *xca, *ca;
-        char *c = (char *)malloc(10);
+        char *c = malloc(10);
 
         big_init_m(6, &y12, &three, &x1x1, &inv, &ca, &xca);
         big_alloc_max_m(7, &y12, &three, &x1x1, &inv, &ca, &xca, &m);
@@ -288,17 +288,17 @@ void lightcrypt_point_add(struct curve *cur,
         big_mul(xca, inv, &m);
         printf("4\n");
 
-        //        big_free(&y12);
+        // big_free(&y12);
         big_free(&three);
-        //        big_free(&x1x1);
-        //        big_free(&inv);
+        // big_free(&x1x1);
+        // big_free(&inv);
         big_free(&ca);
         big_free(&xca);
 
-        //        big_final(&y12);
+        // big_final(&y12);
         big_final(&three);
-        //        big_final(&x1x1);
-        //        big_final(&inv);
+        // big_final(&x1x1);
+        // big_final(&inv);
         big_final(&ca);
         big_final(&xca);
 
@@ -306,7 +306,7 @@ void lightcrypt_point_add(struct curve *cur,
         // big_end_str(c);
       } else {
         bigint_t *x1x2, *y1y2, *inv;
-        char *cc = (char *)malloc(MAXSTR);
+        char *cc = malloc(MAXSTR);
 
         big_init_m(4, &x1x2, &y1y2, &inv, &m);
         big_alloc_max_m(4, &x1x2, &y1y2, &inv, &m);
@@ -326,15 +326,6 @@ void lightcrypt_point_add(struct curve *cur,
         big_clear_zeros(&inv);
         big_mul(inv, y1y2, &m);
         printf("6\n");
-
-        //        big_free(&x1x2);
-        //        big_free(&y1y2);
-        //        big_free(&inv);
-
-        //        big_final(&x1x2);
-        //        big_final(&y1y2);
-        //        big_final(&inv);
-        // big_end_m(3, &x1x2, &y1y2, &inv);
       }
       printf("IND\n");
       big_init_m(4, &x3, &y3, &mm, &mmm);
@@ -354,16 +345,6 @@ void lightcrypt_point_add(struct curve *cur,
       big_mod(y3, cur->p, &result->p2);
       // assert(lightcrypt_oncurve(cur, result));
       lightcrypt_copy_t(result, ret);
-      //      big_free(&x3);
-      //      big_free(&y3);
-      //      big_free(&mm);
-      //      big_free(&mmm);
-
-      //      big_free(&x3);
-      //      big_free(&y3);
-      //      big_free(&mm);
-      //      big_free(&mmm);
-      printf("IND\n");
     }
   }
   // lightcrypt_end_t_m(1, &result);
@@ -399,7 +380,7 @@ void lightcrypt_point_imd(struct curve *cur,
                           bigint_t **ret) {
   bigint_t *rr;
   bool bret = false;
-  char *cc  = (char *)malloc(MAXSTR);
+  char *cc = malloc(MAXSTR);
 
   big_init_m(1, &rr);
   big_alloc_max_m(1, &rr);
@@ -479,7 +460,7 @@ void lightcrypt_point_imd(struct curve *cur,
         big_sub_internal(old_st, qs, &s);
         big_sub_internal(old_tt, qt, &t);
         big_clear_zeros(&r);
-        //        memset(cc, 0, strlen(cc));
+
         big_get(r, cc);
         printf("r = %s : %d\n", cc, r->len);
       }

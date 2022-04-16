@@ -10,23 +10,23 @@ typedef uint8_t u08;
 typedef unsigned char b08;
 
 // SSL
-#define SEVENFFF          0x7fffffffffffffff
-#define RAND()            (rand() & SEVENFFF)
-#define BYTE              8
+#define SEVENFFF 0x7fffffffffffffff
+#define RAND() (rand() & SEVENFFF)
+#define BYTE 8
 #define SHA512_BLOCK_SIZE 1024 / BYTE
-#define DIGEST_SIZE       512 / BYTE
+#define DIGEST_SIZE 512 / BYTE
 
 // TLS
-#define TLSVERSION     0x304
-#define TLSCIPHER      222
+#define TLSVERSION 0x304
+#define TLSCIPHER 222
 #define TLSCIPHERAVAIL 222
 #define TLSCOMPRESSION 123
 
 // Hash
-#define SHFR(x, n)   (x >> n)
-#define ROTR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define ROTL(x, n)   ((x << n) | (x >> ((sizeof(x) << 3) - n)))
-#define CH(x, y, z)  ((x & y) ^ (~x & z))
+#define SHFR(x, n) (x >> n)
+#define ROTR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
+#define ROTL(x, n) ((x << n) | (x >> ((sizeof(x) << 3) - n)))
+#define CH(x, y, z) ((x & y) ^ (~x & z))
 #define MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
 
 #define SHA512_F1(x) (ROTR(x, 28) ^ ROTR(x, 34) ^ ROTR(x, 39))

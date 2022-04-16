@@ -7,9 +7,9 @@
 
 #define MAXSTR 512
 #define BIGLEN 1024
-#define DEC    10
-#define HEX    16
-#define LEN    sizeof(i08)
+#define DEC 10
+#define HEX 16
+#define LEN sizeof(i08)
 
 typedef struct {
   i08 *dig;
