@@ -39,7 +39,9 @@ void big_init_m(int len, ...) {
 void big_free(bigint_t **a) {
   if ((*a)->alloc_d) {
     (*a)->alloc_d = false;
-    free((*a)->dig);
+    if ((*a)->dig != NULL) {
+      free((*a)->dig);
+    }
   }
 }
 
@@ -60,7 +62,9 @@ void big_free_m(int len, ...) {
 void big_final(bigint_t **a) {
   if ((*a)->alloc_t) {
     (*a)->alloc_t = false;
-    free((*a));
+    if ((*a) != NULL) {
+      free((*a));
+    }
   }
 }
 
@@ -124,9 +128,7 @@ void big_resize(bigint_t **a, int old_len, int new_len) {
       big_alloc_m(1, &aa);
       big_get(*a, aaa);
       tmplen = (*aa).len;
-      // big_copy(*a, &aa);
       big_set(aaa, &aa);
-      //  big_copy_ref(*a, &aa);
       big_get(aa, bbb);
 
       big_free_m(1, a);
@@ -135,7 +137,6 @@ void big_resize(bigint_t **a, int old_len, int new_len) {
       big_alloc_len(a, new_len);
       big_set(aaa, a);
       big_get(*a, aaa);
-      printf("aaa = %s\n", aaa);
       big_free_m(1, &aa);
       big_final_m(1, &aa);
       big_end_str(bbb);

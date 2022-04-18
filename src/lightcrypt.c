@@ -18,7 +18,6 @@
 void lightcrypt_init() {
   bigint_t *priv1, *priv2, *tmp;
   bigtup_t *publ1 = NULL, *publ2 = NULL, *scal1 = NULL, *scal2 = NULL;
-  struct timespec remaining, request = {1, 0};
   struct curve *curv = malloc(sizeof(struct curve));
 
   lightcrypt_init_t_m(5, &curv->g, &publ1, &publ2, &scal1, &scal2);
@@ -62,7 +61,7 @@ void lightcrypt_init() {
 
   lightcrypt_pubkey(curv, priv1, &publ1);
   printf("-----------  -- -----------\n");
-  //  nanosleep(&request, &remaining);
+  //  usleep(20000);
   //  lightcrypt_pubkey(curv, priv2, &publ2);
 
   //  lightcrypt_point_mul(&(*c), priv, publ2, &scal1);
