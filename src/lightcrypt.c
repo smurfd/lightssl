@@ -443,25 +443,29 @@ void lightcrypt_point_imd(struct curve *cur,
       while (!big_cmp_str("0", r)) {
         big_div(old_r, r, &quotient);
 
-        big_copy_ref(old_r, &old_rt);
-        big_copy_ref(old_s, &old_st);
-        big_copy_ref(old_t, &old_tt);
+        big_copy(old_r, &old_rt);
+        big_copy(old_s, &old_st);
+        big_copy(old_t, &old_tt);
 
-        big_copy_ref(r, &old_r);
-        big_copy_ref(s, &old_s);
-        big_copy_ref(t, &old_t);
+        big_copy(r, &old_r);
+        big_copy(s, &old_s);
+        big_copy(t, &old_t);
 
         big_mul(quotient, r, &qr);
         big_mul(quotient, s, &qs);
         big_mul(quotient, t, &qt);
 
-        big_sub_internal(old_rt, qr, &r);
-        big_sub_internal(old_st, qs, &s);
-        big_sub_internal(old_tt, qt, &t);
+        big_sub(old_rt, qr, &r);
+        big_sub(old_st, qs, &s);
+        big_sub(old_tt, qt, &t);
+//        big_sub_internal(old_rt, qr, &r);
+//        big_sub_internal(old_st, qs, &s);
+//        big_sub_internal(old_tt, qt, &t);
         big_clear_zeros(&r);
 
         big_get(r, cc);
         printf("r = %s : %d\n", cc, r->len);
+        usleep(300000);
       }
       printf("-------------------------------\n");
       bigint_t *gcd, *x, *y;
