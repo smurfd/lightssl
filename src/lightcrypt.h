@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+/*
 typedef struct {
   bigint_t *p1;
   bigint_t *p2;
@@ -26,11 +26,30 @@ struct curve {
   uint8_t b;
   bigint_t *n;
   uint8_t h;
-  bigtup_t *g;
+  bigint_t *g1;
+  bigint_t *g2;
+//  bigtup_t *g;
 } curve_t;
+*/
+
+char *curve_name;
+bigint_t *curve_p;
+uint8_t curve_a;
+uint8_t curve_b;
+bigint_t *curve_g1;
+bigint_t *curve_g2;
+bigint_t *curve_n;
+uint8_t curve_h;
+
+void lightcrypt_random(bigint_t **p);
+void lightcrypt_getrandstr(int len, char *ret);
+void lightcrypt_privkey(bigint_t **privkey);
+void lightcrypt_publkey(bigint_t *privkey, bigint_t **pub1, bigint_t **pub2);
+void lightcrypt_point_mul(bigint_t *key, bigint_t *point1, bigint_t *point2, bigint_t **ret1, bigint_t **ret2);
 
 // Crypt
 void lightcrypt_init();
+/*
 // void lightcrypt_rand(bigint_t **p);
 // void lightcrypt_rand_t(bigtup_t **p);
 void lightcrypt_getrandstr(int len, char *ret);
@@ -58,6 +77,7 @@ void lightcrypt_end_t(bigtup_t **p);
 void lightcrypt_init_t_m(int len, ...);
 void lightcrypt_end_t_m(int len, ...);
 void lightcrypt_copy_t(bigtup_t *a, bigtup_t **b);
+*/
 #endif
 
 // Read:

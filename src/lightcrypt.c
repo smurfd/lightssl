@@ -16,84 +16,105 @@
 //
 // Initialize crypt
 void lightcrypt_init() {
-  bigint_t *priv1, *priv2, *tmp;
-  bigtup_t *publ1 = NULL, *publ2 = NULL, *scal1 = NULL, *scal2 = NULL;
-  struct curve *curv = malloc(sizeof(struct curve));
+  bigint_t *priv1, *priv2, *publ11, *publ12, *publ21, *publ22;
+  big_init_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
+  big_init_m(4, &publ11, &publ12, &publ21, &publ22);
+  big_alloc_max_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
+  big_alloc_max_m(4, &publ11, &publ12, &publ21, &publ22);
+  char *tmpstr = malloc(MAXSTR);
 
-  lightcrypt_init_t_m(5, &curv->g, &publ1, &publ2, &scal1, &scal2);
-  big_init_m(
-    7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2, &tmp);
-  big_alloc_max_m(
-    7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2, &tmp);
-  big_set_m(6, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1, &priv2);
-
+  curve_name = malloc(10);
   // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
   big_set("115792089237316195423570985008687907853269984665640564039"
-          "457584007908834671663",
-          &tmp);
-  big_copy_ref(tmp, &curv->p);
-
+          "457584007908834671663", &curve_p);
   // 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
   big_set("550662630222773436695787188951685343262506034537775941755"
-          "00187360389116729240",
-          &tmp);
-  big_copy_ref(tmp, &curv->g->p1);
-
+          "00187360389116729240", &curve_g1);
   // 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
   big_set("326705100207588169780830851305070431844712733806592432759"
-          "38904335757337482424",
-          &tmp);
-  big_copy_ref(tmp, &curv->g->p2);
-
+          "38904335757337482424", &curve_g2);
   // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
   big_set("115792089237316195423570985008687907852837564279074904382"
-          "605163141518161494337",
-          &tmp);
-  big_copy_ref(tmp, &curv->n);
-
-  strcpy(curv->name, "secp256k1");
-  curv->a = 0;
-  curv->b = 7;
-  curv->h = 1;
+          "605163141518161494337", &curve_n);
+  strcpy(curve_name, "secp256k1");
+  curve_a = 0;
+  curve_b = 7;
+  curve_h = 1;
 
   lightcrypt_privkey(&priv1);
+  usleep(10);
   lightcrypt_privkey(&priv2);
 
-  lightcrypt_pubkey(curv, priv1, &publ1);
-  printf("-----------  -- -----------\n");
-  //  usleep(20000);
-  //  lightcrypt_pubkey(curv, priv2, &publ2);
+  lightcrypt_publkey(priv1, &publ11, &publ12);
+  lightcrypt_publkey(priv2, &publ21, &publ22);
 
-  //  lightcrypt_point_mul(&(*c), priv, publ2, &scal1);
-  //  lightcrypt_point_mul(&(*c), priv2, publ, &scal2);
-  //  printf("cmp1 %d\n", big_cmp(scal1->p1, scal2->p1));
-  //  printf("cmp2 %d\n", big_cmp(scal1->p2, scal2->p2));
-
-  //  big_end_m(7, &curv->p, &curv->n, &curv->g->p1, &curv->g->p2, &priv1,
-  //  &priv2, &tmp);
-
-  lightcrypt_end_t_m(5, &scal2, &scal1, &publ2, &publ1, &curv->g);
-  if (curv != NULL) {
-    free(curv);
-  }
-
-  big_free(&curv->p);
-  big_free(&curv->n);
-  big_free(&curv->g->p1);
-  big_free(&curv->g->p2);
-  big_free(&priv1);
-  big_free(&priv2);
-  big_free(&tmp);
-
-  big_final(&curv->p);
-  big_final(&curv->n);
-  big_final(&curv->g->p1);
-  big_final(&curv->g->p2);
-  big_final(&priv1);
-  big_final(&priv2);
-  big_final(&tmp);
+  big_free_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
+  big_free_m(4, &publ11, &publ12, &publ21, &publ22);
+  big_final_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
+  big_final_m(4, &publ11, &publ12, &publ21, &publ22);
+  free(tmpstr);
+  free(curve_name);
 }
 
+void lightcrypt_point_mul(bigint_t *key, bigint_t *point1, bigint_t *point2, bigint_t **ret1, bigint_t **ret2) {
+  bigint_t *kcn, *po1, *po2;
+
+  // assert on_curve(point1, point2)
+  big_init_m(1, &kcn);
+  big_alloc_len(&kcn, key->len);
+  big_set_m(1, &kcn);
+
+  big_mod(key, curve_n, &kcn);
+  if (big_cmp_str("0", kcn) == 1 || (point1 == NULL && point2 == NULL)) {
+    ret1 = NULL;
+    ret2 = NULL;
+  }
+  if (key->neg == true) {
+    big_init_m(2, &po1, &po2);
+    big_alloc_len(&po1, point1->len);
+    big_alloc_len(&po2, point2->len);
+    big_set_m(2, &po1, &po2);
+    key->neg = false;
+    //lightcrypt_point_neg(point1, point1, &po1);
+    //lightcrypt_point_neg(point2, point2, &po2);
+    //lightcrypt_point_mul(key, po1, po2, ret1, ret2);
+  }
+
+  // assert on_curve(ret1, ret2)
+  big_final_m(1, &kcn);
+}
+
+void lightcrypt_publkey(bigint_t *privkey, bigint_t **pub1, bigint_t **pub2) {
+  lightcrypt_point_mul(privkey, curve_g1, curve_g2, pub1, pub2);
+}
+
+void lightcrypt_getrandstr(int len, char *ret) {
+  srand(time(0));
+  char char1[] = "0123456789";
+  for (int i = 0; i < len; i++) {
+    ret[i] = char1[rand() % (sizeof char1 - 1)];
+  }
+}
+
+//
+// Randomize to a bigint
+void lightcrypt_random(bigint_t **p) {
+  char *str = malloc(80);
+
+  lightcrypt_getrandstr(80, str);
+  big_set(str, &(*p));
+  big_end_str(str);
+}
+
+//
+// Initialize private key
+void lightcrypt_privkey(bigint_t **privkey) {
+  lightcrypt_random(privkey);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+/*
 void lightcrypt_init_t(bigtup_t **p) {
   (*p) = malloc(sizeof(bigtup_t));
   (*p)->alloc_t = true;
@@ -458,9 +479,9 @@ void lightcrypt_point_imd(struct curve *cur,
         big_sub(old_rt, qr, &r);
         big_sub(old_st, qs, &s);
         big_sub(old_tt, qt, &t);
-//        big_sub_internal(old_rt, qr, &r);
-//        big_sub_internal(old_st, qs, &s);
-//        big_sub_internal(old_tt, qt, &t);
+        //        big_sub_internal(old_rt, qr, &r);
+        //        big_sub_internal(old_st, qs, &s);
+        //        big_sub_internal(old_tt, qt, &t);
         big_clear_zeros(&r);
 
         big_get(r, cc);
@@ -537,7 +558,7 @@ bool lightcrypt_oncurve(struct curve *cur, bigtup_t *point) {
   }
   return ret;
 }
-
+*/
 /*
 //
 // Initialize crypt
