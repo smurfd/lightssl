@@ -45,9 +45,12 @@ void lightcrypt_random(bigint_t **p);
 void lightcrypt_getrandstr(int len, char *ret);
 void lightcrypt_privkey(bigint_t **privkey);
 void lightcrypt_publkey(bigint_t *privkey, bigint_t **pub1, bigint_t **pub2);
-void lightcrypt_point_mul(bigint_t *key, bigint_t *point1, bigint_t *point2, bigint_t **ret1, bigint_t **ret2);
-void lightcrypt_point_neg(bigint_t *point1, bigint_t *point2, bigint_t **ret1, bigint_t **ret2);
-void lightcrypt_point_add(bigint_t *point1, bigint_t *point2, bigint_t *point3, bigint_t *point4, bigint_t **ret1, bigint_t **ret2);
+void lightcrypt_point_mul(bigint_t *key, bigint_t *point1, bigint_t *point2,
+  bigint_t **ret1, bigint_t **ret2);
+void lightcrypt_point_neg(
+  bigint_t *point1, bigint_t *point2, bigint_t **ret1, bigint_t **ret2);
+void lightcrypt_point_add(bigint_t *point1, bigint_t *point2, bigint_t *point3,
+  bigint_t *point4, bigint_t **ret1, bigint_t **ret2);
 
 // Crypt
 void lightcrypt_init();

@@ -18,14 +18,8 @@
 //
 // Print hello on server
 void lightssl_print_hello(struct hello *hi) {
-  printf("Hello: %d %d %llu %d %d %d %llu\n",
-         hi->server,
-         hi->tls_v,
-         hi->rnd,
-         hi->ciph_avail[0],
-         hi->ciph_select[0],
-         hi->compress,
-         hi->session_id);
+  printf("Hello: %d %d %llu %d %d %d %llu\n", hi->server, hi->tls_v, hi->rnd,
+    hi->ciph_avail[0], hi->ciph_select[0], hi->compress, hi->session_id);
 }
 
 //
@@ -47,8 +41,8 @@ int lightssl_srv_init(const char *host, const char *port) {
 // Server handler
 void *lightssl_srv_handler(void *sdesc) {
   int s = *(int *)sdesc;
-  b08 avail[] = {TLSCIPHER};
-  b08 select[] = {TLSCIPHERAVAIL};
+  b08 avail[] = { TLSCIPHER };
+  b08 select[] = { TLSCIPHERAVAIL };
   b08 compress = TLSCOMPRESSION;
   struct hello *hs_srv;
   struct hello *hs_cli_recv;
@@ -86,7 +80,8 @@ int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
     new_sock = (int *)malloc(sizeof *new_sock);
     *new_sock = csock;
     if (pthread_create(
-          &sniffer_thread, NULL, lightssl_srv_handler, (void *)new_sock) < 0) {
+          &sniffer_thread, NULL, lightssl_srv_handler, (void *)new_sock)
+      < 0) {
       printf("error\n");
       return -1;
     }
@@ -139,25 +134,17 @@ void lightssl_cli_send(int csock, const char *msg) {
 
 //
 // Client end session
-void lightssl_cli_end(int csock) {
-  close(csock);
-}
+void lightssl_cli_end(int csock) { close(csock); }
 
 //
 // Set hello message
-struct hello *lightssl_hs_set_hello(struct hello *hi,
-                                    bool srv,
-                                    int tls,
-                                    u64 r,
-                                    b08 avail[],
-                                    b08 sel[],
-                                    b08 c,
-                                    u64 sess) {
+struct hello *lightssl_hs_set_hello(struct hello *hi, bool srv, int tls, u64 r,
+  b08 avail[], b08 sel[], b08 c, u64 sess) {
   hi->server = srv;
   hi->tls_v = tls; // will be 4 = TLS1.3
   hi->rnd = r;
   hi->ciph_avail[0] = avail[0]; // will only use 1 cipher
-  hi->ciph_select[0] = sel[0];  // will only use 1 cipher
+  hi->ciph_select[0] = sel[0]; // will only use 1 cipher
   hi->compress = c;
   hi->session_id = sess;
   return hi;

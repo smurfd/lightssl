@@ -413,8 +413,8 @@ void big_add(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 
     while (i >= 0 || j >= 0 || carry > 0) {
       if (i >= 0 && j >= 0) {
-        tmp =
-          big_get_hex(aa->dig[i], aa->base) + big_get_hex(bb->dig[j], bb->base);
+        tmp = big_get_hex(aa->dig[i], aa->base)
+          + big_get_hex(bb->dig[j], bb->base);
       } else if (i >= 0) {
         tmp = a->dig[i];
       } else if (j >= 0) {
@@ -488,8 +488,8 @@ void big_mul(const bigint_t *a, const bigint_t *b, bigint_t **c) {
       j = bb->len - 1;
       while (j >= 0 || carry > 0) {
         if (j >= 0) {
-          tmp = big_get_hex(aa->dig[i], aa->base) *
-            big_get_hex(bb->dig[j], bb->base);
+          tmp = big_get_hex(aa->dig[i], aa->base)
+            * big_get_hex(bb->dig[j], bb->base);
         } else {
           tmp = 0;
         }
@@ -596,8 +596,8 @@ void big_sub(const bigint_t *a, const bigint_t *b, bigint_t **c) {
         carry = 0;
         while (i >= 0 || j >= 0 || carry > 0) {
           if (i >= 0 && j >= 0) {
-            tmp = big_get_hex((*aa).dig[i], (*aa).base) -
-              big_get_hex((*bb).dig[j], (*bb).base);
+            tmp = big_get_hex((*aa).dig[i], (*aa).base)
+              - big_get_hex((*bb).dig[j], (*bb).base);
             if (tmp < 0) {
               if (i == 0 && j == 0) {
                 (*c)->neg = true;
@@ -672,8 +672,8 @@ void big_sub_internal(const bigint_t *a, const bigint_t *b, bigint_t **c) {
   } else {
     while (i >= 0 || j >= 0 || carry > 0) {
       if (i >= 0 && j >= 0) {
-        tmp = big_get_hex((*aa).dig[i], (*aa).base) -
-          big_get_hex((*bb).dig[j], (*bb).base);
+        tmp = big_get_hex((*aa).dig[i], (*aa).base)
+          - big_get_hex((*bb).dig[j], (*bb).base);
         if (tmp < 0) {
           if (i == 0 && j == 0) {
             (*c)->neg = true;
@@ -1008,9 +1008,7 @@ void big_mod(const bigint_t *a, const bigint_t *b, bigint_t **c) {
 
 //
 // Bigint &1
-bool big_bit_and_one(bigint_t *a) {
-  return (*a).dig[(*a).len - 1] & 1;
-}
+bool big_bit_and_one(bigint_t *a) { return (*a).dig[(*a).len - 1] & 1; }
 
 //
 // Check what base a has and set that to b
