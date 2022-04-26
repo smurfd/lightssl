@@ -1,12 +1,21 @@
-#!/ usr / bin / env python3
+#!/usr/bin/env python3
 import random
 
-  curve_name = 'secp256k1' curve_p = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f curve_a = 0 curve_b = 7 curve_g1 = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798 curve_g2 = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 curve_n = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141 curve_h = 1
+curve_name = 'secp256k1'
+curve_p = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
+curve_a = 0
+curve_b = 7
+curve_g1= 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+curve_g2= 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
+curve_n = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+curve_h = 1
 
-#Returns the inverse of k modulo p(k must be !0 and p prime)
-  def inverse_mod(key, point) : if key == 0 :raise ZeroDivisionError("Zero division")
+# Returns the inverse of k modulo p (k must be !0 and p prime)
+def inverse_mod(key, point):
+  if key == 0:
+    raise ZeroDivisionError('division by zero')
 
-      if key< 0:
+  if key < 0:
     return point - inverse_mod(-key, point)
 
   s = 0
@@ -36,18 +45,20 @@ import random
 
   assert gcd == 1
   assert (key * x) % point == 1
+
   return x % point
 
-#Returns true if the point lies on the elliptic curve
+# Returns true if the point lies on the elliptic curve
 def on_curve(point1, point2):
   if point1 is None and point2 is None:
     return True
 
   x = point1
   y = point2
+
   return (y * y - x * x * x - curve_a * x - curve_b) % curve_p == 0
 
-#Returns a the negative of a point
+# Returns a the negative of a point
 def point_neg(point1, point2):
   assert on_curve(point1, point2)
 
@@ -61,9 +72,10 @@ def point_neg(point1, point2):
   result2 = -y % curve_p
 
   assert on_curve(result1, result2)
+
   return result1, result2
 
-#Returns the result of two points added according to group law
+# Returns the result of two points added according to group law
 def point_add(point1, point2, point3, point4):
   assert on_curve(point1, point2)
   assert on_curve(point3, point4)
@@ -93,9 +105,10 @@ def point_add(point1, point2, point3, point4):
   result2 = -y3 % curve_p
 
   assert on_curve(result1, result2)
+
   return result1, result2
 
-#Returns key times point
+# Returns key times point
 def scalar_mult(key, point1, point2):
   assert on_curve(point1, point2)
 
@@ -103,7 +116,8 @@ def scalar_mult(key, point1, point2):
     return None
 
   if key < 0:
-    return scalar_mult(-key, point_neg(point1, point1), point_neg(point2, point2))
+    p1, p2 = point_neg(point1, point2)
+    return scalar_mult(-key, p1, p2)
 
   result1 = None
   result2 = None
@@ -115,36 +129,43 @@ def scalar_mult(key, point1, point2):
       result1, result2 = point_add(result1, result2, addend1, addend2)
 
     addend1, addend2 = point_add(addend1, addend2,addend1, addend2)
+
     key >>= 1
 
   assert on_curve(result1, result2)
+
   return result1, result2
 
-#Generate private key
+# Generate private key
 def make_private_key():
-  priv = random.randrange(1, curve_n)
-  return priv
+    private_key = random.randrange(1, curve_n)
 
-#Generate public key
+    return private_key
+
+# Generate public key
 def make_public_key(priv):
-  publ1, publ2 = scalar_mult(priv, curve_g1, curve_g2)
-  return publ1, publ2
+    pub1, pub2 = scalar_mult(priv, curve_g1, curve_g2)
 
-#Main
+    return pub1, pub2
+
+# Main
 print('Curve:', curve_name)
+
+# Alice generates her own keypair.
 alice_private_key = make_private_key()
 alice_public_key1, alice_public_key2 = make_public_key(alice_private_key)
 
+# Bob generates his own key pair.
 bob_private_key = make_private_key()
 bob_public_key1, bob_public_key2 = make_public_key(bob_private_key)
 
-print("Alice priv key:", hex(alice_private_key))
-print("Alice publ key:", hex(alice_public_key1), ",", hex(alice_public_key2))
+print("Alice's private key:", hex(alice_private_key))
+print("Alice's public key:", hex(alice_public_key1), ",", hex(alice_public_key2))
 
-print("Bob priv key:", hex(bob_private_key))
-print("Bob publ key:", hex(bob_public_key1), ",", hex(bob_public_key2))
+print("Bob's private key:", hex(bob_private_key))
+print("Bob's public key:", hex(bob_public_key1), ",", hex(bob_public_key2))
 
-#Exchanged pub keys and shared secrets
+# Alice and Bob exchange their public keys and calculate the shared secret.
 s1, s2 = scalar_mult(alice_private_key, bob_public_key1, bob_public_key2)
 s3, s4 = scalar_mult(bob_private_key, alice_public_key1, alice_public_key2)
 
