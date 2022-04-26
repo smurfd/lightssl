@@ -20,6 +20,7 @@ void big_init(bigint_t **a) {
   (*a)->base = DEC;
   (*a)->alloc_t = true;
   (*a)->alloc_d = false;
+  (*a)->null = false;
 }
 
 //
@@ -168,6 +169,7 @@ void big_set(char *a, bigint_t **b) {
   // Reset outparam
   memset((*b)->dig, 0, len);
 
+  (*b)->null = false;
   (*b)->neg = false;
   (*b)->base = DEC;
   if (a[0] == '-') {
@@ -207,6 +209,11 @@ void big_set(char *a, bigint_t **b) {
       }
     }
   }
+}
+
+void big_set_null(bigint_t **b) {
+  (*b)->null = true;
+  big_set("0", b);
 }
 
 //

@@ -16,6 +16,7 @@ typedef struct {
   int len;
   i08 base;
   bool neg;
+  bool null;
   bool alloc_t;
   bool alloc_d;
 } bigint_t;
@@ -26,6 +27,7 @@ void big_init(bigint_t **a);
 void big_end(bigint_t **a);
 void big_end_str(char *a);
 void big_set(char *a, bigint_t **b);
+void big_set_null(bigint_t **b);
 void big_clear_zeros(bigint_t **b);
 void big_free(bigint_t **a);
 void big_final(bigint_t **a);

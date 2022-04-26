@@ -1,33 +1,29 @@
-# $ git config --global clangFormat.binary clang-format
-# $ clang-format -style=llvm -dump-config > .clang-format
-# $ find src -exec clang-format -style=file -i {} \;
+# git config --global clangFormat.binary clang-format
+# clang-format -style=llvm -dump-config > .clang-format
+# find src/* -exec clang-format -style=file -i {} \;
 
-# $ touch .git/hooks/pre-commit
-# $ chmod +x .git/hooks/pre-commit
+# touch .git/hooks/pre-commit
+# chmod +x .git/hooks/pre-commit
 
 # ---- pre-commit ---
 ##!/bin/bash
-#git clang-format --extensions cpp,hpp --style file -v
-#rc=$?
-#if [[ $rc == 33 ]]
-#then
-# echo "Nothing needs to be reformatted!"
-# exit 0
-#fi
-#
-#echo -e "Would you like to continue to commit (y/n): \c"
-#
-## Make sure under any mode, we can read user input.
-#exec < /dev/tty
-#read cont
-#
-#if [ "$cont" == "y" ]
-#then
-# exit 0
-#fi
-#
-#exit 1
+# git clang-format --extensions cpp,hpp --style file -v
+# rc=$?
+# if [[ $rc == 33 ]]
+# then
+#  echo "Nothing needs to be reformatted!"
+#  exit 0
+# fi
+# echo -e "Would you like to continue to commit (y/n): \c"
+# exec < /dev/tty
+# read cont
+# if [ "$cont" == "y" ]
+# then
+#  exit 0
+# fi
+# exit 1
 # ----  ---  --------
+
 ---
 Language:        Cpp
 # BasedOnStyle:  LLVM
@@ -39,14 +35,14 @@ AlignConsecutiveAssignments: None
 AlignConsecutiveBitFields: None
 AlignConsecutiveDeclarations: None
 AlignEscapedNewlines: Right
-AlignOperands: false
+AlignOperands:   Align
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
-AllowShortEnumsOnASingleLine: false
+AllowShortEnumsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
 AllowShortLambdasOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
@@ -56,8 +52,8 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: MultiLine
 AttributeMacros:
   - __capability
-BinPackArguments: false
-BinPackParameters: false
+BinPackArguments: true
+BinPackParameters: true
 BraceWrapping:
   AfterCaseLabel:  false
   AfterClass:      false
@@ -73,7 +69,7 @@ BraceWrapping:
   BeforeElse:      false
   BeforeLambdaBody: false
   BeforeWhile:     false
-  IndentBraces:    true
+  IndentBraces:    false
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
@@ -209,7 +205,7 @@ StatementAttributeLikeMacros:
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
-TabWidth:        8
+TabWidth:        2
 UseCRLF:         false
 UseTab:          Never
 WhitespaceSensitiveMacros:
