@@ -121,14 +121,12 @@ void big_resize(bigint_t **a, int old_len, int new_len) {
     char *aaa = malloc(MAXSTR);
     char *bbb = malloc(MAXSTR);
     bigint_t *aa = NULL;
-    int tmplen;
 
     if ((*a)->len > 1) {
       big_init_m(1, &aa);
       (*aa).len = (*a)->len;
       big_alloc_m(1, &aa);
       big_get(*a, aaa);
-      tmplen = (*aa).len;
       big_set(aaa, &aa);
       big_get(aa, bbb);
 
