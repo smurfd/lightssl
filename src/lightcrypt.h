@@ -13,27 +13,25 @@
 #include <time.h>
 
 char *curve_name;
-bigint_t *curve_p;
-uint8_t curve_a;
-uint8_t curve_b;
-bigint_t *curve_g1;
-bigint_t *curve_g2;
-bigint_t *curve_n;
-uint8_t curve_h;
+big *curve_p;
+u08 curve_a;
+u08 curve_b;
+big *curve_g1;
+big *curve_g2;
+big *curve_n;
+u08 curve_h;
 
-void lightcrypt_random(bigint_t **p);
-void lightcrypt_getrandstr(int len, char *ret);
-void lightcrypt_privkey(bigint_t **privkey);
-void lightcrypt_publkey(bigint_t *privkey, bigint_t **pub1, bigint_t **pub2);
-void lightcrypt_point_mul(bigint_t *key, bigint_t *point1, bigint_t *point2,
-  bigint_t **ret1, bigint_t **ret2);
-void lightcrypt_point_neg(
-  bigint_t *point1, bigint_t *point2, bigint_t **ret1, bigint_t **ret2);
-void lightcrypt_point_add(bigint_t *point1, bigint_t *point2, bigint_t *point3,
-  bigint_t *point4, bigint_t **ret1, bigint_t **ret2);
-
+void lc_random(big **p);
+void lc_getrandstr(int len, char *ret);
+void lc_privkey(big **privkey);
+void lc_publkey(big *privkey, big **pub1, big **pub2);
+void lc_point_mul(big *key, big *p1, big *p2, big **ret1, big **ret2);
+void lc_point_neg(big *p1, big *p2, big **ret1, big **ret2);
+void lc_point_add(big *p1, big *p2, big *p3,big *p4, big **ret1, big **ret2);
+void lc_inverse_mod(big *key, big *point, big **ret);
+bool lc_on_curve(big *p1, big *p2);
 // Crypt
-void lightcrypt_init();
+void lc_init();
 
 #endif
 

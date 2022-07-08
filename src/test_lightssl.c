@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
       free(a);
       printf("OK\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
-      lightcrypt_init();
+      lc_init();
       printf("OK!\n");
     } else if (strcmp(argv[1], "hash") == 0) {
       const char *in = "smurfd";
