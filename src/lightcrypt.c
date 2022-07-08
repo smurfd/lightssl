@@ -30,13 +30,17 @@ void lc_init() {
 
   curve_name = malloc(10);
   big_set("11579208923731619542357098500868790785326998466564056403945758400790"
-          "8834671663", &curve_p);
+          "8834671663",
+    &curve_p);
   big_set("55066263022277343669578718895168534326250603453777594175500187360389"
-          "116729240", &curve_g1);
+          "116729240",
+    &curve_g1);
   big_set("32670510020758816978083085130507043184471273380659243275938904335757"
-          "337482424", &curve_g2);
+          "337482424",
+    &curve_g2);
   big_set("11579208923731619542357098500868790785283756427907490438260516314151"
-          "8161494337", &curve_n);
+          "8161494337",
+    &curve_n);
   strcpy(curve_name, "secp256k1");
   curve_a = 0;
   curve_b = 7;
@@ -185,7 +189,7 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
     key->neg = false;
     lc_inverse_mod(key, p, &r);
     big_sub(p, r, ret);
-    //big_free_m(1, &r);
+    // big_free_m(1, &r);
     big_final_m(1, &r);
   } else {
     big *q, *r, *s, *t, *old_r, *old_s, *old_t, *r_tmp, *s_tmp, *t_tmp, *qt;
@@ -203,7 +207,7 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
     big_set("0", &old_t);
     big_copy(key, &old_r);
     printf("inv mod bfr while\n");
-    while(!big_cmp_str("0", r)) {
+    while (!big_cmp_str("0", r)) {
       big_div(old_r, r, &q);
 
       big_mul(q, r, &qt);
@@ -235,10 +239,10 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
     big_assert_str("1", &xp);
 
     big_mod(x, p, ret);
-    //big_free_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
-    //big_free_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
-    //big_final_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
-    //big_final_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
+    // big_free_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
+    // big_free_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
+    // big_final_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
+    // big_final_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
   }
 }
 
@@ -251,8 +255,10 @@ bool lc_on_curve(big *p1, big *p2) {
   if (p1->null && p2->null) {
     return true;
   }
-  big_init_m(12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
-  big_alloc_max_m(12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
+  big_init_m(
+    12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
+  big_alloc_max_m(
+    12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
   big_set_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
 
   sprintf(a, "%d", curve_a);
@@ -275,7 +281,7 @@ bool lc_on_curve(big *p1, big *p2) {
   big_get(xxx, a);
   printf("xxx=%s\n", a);
   big_sub(yy, xxx, &yyx);
-//  big_sub(yyx, cax, &yyc);
+  //  big_sub(yyx, cax, &yyc);
   big_sub(yyx, cb, &yycc);
 
   big_mod(yycc, curve_p, &cccc);
@@ -284,7 +290,7 @@ bool lc_on_curve(big *p1, big *p2) {
   printf("ret = %d : %s\n", ret, a);
   free(b);
   free(a);
-  //big_free_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
+  // big_free_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
   big_final_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
   return ret;
 }
