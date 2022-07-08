@@ -1,36 +1,25 @@
+import platform
+import certifi
 import socket
 import ssl
-import platform
-import time
+import os
 
 # Context creation
-sslContext = ssl.SSLContext();
-sslContext.verify_mode = ssl.CERT_REQUIRED;
+sslContext = ssl.SSLContext()
+sslContext.verify_mode = ssl.CERT_REQUIRED
 
-# Check for OS X platform
-if platform.system().lower() == 'darwin':
-  import certifi
-  import os
-  print("cafile = ",os.path.relpath(certifi.where()))
-  # Load the CA certificates used for validating the peer's certificate
-  sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()),
-    capath=None,cadata=None);
+# Load the CA certificates used for validating the peer's certificate
+sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()),
+  capath=None,cadata=None)
 
 # Create an SSLSocket
-clientSocket = socket.socket();
-secureClientSocket = sslContext.wrap_socket(clientSocket, do_handshake_on_connect=False);
+secureClientSocket = sslContext.wrap_socket(
+  socket.socket(), do_handshake_on_connect=False)
 
-# Only connect, no handshake
-t1 = time.time();
-retval = secureClientSocket.connect(("example.org", 443));
-print("Time taken to establish the connection:%2.3f"%(time.time() - t1));
+assert(secureClientSocket.connect(("example.org", 443)) == None)
 
 # Explicit handshake
-t3 = time.time();
-secureClientSocket.do_handshake();
-print("Time taken for SSL handshake:%2.3f"%(time.time() - t3));
+secureClientSocket.do_handshake()
 
-# Get the certificate of the server and print
-serverCertificate = secureClientSocket.getpeercert();
-print("Certificate obtained from the server:");
-print(serverCertificate);
+# Get the certificate of the server
+assert(secureClientSocket.getpeercert())
