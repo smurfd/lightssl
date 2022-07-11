@@ -19,8 +19,10 @@ def test_my():
 
   # Create an SSLSocket
   ss = socket.socket() # not sure why i cant use this as arg to wrap_socket()
-  secureClientSocket = sslContext.wrap_socket(
+  secureClientSocket = ssl_wrap_socket(sslContext,
     socket.socket(), do_handshake_on_connect=False)
+#  secureClientSocket = sslContext.wrap_socket(
+#    socket.socket(), do_handshake_on_connect=False)
 
   # Make the connection
   ssl_connect(ss, secureClientSocket, ("example.org", 443))
