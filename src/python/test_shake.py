@@ -3,7 +3,7 @@ import certifi
 import socket
 import ssl
 import os
-from shake import *
+import shake as sh
 
 #
 #
@@ -17,23 +17,21 @@ def test_my():
   sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()),
     capath=None,cadata=None)
 
-  # Create an SSLSocket
-  ss = socket.socket() # not sure why i cant use this as arg to wrap_socket()
-  secureClientSocket = ssl_wrap_socket(sslContext,
-    socket.socket(), do_handshake_on_connect=False)
-#  secureClientSocket = sslContext.wrap_socket(
-#    socket.socket(), do_handshake_on_connect=False)
+  s = socket.socket()
+  secureClientSocket = sslContext.wrap_socket(
+    s, do_handshake_on_connect=False)
 
   # Make the connection
-  ssl_connect(ss, secureClientSocket, ("example.org", 443))
+  assert(sh.SSLSocket1.connect1(secureClientSocket, ("example.org", 443)) == None)
 
   # Explicit handshake
-  ssl_sock_do_shake(secureClientSocket)
+  sh.SSLSocket1.do_handshake1(secureClientSocket)
 
-  # Get the certificate of the server
-  assert(ssl_getpeercert(secureClientSocket))
+  assert(sh.SSLSocket1.getpeercert1(secureClientSocket))
+
   secureClientSocket.close()
-  ss.close()
+  socket.socket().close()
+
 
 #
 #
@@ -59,6 +57,7 @@ def test_default():
 
   # Get the certificate of the server
   assert(secureClientSocket.getpeercert())
+
   secureClientSocket.close()
   socket.socket().close()
 
