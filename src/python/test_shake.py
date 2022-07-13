@@ -6,34 +6,26 @@ import os
 import shake as sh
 
 #
-#
 # trying to rewrite the handshake...
 def test_my():
   # Context creation
-  sslContext = ssl.SSLContext()
-  sslContext.verify_mode = ssl.CERT_REQUIRED
+  sc = sh.SSLContext1()
+  sc.verify_mode = ssl.CERT_REQUIRED
+  shll = sh.SSLSocket1
 
   # Load the CA certificates used for validating the peer's certificate
-  sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()),
-    capath=None,cadata=None)
+  sc.load_verify_locations(cafile=os.path.relpath(certifi.where()))
 
-  s = socket.socket()
-  secureClientSocket = sslContext.wrap_socket(
-    s, do_handshake_on_connect=False)
+  secSock = sc.wrap_socket(socket.socket(), do_handshake_on_connect=False)
 
   # Make the connection
-  assert(sh.SSLSocket1.connect1(secureClientSocket, ("example.org", 443)) == None)
+  assert(shll.connect1(secSock, ("example.org", 443)) == None)
 
   # Explicit handshake
-  sh.SSLSocket1.do_handshake1(secureClientSocket)
+  shll.do_handshake1(secSock)
 
-  assert(sh.SSLSocket1.getpeercert1(secureClientSocket))
+  assert(shll.getpeercert1(secSock))
 
-  secureClientSocket.close()
-  socket.socket().close()
-
-
-#
 #
 # Default easy handshake, for sanity
 def test_default():
@@ -61,7 +53,6 @@ def test_default():
   secureClientSocket.close()
   socket.socket().close()
 
-#
 #
 # main
 print("testing default...")

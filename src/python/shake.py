@@ -25,43 +25,53 @@ class SSLContext1(_SSLContext):
     self = _SSLContext.__new__(cls, protocol)
     return self
 
-  def wrap_socket(self, sock, server_side=False,
-                    do_handshake_on_connect=True,
-                    suppress_ragged_eofs=True,
-                    server_hostname=None, session=None):
-    return SSLSocket1._create(
-            sock=sock,
-            server_side=server_side,
-            do_handshake_on_connect=do_handshake_on_connect,
-            suppress_ragged_eofs=suppress_ragged_eofs,
-            server_hostname=server_hostname,
-            context=self,
-            session=session)
+  def wrap_socket(self, sock, server_side=False, do_handshake_on_connect=True,
+    suppress_ragged_eofs=True, server_hostname=None, session=None):
+    return SSLSocket1._create(sock=sock,server_side=server_side,
+      do_handshake_on_connect=do_handshake_on_connect,
+      suppress_ragged_eofs=suppress_ragged_eofs, server_hostname=server_hostname,
+      context=self, session=session)
 
   def wrap_bio(self, incoming, outgoing, server_side=False,
-                 server_hostname=None, session=None):
+    server_hostname=None, session=None):
     # Need to encode server_hostname here because _wrap_bio() can only
     # handle ASCII str.
-    return SSLObject1._create(
-            incoming, outgoing, server_side=server_side,
-            server_hostname=self._encode_hostname(server_hostname),
-            session=session, context=self,)
+    return SSLObject1._create(incoming, outgoing, server_side=server_side,
+      server_hostname=self._encode_hostname(server_hostname), session=session,
+      context=self,)
 
+  @property
+  def verify_mode(self):
+    value = super().verify_mode
+    try:
+      return ssl.VerifyMode(value)
+    except ValueError:
+      return value
+
+  @verify_mode.setter
+  def verify_mode(self, value):
+    super(SSLContext1, SSLContext1).verify_mode.__set__(self, value)
+
+  @property
+  def context(self):
+    """The SSLContext that is currently in use."""
+    return self._sslobj.context
+
+  @context.setter
+  def context(self, ctx):
+    self._sslobj.context = ctx
 
 class SSLObject1:
   def __init__(self, *args, **kwargs):
-    raise TypeError(
-            f"{self.__class__.__name__} does not have a public "
-            f"constructor. Instances are returned by SSLContext.wrap_bio().")
+    raise TypeError(f"{self.__class__.__name__} does not have a public "
+      f"constructor. Instances are returned by SSLContext.wrap_bio().")
 
   @classmethod
-  def _create(cls, incoming, outgoing, server_side=False,
-                 server_hostname=None, session=None, context=None):
+  def _create(cls, incoming, outgoing, server_side=False, server_hostname=None,
+    session=None, context=None):
     self = cls.__new__(cls)
-    sslobj = context._wrap_bio(
-            incoming, outgoing, server_side=server_side,
-            server_hostname=server_hostname,
-            owner=self, session=session)
+    sslobj = context._wrap_bio( incoming, outgoing, server_side=server_side,
+      server_hostname=server_hostname, owner=self, session=session)
     self._sslobj = sslobj
     return self
 
@@ -88,10 +98,8 @@ class SSLSocket1(socket.socket):
   provides read and write methods over that channel. """
 
   def __init__(self, *args, **kwargs):
-    raise TypeError(
-            f"{self.__class__.__name__} does not have a public "
-            f"constructor. Instances are returned by "
-            f"SSLContext.wrap_socket().")
+    raise TypeError(f"{self.__class__.__name__} does not have a public "
+      f"constructor. Instances are returned by SSLContext.wrap_socket().")
 
   def connect1(self, addr):
     # Connects to remote ADDR, and then wraps the connection in an SSL channel.
@@ -127,8 +135,7 @@ class SSLSocket1(socket.socket):
     if self._connected or self._sslobj is not None:
       raise ValueError("attempt to connect already-connected SSLSocket!")
     self._sslobj = self.context._wrap_socket(
-            self, False, self.server_hostname,
-            owner=self, session=self._session)
+      self, False, self.server_hostname, owner=self, session=self._session)
     try:
       if connect_ex: rc = self.connect_ex(addr)
       else:
@@ -136,8 +143,7 @@ class SSLSocket1(socket.socket):
         self.connect(addr)
       if not rc:
         self._connected = True
-        if self.do_handshake_on_connect:
-          self.do_handshake()
+        if self.do_handshake_on_connect: self.do_handshake()
       return rc
     except (OSError, ValueError):
       self._sslobj = None
@@ -145,8 +151,7 @@ class SSLSocket1(socket.socket):
 
   @classmethod
   def _create(cls, sock, server_side=False, do_handshake_on_connect=True,
-                suppress_ragged_eofs=True, server_hostname=None,
-                context=None, session=None):
+    suppress_ragged_eofs=True, server_hostname=None, context=None, session=None):
     if sock.getsockopt(SOL_SOCKET, SO_TYPE) != SOCK_STREAM:
       raise NotImplementedError("only stream sockets are supported")
     if server_side:
@@ -157,9 +162,8 @@ class SSLSocket1(socket.socket):
     if context.check_hostname and not server_hostname:
       raise ValueError("check_hostname requires server_hostname")
 
-    kwargs = dict(
-            family=sock.family, type=sock.type, proto=sock.proto,
-            fileno=sock.fileno())
+    kwargs = dict(family=sock.family, type=sock.type, proto=sock.proto,
+      fileno=sock.fileno())
     self = cls.__new__(cls, **kwargs)
     super(SSLSocket1, self).__init__(**kwargs)
     self.settimeout(sock.gettimeout())
@@ -195,11 +199,32 @@ class SSLSocket1(socket.socket):
           timeout = self.gettimeout()
           if timeout == 0.0:
             # non-blocking
-            raise ValueError("do_handshake_on_connect should not be specified for non-blocking sockets")
+            raise ValueError("do_handshake_on_connect should not be specified"
+              " for non-blocking sockets")
           self.do_handshake()
       except (OSError, ValueError):
         self.close()
         raise
     return self
+
+  @property
+  def context(self):
+    return self._context
+
+  @context.setter
+  def context(self, ctx):
+    self._context = ctx
+    self._sslobj.context = ctx
+
+  def _check_connected(self):
+    if not self._connected:
+      # getpeername() will raise ENOTCONN if the socket is really
+      # not connected; note that we can be connected even without
+      # _connected being set, e.g. if connect() first returned EAGAIN.
+      self.getpeername()
+
+  def _checkClosed(self, msg=None):
+    # raise an exception here if you wish to check for spurious closes
+    pass
 
 SSLContext1.sslsocket_class = SSLSocket1
