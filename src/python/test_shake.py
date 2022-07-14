@@ -1,39 +1,37 @@
-import platform
-import certifi
-import socket
-import os
 import shake as sh
+import socket
 
 #
 # trying to rewrite the handshake...
-def test_my():
+def test_my(cf):
   # Context creation
   sc = sh.MySSLContext()
   sc.vmm()
   shll = sh.MySSLSocket
 
   # Load the CA certificates used for validating the peer's certificate
-  sc.load_verify_locations(cafile=os.path.relpath(certifi.where()))
+  sc.load_verify_locations(cafile=cf)
 
-  secSock = sc.wrap_socket(socket.socket())
+  secSock = sc.my_wrap_socket(socket.socket())
 
   # Make the connection
-  shll.connect1(secSock, ("localhost", 4443))
+  shll.my_connect(secSock, ("localhost", 4443))
 
   # Explicit handshake & Get the certificate of the server
-  shll.do_handshake1(secSock)
-  return shll.getpeercert1(secSock)
+  shll.my_do_handshake(secSock)
+  return shll.my_getpeercert(secSock)
 
 #
 # Default easy handshake, for sanity
-def test_default():
+def test_default(cf):
   import ssl
+
   # Context creation
   sslContext = ssl.SSLContext()
   sslContext.verify_mode = ssl.CERT_REQUIRED
 
   # Load the CA certificates used for validating the peer's certificate
-  sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()))
+  sslContext.load_verify_locations(cafile=cf)
 
   # Create an SSLSocket
   secureClientSocket = sslContext.wrap_socket(socket.socket())
@@ -47,5 +45,9 @@ def test_default():
 
 #
 # main
-assert(test_default() == test_my())
+import certifi
+import os
+
+cf = os.path.relpath(certifi.where())
+assert(test_default(cf) == test_my(cf))
 print("OK!")

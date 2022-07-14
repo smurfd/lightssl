@@ -8,10 +8,10 @@
 # add server.pem contents to end of whatever this prints
 #   print(os.path.relpath(certifi.where()))
 
-# for me it was like: 
+# for me it was like:
 # cat server.pem >> ../../../../../opt/homebrew/lib/python3.8/site-packages/certifi-2022.5.18.1-py3.8.egg/certifi/cacert.pem
 
-# run the "server" : 
+# run the "server" :
 # python3 src/python/srv.py
 import http.server, ssl
 
