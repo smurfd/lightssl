@@ -6,7 +6,7 @@ import ssl
 from _ssl import _SSLContext
 from socket import SOL_SOCKET, SO_TYPE, SOCK_STREAM
 
-class SSLContext1(_SSLContext):
+class MySSLContext(_SSLContext):
   """An SSLContext holds various SSL-related configuration options and
   data, such as certificates and possibly a private key."""
   sslsocket_class = None  # SSLSocket is assigned later.
@@ -19,7 +19,7 @@ class SSLContext1(_SSLContext):
 
   def wrap_socket(self, sock, server_side=False, do_handshake_on_connect=True,
     suppress_ragged_eofs=True, server_hostname=None, session=None):
-    return SSLSocket1._create(sock=sock,server_side=server_side,
+    return MySSLSocket._create(sock=sock,server_side=server_side,
       do_handshake_on_connect=do_handshake_on_connect,
       suppress_ragged_eofs=suppress_ragged_eofs, server_hostname=server_hostname,
       context=self, session=session)
@@ -28,15 +28,15 @@ class SSLContext1(_SSLContext):
     server_hostname=None, session=None):
     # Need to encode server_hostname here because _wrap_bio() can only
     # handle ASCII str.
-    return SSLObject1._create(incoming, outgoing, server_side=server_side,
+    return MySSLObject._create(incoming, outgoing, server_side=server_side,
       server_hostname=self._encode_hostname(server_hostname), session=session,
       context=self,)
 
   def vmm(self):
-    super(SSLContext1, SSLContext1).verify_mode.__set__(self, 2)
+    super(MySSLContext, MySSLContext).verify_mode.__set__(self, 2)
     # ssl.CERT_REQUIRED = 2
 
-class SSLObject1:
+class MySSLObject:
   def __init__(self, *args, **kwargs):
     raise TypeError(f"{self.__class__.__name__} does not have a public "
       f"constructor. Instances are returned by SSLContext.wrap_bio().")
@@ -62,7 +62,7 @@ class SSLObject1:
     provided, but not validated."""
     return self._sslobj.getpeercert(binary_form)
 
-class SSLSocket1(socket.socket):
+class MySSLSocket(socket.socket):
   """This class implements a subtype of socket.socket that wraps
   the underlying OS socket in an SSL context when necessary, and
   provides read and write methods over that channel. """
@@ -133,7 +133,7 @@ class SSLSocket1(socket.socket):
     kwargs = dict(family=sock.family, type=sock.type, proto=sock.proto,
       fileno=sock.fileno())
     self = cls.__new__(cls, **kwargs)
-    super(SSLSocket1, self).__init__(**kwargs)
+    super(MySSLSocket, self).__init__(**kwargs)
     self.settimeout(sock.gettimeout())
     sock.detach()
 
@@ -184,4 +184,4 @@ class SSLSocket1(socket.socket):
     self._context = ctx
     self._sslobj.context = ctx
 
-SSLContext1.sslsocket_class = SSLSocket1
+MySSLContext.sslsocket_class = MySSLSocket

@@ -8,9 +8,9 @@ import shake as sh
 # trying to rewrite the handshake...
 def test_my():
   # Context creation
-  sc = sh.SSLContext1()
+  sc = sh.MySSLContext()
   sc.vmm()
-  shll = sh.SSLSocket1
+  shll = sh.MySSLSocket
 
   # Load the CA certificates used for validating the peer's certificate
   sc.load_verify_locations(cafile=os.path.relpath(certifi.where()))
