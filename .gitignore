@@ -2,3 +2,4 @@
 tmp/
 src/python/__*
 build/
+server.pem

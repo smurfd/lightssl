@@ -1,13 +1,5 @@
 # grabbed from https://raw.githubusercontent.com/python/cpython/main/Lib/ssl.py
 
-"""
-TODO:
-_create()
-._wrap_bio()
-._wrap_socket()
-._sslobj
-"""
-
 import socket
 import errno
 import ssl

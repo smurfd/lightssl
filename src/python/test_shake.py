@@ -18,7 +18,7 @@ def test_my():
   secSock = sc.wrap_socket(socket.socket(), do_handshake_on_connect=False)
 
   # Make the connection
-  assert(shll.connect1(secSock, ("example.org", 443)) == None)
+  assert(shll.connect1(secSock, ("localhost", 4443)) == None)
 
   # Explicit handshake
   shll.do_handshake1(secSock)
@@ -43,7 +43,7 @@ def test_default():
     socket.socket(), do_handshake_on_connect=False)
 
   # Make the connection
-  assert(secureClientSocket.connect(("example.org", 443)) == None)
+  assert(secureClientSocket.connect(("localhost", 4443)) == None)
 
   # Explicit handshake
   secureClientSocket.do_handshake()
