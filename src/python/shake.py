@@ -112,7 +112,6 @@ class SSLSocket1(socket.socket):
         self.connect(addr)
       if not rc:
         self._connected = True
-        if self.do_handshake_on_connect: self.do_handshake()
       return rc
     except (OSError, ValueError):
       self._sslobj = None

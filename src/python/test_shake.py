@@ -15,16 +15,14 @@ def test_my():
   # Load the CA certificates used for validating the peer's certificate
   sc.load_verify_locations(cafile=os.path.relpath(certifi.where()))
 
-  secSock = sc.wrap_socket(socket.socket(), do_handshake_on_connect=False)
+  secSock = sc.wrap_socket(socket.socket())
 
   # Make the connection
-  assert(shll.connect1(secSock, ("localhost", 4443)) == None)
+  shll.connect1(secSock, ("localhost", 4443))
 
-  # Explicit handshake
+  # Explicit handshake & Get the certificate of the server
   shll.do_handshake1(secSock)
-
-  assert(shll.getpeercert1(secSock))
-  print(shll.getpeercert1(secSock))
+  return shll.getpeercert1(secSock)
 
 #
 # Default easy handshake, for sanity
@@ -35,29 +33,19 @@ def test_default():
   sslContext.verify_mode = ssl.CERT_REQUIRED
 
   # Load the CA certificates used for validating the peer's certificate
-  sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()),
-    capath=None,cadata=None)
+  sslContext.load_verify_locations(cafile=os.path.relpath(certifi.where()))
 
   # Create an SSLSocket
-  secureClientSocket = sslContext.wrap_socket(
-    socket.socket(), do_handshake_on_connect=False)
+  secureClientSocket = sslContext.wrap_socket(socket.socket())
 
   # Make the connection
-  assert(secureClientSocket.connect(("localhost", 4443)) == None)
+  secureClientSocket.connect(("localhost", 4443))
 
-  # Explicit handshake
+  # Explicit handshake & Get the certificate of the server
   secureClientSocket.do_handshake()
-
-  # Get the certificate of the server
-  assert(secureClientSocket.getpeercert())
-
-  secureClientSocket.close()
-  socket.socket().close()
+  return secureClientSocket.getpeercert()
 
 #
 # main
-print("testing default...")
-test_default()
-
-print("testing my...")
-test_my()
+assert(test_default() == test_my())
+print("OK!")
