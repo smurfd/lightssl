@@ -40,26 +40,9 @@ class SSLContext1(_SSLContext):
       server_hostname=self._encode_hostname(server_hostname), session=session,
       context=self,)
 
-  @property
-  def verify_mode(self):
-    value = super().verify_mode
-    try:
-      return ssl.VerifyMode(value)
-    except ValueError:
-      return value
-
-  @verify_mode.setter
-  def verify_mode(self, value):
-    super(SSLContext1, SSLContext1).verify_mode.__set__(self, value)
-
-  @property
-  def context(self):
-    """The SSLContext that is currently in use."""
-    return self._sslobj.context
-
-  @context.setter
-  def context(self, ctx):
-    self._sslobj.context = ctx
+  def vmm(self):
+    super(SSLContext1, SSLContext1).verify_mode.__set__(self, 2)
+    # ssl.CERT_REQUIRED = 2
 
 class SSLObject1:
   def __init__(self, *args, **kwargs):
@@ -74,11 +57,6 @@ class SSLObject1:
       server_hostname=server_hostname, owner=self, session=session)
     self._sslobj = sslobj
     return self
-
-  @property
-  def context(self):
-    """The SSLContext that is currently in use."""
-    return self._sslobj.context
 
   def do_handshake(self):
     """Start the SSL/TLS handshake."""
@@ -113,13 +91,12 @@ class SSLSocket1(socket.socket):
 
   def getpeercert1(self, binary_form=False):
     print("my getpeercert")
-    self._checkClosed()
-    self._check_connected()
+    if not self._connected: self.getpeername()
     return self._sslobj.getpeercert(binary_form)
 
   def do_handshake1(self, block=False):
     print("my do_handshake")
-    self._check_connected()
+    if not self._connected: self.getpeername()
     timeout = self.gettimeout()
     try:
       if timeout == 0.0 and block: self.settimeout(None)
@@ -215,16 +192,5 @@ class SSLSocket1(socket.socket):
   def context(self, ctx):
     self._context = ctx
     self._sslobj.context = ctx
-
-  def _check_connected(self):
-    if not self._connected:
-      # getpeername() will raise ENOTCONN if the socket is really
-      # not connected; note that we can be connected even without
-      # _connected being set, e.g. if connect() first returned EAGAIN.
-      self.getpeername()
-
-  def _checkClosed(self, msg=None):
-    # raise an exception here if you wish to check for spurious closes
-    pass
 
 SSLContext1.sslsocket_class = SSLSocket1

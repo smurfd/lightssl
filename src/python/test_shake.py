@@ -1,7 +1,6 @@
 import platform
 import certifi
 import socket
-import ssl
 import os
 import shake as sh
 
@@ -10,7 +9,7 @@ import shake as sh
 def test_my():
   # Context creation
   sc = sh.SSLContext1()
-  sc.verify_mode = ssl.CERT_REQUIRED
+  sc.vmm()
   shll = sh.SSLSocket1
 
   # Load the CA certificates used for validating the peer's certificate
@@ -25,10 +24,12 @@ def test_my():
   shll.do_handshake1(secSock)
 
   assert(shll.getpeercert1(secSock))
+  print(shll.getpeercert1(secSock))
 
 #
 # Default easy handshake, for sanity
 def test_default():
+  import ssl
   # Context creation
   sslContext = ssl.SSLContext()
   sslContext.verify_mode = ssl.CERT_REQUIRED
