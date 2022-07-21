@@ -4,14 +4,61 @@ import socket
 from socket import SOL_SOCKET, SO_TYPE, SOCK_STREAM
 from _ssl import _SSLContext
 
+class sslc():
+  def __new__(cls, protocol):
+    from cffi import FFI
+    ffi = FFI()
+
+    ffi.set_source("_test", """
+    #include <stdio.h>
+    typedef struct Con {
+      int x;
+    } Con;
+
+    Con* _SSLContext11(int *type, int prot_ver) {
+      Con *s = NULL;
+      (*s).x = 0;
+      printf(\"hmm %d\\n\", (*s).x);
+      return s;
+    }
+
+    int stuff(int protocol) {
+      printf(\"stuff %d\\n\", protocol);
+      //_SSLContext11(&protocol, protocol);
+      return protocol*protocol;
+    }
+
+    long factorial(int n) {
+        long r = n;
+        while(n > 1) {
+            n -= 1;
+            r *= n;
+        }
+        return r;
+    }
+    """)
+    ffi.cdef("""
+    long factorial(int);
+    int stuff(int protocol);
+    //Con _SSLContext11(int *type, int prot_ver);
+    """)
+    # l = ffi.compile(tmpdir="/tmp")
+    lib = ffi.dlopen(ffi.compile(tmpdir="/tmp"))
+    print(lib.factorial(10))
+    print(lib.stuff(protocol))
+    #print(lib._SSLContext11(protocol, protocol))
+
 class MySSLContext(_SSLContext):
   # An SSLContext holds various SSL-related configuration options and
   # data, such as certificates and possibly a private key.
   sslsocket_class = None  # SSLSocket is assigned later.
 
   def __new__(cls, protocol=None, *args, **kwargs):
+    import ssl
+
     if protocol is None: protocol = 5 # ssl.PROTOCOL_TLSv1_2 = 5
     self = _SSLContext.__new__(cls, protocol)
+    x = sslc.__new__(cls, protocol)
     return self
 
   def my_wrap_socket(self, sock, server_side=False, do_handshake_on_connect=True,
