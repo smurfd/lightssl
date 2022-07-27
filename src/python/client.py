@@ -2,17 +2,19 @@
 
 import socket
 import json
-import binascii
+import binascii as bi
 from random import randint
 
 hl = 64     # header length
 f = 'utf-8' # format
 message = "secret, secret, super secret"
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((socket.gethostbyname(socket.gethostname()), 8080))
+def mkcon():
+  client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  client.connect((socket.gethostbyname(socket.gethostname()), 8080))
+  return client
 
-def send(msg):
+def send(client, msg):
   ml = str(len(msg.encode(f))).encode(f) +\
     (b' ' * (hl - len(str(len(msg.encode(f))).encode(f))))
   client.send(ml)
@@ -20,19 +22,18 @@ def send(msg):
   return msg.encode(f)
 
 def crypt(msg, key):
-  crypt_msg = ''
-  for c in msg: crypt_msg += chr(ord(c) ^ key)
-  return str(binascii.hexlify(bytes(crypt_msg, f)), f)
+  return str(bi.hexlify(bytes("".join(chr(ord(c) ^ key) for c in msg), f)), f)
 
-g, n, p = randint(1, 133700), randint(1, 133700), randint(1, 133700)
-client_param = (g ** p) % n
+def main():
+  cl = mkcon()
+  g, n, p = randint(1, 133700), randint(1, 133700), randint(1, 133700)
+  client_param = (g ** p) % n
 
-# Diffie-Hellman handshake, serialize the g, n and client parameter
-send(json.dumps([str(g), str(n), str(client_param)]))
-from_server = client.recv(2048)
-server_param = json.loads(from_server)
-client_key = (server_param ** p) % n
+  # Diffie-Hellman handshake, serialize the g, n and client parameter
+  send(cl, json.dumps([str(g), str(n), str(client_param)]))
+  print("".join(chr(x) for x in send(cl, json.dumps(crypt(message,
+    (json.loads(cl.recv(2048)) ** p) % n)))))
 
-print(send(json.dumps(crypt(message, client_key))))
+  cl.close()
 
-client.close()
+main()
