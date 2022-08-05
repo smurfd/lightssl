@@ -1,43 +1,61 @@
-# from https://github.com/luciangutu/tls_handshake_poc
-
-import socket
-import json
-import binascii as bi
-from random import randint
-
-hl = 64     # header length
-f = 'utf-8' # format
+import time, threading, socket, sys, os
 
 def crypt(msg, key):
-  print("Encrypted message:", msg)
-  return str(bi.hexlify(bytes("".join(chr(ord(c) ^ key) for c in msg), f)), f)
+  return bytes("".join(chr(ord(m) ^ int(key, 16)) for m in msg), 'utf-8')
 
-def srvcon():
-  serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  serv.bind((socket.gethostbyname(socket.gethostname()),8080))
-  return serv
+def connect():
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.bind(('127.0.0.1', 9999))
+  s.listen(5)
+  return s
 
-def srvloop():
-  sr = srvcon()
-  sr.listen(5)
-  srvprivnr = randint(1, 133700)
+def recv_hello(s):
+  hello = s.recv(1024)
+  print("hello:", hello)
+  return hello
+
+def recv_data(s):
+  data = s.recv(1024)
+  return data
+
+def recv_key(s, key_len):
+  key = s.recv(int(key_len))
+  return key
+
+def recv_key_len(s):
+  key_len = s.recv(4)
+  return key_len
+
+def send_hello(s, hello):
+  s.send(hello.encode())
+
+def send_data(s, data):
+  s.send(data)
+
+def dowork():
+  s = connect()
+  work_loop(s)
+
+def work_loop(s):
   while True:
-    conn, addr = sr.accept()
-    handshake = False
-    while True:
-      # getting the HEADER first. HEADER contains the message length
-      msglen = conn.recv(hl).decode(f)
-      if not msglen or msglen == 0: break
-      data = conn.recv(int(msglen)).decode(f)
-      if not data: break
-      if not handshake:
-        # Diffie-Hellman handshake
-        handshake = True
-        g, n, cliparm = [int(e) for e in json.loads(data)]
-        conn.send(json.dumps((g ** srvprivnr) % n).encode(f)) # server_param
-      else: # server_key = (cliparm ** srvprivnr) % n
-        print("Decr", crypt(json.loads(data), (cliparm ** srvprivnr) % n))
-  conn.close()
+    c,addr = s.accept()
+    if recv_hello(c) == "Hello".encode():
+      send_hello(c, "olleH")
+      key_len = recv_key_len(c)
+      key = recv_key(c, key_len)
+      data = recv_data(c)
+      send_data(c, crypt("Other Sup3r S3cr3t sh1t", key))
+    c.close()
 
-print("Starting server...")
-srvloop()
+def main():
+  shutdown_event = threading.Event()
+  t = threading.Thread(target=dowork, args=(), name='worker')
+  t.start()
+
+  try:
+    while t.is_alive(): t.join(timeout=0.1)
+  except (KeyboardInterrupt, SystemExit):
+    shutdown_event.set()
+    os._exit(9)
+
+main()

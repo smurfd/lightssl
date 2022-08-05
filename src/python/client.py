@@ -1,39 +1,37 @@
-# from https://github.com/luciangutu/tls_handshake_poc
-
 import socket
-import json
-import binascii as bi
-from random import randint
-
-hl = 64     # header length
-f = 'utf-8' # format
-message = "secret, secret, super secret"
-
-def mkcon():
-  client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  client.connect((socket.gethostbyname(socket.gethostname()), 8080))
-  return client
-
-def send(client, msg):
-  ml = str(len(msg.encode(f))).encode(f) +\
-    (b' ' * (hl - len(str(len(msg.encode(f))).encode(f))))
-  client.send(ml)
-  client.send(msg.encode(f))
-  return msg.encode(f)
 
 def crypt(msg, key):
-  return str(bi.hexlify(bytes("".join(chr(ord(c) ^ key) for c in msg), f)), f)
+  return bytes("".join(chr(ord(m) ^ int(key, 16)) for m in msg), 'utf-8')
+
+def connect():
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.connect(('127.0.0.1', 9999))
+  return s
+
+def send_hello(s, hello):
+  s.send(hello.encode())
+
+def send_key(s, key):
+  s.send(key.encode())
+
+def send_key_len(s, key_len):
+  s.send(key_len.encode())
+
+def send_data(s, data):
+  s.send(data)
+
+def recv_hello(s):
+  hello = s.recv(1024)
+  print("hello:", hello)
+  return hello
 
 def main():
-  cl = mkcon()
-  g, n, p = randint(1, 133700), randint(1, 133700), randint(1, 133700)
-  client_param = (g ** p) % n
-
-  # Diffie-Hellman handshake, serialize the g, n and client parameter
-  send(cl, json.dumps([str(g), str(n), str(client_param)]))
-  print("".join(chr(x) for x in send(cl, json.dumps(crypt(message,
-    (json.loads(cl.recv(2048)) ** p) % n)))))
-
-  cl.close()
+  s = connect()
+  send_hello(s, "Hello")
+  if recv_hello(s) == "olleH".encode():
+    send_key_len(s, "0007")
+    send_key(s, "0x31337")
+    send_data(s, crypt("Sup3r S3cr3t sh1t", "0x31337"))
+  s.close()
 
 main()
