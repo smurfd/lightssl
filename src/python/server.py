@@ -1,7 +1,6 @@
 import time, threading, socket, sys, os
 
-def crypt(msg, key):
-  return bytes("".join(chr(ord(m) ^ int(key, 16)) for m in msg), 'utf-8')
+def crypt(m, k): return "".join(chr(ord(i) ^ int(k, 16)) for i in m).encode()
 
 def connect():
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,21 +9,16 @@ def connect():
   return s
 
 def recv_hello(s):
-  hello = s.recv(1024)
-  print("hello:", hello)
-  return hello
+  return s.recv(1024)
 
 def recv_data(s):
-  data = s.recv(1024)
-  return data
+  return s.recv(1024)
 
 def recv_key(s, key_len):
-  key = s.recv(int(key_len))
-  return key
+  return s.recv(int(key_len))
 
 def recv_key_len(s):
-  key_len = s.recv(4)
-  return key_len
+  return s.recv(4)
 
 def send_hello(s, hello):
   s.send(hello.encode())
@@ -33,12 +27,11 @@ def send_data(s, data):
   s.send(data)
 
 def dowork():
-  s = connect()
-  work_loop(s)
+  work_loop(connect())
 
 def work_loop(s):
   while True:
-    c,addr = s.accept()
+    c, addr = s.accept()
     if recv_hello(c) == "Hello".encode():
       send_hello(c, "olleH")
       key_len = recv_key_len(c)
@@ -54,8 +47,6 @@ def main():
 
   try:
     while t.is_alive(): t.join(timeout=0.1)
-  except (KeyboardInterrupt, SystemExit):
-    shutdown_event.set()
-    os._exit(9)
+  except (KeyboardInterrupt, SystemExit): shutdown_event.set(); os._exit(9)
 
 main()

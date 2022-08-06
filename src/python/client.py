@@ -1,7 +1,6 @@
 import socket
 
-def crypt(msg, key):
-  return bytes("".join(chr(ord(m) ^ int(key, 16)) for m in msg), 'utf-8')
+def crypt(m, k): return "".join(chr(ord(i) ^ int(k, 16)) for i in m).encode()
 
 def connect():
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,9 +20,7 @@ def send_data(s, data):
   s.send(data)
 
 def recv_hello(s):
-  hello = s.recv(1024)
-  print("hello:", hello)
-  return hello
+  return s.recv(1024)
 
 def main():
   s = connect()
