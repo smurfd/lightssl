@@ -1,43 +1,24 @@
-import time, threading, socket, sys, os
-
-def crypt(m, k): return "".join(chr(ord(i) ^ int(k, 16)) for i in m).encode()
-
-def connect():
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.bind(('127.0.0.1', 9999))
-  s.listen(5)
-  return s
-
-def recv_hello(s):
-  return s.recv(1024)
-
-def recv_data(s):
-  return s.recv(1024)
-
-def recv_key(s, key_len):
-  return s.recv(int(key_len))
-
-def recv_key_len(s):
-  return s.recv(4)
-
-def send_hello(s, hello):
-  s.send(hello.encode())
-
-def send_data(s, data):
-  s.send(data)
+import time, threading, socket, sys, os, random, ast, helper
 
 def dowork():
-  work_loop(connect())
+  work_loop(helper.bind())
 
 def work_loop(s):
+  priv = random.randint(1, 1337)
   while True:
     c, addr = s.accept()
-    if recv_hello(c) == "Hello".encode():
-      send_hello(c, "olleH")
-      key_len = recv_key_len(c)
-      key = recv_key(c, key_len)
-      data = recv_data(c)
-      send_data(c, crypt("Other Sup3r S3cr3t sh1t", key))
+    shake = False
+    if helper.recv_stuff(c) == "Hello".encode():
+      helper.send_stuff(c, "olleH")
+      if not shake:
+        key = helper.recv_stuff(c)
+      else: data = helper.recv_stuff(c)
+      if not shake:
+        shake = True
+        g, n, cp = map(int, ast.literal_eval(helper.recv_stuff(c).decode()))
+        helper.send_stuff(c, str((g ** priv) % n))
+      else:
+        helper.crypt(data, (cp ** priv) % n)
     c.close()
 
 def main():
