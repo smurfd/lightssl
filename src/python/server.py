@@ -13,6 +13,7 @@ def work_loop(s):
         shake = True
         key = helper.recv(c)
         g, n, cp = map(int, ast.literal_eval(helper.recv(c).decode()))
+        cp -= int(key, 16)
         helper.send(c, str((g ** priv) % n))
       else: helper.crypt(helper.recv(c), (cp ** priv) % n)
     c.close()
