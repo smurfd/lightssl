@@ -1,9 +1,9 @@
-import time, threading, socket, sys, os, random, ast, helper
+import helper
 
-def dowork(): work_loop(helper.bind())
+def dowork(): work_loop(helper.connect(bind=True))
 
 def work_loop(s):
-  priv = random.randint(1, 1337)
+  priv = helper.rnd(31337)
   while True:
     c, addr = s.accept()
     shake = False
@@ -12,18 +12,12 @@ def work_loop(s):
       if not shake:
         shake = True
         key = helper.recv(c)
-        g, n, cp = map(int, ast.literal_eval(helper.recv(c).decode()))
+        g, n, cp = map(int, helper.ast_lit(helper.recv(c)))
         cp -= int(key, 16)
         helper.send(c, str((g ** priv) % n))
       else: helper.crypt(helper.recv(c), (cp ** priv) % n)
     c.close()
 
-def main():
-  shutdown_event = threading.Event()
-  t = threading.Thread(target=dowork, args=(), name='worker')
-  t.start()
-  try:
-    while t.is_alive(): t.join(timeout=0.1)
-  except (KeyboardInterrupt, SystemExit): shutdown_event.set(); os._exit(9)
+def main(): helper.worker(dowork)
 
 main()
