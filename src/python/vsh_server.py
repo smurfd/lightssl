@@ -3,19 +3,18 @@ import vsh
 def dowork(): work_loop(vsh.connect(bind=True))
 
 def work_loop(s):
-  priv = vsh.rnd(31337)
   while True:
-    c, addr = s.accept()
+    priv = vsh.rnd(31337)
     shake = False
-    if vsh.recv(c) == "Hello".encode():
-      vsh.send(c, "olleH")
+    c, addr = s.accept()
+    while True:
       if not shake:
         shake = True
-        key = vsh.recv(c)
-        g, n, cp = map(int, vsh.ast_lit(vsh.recv(c)))
-        cp -= int(key, 16)
+        recv = vsh.recv(c)
+        if not recv or recv == 0 or recv == False: break
+        g, n, cp = map(int, vsh.ast_lit(recv))
         vsh.send(c, str((g ** priv) % n))
-      else: vsh.crypt(vsh.recv(c), (cp ** priv) % n)
+      else: vsh.crypt(vsh.recv(c, b=True).decode(), (cp ** priv) % n); break
     c.close()
 
 def main(): vsh.worker(dowork)
