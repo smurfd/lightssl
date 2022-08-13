@@ -1,6 +1,6 @@
 import socket, random, threading, ast, os
 
-def crypt(m, k): return "".join(chr(ord(i) ^ int(str(k), 16)) for i in m)
+def crypt(m, k): return "".join(chr(ord(i)^int(str(k), 16)) for i in m).encode()
 
 def rnd(r): return random.randint(1, r)
 
@@ -17,21 +17,19 @@ def calc_data_length(data):
 def send(s, data):
   ss = str(calc_data_length(data))
   ss = "".join(" " for i in range(0, 64 - len(ss))) + ss
-  s.send(str(ss).encode())
+  s.send(str(ss).encode()) # Send "header" containing msg length
   s.send(str(data).encode())
 
 def recv(s, b=False):
-  if b is True: return s.recv(2048)
-  else:
-    len = s.recv(64).decode()
-    if not len or len == 0: return False
-    return s.recv(int(len))
+  rec = int(s.recv(64).decode()) # Receive "header" containing msg length
+  if b is True: return s.recv(rec).decode()
+  else: return s.recv(rec)
 
-def worker(tt):
-  t = threading.Thread(target=tt, args=(), name=tt)
-  t.start()
-  try:
-    while t.is_alive(): t.join(timeout=0.1)
-  except (KeyboardInterrupt, SystemExit): threading.Event().set(); os._exit(9)
+def work(t):
+  while t.is_alive():
+    try: t.join(timeout=0.1)
+    except (KeyboardInterrupt, SystemExit): threading.Event().set(); os._exit(9)
+
+def worker(tt): t = threading.Thread(target=tt, name=tt); t.start(); work(t)
 
 def ast_lit(b): return ast.literal_eval(b.decode())
