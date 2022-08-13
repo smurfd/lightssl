@@ -1,13 +1,13 @@
 import socket, random, threading, ast, os
 
-def crypt(m, k): return "".join(chr(ord(i) ^ int(str(k), 16)) for i in m).encode()
+def crypt(m, k): return "".join(chr(ord(i) ^ int(str(k), 16)) for i in m)
 
 def rnd(r): return random.randint(1, r)
 
-def connect(bind=False):
+def connect(host, port, bind=False):
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  if bind == False: s.connect(('127.0.0.1', 9999))
-  else: s.bind(('127.0.0.1', 9999)); s.listen(5)
+  if bind == False: s.connect((host, port))
+  else: s.bind((host, port)); s.listen(5)
   return s
 
 def calc_data_length(data):
@@ -28,7 +28,7 @@ def recv(s, b=False):
     return s.recv(int(len))
 
 def worker(tt):
-  t = threading.Thread(target=tt, args=(), name='worker')
+  t = threading.Thread(target=tt, args=(), name=tt)
   t.start()
   try:
     while t.is_alive(): t.join(timeout=0.1)

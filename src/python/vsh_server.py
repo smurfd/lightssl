@@ -1,6 +1,6 @@
 import vsh
 
-def dowork(): work_loop(vsh.connect(bind=True))
+def dowork(): work_loop(vsh.connect('127.0.0.1', 9999, bind=True))
 
 def work_loop(s):
   while True:
