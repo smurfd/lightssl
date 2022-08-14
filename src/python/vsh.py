@@ -1,35 +1,43 @@
 import socket, random, threading, ast, os
 
+# Encrypt data and return
 def crypt(m, k): return "".join(chr(ord(i)^int(str(k), 16)) for i in m).encode()
 
-def rnd(r): return random.randint(1, r)
+# Return random number in range of seednumber
+def rnd(): return random.randint(1, 31337)
 
+# Handle connection and binding (client/server) and return the zocket
 def connect(host, port, bind=False):
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  if bind == False: s.connect((host, port))
-  else: s.bind((host, port)); s.listen(5)
-  return s
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  if bind == False: sock.connect((host, port)); return sock
+  else: sock.bind((host, port)); sock.listen(5); return sock
 
-def calc_data_length(data):
-  if type(data) is bytes: return len(data) + 3 # +3 is for b''
-  return len(str(data))
+# Get a string value of the datalength, if byte we add 3 chrs for b''
+def datalen(data):
+  if type(data) is bytes: return str(len(data) + 3)
+  return str(len(str(data)))
 
-def send(s, data):
-  ss = str(calc_data_length(data))
-  ss = "".join(" " for i in range(0, 64 - len(ss))) + ss
-  s.send(str(ss).encode()) # Send "header" containing msg length
-  s.send(str(data).encode())
+# Send a header with 64 bytes, which holds the length of the data & then data
+def send(sock, data):
+  # Fill the header with spaces to contain the exact number of 64 bytes
+  hdr = "".join(" " for i in range(0, 64 - len(datalen(data)))) + datalen(data)
+  sock.send(str(hdr).encode())
+  sock.send(str(data).encode())
 
-def recv(s, b=False):
-  rec = int(s.recv(64).decode()) # Receive "header" containing msg length
-  if b is True: return s.recv(rec).decode()
-  else: return s.recv(rec)
+# Receive a header with 64 bytes, which holds the length of the data & then data
+def recv(sock, b=False):
+  rec = int(sock.recv(64).decode()) # Receive "header" containing msg length
+  if b is True: return sock.recv(rec).decode()
+  else: return sock.recv(rec)
 
-def work(t):
-  while t.is_alive():
-    try: t.join(timeout=0.1)
+# Thread loop catching possible Ctrl + c keys to break the server loop
+def work(thrd):
+  while thrd.is_alive():
+    try: thrd.join(timeout=0.1)
     except (KeyboardInterrupt, SystemExit): threading.Event().set(); os._exit(9)
 
-def worker(tt): t = threading.Thread(target=tt, name=tt); t.start(); work(t)
+# Thread worker
+def worker(fnc): t = threading.Thread(target=fnc, name=fnc); t.start(); work(t)
 
-def ast_lit(b): return ast.literal_eval(b.decode())
+# Return the byte map
+def liteval(b): return ast.literal_eval(b.decode())
