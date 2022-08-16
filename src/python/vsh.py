@@ -4,7 +4,13 @@ import socket, random, threading, ast, os
 def crypt(m, k): return "".join(chr(ord(i)^int(str(k), 16)) for i in m).encode()
 
 # Return random number in range of seednumber
-def rnd(): return random.randint(1, 31337)
+def rnd(): return random.randint(1337, 31337)
+
+# Return random prime number
+def prim():
+  while True:
+    p = random.randrange(10001, 100000, 2)
+    if all(p % n != 0 for n in range(3, int((p ** 0.5) + 1), 2)): return p
 
 # Handle connection and binding (client/server) and return the zocket
 def connect(host, port, bind=False):
