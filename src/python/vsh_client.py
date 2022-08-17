@@ -10,6 +10,7 @@ def main():
   vsh.send(sock, vsh.crypt("Secret1", str(((int(vsh.recv(sock))) ** priv) % p)))
   sock.close()
 
+  vsh.keypair()
   # (g ** priv) % p = alices public key, g & p shared public values
   # int(vsh.recv(sock)) = bobs public key
   # (((int(vsh.recv(sock))) ** priv) % p) = shared secret

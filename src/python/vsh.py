@@ -1,5 +1,21 @@
 import socket, random, threading, ast, os
 
+# Generate public and private keypair
+def genkeypair(g, p):
+  priv = prim()
+  return (g ** priv) % p, priv
+
+# Generate shared key
+def genshare(pub, priv, p):
+  return (pub ** priv) % p
+
+# Generate Alice and Bobs keypair and assert shared key is the same
+def keypair():
+  g, p = prim(), prim()
+  apub, apriv = genkeypair(g, p)
+  bpub, bpriv = genkeypair(g, p)
+  assert(genshare(apub, bpriv, p) == genshare(bpub, apriv, p))
+
 # Encrypt data and return
 def crypt(m, k): return "".join(chr(ord(i)^int(str(k), 16)) for i in m).encode()
 
