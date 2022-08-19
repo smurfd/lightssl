@@ -58,35 +58,3 @@ void keypair() {
 
   printf("Share 0x%.16llx == 0x%.16llx\n", s1, s2);
 }
-
-/*int main() {
-  srand(time(0));
-  keypair();
-}
-*/
-/*
-void genkeys(int g, int p, int *ret1, int *ret2) {
-  int priv = RAND();
-
-  (*ret1) = (int)pow(g, priv) % p;
-  (*ret2) = priv;
-}
-
-void genshare(int pub, int priv, int p, int *share) {
-  (*share) = (int)pow(pub, priv) % p;
-}
-
-void keypair() {
-  int g1 = RAND(), p1 = RAND(), g2 = RAND(), p2 = RAND();
-  int apub1, apriv1, s1, apub2, apriv2, s2;
-
-  genkeys(g1, p1, &apub1, &apriv1);
-  genkeys(g2, p2, &apub2, &apriv2);
-  printf("%d %d : %d %d\n", apub1, apriv1, g1, p1);
-  printf("%d %d : %d %d\n", apub2, apriv2, g2, p2);
-  genshare(apub1, apriv2, p1, &s1);
-  genshare(apub2, apriv1, p1, &s2);
-
-  printf("Share %d == %d\n", s1, s2);
-}
-*/
