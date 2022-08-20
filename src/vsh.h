@@ -15,5 +15,4 @@ void *vsh_handler(void *sdesc);
 int vsh_init(const char *host, const char *port, bool b);
 int vsh_listen(int ssock, struct sockaddr *cli);
 
-
 #endif

@@ -29,7 +29,7 @@ void vsh_send(int csock, const char *msg) {
 int vsh_init(const char *host, const char *port, bool b) {
   int ssock = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in saddr;
-  
+
   memset(&saddr, '\0', sizeof(saddr));
   saddr.sin_family = AF_INET;
   saddr.sin_port = htons(atoi(port));
