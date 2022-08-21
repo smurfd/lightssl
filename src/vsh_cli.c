@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,13 +12,17 @@
 //
 // client main
 int main() {
-  int c = vsh_init("127.0.0.1", "9998", false);
   char *cc = malloc(BLOCK);
-  vsh_send(c, "this is a long string doodz");
-  vsh_recv(c, cc);
+  int c = vsh_init("127.0.0.1", "9998", false);
+  srand(time(0));
 
-  printf("recv: %s\n", cc);
-  vsh_end(c);
+  if (c >= 0) {
+    vsh_send(c, "this is a long string doodz");
+    vsh_recv(c, cc);
+
+    printf("recv: %s\n", cc);
+    vsh_end(c);
+  }
   free(cc);
 
   vsh_keys();

@@ -41,7 +41,7 @@ int vsh_init(const char *host, const char *port, bool b) {
     bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr));
   } else {
     if (connect(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-      printf("Connection error\n"); exit(1);
+      printf("Connection error\n"); return -1;// exit(1);
     }
   }
   return ssock;
