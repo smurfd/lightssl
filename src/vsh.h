@@ -1,18 +1,28 @@
 #ifndef VSH_H
 #define VSH_H 1
 
+#define BLOCK 1024
+typedef uint64_t u64;
+
 struct sockaddr;
+struct header {
+  u64 len;
+  u64 ver;
+  u64 othr;
+  u64 stuff;
+  u64 here;
+} header;
 
-uint64_t llrand();
-void keypair();
-void genkeys(uint64_t g, uint64_t p, uint64_t *ret1, uint64_t *ret2);
-void genshare(uint64_t pub, uint64_t priv, uint64_t p, uint64_t *share);
+u64 llrand();
+void vsh_keys();
+void genkeys(u64 g, u64 p, u64 *ret1, u64 *ret2);
+void genshare(u64 pub, u64 priv, u64 p, u64 *share);
 
-void vsh_recv(int csock, char *data);
-void vsh_send(int csock, const char *msg);
-void vsh_end(int csock);
-void *vsh_handler(void *sdesc);
 int vsh_init(const char *host, const char *port, bool b);
 int vsh_listen(int ssock, struct sockaddr *cli);
+void vsh_end(int csock);
+void vsh_recv(int csock, char *data);
+void vsh_send(int csock, const char *msg);
+void *vsh_handler(void *sdesc);
 
 #endif

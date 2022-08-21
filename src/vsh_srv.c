@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "vsh.h"
 
 // gcc vsh_srv.c vsh.c -o srv
