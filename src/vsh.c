@@ -68,20 +68,20 @@ void *vsh_handler(void *sdesc) {
 //
 // Server listener
 int vsh_listen(int ssock, struct sockaddr *cli) {
-  int csock = 1, *new_sock, c = sizeof(struct sockaddr_in);
+  int csock = 1, *newsock, c = sizeof(struct sockaddr_in);
 
   listen(ssock, 3);
   while (csock >= 1) {
     csock = accept(ssock, (struct sockaddr *)&cli, (socklen_t *)&c);
     pthread_t thrd;
-    new_sock = (int *)malloc(sizeof *new_sock);
-    *new_sock = csock;
-    if (pthread_create(&thrd, NULL, vsh_handler, (void *)new_sock) < 0) {
+    newsock = (int *)malloc(sizeof *newsock);
+    *newsock = csock;
+    if (pthread_create(&thrd, NULL, vsh_handler, (void *)newsock) < 0) {
       printf("error\n");
       return -1;
     }
     pthread_join(thrd, NULL);
-    free(new_sock);
+    free(newsock);
   }
   return csock;
 }
