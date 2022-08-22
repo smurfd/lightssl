@@ -57,7 +57,7 @@ void vsh_end(int csock) {close(csock);}
 // Server handler
 void *vsh_handler(void *sdesc) {
   int s = *(int *)sdesc;
-  char (*d) = malloc(BLOCK);
+  char (*d) = malloc(vsh_getblock());
   if (s == -1) {
     return (void *)-1;
   }
@@ -131,3 +131,8 @@ void vsh_keys() {
   printf("Alice & Bobs Shared secret 0x%.16llx == 0x%.16llx\n", s1, s2);
   assert(s1 == s2);
 }
+
+
+//
+// Get BLOCK size
+int vsh_getblock() {return BLOCK;}

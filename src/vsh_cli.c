@@ -12,7 +12,7 @@
 //
 // client main
 int main() {
-  char *cc = malloc(BLOCK);
+  char *cc = malloc(vsh_getblock());
   int c = vsh_init("127.0.0.1", "9998", false);
   srand(time(0));
 

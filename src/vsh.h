@@ -10,6 +10,7 @@ void vsh_keys();
 void genkeys(u64 g, u64 p, u64 *ret1, u64 *ret2);
 void genshare(u64 pub, u64 priv, u64 p, u64 *share);
 
+int vsh_getblock();
 int vsh_init(const char *host, const char *port, bool b);
 int vsh_listen(int ssock, struct sockaddr *cli);
 void vsh_end(int csock);
