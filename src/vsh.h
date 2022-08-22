@@ -3,16 +3,7 @@
 
 #include <sys/socket.h>
 
-#define BLOCK 1024
 typedef uint64_t u64;
-
-struct header {
-  u64 len;
-  u64 ver;
-  u64 othr;
-  u64 stuff;
-  u64 here;
-} header;
 
 u64 llrand();
 void vsh_keys();

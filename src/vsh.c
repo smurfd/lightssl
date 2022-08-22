@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "vsh.h"
+#include "vsh_defs.h"
 
 //
 // Receive message
