@@ -2,9 +2,8 @@
 #define VSH_H 1
 
 #include <sys/socket.h>
-#include "vsh_defs.h"
 
-//typedef uint64_t u64;
+typedef uint64_t u64;
 
 u64 llrand();
 void vsh_keys();
