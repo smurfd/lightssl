@@ -6,8 +6,8 @@
 #include <stdbool.h>
 #include "vsh.h"
 
-// gcc vsh_cli.c vsh.c -o cli
-// ./cli (in one terminal window)
+//clang -std=c99 -pedantic -O2 -lm -pthread src/vsh_cli.c src/vsh.c -o build/cli
+//./cli (in one terminal window)
 
 //
 // client main

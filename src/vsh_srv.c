@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include "vsh.h"
 
-// gcc vsh_srv.c vsh.c -o srv
-// ./srv (in one terminal window)
+//clang -std=c99 -pedantic -O2 -lm -pthread src/vsh_srv.c src/vsh.c -o build/srv
+//./srv (in one terminal window)
 
 //
 // server main
