@@ -1,10 +1,11 @@
 #ifndef VSH_H
 #define VSH_H 1
 
+#include <sys/socket.h>
+
 #define BLOCK 1024
 typedef uint64_t u64;
 
-struct sockaddr;
 struct header {
   u64 len;
   u64 ver;
