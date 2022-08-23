@@ -14,7 +14,6 @@
 int main() {
   char *cc = malloc(vsh_getblock());
   int c = vsh_init("127.0.0.1", "9998", false);
-  srand(time(0));
 
   if (c >= 0) {
     vsh_send(c, "this is a long string doodz");
@@ -24,6 +23,6 @@ int main() {
     vsh_end(c);
   }
   free(cc);
-
+  srand(time(0));
   vsh_keys();
 }

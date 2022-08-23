@@ -43,7 +43,7 @@ int vsh_init(const char *host, const char *port, bool b) {
     bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr));
   } else {
     if (connect(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-      printf("Connection error\n"); return -1;// exit(1);
+      printf("Connection error\n"); return -1;
     }
   }
   return ssock;
@@ -103,23 +103,21 @@ u64 llrand() {
 // Generate a public and private keypair
 void genkeys(u64 g, u64 p, u64 *ret1, u64 *ret2) {
   u64 priv = llrand();
-
-  (*ret1) = (u64)pow(g, priv) % p;
+  (*ret1) = (uint64_t)pow(g, priv) % p;
   (*ret2) = priv;
 }
 
 //
 // Generate the shared key
 void genshare(u64 pub, u64 priv, u64 p, u64 *share) {
-  (*share) = (u64)pow(pub, priv) % p;
+  (*share) = p %(uint64_t)pow(pub, priv);
 }
 
 //
 // Generate a keypair & shared key then print it
 void vsh_keys() {
-  u64 apub1, apriv1, s1, apub2, apriv2, s2, g1, g2, p1, p2;
-  srand(time(0));
-  g1 = llrand(); g2 = llrand(); p1 = llrand(); p2 = llrand();
+  uint64_t g1 = llrand(), p1 = llrand(), g2 = llrand(), p2 = llrand();
+  uint64_t apub1, apriv1, s1, apub2, apriv2, s2;
 
   genkeys(g1, p1, &apub1, &apriv1);
   genkeys(g2, p2, &apub2, &apriv2);
@@ -131,7 +129,6 @@ void vsh_keys() {
   printf("Alice & Bobs Shared secret 0x%.16llx == 0x%.16llx\n", s1, s2);
   assert(s1 == s2);
 }
-
 
 //
 // Get BLOCK size
