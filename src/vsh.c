@@ -82,7 +82,6 @@ int vsh_listen(int ssock, struct sockaddr *cli) {
     newsock = (int *)malloc(sizeof *newsock);
     *newsock = csock;
     if (pthread_create(&thrd, NULL, vsh_handler, (void *)newsock) < 0) {
-      printf("error\n");
       return -1;
     }
     pthread_join(thrd, NULL);
@@ -101,33 +100,33 @@ u64 llrand() {
 
 //
 // Generate a public and private keypair
-void genkeys(u64 g, u64 p, u64 *ret1, u64 *ret2) {
-  u64 priv = llrand();
-  (*ret1) = (uint64_t)pow(g, priv) % p;
-  (*ret2) = priv;
+struct keys genkeys(u64 g, u64 p) {
+  struct keys k;
+  k.priv = llrand();
+  k.publ = (u64)pow(g, k.priv) % p;
+  return k;
 }
 
 //
 // Generate the shared key
-void genshare(u64 pub, u64 priv, u64 p, u64 *share) {
-  (*share) = p %(uint64_t)pow(pub, priv);
+u64 genshare(struct keys *k1, struct keys *k2, u64 p) {
+  (*k1).shar = p % (u64)pow((*k1).publ, (*k2).priv);
+  (*k2).shar = p % (u64)pow((*k2).publ, (*k1).priv);
+  assert((*k1).shar == (*k2).shar);
+  if ((*k1).shar == (*k2).shar) return (*k1).shar;
+  else return 0;
 }
 
 //
 // Generate a keypair & shared key then print it
 void vsh_keys() {
-  uint64_t g1 = llrand(), p1 = llrand(), g2 = llrand(), p2 = llrand();
-  uint64_t apub1, apriv1, s1, apub2, apriv2, s2;
+  u64 g1 = llrand(), g2 = llrand(), p1 = llrand(), p2 = llrand();
 
-  genkeys(g1, p1, &apub1, &apriv1);
-  genkeys(g2, p2, &apub2, &apriv2);
-  printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", apub1, apriv1);
-  printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", apub2, apriv2);
-  genshare(apub1, apriv2, p1, &s1);
-  genshare(apub2, apriv1, p1, &s2);
-
-  printf("Alice & Bobs Shared secret 0x%.16llx == 0x%.16llx\n", s1, s2);
-  assert(s1 == s2);
+  struct keys k1 = genkeys(g1, p1), k2 = genkeys(g1, p2);
+  printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
+  printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
+  genshare(&k1, &k2, p1);
+  printf("Alice and Bobs shared keys: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
 }
 
 //
