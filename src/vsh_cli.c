@@ -1,16 +1,16 @@
+//                                                                            //
+// Very simple handshake
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <stdbool.h>
 #include "vsh.h"
 
-//clang -std=c99 -pedantic -O2 -lm -pthread src/vsh_cli.c src/vsh.c -o build/cli
-//./cli (in one terminal window)
-
 //
-// client main
+// Client main
 int main() {
   char *cc = malloc(vsh_getblock());
   int c = vsh_init("127.0.0.1", "9998", false);
@@ -24,5 +24,5 @@ int main() {
   }
   free(cc);
   srand(time(0));
-  vsh_keys();
+  assert(vsh_keys() == 1);
 }

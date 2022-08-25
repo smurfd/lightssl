@@ -1,3 +1,5 @@
+//                                                                            //
+// Very simple handshake
 #include <time.h>
 #include <math.h>
 #include <stdio.h>
@@ -16,36 +18,33 @@
 //
 // Receive message
 void vsh_recv(int csock, char *data) {
-  struct header h;
-  recv(csock, &h, sizeof(header), 0);
+  head h;
+  recv(csock, &h, sizeof(head), 0);
   recv(csock, data, ntohl(h.len), 0);
 }
 
 //
 // Send message
 void vsh_send(int csock, const char *msg) {
-  header.len = strlen(msg);
-  send(csock, &header, sizeof(header), 0);
-  send(csock, msg, header.len, 0);
+  head h;
+  h.len = strlen(msg);
+  send(csock, &h, sizeof(head), 0);
+  send(csock, msg, h.len, 0);
 }
 
 //
 // Initialize server and client (b=true for server deamon)
 int vsh_init(const char *host, const char *port, bool b) {
   int ssock = socket(AF_INET, SOCK_STREAM, 0);
-  struct sockaddr_in saddr;
+  sock_in saddr;
 
   memset(&saddr, '\0', sizeof(saddr));
   saddr.sin_family = AF_INET;
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
-  if (b == true) {
-    bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr));
-  } else {
-    if (connect(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-      printf("Connection error\n"); return -1;
-    }
-  }
+  if (b == true) {bind(ssock, (sock*)&saddr, sizeof(saddr));}
+  else {if (connect(ssock, (sock*)&saddr, sizeof(saddr)) < 0) {
+    printf("Connection error\n"); return -1;}}
   return ssock;
 }
 
@@ -56,15 +55,12 @@ void vsh_end(int csock) {close(csock);}
 //
 // Server handler
 void *vsh_handler(void *sdesc) {
-  int s = *(int *)sdesc;
+  int s = *(int*)sdesc;
   char (*d) = malloc(vsh_getblock());
-  if (s == -1) {
-    return (void *)-1;
-  }
+  if (s == -1) {return (void*)-1;}
   // Send and receive stuff
   vsh_recv(s, d);
   vsh_send(s, "zdood gnirts gnol a si siht");
-
   free(d);
   pthread_exit(NULL);
   return 0;
@@ -72,16 +68,16 @@ void *vsh_handler(void *sdesc) {
 
 //
 // Server listener
-int vsh_listen(int ssock, struct sockaddr *cli) {
-  int csock = 1, *newsock, c = sizeof(struct sockaddr_in);
+int vsh_listen(int ssock, sock *cli) {
+  int csock = 1, *newsock, c = sizeof(sock_in);
 
   listen(ssock, 3);
   while (csock >= 1) {
-    csock = accept(ssock, (struct sockaddr *)&cli, (socklen_t *)&c);
+    csock = accept(ssock, (sock*)&cli, (socklen_t*)&c);
     pthread_t thrd;
-    newsock = (int *)malloc(sizeof *newsock);
+    newsock = (int*)malloc(sizeof(*newsock));
     *newsock = csock;
-    if (pthread_create(&thrd, NULL, vsh_handler, (void *)newsock) < 0) {
+    if (pthread_create(&thrd, NULL, vsh_handler, (void*)newsock) < 0) {
       return -1;
     }
     pthread_join(thrd, NULL);
@@ -92,7 +88,7 @@ int vsh_listen(int ssock, struct sockaddr *cli) {
 
 //
 // Random uint64_t
-u64 llrand() {
+u64 vsh_rand() {
   u64 r = 0;
   for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
   return r & 0xFFFFFFFFFFFFFFFFULL;
@@ -100,16 +96,16 @@ u64 llrand() {
 
 //
 // Generate a public and private keypair
-struct keys genkeys(u64 g, u64 p) {
-  struct keys k;
-  k.priv = llrand();
+key vsh_genkeys(u64 g, u64 p) {
+  key k;
+  k.priv = vsh_rand();
   k.publ = (u64)pow(g, k.priv) % p;
   return k;
 }
 
 //
 // Generate the shared key
-u64 genshare(struct keys *k1, struct keys *k2, u64 p) {
+u64 vsh_genshare(key *k1, key *k2, u64 p) {
   (*k1).shar = p % (u64)pow((*k1).publ, (*k2).priv);
   (*k2).shar = p % (u64)pow((*k2).publ, (*k1).priv);
   assert((*k1).shar == (*k2).shar);
@@ -119,15 +115,26 @@ u64 genshare(struct keys *k1, struct keys *k2, u64 p) {
 
 //
 // Generate a keypair & shared key then print it
-void vsh_keys() {
-  u64 g1 = llrand(), g2 = llrand(), p1 = llrand(), p2 = llrand();
+int vsh_keys() {
+  u64 g1 = vsh_rand(), g2 = vsh_rand(), p1 = vsh_rand(), p2 = vsh_rand();
+  u64 c = 123456, d = 0, e = 0;
+  key k1 = vsh_genkeys(g1, p1), k2 = vsh_genkeys(g1, p2);
 
-  struct keys k1 = genkeys(g1, p1), k2 = genkeys(g1, p2);
+  vsh_genshare(&k1, &k2, p1);
   printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
   printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
-  genshare(&k1, &k2, p1);
-  printf("Alice and Bobs shared keys: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
+  printf("Alice & Bobs shared key: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
+
+  vsh_crypt(c, k1, &d);
+  vsh_crypt(d, k2, &e);
+  printf("Before: 0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n", c, d, e);
+  assert(c == e);
+  return c == e;
 }
+
+//
+// Encrypt and decrypt data with shared key
+void vsh_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
 
 //
 // Get BLOCK size
