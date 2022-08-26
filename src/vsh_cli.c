@@ -16,13 +16,17 @@ int main() {
   int c = vsh_init("127.0.0.1", "9998", false);
 
   if (c >= 0) {
-    vsh_send(c, "this is a long string doodz");
-    vsh_recv(c, cc);
+    key k1, k2;
+    head h;
+    vsh_transferkey(c, false, false, &h, &k1);
+    k2 = vsh_genkeys(h.g, h.p);
+    vsh_genshare(&k1, &k2, h.p, false);
+    vsh_transferkey(c, true, false, &h, &k2);
+    printf("share : 0x%.16llx\n", k2.shar);
 
-    printf("recv: %s\n", cc);
     vsh_end(c);
   }
   free(cc);
   srand(time(0));
-  assert(vsh_keys() == 1);
+  vsh_keys();
 }

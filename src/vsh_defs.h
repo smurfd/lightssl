@@ -14,9 +14,8 @@ typedef struct sockaddr_in sock_in;
 struct header {
   u64 len;
   u64 ver;
-  u64 othr;
-  u64 stuff;
-  u64 here;
+  u64 g;
+  u64 p;
 };
 
 struct keys {
