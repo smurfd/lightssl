@@ -40,6 +40,7 @@ void vsh_end(int csock) {close(csock);}
 void *vsh_handler(void *sdesc) {
   int s = *(int*)sdesc;
   char (*d) = malloc(vsh_getblock());
+
   if (s == -1) {return (void*)-1;}
   // Send and receive stuff
   u64 g1 = vsh_rand(), p1 = vsh_rand();
@@ -48,8 +49,8 @@ void *vsh_handler(void *sdesc) {
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   vsh_transferkey(s, true, true, &h, &k1);
   vsh_transferkey(s, false, true, &h, &k2);
+  vsh_genshare(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
-  // FIXME: or should i generate the share on the serverside?!
   free(d);
   pthread_exit(NULL);
   return 0;
@@ -79,6 +80,7 @@ int vsh_listen(int ssock, sock *cli) {
 // Random uint64_t
 u64 vsh_rand() {
   u64 r = 0;
+
   for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
   return r & 0xFFFFFFFFFFFFFFFFULL;
 }
@@ -87,6 +89,7 @@ u64 vsh_rand() {
 // Generate a public and private keypair
 key vsh_genkeys(u64 g, u64 p) {
   key k;
+
   k.priv = vsh_rand();
   k.publ = (u64)pow(g, k.priv) % p;
   return k;
@@ -94,26 +97,20 @@ key vsh_genkeys(u64 g, u64 p) {
 
 //
 // Generate the shared key
-u64 vsh_genshare(key *k1, key *k2, u64 p, bool srv) {
-  u64 shar;
-  if (!srv) {
-    (*k1).shar = p % (u64)pow((*k1).publ, (*k2).priv);
-    shar = (*k1).shar;
-  } else {
-    (*k2).shar = p % (u64)pow((*k2).publ, (*k1).priv);
-    shar = (*k2).shar;
-  }
-  return shar;
+void vsh_genshare(key *k1, key *k2, u64 p, bool srv) {
+  if (!srv) {(*k1).shar = p % (u64)pow((*k1).publ, (*k2).priv);}
+  else {(*k2).shar = p % (u64)pow((*k2).publ, (*k1).priv);}
 }
 
 //
-// Generate a keypair & shared key then print it
+// Generate a keypair & shared key then print it (test / demo)
 int vsh_keys() {
   u64 g1 = vsh_rand(), g2 = vsh_rand(), p1 = vsh_rand(), p2 = vsh_rand();
   u64 c = 123456, d = 0, e = 0;
   key k1 = vsh_genkeys(g1, p1), k2 = vsh_genkeys(g1, p2);
 
   vsh_genshare(&k1, &k2, p1, false);
+  vsh_genshare(&k1, &k2, p1, true);
   printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
   printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
   printf("Alice & Bobs shared key: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
@@ -135,9 +132,11 @@ int vsh_getblock() {return BLOCK;}
 
 void vsh_transferkey(int s, bool snd, bool srv, head *h, key *k) {
   key tmp;
+
   if (snd) {vsh_sendkey(s, h, srv, k);}
-  else {vsh_recvkey(s, h, &tmp); (*k).publ = tmp.publ; (*k).shar = tmp.shar;}
-  printf("k3: %.16llx %.16llx %.16llx\n", (*k).publ, (*k).priv, (*k).shar);
+  else {vsh_recvkey(s, h, &tmp);
+    (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
+    // This to ensure if we receive a private key we clear it
 }
 
 void vsh_recvkey(int csock, head *h, key *k) {
@@ -148,8 +147,9 @@ void vsh_recvkey(int csock, head *h, key *k) {
 
 void vsh_sendkey(int csock, head *h, bool srv, key *k) {
   key kk;
+
   kk.publ = (*k).publ;
-  kk.priv = 0;
+  kk.priv = 0; // This to ensure not to send the private key
   kk.shar = (*k).shar;
 
   send(csock, h, sizeof(head), 0);

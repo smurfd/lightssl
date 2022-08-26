@@ -18,12 +18,12 @@ int main() {
   if (c >= 0) {
     key k1, k2;
     head h;
+
     vsh_transferkey(c, false, false, &h, &k1);
     k2 = vsh_genkeys(h.g, h.p);
-    vsh_genshare(&k1, &k2, h.p, false);
     vsh_transferkey(c, true, false, &h, &k2);
-    printf("share : 0x%.16llx\n", k2.shar);
-
+    vsh_genshare(&k1, &k2, h.p, false);
+    printf("share : 0x%.16llx\n", k1.shar);
     vsh_end(c);
   }
   free(cc);
