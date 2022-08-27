@@ -17,13 +17,16 @@ int main() {
 
   if (c >= 0) {
     key k1, k2;
+    u64 dat[12], cd[12];
     head h;
 
-    vsh_transferkey(c, false, false, &h, &k1);
+    vsh_transferkey(c, false, &h, &k1);
     k2 = vsh_genkeys(h.g, h.p);
-    vsh_transferkey(c, true, false, &h, &k2);
+    vsh_transferkey(c, true, &h, &k2);
     vsh_genshare(&k1, &k2, h.p, false);
     printf("share : 0x%.16llx\n", k1.shar);
+    for (int i = 0; i < 12; i++) {dat[i] = (u64)i;vsh_crypt(dat[i], k1, &cd[i]);}
+    vsh_transferdata(c, cd, true, 11);
     vsh_end(c);
   }
   free(cc);

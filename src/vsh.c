@@ -40,6 +40,7 @@ void vsh_end(int csock) {close(csock);}
 void *vsh_handler(void *sdesc) {
   int s = *(int*)sdesc;
   char (*d) = malloc(vsh_getblock());
+  u64 dat[11], cd[11];
 
   if (s == -1) {return (void*)-1;}
   // Send and receive stuff
@@ -47,10 +48,15 @@ void *vsh_handler(void *sdesc) {
   key k1 = vsh_genkeys(g1, p1), k2;
   head h; h.g = g1; h.p = p1;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
-  vsh_transferkey(s, true, true, &h, &k1);
-  vsh_transferkey(s, false, true, &h, &k2);
+  vsh_transferkey(s, true, &h, &k1);
+  vsh_transferkey(s, false, &h, &k2);
   vsh_genshare(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
+
+  vsh_transferdata(s, &dat, false, 11);
+  for (int i = 0; i < 10; i++) {
+    vsh_crypt(dat[i], k2, &cd[i]); printf("d: %llu\n", cd[i]);
+  }
   free(d);
   pthread_exit(NULL);
   return 0;
@@ -130,10 +136,10 @@ void vsh_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
 // Get BLOCK size
 int vsh_getblock() {return BLOCK;}
 
-void vsh_transferkey(int s, bool snd, bool srv, head *h, key *k) {
+void vsh_transferkey(int s, bool snd, head *h, key *k) {
   key tmp;
 
-  if (snd) {vsh_sendkey(s, h, srv, k);}
+  if (snd) {vsh_sendkey(s, h, k);}
   else {vsh_recvkey(s, h, &tmp);
     (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
     // This to ensure if we receive a private key we clear it
@@ -145,7 +151,7 @@ void vsh_recvkey(int csock, head *h, key *k) {
   (*k).priv = 0;
 }
 
-void vsh_sendkey(int csock, head *h, bool srv, key *k) {
+void vsh_sendkey(int csock, head *h, key *k) {
   key kk;
 
   kk.publ = (*k).publ;
@@ -154,4 +160,16 @@ void vsh_sendkey(int csock, head *h, bool srv, key *k) {
 
   send(csock, h, sizeof(head), 0);
   send(csock, &kk, sizeof(key), 0);
+}
+
+void vsh_transferdata(int csock, void* data, bool snd, u64 len) {
+  head h;
+  if (snd) {
+    h.len = len;
+    send(csock, &h, sizeof(head), 0);
+    send(csock, data, sizeof(u64) * len, 0);
+  } else {
+    recv(csock, &h, sizeof(head), 0);
+    recv(csock, &data, sizeof(u64) * len, 0);
+  }
 }
