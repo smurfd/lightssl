@@ -12,24 +12,24 @@
 //
 // Client main
 int main() {
-  char *cc = malloc(vsh_getblock());
-  int c = vsh_init("127.0.0.1", "9998", false);
+  int i, s = vsh_init("127.0.0.1", "9998", false);
 
-  if (c >= 0) {
-    key k1, k2;
+  if (s >= 0) {
     u64 dat[12], cd[12];
+    key k1, k2;
     head h;
 
-    vsh_transferkey(c, false, &h, &k1);
+    vsh_transferkey(s, false, &h, &k1);
     k2 = vsh_genkeys(h.g, h.p);
-    vsh_transferkey(c, true, &h, &k2);
+    vsh_transferkey(s, true, &h, &k2);
     vsh_genshare(&k1, &k2, h.p, false);
     printf("share : 0x%.16llx\n", k1.shar);
-    for (int i = 0; i < 12; i++) {dat[i] = (u64)i;vsh_crypt(dat[i], k1, &cd[i]);}
-    vsh_transferdata(c, cd, true, 11);
-    vsh_end(c);
+    for (i = 0; i < 12; i++) {dat[i] = (u64)i;vsh_crypt(dat[i], k1, &cd[i]);}
+    vsh_transferdata(s, cd, true, 11);
+    vsh_end(s);
   }
-  free(cc);
+
+  // locally generate two keypairs
   srand(time(0));
   vsh_keys();
 }

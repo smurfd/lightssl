@@ -10,8 +10,9 @@
 //
 // Server main
 int main() {
-  sock *cli = NULL;
   int s = vsh_init("127.0.0.1", "9998", true);
+  sock *cli = NULL;
+
   vsh_listen(s, cli);
   vsh_end(s);
 }

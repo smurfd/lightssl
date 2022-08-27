@@ -12,16 +12,16 @@ u64 vsh_rand();
 int vsh_keys();
 int vsh_getblock();
 int vsh_init(const char *host, const char *port, bool b);
-int vsh_listen(int ssock, sock *cli);
+int vsh_listen(int s, sock *cli);
 
-void vsh_end(int csock);
+void vsh_end(int s);
 void *vsh_handler(void *sdesc);
 void vsh_crypt(u64 data, key k, u64 *enc);
-void vsh_recvkey(int csock, head *h, key *k);
-void vsh_sendkey(int csock, head *h, key *k);
+void vsh_recvkey(int s, head *h, key *k);
+void vsh_sendkey(int s, head *h, key *k);
 void vsh_genshare(key *k1, key *k2, u64 p, bool srv);
 void vsh_transferkey(int s, bool snd, head *h, key *k);
-void vsh_transferdata(int csock, void* data, bool snd, u64 len);
+void vsh_transferdata(int s, void* data, bool snd, u64 len);
 
 #endif
 /*

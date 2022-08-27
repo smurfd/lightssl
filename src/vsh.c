@@ -18,22 +18,22 @@
 //
 // Initialize server and client (b=true for server deamon)
 int vsh_init(const char *host, const char *port, bool b) {
-  int ssock = socket(AF_INET, SOCK_STREAM, 0);
+  int s = socket(AF_INET, SOCK_STREAM, 0);
   sock_in saddr;
 
   memset(&saddr, '\0', sizeof(saddr));
   saddr.sin_family = AF_INET;
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
-  if (b == true) {bind(ssock, (sock*)&saddr, sizeof(saddr));}
-  else {if (connect(ssock, (sock*)&saddr, sizeof(saddr)) < 0) {
+  if (b == true) {bind(s, (sock*)&saddr, sizeof(saddr));}
+  else {if (connect(s, (sock*)&saddr, sizeof(saddr)) < 0) {
     printf("Connection error\n"); return -1;}}
-  return ssock;
+  return s;
 }
 
 //
 // End connection
-void vsh_end(int csock) {close(csock);}
+void vsh_end(int s) {close(s);}
 
 //
 // Server handler
@@ -64,22 +64,22 @@ void *vsh_handler(void *sdesc) {
 
 //
 // Server listener
-int vsh_listen(int ssock, sock *cli) {
-  int csock = 1, *newsock, c = sizeof(sock_in);
+int vsh_listen(int s, sock *cli) {
+  int c = 1, *newsock, len = sizeof(sock_in);
 
-  listen(ssock, 3);
-  while (csock >= 1) {
-    csock = accept(ssock, (sock*)&cli, (socklen_t*)&c);
+  listen(s, 3);
+  while (c >= 1) {
+    c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
     newsock = (int*)malloc(sizeof(*newsock));
-    *newsock = csock;
+    *newsock = c;
     if (pthread_create(&thrd, NULL, vsh_handler, (void*)newsock) < 0) {
       return -1;
     }
     pthread_join(thrd, NULL);
     free(newsock);
   }
-  return csock;
+  return c;
 }
 
 //
@@ -136,6 +136,8 @@ void vsh_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
 // Get BLOCK size
 int vsh_getblock() {return BLOCK;}
 
+//
+// Transfer keys (send and receive)
 void vsh_transferkey(int s, bool snd, head *h, key *k) {
   key tmp;
 
@@ -145,31 +147,28 @@ void vsh_transferkey(int s, bool snd, head *h, key *k) {
     // This to ensure if we receive a private key we clear it
 }
 
-void vsh_recvkey(int csock, head *h, key *k) {
-  recv(csock, h, sizeof(head), 0);
-  recv(csock, k, sizeof(key), 0);
-  (*k).priv = 0;
+//
+// Receive key
+void vsh_recvkey(int s, head *h, key *k) {
+  recv(s, h, sizeof(head), 0); recv(s, k, sizeof(key), 0); (*k).priv = 0;
+  // This to ensure if we receive a private key we clear it
 }
 
-void vsh_sendkey(int csock, head *h, key *k) {
+//
+// Send key
+void vsh_sendkey(int s, head *h, key *k) {
   key kk;
 
-  kk.publ = (*k).publ;
-  kk.priv = 0; // This to ensure not to send the private key
-  kk.shar = (*k).shar;
-
-  send(csock, h, sizeof(head), 0);
-  send(csock, &kk, sizeof(key), 0);
+  // This to ensure not to send the private key
+  kk.publ = (*k).publ; kk.shar = (*k).shar; kk.priv = 0;
+  send(s, h, sizeof(head), 0); send(s, &kk, sizeof(key), 0);
 }
 
-void vsh_transferdata(int csock, void* data, bool snd, u64 len) {
+//
+// Transfer data (send and receive)
+void vsh_transferdata(int s, void* data, bool snd, u64 len) {
   head h;
-  if (snd) {
-    h.len = len;
-    send(csock, &h, sizeof(head), 0);
-    send(csock, data, sizeof(u64) * len, 0);
-  } else {
-    recv(csock, &h, sizeof(head), 0);
-    recv(csock, &data, sizeof(u64) * len, 0);
-  }
+
+  if (snd) {send(s, &h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
+  else {recv(s, &h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
