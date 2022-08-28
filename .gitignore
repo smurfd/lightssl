@@ -1,5 +1,7 @@
 .DS_Store
 tmp/
 src/python/__*
+src/vsh/python/__*
 build/
 server.pem
+src/vsh/build
