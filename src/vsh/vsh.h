@@ -2,8 +2,19 @@
 // Very simple handshake
 #ifndef VSH_H
 #define VSH_H 1
-#include "vsh_defs.h"
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <assert.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
+#include "vsh_defs.h"
 
 key vsh_genkeys(u64 g, u64 p);
 

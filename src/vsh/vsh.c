@@ -1,17 +1,5 @@
 //                                                                            //
 // Very simple handshake
-#include <time.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <assert.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include "vsh.h"
 #include "vsh_defs.h"
 
@@ -19,15 +7,14 @@
 // Initialize server and client (b=true for server deamon)
 int vsh_init(const char *host, const char *port, bool b) {
   int s = socket(AF_INET, SOCK_STREAM, 0);
-  sock_in saddr;
+  sock_in adr;
 
-  memset(&saddr, '\0', sizeof(saddr));
-  saddr.sin_family = AF_INET;
-  saddr.sin_port = htons(atoi(port));
-  saddr.sin_addr.s_addr = inet_addr(host);
-  if (b == true) {bind(s, (sock*)&saddr, sizeof(saddr));}
-  else {if (connect(s, (sock*)&saddr, sizeof(saddr)) < 0) {
-    printf("Connection error\n"); return -1;}}
+  memset(&adr, '\0', sizeof(adr));
+  adr.sin_family = AF_INET;
+  adr.sin_port = atoi(port);
+  adr.sin_addr.s_addr = inet_addr(host);
+  if (b == true) {bind(s, (sock*)&adr, sizeof(adr));}
+  else {if (connect(s, (sock*)&adr, sizeof(adr)) < 0) {return -1;}}
   return s;
 }
 
@@ -38,25 +25,26 @@ void vsh_end(int s) {close(s);}
 //
 // Server handler
 void *vsh_handler(void *sdesc) {
-  int s = *(int*)sdesc;
-  char (*d) = malloc(vsh_getblock());
-  u64 dat[11], cd[11];
-
-  if (s == -1) {return (void*)-1;}
-  // Send and receive stuff
   u64 g1 = vsh_rand(), p1 = vsh_rand();
+  char (*d) = malloc(vsh_getblock());
   key k1 = vsh_genkeys(g1, p1), k2;
+  u64 dat[BLOCK], cd[BLOCK];
   head h; h.g = g1; h.p = p1;
+  int s = *(int*)sdesc;
+
+  // Send and receive stuff
+  if (s == -1) {return (void*)-1;}
+  if (h.len > BLOCK) {return (void*)-1;}
+
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   vsh_transferkey(s, true, &h, &k1);
   vsh_transferkey(s, false, &h, &k2);
   vsh_genshare(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
 
-  vsh_transferdata(s, &dat, false, 11);
-  for (int i = 0; i < 10; i++) {
-    vsh_crypt(dat[i], k2, &cd[i]); printf("d: %llu\n", cd[i]);
-  }
+  vsh_transferdata(s, &dat, false, h.len);
+  // Decrypt the data
+  for (int i = 0; i < h.len - 1; i++) {vsh_crypt(dat[i], k2, &cd[i]);}
   free(d);
   pthread_exit(NULL);
   return 0;
@@ -65,19 +53,17 @@ void *vsh_handler(void *sdesc) {
 //
 // Server listener
 int vsh_listen(int s, sock *cli) {
-  int c = 1, *newsock, len = sizeof(sock_in);
+  int c = 1, *ns, len = sizeof(sock_in);
 
   listen(s, 3);
   while (c >= 1) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
-    newsock = (int*)malloc(sizeof(*newsock));
-    *newsock = c;
-    if (pthread_create(&thrd, NULL, vsh_handler, (void*)newsock) < 0) {
-      return -1;
-    }
+    ns = (int*)malloc(sizeof(*ns));
+    *ns = c;
+    if (pthread_create(&thrd, NULL, vsh_handler, (void*)ns) < 0) {return -1;}
     pthread_join(thrd, NULL);
-    free(newsock);
+    free(ns);
   }
   return c;
 }
@@ -123,7 +109,7 @@ int vsh_keys() {
 
   vsh_crypt(c, k1, &d);
   vsh_crypt(d, k2, &e);
-  printf("Before: 0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n", c, d, e);
+  printf("Before:  0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n",c,d,e);
   assert(c == e);
   return c == e;
 }
