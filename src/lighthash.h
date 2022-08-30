@@ -2,10 +2,10 @@
 #ifndef LIGHTHASH_H
 #define LIGHTHASH_H 1
 
-#include "lightdefs.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "lightdefs.h"
 
 void lighthash_init();
 void lighthash_update(const b08 *msg, u08 len);

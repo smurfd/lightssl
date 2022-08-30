@@ -2,10 +2,10 @@
 #ifndef LIGHTSSL_H
 #define LIGHTSSL_H 1
 
-#include "lightdefs.h"
-#include <stdbool.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/socket.h>
+#include "lightdefs.h"
 
 struct hello {
   bool server; // is the hello comming from server?
@@ -17,9 +17,7 @@ struct hello {
   u64 session_id; // session id
 };
 
-struct handshake {
-  struct hello hi;
-} hs;
+struct handshake {struct hello hi;} hs;
 
 void lightssl_print_hello(struct hello *hi);
 

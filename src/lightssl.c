@@ -40,16 +40,13 @@ int lightssl_srv_init(const char *host, const char *port) {
 //
 // Server handler
 void *lightssl_srv_handler(void *sdesc) {
-  int s = *(int *)sdesc;
-  b08 avail[] = { TLSCIPHER };
-  b08 select[] = { TLSCIPHERAVAIL };
+  struct hello *hs_srv, *hs_cli_recv;
+  b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
-  struct hello *hs_srv;
-  struct hello *hs_cli_recv;
+  b08 avail[] = {TLSCIPHER};
+  int s = *(int *)sdesc;
 
-  if (s == -1) {
-    return (void *)-1;
-  }
+  if (s == -1) {return (void *)-1;}
 
   hs_srv = malloc(sizeof(struct hello));
   hs_cli_recv = malloc(sizeof(struct hello));
@@ -69,9 +66,7 @@ void *lightssl_srv_handler(void *sdesc) {
 //
 // Server listener
 int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
-  int csock = 1;
-  int *new_sock;
-  int c = sizeof(struct sockaddr_in);
+  int csock = 1, *new_sock, c = sizeof(struct sockaddr_in);
 
   listen(ssock, 3);
   while (csock >= 1) {
@@ -153,11 +148,8 @@ struct hello *lightssl_hs_set_hello(struct hello *hi, bool srv, int tls, u64 r,
 //
 // Send Handshake hello message
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
-  if (srv) {
-    printf("Sending Hello from server\n");
-  } else {
-    printf("Sending Hello from client\n");
-  }
+  if (srv) {printf("Sending Hello from server\n");}
+  else {printf("Sending Hello from client\n");}
 
   send(csock, hi, sizeof(struct hello), 0);
   lightssl_print_hello(hi);
@@ -169,21 +161,14 @@ b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
 struct hello *lightssl_hs_recv_hi(int csock, bool srv, struct hello *hi) {
   int r, r_tot;
 
-  if (srv) {
-    printf("Receiving Hello from client\n");
-  } else {
-    printf("Receiving Hello from server\n");
-  }
+  if (srv) {printf("Receiving Hello from client\n");}
+  else {printf("Receiving Hello from server\n");}
   r_tot = 0;
   r = 0;
   while ((u64)r_tot < sizeof(struct hello)) {
     r = recv(csock, hi, sizeof(struct hello), 0);
-    if (r == -1) {
-      break;
-    }
-    if (r > 0) {
-      r_tot = r_tot + r;
-    }
+    if (r == -1) {break;}
+    if (r > 0) {r_tot = r_tot + r;}
   }
   return hi;
 }

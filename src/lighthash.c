@@ -1,41 +1,36 @@
 //                                                                            //
-#include "lighthash.h"
-#include "lightdefs.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lighthash.h"
+#include "lightdefs.h"
 
-extern u64 sha[80];
-extern u64 sha_init[BYTE];
+extern u64 sha[80], sha_init[BYTE];
 
 //
 // "Construct"
 char *lighthash_new(const char *in) {
-  b08 digest[DIGEST_SIZE];
+  b08 digest[DIG_SIZE];
   char *buf;
 
-  memset(digest, 0, DIGEST_SIZE);
-  buf = (char *)malloc(2 * DIGEST_SIZE + 1);
-  buf[2 * DIGEST_SIZE] = 0;
+  memset(digest, 0, DIG_SIZE);
+  buf = (char *)malloc(2 * DIG_SIZE + 1);
+  buf[2 * DIG_SIZE] = 0;
 
   lighthash_init();
   lighthash_update((b08 *)in, strlen(in));
   lighthash_finalize(digest);
 
-  for (int i = 0; i < DIGEST_SIZE; i++) {
-    sprintf(buf + i * 2, "%02x", digest[i]);
-  }
+  for (int i = 0; i < DIG_SIZE; i++) {sprintf(buf + i * 2, "%02x", digest[i]);}
   return buf;
 }
 
 //
 // Initialize
 void lighthash_init() {
-  for (int i = 0; i < BYTE; i++) {
-    m_h[i] = sha_init[i];
-  }
+  for (int i = 0; i < BYTE; i++) {m_h[i] = sha_init[i];}
   m_len = 0;
   m_tot_len = 0;
 }
@@ -50,10 +45,7 @@ void lighthash_update(const b08 *msg, u08 len) {
   rem_len = len < tmp_len ? len : tmp_len;
   memcpy(&m_block[m_len], msg, rem_len);
 
-  if (m_len + len < SHA512_BLOCK_SIZE) {
-    m_len += len;
-    return;
-  }
+  if (m_len + len < SHA512_BLOCK_SIZE) {m_len += len; return;}
   new_len = len - rem_len;
   block_nb = new_len / SHA512_BLOCK_SIZE;
   shifted_message = msg + rem_len;
@@ -78,30 +70,22 @@ void lighthash_finalize(b08 *digest) {
   SHA2_UNPACK32(len_b, m_block + pm_len - 4);
   lighthash_transform(m_block, block_nb);
 
-  for (int i = 0; i < BYTE; i++) {
-    SHA2_UNPACK64(m_h[i], &digest[i << 3]);
-  }
+  for (int i = 0; i < BYTE; i++) {SHA2_UNPACK64(m_h[i], &digest[i << 3]);}
 }
 
 //
 // Transform
 void lighthash_transform(const b08 *msg, u08 blocknb) {
-  u64 w[80];
-  u64 wv[BYTE];
-  u64 t1, t2;
+  u64 w[80], wv[BYTE], t1, t2;
   const b08 *sub_block;
 
   for (int i = 0; i < (int)blocknb; i++) {
     sub_block = msg + (i << 7);
-    for (int j = 0; j < 16; j++) {
-      SHA2_PACK64(&sub_block[j << 3], &w[j]);
-    }
+    for (int j = 0; j < 16; j++) {SHA2_PACK64(&sub_block[j << 3], &w[j]);}
     for (int j = 16; j < 80; j++) {
       w[j] = SHA512_F4(w[j - 2]) + w[j - 7] + SHA512_F3(w[j - 15]) + w[j - 16];
     }
-    for (int j = 0; j < BYTE; j++) {
-      wv[j] = m_h[j];
-    }
+    for (int j = 0; j < BYTE; j++) {wv[j] = m_h[j];}
     for (int j = 0; j < 80; j++) {
       t1 = wv[7] + SHA512_F2(wv[4]) + CH(wv[4], wv[5], wv[6]) + sha[j] + w[j];
       t2 = SHA512_F1(wv[0]) + MAJ(wv[0], wv[1], wv[2]);
@@ -114,18 +98,13 @@ void lighthash_transform(const b08 *msg, u08 blocknb) {
       wv[1] = wv[0];
       wv[0] = t1 + t2;
     }
-    for (int j = 0; j < BYTE; j++) {
-      m_h[j] += wv[j];
-    }
+    for (int j = 0; j < BYTE; j++) {m_h[j] += wv[j];}
   }
 }
 
 //
 // Verify hash
 bool lighthash_verify(const char *hash, const char *ver_hash) {
-  if (strcasecmp(hash, ver_hash) == 0) {
-    return true;
-  } else {
-    return false;
-  }
+  if (strcasecmp(hash, ver_hash) == 0) {return true;}
+  else {return false;}
 }

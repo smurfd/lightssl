@@ -1,9 +1,9 @@
-#include "lightdefs.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lightdefs.h"
 
-u64 sha[80] = { 0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
+u64 sha[80] = {0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
   0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL, 0x3956c25bf348b538ULL,
   0x59f111f1b605d019ULL, 0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL,
   0xd807aa98a3030242ULL, 0x12835b0145706fbeULL, 0x243185be4ee4b28cULL,
@@ -29,8 +29,8 @@ u64 sha[80] = { 0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
   0x06f067aa72176fbaULL, 0x0a637dc5a2c898a6ULL, 0x113f9804bef90daeULL,
   0x1b710b35131c471bULL, 0x28db77f523047d84ULL, 0x32caab7b40c72493ULL,
   0x3c9ebe0a15c9bebcULL, 0x431d67c49c100d4cULL, 0x4cc5d4becb3e42b6ULL,
-  0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL };
+  0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL};
 
-u64 sha_init[BYTE] = { 0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
+u64 sha_init[BYTE] = {0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
   0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL, 0x510e527fade682d1ULL,
-  0x9b05688c2b3e6c1fULL, 0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL };
+  0x9b05688c2b3e6c1fULL, 0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL};

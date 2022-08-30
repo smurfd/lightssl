@@ -2,15 +2,15 @@
 #ifndef LIGHTCRYPT_H
 #define LIGHTCRYPT_H 1
 
-#include "lightbig.h"
-#include "lightdefs.h"
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
-#include <time.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include "lightbig.h"
+#include "lightdefs.h"
 
 char *curve_name;
 big *curve_p;
@@ -30,6 +30,7 @@ void lc_point_neg(big *p1, big *p2, big **ret1, big **ret2);
 void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2);
 void lc_inverse_mod(big *key, big *point, big **ret);
 bool lc_on_curve(big *p1, big *p2);
+
 // Crypt
 void lc_init();
 

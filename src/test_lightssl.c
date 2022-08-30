@@ -1,17 +1,17 @@
 //                                                                            //
-#include "lightbig.h"
-#include "lightcrypt.h"
-#include "lighthash.h"
-#include "lightssl.h"
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
+#include "lightbig.h"
+#include "lightssl.h"
+#include "lighthash.h"
+#include "lightcrypt.h"
 
 int main(int argc, char **argv) {
-  b08 avail[] = { TLSCIPHER };
-  b08 select[] = { TLSCIPHERAVAIL };
+  b08 avail[] = {TLSCIPHER};
+  b08 select[] = {TLSCIPHERAVAIL};
   b08 compress = TLSCOMPRESSION;
 
   if (argc == 2 && argv) {
@@ -21,8 +21,7 @@ int main(int argc, char **argv) {
 
       lightssl_srv_listen(s, cli);
     } else if (strcmp(argv[1], "client") == 0) {
-      struct hello *hs_cli;
-      struct hello *hs_srv_recv;
+      struct hello *hs_cli, *hs_srv_recv;
       int cl;
 
       hs_cli = malloc(sizeof(struct hello));
@@ -362,10 +361,8 @@ int main(int argc, char **argv) {
       printf("OK!\n");
     } else if (strcmp(argv[1], "hash") == 0) {
       const char *in = "smurfd";
-      const char *rh
-        = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb2"
-          "01cbb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7"
-          "e70f3d1";
+      const char *rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb20"
+      "1cbb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7e70f3d1";
       char *out = malloc(100);
 
       strcpy(out, lighthash_new(in));
