@@ -1,14 +1,14 @@
 # Gen cert
-# openssl genrsa -des3 -out server.key 1024
+# openssl genrsa -des3 -out server.key 2048
 # openssl req -new -key server.key -out server.csr
-# openssl x509 -req -days 1024 -in server.csr -signkey server.key -out server.crt
+# openssl x509 -req -days 2048 -in server.csr -signkey server.key -out server.crt
 # cat server.crt server.key > server.pem
-# rm server.crt server.key
+# rm server.crt server.key server.csr
 
 # add server.pem contents to end of whatever this prints
 #   print(os.path.relpath(certifi.where()))
 
-# for me it was like:
+# for me it was like: (needs to be done when upgrading python or certifi)
 # cat server.pem >> ../../../../../opt/homebrew/lib/python3.8/site-packages/certifi-2022.5.18.1-py3.8.egg/certifi/cacert.pem
 
 # run the "server" :
