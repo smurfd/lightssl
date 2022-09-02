@@ -37,17 +37,10 @@ int main(int argc, char **argv) {
       free(hs_cli);
     } else if (strcmp(argv[1], "big") == 0) {
       bigint_t *ac, *ad, *a1;
-      int add_t = 5;
-      int sub_t = 16;
-      int mul_t = 3;
-      int div_t = 14;
-      int mod_t = 2;
-      int hex_t = 1;
+      int add_t = 5, sub_t = 16, mul_t = 3, div_t = 14, mod_t = 2, hex_t = 1;
       int nrt = add_t + sub_t + mul_t + div_t + mod_t + hex_t;
-      char **a = malloc(nrt * MAXSTR);
-      char **b = malloc(nrt * MAXSTR);
-      char **c = malloc(nrt * MAXSTR);
-      char *cc = malloc(MAXSTR);
+      char **a = malloc(nrt * MAXSTR), **b = malloc(nrt * MAXSTR);
+      char **c = malloc(nrt * MAXSTR); char *cc = malloc(MAXSTR);
 
       big_init_m(3, &ac, &ad, &a1);
       big_alloc_max_m(3, &ac, &ad, &a1);
@@ -310,8 +303,8 @@ int main(int argc, char **argv) {
       c[40] = "0xb85c9";
 
       big_init_m(3, &ac, &ad, &a1);
-      big_alloc_max_m(3, &ac, &ad, &a1);
       for (int i = 0; i < nrt; i++) {
+        big_alloc_max_m(3, &ac, &ad, &a1);
         big_set(a[i], &ac);
         big_set(b[i], &ad);
         if (i < add_t) {
@@ -347,14 +340,9 @@ int main(int argc, char **argv) {
           (*a1).base = HEX;
           big_assert_str(c[i], &a1);
         }
-        // sleep 0.03 seconds
-        usleep(300000);
       }
-      // big_free_m(3, &ac, &ad, &a1);
-      // big_final_m(3, &ac, &ad, &a1);
-      free(c);
-      free(b);
-      free(a);
+      big_final_m(3, &ac, &ad, &a1);
+      free(c); free(b); free(a);
       printf("OK\n");
     } else if (strcmp(argv[1], "crypt") == 0) {
       lc_init();

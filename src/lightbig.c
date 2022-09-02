@@ -727,7 +727,7 @@ void big_div_sub(const big *a, const big *b, big **c) {
   (*co2).len = 5;
   (*one).len = 2;
 
-  big_alloc_m(7, &aa, &bb, &co1, &co2, &one, &e, c);
+  big_alloc_max_m(7, &aa, &bb, &co1, &co2, &one, &e, c);
   big_copy(a, &aa);
   big_copy(b, &bb);
   aa->len = a->len;
@@ -767,7 +767,7 @@ void big_div(const big *a, const big *b, big **c) {
   (*cc).len = (*a).len;
   (*cc1).len = (*a).len;
   (*c)->len = (*a).len;
-  big_alloc_m(6, &aa, &bb, &cc, &aa1, &cc1, c);
+  big_alloc_max_m(6, &aa, &bb, &cc, &aa1, &cc1, c);
 
   // reset output parameter
   (*c)->neg = false;
