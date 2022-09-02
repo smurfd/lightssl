@@ -1,13 +1,12 @@
 //                                                                            //
-#include "lightbig.h"
-#include "lightdefs.h"
+#include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdbool.h>
+#include "lightbig.h"
+#include "lightdefs.h"
 // TODO: obviously huge room for improvement
 // TODO: add multifunctions to save lines like: a+b-c*d
 // FIXME: If you DONT find bugs/leaks/securityissues let me know ;)
@@ -29,9 +28,7 @@ void big_init_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_init(va_arg(valist, big **));
-  }
+  for (int i = 0; i < len; i++) {big_init(va_arg(valist, big **));}
   va_end(valist);
 }
 
@@ -40,9 +37,7 @@ void big_init_m(int len, ...) {
 void big_free(big **a) {
   if ((*a)->alloc_d) {
     (*a)->alloc_d = false;
-    if ((*a)->dig != NULL) {
-      free((*a)->dig);
-    }
+    if ((*a)->dig != NULL) {free((*a)->dig);}
   }
 }
 
@@ -52,9 +47,7 @@ void big_free_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_free(va_arg(valist, big **));
-  }
+  for (int i = 0; i < len; i++) {big_free(va_arg(valist, big **));}
   va_end(valist);
 }
 
@@ -63,9 +56,7 @@ void big_free_m(int len, ...) {
 void big_final(big **a) {
   if ((*a)->alloc_t) {
     (*a)->alloc_t = false;
-    if ((*a) != NULL) {
-      free((*a));
-    }
+    if ((*a) != NULL) {free((*a));}
   }
 }
 
@@ -75,32 +66,20 @@ void big_final_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_final(va_arg(valist, big **));
-  }
+  for (int i = 0; i < len; i++) {big_final(va_arg(valist, big **));}
   va_end(valist);
 }
 
 //
 // Clear a bigint
 void big_end(big **a) {
-  if ((*a)->alloc_d) {
-    free((*a)->dig);
-    (*a)->alloc_d = false;
-  }
-  if ((*a)->alloc_t) {
-    free((*a));
-    (*a)->alloc_t = false;
-  }
+  if ((*a)->alloc_d) {free((*a)->dig); (*a)->alloc_d = false;}
+  if ((*a)->alloc_t) {free((*a)); (*a)->alloc_t = false;}
 }
 
 //
 // Free a string
-void big_end_str(char *a) {
-  if (a != NULL) {
-    free(a);
-  }
-}
+void big_end_str(char *a) {if (a != NULL) {free(a);}}
 
 //
 // Clear several bigint
@@ -108,9 +87,7 @@ void big_end_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_end(va_arg(valist, big **));
-  }
+  for (int i = 0; i < len; i++) {big_end(va_arg(valist, big **));}
   va_end(valist);
 }
 
@@ -118,8 +95,7 @@ void big_end_m(int len, ...) {
 // resize
 void big_resize(big **a, int old_len, int new_len) {
   if ((*a)->alloc_d) {
-    char *aaa = malloc(MAXSTR);
-    char *bbb = malloc(MAXSTR);
+    char *aaa = malloc(MAXSTR), *bbb = malloc(MAXSTR);
     big *aa = NULL;
 
     if ((*a)->len > 1) {
@@ -140,9 +116,7 @@ void big_resize(big **a, int old_len, int new_len) {
       big_final_m(1, &aa);
       big_end_str(bbb);
       big_end_str(aaa);
-    } else {
-      (*a)->len = old_len;
-    }
+    } else {(*a)->len = old_len;}
   }
 }
 
@@ -152,17 +126,15 @@ void big_set_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_set("", va_arg(valist, big **));
-  }
+  for (int i = 0; i < len; i++) {big_set("", va_arg(valist, big **));}
   va_end(valist);
 }
 
 //
 // Set a bigint from string
 void big_set(char *a, big **b) {
-  int skip = 0;
   int len = (int)strlen(a) > (*b)->len ? strlen(a) : (*b)->len;
+  int skip = 0;
 
   // Reset outparam
   memset((*b)->dig, 0, len);
@@ -170,22 +142,15 @@ void big_set(char *a, big **b) {
   (*b)->null = false;
   (*b)->neg = false;
   (*b)->base = DEC;
-  if (a[0] == '-') {
-    (*b)->neg = true;
-    skip++;
-  }
+  if (a[0] == '-') {(*b)->neg = true; skip++;}
   if (a[0 + skip] == '0' && a[1 + skip] == 'x') {
     (*b)->base = HEX;
     skip = skip + 2;
-  } else {
-    (*b)->base = DEC;
   }
-  if (strcmp("0", a) == 0) {
-    (*b)->len = 1;
-    (*b)->dig[0] = 0;
-  } else if (strcmp("", a) == 0) {
-    (*b)->len = 1;
-  } else {
+  else {(*b)->base = DEC;}
+  if (strcmp("0", a) == 0) {(*b)->len = 1; (*b)->dig[0] = 0;}
+  else if (strcmp("", a) == 0) {(*b)->len = 1;}
+  else {
     while (a[skip] == '0') { // ignore 1st zeros
       skip++;
       (*b)->len--;
@@ -234,9 +199,7 @@ void big_alloc_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_alloc(va_arg(valist, big **));
-  }
+  for (int i = 0; i < len; i++) {big_alloc(va_arg(valist, big **));}
   va_end(valist);
 }
 
@@ -246,54 +209,43 @@ void big_alloc_max_m(int len, ...) {
   va_list valist;
 
   va_start(valist, len);
-  for (int i = 0; i < len; i++) {
-    big_alloc_len(va_arg(valist, big **), MAXSTR);
-  }
+  for (int i = 0; i < len; i++) {big_alloc_len(va_arg(valist, big **), MAXSTR);}
   va_end(valist);
 }
 
 //
 // Compare two bigints
-bool big_cmp(const big *a, const big *b) {
-  if ((*a).len != (*b).len) {
-    return false;
-  }
+bool big_cmp(cb *a, cb *b) {
+  if ((*a).len != (*b).len) {return false;}
   for (int i = 0; i < (*a).len; i++) {
-    if ((*a).dig[i] != (*b).dig[i]) {
-      return false;
-    }
+    if ((*a).dig[i] != (*b).dig[i]) {return false;}
   }
   return true;
 }
 
 //
 // Compare a string and a bigint
-bool big_cmp_str(char *str, const big *a) {
-  if ((u64)(*a).len != strlen(str)) {
-    return false;
-  }
+bool big_cmp_str(char *str, cb *a) {
+  if ((u64)(*a).len != strlen(str)) {return false;}
   for (int i = 0; i < (*a).len; i++) {
-    if ((*a).dig[i] != (str[i] - '0')) {
-      return false;
-    }
+    if ((*a).dig[i] != (str[i] - '0')) {return false;}
   }
   return true;
 }
 
 //
 // Copy one bigint to another
-void big_copy(const big *a, big **c) {
+void big_copy(cb *a, big **c) {
   char *aaa = malloc(MAXSTR);
 
   big_get(a, aaa);
   big_set(aaa, c);
-
   big_end_str(aaa);
 }
 
 //
 // Copy data references
-void big_copy_ref(const big *a, big **b) {
+void big_copy_ref(cb *a, big **b) {
   char *bbb = malloc(MAXSTR);
 
   (*b)->len = (*a).len;
@@ -317,36 +269,22 @@ void big_clear_zeros(big **b) {
 
   // if the string only contains zeros atleast save one
   big_get(*b, bbb);
-  if (strcmp("", bbb) == 0) {
-    big_set("0", b);
-  }
+  if (strcmp("", bbb) == 0) {big_set("0", b);}
   big_end_str(bbb);
 }
 
 //
 // Get string from bigint
-void big_get(const big *a, char *b) {
-  int mod = 0;
-  int len = (int)strlen(b) > (*a).len ? strlen(b) : (*a).len;
-
+void big_get(cb *a, char *b) {
+  int len = (int)strlen(b) > (*a).len ? strlen(b) : (*a).len, mod = 0;
   // Reset outparam
   memset(b, 0, len);
 
-  if (a->neg && a->dig[0] != '-') {
-    mod = 1;
-    b[0] = '-';
-  }
-  if (a->base == HEX) {
-    b[0 + mod] = '0';
-    b[1 + mod] = 'x';
-    mod = mod + 2;
-  }
+  if (a->neg && a->dig[0] != '-') {mod = 1; b[0] = '-';}
+  if (a->base == HEX) {b[0 + mod] = '0'; b[1 + mod] = 'x'; mod = mod + 2;}
   for (int i = 0; i < a->len; i++) {
-    if (a->dig[i] < DEC) {
-      b[i + mod] = a->dig[i] + '0';
-    } else {
-      b[i + mod] = (a->dig[i] % 'a') + 'a' - 10;
-    }
+    if (a->dig[i] < DEC) {b[i + mod] = a->dig[i] + '0';}
+    else {b[i + mod] = (a->dig[i] % 'a') + 'a' - 10;}
   }
   b[a->len + mod] = '\0';
 }
@@ -356,12 +294,8 @@ void big_get(const big *a, char *b) {
 i08 big_get_hex(i08 a, i08 base) {
   if (base == HEX) {
     if (a > 9) {
-      if (a % 'A' < 7) {
-        return 10 + (a % 'A');
-      }
-      if (a % 'a' < 7) {
-        return 10 + (a % 'a');
-      }
+      if (a % 'A' < 7) {return 10 + (a % 'A');}
+      if (a % 'a' < 7) {return 10 + (a % 'a');}
     }
   }
   return a;
@@ -369,9 +303,8 @@ i08 big_get_hex(i08 a, i08 base) {
 
 //
 // Bigint addition
-void big_add(const big *a, const big *b, big **c) {
-  char *aaa = malloc(MAXSTR);
-  char *bbb = malloc(MAXSTR);
+void big_add(cb *a, cb *b, big **c) {
+  char *aaa = malloc(MAXSTR), *bbb = malloc(MAXSTR);
   int i, j, k, tmp, carry, base, cmpa, cmpb;
   big *aa = NULL, *bb = NULL;
 
@@ -394,16 +327,11 @@ void big_add(const big *a, const big *b, big **c) {
 
   big_end_str(bbb);
   big_end_str(aaa);
-  if ((*a).neg && (*b).neg) {
-    (*c)->neg = true;
-  }
-  if (a == NULL || b == NULL) {
-    c = NULL;
-  } else if (cmpa == 0) {
-    big_copy_ref(bb, c);
-  } else if (cmpb == 0) {
-    big_copy_ref(aa, c);
-  } else {
+  if ((*a).neg && (*b).neg) {(*c)->neg = true;}
+  if (a == NULL || b == NULL) {c = NULL;}
+  else if (cmpa == 0) {big_copy_ref(bb, c);}
+  else if (cmpb == 0) {big_copy_ref(aa, c);}
+  else {
     (*c)->len = (a->len > b->len ? a->len : b->len) + 1;
     i = a->len - 1;
     j = b->len - 1;
@@ -413,19 +341,13 @@ void big_add(const big *a, const big *b, big **c) {
       if (i >= 0 && j >= 0) {
         tmp = big_get_hex(aa->dig[i], aa->base)
           + big_get_hex(bb->dig[j], bb->base);
-      } else if (i >= 0) {
-        tmp = a->dig[i];
-      } else if (j >= 0) {
-        tmp = b->dig[j];
-      } else {
-        tmp = 0;
-      }
+      } else if (i >= 0) {tmp = a->dig[i];}
+      else if (j >= 0) {tmp = b->dig[j];}
+      else {tmp = 0;}
       tmp += carry;
       carry = tmp / base;
       (*c)->dig[k] = tmp % base;
-      i--;
-      j--;
-      k--;
+      i--; j--; k--;
     }
     big_clear_zeros(c);
   }
@@ -435,7 +357,7 @@ void big_add(const big *a, const big *b, big **c) {
 
 //
 // Bigint multiplication
-void big_mul(const big *a, const big *b, big **c) {
+void big_mul(cb *a, cb *b, big **c) {
   int i, j, k, tmp, carry, push_left, base;
   big *aa = NULL, *bb = NULL;
 
@@ -462,13 +384,10 @@ void big_mul(const big *a, const big *b, big **c) {
     (*c)->neg = false;
     (*aa).neg = false;
     (*bb).neg = false;
-  } else if ((*aa).neg || (*bb).neg) {
-    (*c)->neg = true;
-  }
+  } else if ((*aa).neg || (*bb).neg) {(*c)->neg = true;}
 
-  if (a == NULL || b == NULL) {
-    c = NULL;
-  } else if ((*aa).len == 1 && (*aa).dig[0] == 0) {
+  if (a == NULL || b == NULL) {c = NULL;}
+  else if ((*aa).len == 1 && (*aa).dig[0] == 0) {
     (*c)->len = 1;
     big_set("0", c);
   } else if ((*bb).len == 1 && (*bb).dig[0] == 0) {
@@ -488,16 +407,14 @@ void big_mul(const big *a, const big *b, big **c) {
         if (j >= 0) {
           tmp = big_get_hex(aa->dig[i], aa->base)
             * big_get_hex(bb->dig[j], bb->base);
-        } else {
-          tmp = 0;
         }
+        else {tmp = 0;}
         tmp += carry;
         carry = tmp / base;
         (*c)->dig[k] += tmp % base;
         carry += (*c)->dig[k] / base;
         (*c)->dig[k] = (*c)->dig[k] % base;
-        j--;
-        k--;
+        j--; k--;
       }
       i--;
     }
@@ -509,9 +426,8 @@ void big_mul(const big *a, const big *b, big **c) {
 
 //
 // Bigint subtraction
-void big_sub(const big *a, const big *b, big **c) {
-  char *aaa = malloc(MAXSTR);
-  char *bbb = malloc(MAXSTR);
+void big_sub(cb *a, cb *b, big **c) {
+  char *aaa = malloc(MAXSTR), *bbb = malloc(MAXSTR);
   int i, j, k, tmp, carry, base, cmp, cmpa, cmpb;
   big *aa = NULL, *bb = NULL;
 
@@ -537,36 +453,24 @@ void big_sub(const big *a, const big *b, big **c) {
 
   (*c)->neg = false;
   (*c)->len = (*a).len;
-  if (cmp == 0) { // both a and b are the same
-    big_set("0", c);
-  } else {
+  // both a and b are the same
+  if (cmp == 0) {big_set("0", c);}
+  else {
     if ((*a).neg && (*b).neg) {
       (*aa).neg = false;
       (*bb).neg = false;
-      if (cmp < 0) {
-        big_sub(bb, aa, c);
-      } else {
-        big_sub(aa, bb, c);
-        (*c)->neg = false;
-      }
+      if (cmp < 0) {big_sub(bb, aa, c);}
+      else {big_sub(aa, bb, c); (*c)->neg = false;}
     } else if ((*a).neg || (*b).neg) {
       (*aa).neg = false;
       (*bb).neg = false;
       big_add(aa, bb, c);
-      if ((*a).len < (*b).len || (*a).len > (*b).len) {
-        (*c)->neg = true;
-      }
-      if ((*a).len == (*b).len) {
-        if (cmp < 0) {
-          (*c)->neg = true;
-        }
-      }
+      if ((*a).len < (*b).len || (*a).len > (*b).len) {(*c)->neg = true;}
+      if ((*a).len == (*b).len) {if (cmp < 0) {(*c)->neg = true;}}
     } else {
-      if (a == NULL || b == NULL) {
-        c = NULL;
-      } else if (cmpa == 0 && cmpb == 0) {
-        big_set("0", c);
-      } else if (cmpa == 0) {
+      if (a == NULL || b == NULL) {c = NULL;}
+      else if (cmpa == 0 && cmpb == 0) {big_set("0", c);}
+      else if (cmpa == 0) {
         (*bb).neg = true;
         big_copy_ref(bb, c);
         big_clear_zeros(c);
@@ -597,40 +501,25 @@ void big_sub(const big *a, const big *b, big **c) {
             tmp = big_get_hex((*aa).dig[i], (*aa).base)
               - big_get_hex((*bb).dig[j], (*bb).base);
             if (tmp < 0) {
-              if (i == 0 && j == 0) {
-                (*c)->neg = true;
-              }
+              if (i == 0 && j == 0) {(*c)->neg = true;}
               tmp += 10;
               (*aa).dig[i - 1] -= 1;
             }
-          } else if (i >= 0) {
-            tmp = (*aa).dig[i];
-          } else if (j >= 0) {
-            tmp = (*bb).dig[j];
-          } else {
-            tmp = 0;
           }
+          else if (i >= 0) {tmp = (*aa).dig[i];}
+          else if (j >= 0) {tmp = (*bb).dig[j];}
+          else {tmp = 0;}
           tmp -= carry;
           carry = tmp / base;
           if (tmp % base < 0 && i < 2) {
             (*c)->dig[k] = (tmp % base) + base;
-            if ((*c)->dig[k - 1] > 0) {
-              (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
-            } else {
-              (*c)->dig[k - 1] = 0;
-              break;
-            }
-          } else {
-            (*c)->dig[k] = tmp % base;
-          }
-          i--;
-          j--;
-          k--;
+            if ((*c)->dig[k - 1] > 0) {(*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;}
+            else {(*c)->dig[k - 1] = 0; break;}
+          } else {(*c)->dig[k] = tmp % base;}
+          i--; j--; k--;
         }
         big_clear_zeros(c);
-        if (j > i) {
-          (*c)->neg = true;
-        }
+        if (j > i) {(*c)->neg = true;}
       }
     }
   }
@@ -641,7 +530,7 @@ void big_sub(const big *a, const big *b, big **c) {
 //
 // Subtraction for internal use, meaning inside of big loops or when you know it
 // has data and not to become negative, like a counter towards zero.
-void big_sub_internal(const big *a, const big *b, big **c) {
+void big_sub_internal(cb *a, cb *b, big **c) {
   int i, j, k, tmp, carry, base;
   big *aa = NULL, *bb = NULL;
 
@@ -665,48 +554,35 @@ void big_sub_internal(const big *a, const big *b, big **c) {
   j = (*bb).len - 1;
   k = (*c)->len - 1;
 
-  if (big_cmp(a, b)) { // both a and b are the same
-    big_set("0", c);
-  } else {
+  // both a and b are the same
+  if (big_cmp(a, b)) {big_set("0", c);}
+  else {
     while (i >= 0 || j >= 0 || carry > 0) {
       if (i >= 0 && j >= 0) {
         tmp = big_get_hex((*aa).dig[i], (*aa).base)
           - big_get_hex((*bb).dig[j], (*bb).base);
         if (tmp < 0) {
-          if (i == 0 && j == 0) {
-            (*c)->neg = true;
-          }
+          if (i == 0 && j == 0) {(*c)->neg = true;}
           tmp += 10;
           (*aa).dig[i - 1] -= 1;
         }
-      } else if (i >= 0) {
-        tmp = (*aa).dig[i];
-      } else if (j >= 0) {
-        tmp = (*bb).dig[j];
-      } else {
-        tmp = 0;
       }
+      else if (i >= 0) {tmp = (*aa).dig[i];}
+      else if (j >= 0) {tmp = (*bb).dig[j];}
+      else {tmp = 0;}
       tmp -= carry;
       carry = tmp / base;
       if (tmp % base < 0 && i < 2) {
         (*c)->dig[k] = (tmp % base) + base;
-        if ((*c)->dig[k - 1] > 0) {
-          (*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;
-        } else {
-          (*c)->dig[k - 1] = 0;
-          break;
-        }
-      } else {
-        (*c)->dig[k] = tmp % base;
-      }
+        if ((*c)->dig[k - 1] > 0) {(*c)->dig[k - 1] = (*aa).dig[k - 1] - 1;}
+        else {(*c)->dig[k - 1] = 0; break;}
+      } else {(*c)->dig[k] = tmp % base;}
       i--;
       j--;
       k--;
     }
     big_clear_zeros(c);
-    if (j > i) {
-      (*c)->neg = true;
-    }
+    if (j > i) {(*c)->neg = true;}
   }
   big_free_m(2, &bb, &aa);
   big_final_m(2, &bb, &aa);
@@ -714,7 +590,7 @@ void big_sub_internal(const big *a, const big *b, big **c) {
 
 //
 // Bigint division
-void big_div_sub(const big *a, const big *b, big **c) {
+void big_div_sub(cb *a, cb *b, big **c) {
   big *aa = NULL, *e = NULL, *bb = NULL;
   big *co1 = NULL, *co2 = NULL, *one = NULL;
 
@@ -754,7 +630,7 @@ void big_div_sub(const big *a, const big *b, big **c) {
   //  big_final_m(4, &one, &co1, &bb, &aa);
 }
 
-void big_div(const big *a, const big *b, big **c) {
+void big_div(cb *a, cb *b, big **c) {
   big *aa = NULL, *bb = NULL, *cc = NULL, *cc1 = NULL, *aa1 = NULL;
   int len_a, len_b, len_diff, cmp, cmp1;
   char *aaa = malloc(MAXSTR);
@@ -794,23 +670,17 @@ void big_div(const big *a, const big *b, big **c) {
   big_end_str(aaa);
 
   // Set result to correct sign
-  if ((*a).neg || (*b).neg) {
-    (*c)->neg = true;
-  }
+  if ((*a).neg || (*b).neg) {(*c)->neg = true;}
 
   // if a or b is NULL we return NULL
   // if a == b we return 1
   // if a < b we return 0
   // if b == 1 we return a
-  if (a == NULL || b == NULL) {
-    c = NULL;
-  } else if (cmp == 0) {
-    big_set("1", c);
-  } else if (cmp <= 0 && len_a == len_b) {
-    big_set("0", c);
-  } else if (cmp1 == 0) {
-    big_copy_ref(aa, c);
-  } else {
+  if (a == NULL || b == NULL) {c = NULL;}
+  else if (cmp == 0) {big_set("1", c);}
+  else if (cmp <= 0 && len_a == len_b) {big_set("0", c);}
+  else if (cmp1 == 0) {big_copy_ref(aa, c);}
+  else {
     len_diff = (*aa).len - (*bb).len;
     len_b = (*bb).len;
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
@@ -818,9 +688,7 @@ void big_div(const big *a, const big *b, big **c) {
       (*bb).len++;
     }
     for (int j = 0; j <= len_diff; j++) {
-      if ((u64)(*bb).len > (u64)(*b).len) {
-        (*bb).len--;
-      }
+      if ((u64)(*bb).len > (u64)(*b).len) {(*bb).len--;}
       len_b = (*bb).len;
       big_div_sub(aa, bb, &cc);
       if ((*cc).dig[0] != 0 && (*cc).len == 1) {
@@ -849,7 +717,7 @@ void big_div(const big *a, const big *b, big **c) {
 //
 // Subtraction for internal use, meaning inside of big loops or when you know it
 // has data and not to become negative, like a counter towards zero.
-void big_div_internal(const big *a, const big *b, big **c) {
+void big_div_internal(cb *a, cb *b, big **c) {
   big *aa = NULL, *bb = NULL, *cc = NULL, *cc1 = NULL, *aa1 = NULL;
   big *one = NULL, *co1 = NULL, *co2 = NULL, *e = NULL, *aa2 = NULL;
   int len_b, len_diff, cmp, cmp1;
@@ -879,23 +747,17 @@ void big_div_internal(const big *a, const big *b, big **c) {
   big_copy(b, &bb);
 
   // Set result to correct sign
-  if ((*a).neg || (*b).neg) {
-    (*c)->neg = true;
-  }
+  if ((*a).neg || (*b).neg) {(*c)->neg = true;}
 
   // if a or b is NULL we return NULL
   // if a == b we return 1
   // if a < b we return 0
   // if b == 1 we return a
-  if (a == NULL || b == NULL) {
-    c = NULL;
-  } else if (cmp == 1) {
-    big_set("1", c);
-  } else if (cmp <= 1 && (*aa).len == (*bb).len) {
-    big_set("0", c);
-  } else if (cmp1 == 1) {
-    big_copy_ref(aa, c);
-  } else {
+  if (a == NULL || b == NULL) {c = NULL;}
+  else if (cmp == 1) {big_set("1", c);}
+  else if (cmp <= 1 && (*aa).len == (*bb).len) {big_set("0", c);}
+  else if (cmp1 == 1) {big_copy_ref(aa, c);}
+  else {
     len_diff = (*aa).len - (*bb).len;
     len_b = (*bb).len;
     for (int i = 0; i <= len_diff; i++) { // Fill divisor with zeros
@@ -903,9 +765,7 @@ void big_div_internal(const big *a, const big *b, big **c) {
       (*bb).len++;
     }
     for (int j = 0; j <= len_diff; j++) {
-      if ((u64)(*bb).len >= (u64)(*b).len) {
-        (*bb).len--;
-      }
+      if ((u64)(*bb).len >= (u64)(*b).len) {(*bb).len--;}
       len_b = (*bb).len;
       big_set("1", &one);
       big_set("0", &co1);
@@ -956,7 +816,7 @@ void big_div_internal(const big *a, const big *b, big **c) {
 
 //
 // Bigint modulo
-void big_mod(const big *a, const big *b, big **c) {
+void big_mod(cb *a, cb *b, big **c) {
   big *aa = NULL, *bb = NULL, *cc = NULL, *cc1 = NULL, *g = NULL;
   bool n = false;
 
@@ -978,21 +838,12 @@ void big_mod(const big *a, const big *b, big **c) {
   (*bb).len = (*b).len;
 
   big_set("1", &g);
-
-  if (a == NULL || b == NULL) {
-    c = NULL;
-  } else {
-    if ((*a).neg) {
-      aa->neg = false;
-      n = true;
-    }
+  if (a == NULL || b == NULL) {c = NULL;}
+  else {
+    if ((*a).neg) {aa->neg = false; n = true;}
     big_div(aa, bb, &cc);
-    if (n) {
-      big_add(cc, g, &cc);
-    }
-    if (n && (*cc).neg == false) {
-      (*cc).neg = true;
-    }
+    if (n) {big_add(cc, g, &cc);}
+    if (n && (*cc).neg == false) {(*cc).neg = true;}
     big_mul(cc, bb, &cc1);
     (*c)->len = (*bb).len;
     big_sub(aa, cc1, c);
@@ -1006,26 +857,22 @@ void big_mod(const big *a, const big *b, big **c) {
 
 //
 // Bigint &1
-bool big_bit_and_one(big *a) { return (*a).dig[(*a).len - 1] & 1; }
+bool big_bit_and_one(big *a) {return (*a).dig[(*a).len - 1] & 1;}
 
 //
 // Check what base a has and set that to b
-i08 big_check_set_base(const big *a, big **b) {
+i08 big_check_set_base(cb *a, big **b) {
   i08 base;
   if (a->base != 0) {
     base = a->base;
-    if (a->base == HEX) {
-      (*b)->base = HEX;
-    }
-  } else {
-    base = DEC;
-  }
+    if (a->base == HEX) {(*b)->base = HEX;}
+  } else {base = DEC;}
   return base;
 }
 
 //
 // Print a bigint
-void big_print(const big **a) {
+void big_print(cb **a) {
   char *aaa = malloc(MAXSTR);
   big *aa = NULL;
 
@@ -1043,8 +890,7 @@ void big_print(const big **a) {
 //
 // Assert two bigints are the same
 void big_assert(big **b1, big **b2) {
-  char *aaa = malloc(MAXSTR);
-  char *bbb = malloc(MAXSTR);
+  char *aaa = malloc(MAXSTR), *bbb = malloc(MAXSTR);
 
   big_get(*b1, aaa);
   big_get(*b2, bbb);
@@ -1059,8 +905,6 @@ void big_assert(big **b1, big **b2) {
 void big_assert_str(char *str, big **b2) {
   char *bbb = malloc(MAXSTR);
 
-  big_get(*b2, bbb);
-  assert(strcmp(str, bbb) == 0);
-
+  big_get(*b2, bbb); assert(strcmp(str, bbb) == 0);
   big_end_str(bbb);
 }
