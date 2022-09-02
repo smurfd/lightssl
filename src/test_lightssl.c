@@ -25,8 +25,8 @@ int main(int argc, char **argv) {
       int cl;
 
       hs_cli = malloc(sizeof(struct hello));
-      lightssl_hs_set_hello(
-        hs_cli, false, TLSVERSION, 1337, avail, select, compress, 13371337);
+      lightssl_hs_set_hello(hs_cli, false, TLSVERSION, 1337, avail, select,
+        compress, 13371337);
       cl = lightssl_cli_init("127.0.0.1", "12345");
       lightssl_hs_send_hi(cl, false, hs_cli);
       hs_srv_recv = malloc(sizeof(struct hello));

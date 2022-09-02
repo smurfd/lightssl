@@ -1,17 +1,17 @@
 //                                                                            //
-#include "lightcrypt.h"
-#include "lightdefs.h"
+#include <time.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <assert.h>
-#include <inttypes.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
+#include <inttypes.h>
+#include "lightdefs.h"
+#include "lightcrypt.h"
 
 //
 // Initialize crypt
@@ -29,18 +29,14 @@ void lc_init() {
   char *tmpstr = malloc(MAXSTR);
 
   curve_name = malloc(10);
-  big_set("11579208923731619542357098500868790785326998466564056403945758400790"
-          "8834671663",
-    &curve_p);
-  big_set("55066263022277343669578718895168534326250603453777594175500187360389"
-          "116729240",
-    &curve_g1);
-  big_set("32670510020758816978083085130507043184471273380659243275938904335757"
-          "337482424",
-    &curve_g2);
-  big_set("11579208923731619542357098500868790785283756427907490438260516314151"
-          "8161494337",
-    &curve_n);
+  big_set("11579208923731619542357098500868790785326998466564056403945758400790\
+8834671663", &curve_p);
+  big_set("55066263022277343669578718895168534326250603453777594175500187360389\
+116729240", &curve_g1);
+  big_set("32670510020758816978083085130507043184471273380659243275938904335757\
+337482424", &curve_g2);
+  big_set("11579208923731619542357098500868790785283756427907490438260516314151\
+8161494337", &curve_n);
   strcpy(curve_name, "secp256k1");
   curve_a = 0;
   curve_b = 7;
@@ -65,13 +61,9 @@ void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2) {
   assert(lc_on_curve(p1, p2));
   assert(lc_on_curve(p3, p4));
 
-  if (p1->null && p2->null) {
-    big_copy(p3, ret1);
-    big_copy(p4, ret2);
-  } else if (p3->null && p4->null) {
-    big_copy(p1, ret1);
-    big_copy(p2, ret2);
-  } else {
+  if (p1->null && p2->null) {big_copy(p3, ret1); big_copy(p4, ret2);}
+  else if (p3->null && p4->null) {big_copy(p1, ret1); big_copy(p2, ret2);}
+  else {
     big *x1, *x2, *y1, *y2, *m;
 
     big_init_m(5, &x1, &x2, &y1, &y2, &m);
@@ -153,11 +145,8 @@ void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2) {
       big_add(y1, x3m, &y3);
       printf("after ifs submuladd\n");
 
-      if (y3->neg == true) {
-        y3->neg = false;
-      } else {
-        y3->neg = true;
-      }
+      if (y3->neg == true) {y3->neg = false;}
+      else {y3->neg = true;}
       printf("after ifs bfr modd\n");
       // ret1 = x3 % curve_p
       big_div(x3, curve_p, &tmp1);
@@ -248,17 +237,12 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
 
 bool lc_on_curve(big *p1, big *p2) {
   big *x, *y, *xx, *yy, *xxx, *cax, *yyx, *yyc, *yycc, *cccc, *ca, *cb;
-  char *a = malloc(10);
-  char *b = malloc(10);
+  char *a = malloc(10), *b = malloc(10);
   bool ret;
 
-  if (p1->null && p2->null) {
-    return true;
-  }
-  big_init_m(
-    12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
-  big_alloc_max_m(
-    12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
+  if (p1->null && p2->null) {return true;}
+  big_init_m(12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
+  big_alloc_max_m(12, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc, &ca, &cb);
   big_set_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
 
   sprintf(a, "%d", curve_a);
@@ -297,10 +281,8 @@ bool lc_on_curve(big *p1, big *p2) {
 
 void lc_point_neg(big *p1, big *p2, big **ret1, big **ret2) {
   // assert on_curve(p1, p2)
-  if (p1->null && p2->null) {
-    big_set_null(ret1);
-    big_set_null(ret2);
-  } else {
+  if (p1->null && p2->null) {big_set_null(ret1); big_set_null(ret2);}
+  else {
     big *x, *y;
 
     big_init_m(2, &x, &y);
@@ -393,9 +375,7 @@ void lc_publkey(big *privkey, big **pub1, big **pub2) {
 void lc_getrandstr(int len, char *ret) {
   srand(time(0));
   char char1[] = "0123456789";
-  for (int i = 0; i < len; i++) {
-    ret[i] = char1[rand() % (sizeof char1 - 1)];
-  }
+  for (int i = 0; i < len; i++) {ret[i] = char1[rand() % (sizeof char1 - 1)];}
 }
 
 //

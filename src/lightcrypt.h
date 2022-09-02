@@ -12,24 +12,24 @@
 #include "lightbig.h"
 #include "lightdefs.h"
 
-char *curve_name;
-big *curve_p;
+u08 curve_h;
 u08 curve_a;
 u08 curve_b;
+big *curve_n;
+big *curve_p;
 big *curve_g1;
 big *curve_g2;
-big *curve_n;
-u08 curve_h;
+char *curve_name;
 
 void lc_random(big **p);
-void lc_getrandstr(int len, char *ret);
 void lc_privkey(big **privkey);
-void lc_publkey(big *privkey, big **pub1, big **pub2);
-void lc_point_mul(big *key, big *p1, big *p2, big **ret1, big **ret2);
-void lc_point_neg(big *p1, big *p2, big **ret1, big **ret2);
-void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2);
-void lc_inverse_mod(big *key, big *point, big **ret);
 bool lc_on_curve(big *p1, big *p2);
+void lc_getrandstr(int len, char *ret);
+void lc_inverse_mod(big *key, big *point, big **ret);
+void lc_publkey(big *privkey, big **pub1, big **pub2);
+void lc_point_neg(big *p1, big *p2, big **ret1, big **ret2);
+void lc_point_mul(big *key, big *p1, big *p2, big **ret1, big **ret2);
+void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2);
 
 // Crypt
 void lc_init();

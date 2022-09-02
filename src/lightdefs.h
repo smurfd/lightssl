@@ -4,34 +4,34 @@
 
 #include <stdint.h>
 
-typedef long long unsigned int u64;
 typedef int8_t i08;
 typedef uint8_t u08;
 typedef unsigned char b08;
+typedef long long unsigned int u64;
 
 // SSL
+#define BYTE 8
+#define DIG_SIZE 512 / BYTE
 #define SEVENFFF 0x7fffffffffffffff
 #define RAND() (rand() & SEVENFFF)
-#define BYTE 8
 #define SHA512_BLOCK_SIZE 1024 / BYTE
-#define DIG_SIZE 512 / BYTE
 
 // TLS
-#define TLSVERSION 0x304
 #define TLSCIPHER 222
+#define TLSVERSION 0x304
 #define TLSCIPHERAVAIL 222
 #define TLSCOMPRESSION 123
 
 // Hash
 #define SHFR(x, n) (x >> n)
-#define ROTR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define ROTL(x, n) ((x << n) | (x >> ((sizeof(x) << 3) - n)))
 #define CH(x, y, z) ((x & y) ^ (~x & z))
 #define MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
+#define ROTR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
+#define ROTL(x, n) ((x << n) | (x >> ((sizeof(x) << 3) - n)))
 
 #define SHA512_F1(x) (ROTR(x, 28) ^ ROTR(x, 34) ^ ROTR(x, 39))
 #define SHA512_F2(x) (ROTR(x, 14) ^ ROTR(x, 18) ^ ROTR(x, 41))
-#define SHA512_F3(x) (ROTR(x, 1) ^ ROTR(x, 8) ^ SHFR(x, 7))
+#define SHA512_F3(x) (ROTR(x,  1) ^ ROTR(x,  8) ^ SHFR(x, 7))
 #define SHA512_F4(x) (ROTR(x, 19) ^ ROTR(x, 61) ^ SHFR(x, 6))
 
 #define SHA2_UNPACK32(x, str) {                                                \

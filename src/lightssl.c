@@ -1,16 +1,16 @@
 //                                                                            //
-#include "lightssl.h"
-#include <arpa/inet.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include "lightssl.h"
 
 // TODO: rework variable names to differ from functionnames
 // TODO: rework listen server loop

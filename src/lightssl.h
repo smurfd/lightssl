@@ -22,17 +22,17 @@ struct handshake {struct hello hi;} hs;
 void lightssl_print_hello(struct hello *hi);
 
 // Server
-int lightssl_srv_init(const char *host, const char *port);
 void *lightssl_srv_handler(void *sdesc);
-int lightssl_srv_listen(int ssock, struct sockaddr *cli);
-void lightssl_srv_send(int csock, const char *msg);
 void lightssl_srv_recv(int csock, char **data);
+void lightssl_srv_send(int csock, const char *msg);
+int lightssl_srv_listen(int ssock, struct sockaddr *cli);
+int lightssl_srv_init(const char *host, const char *port);
 
 // Client
-int lightssl_cli_init(const char *host, const char *port);
-void lightssl_cli_send(int csock, const char *msg);
-void lightssl_cli_recv(int csock, char **data);
 void lightssl_cli_end(int csock);
+void lightssl_cli_recv(int csock, char **data);
+void lightssl_cli_send(int csock, const char *msg);
+int lightssl_cli_init(const char *host, const char *port);
 
 // Handshake
 struct hello *lightssl_hs_set_hello(struct hello *hs, bool srv, int tls, u64 r,
