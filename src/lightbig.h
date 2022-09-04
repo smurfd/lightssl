@@ -43,8 +43,6 @@ void big_sub(cb *a, cb *b, big **c);
 void big_mod(cb *a, cb *b, big **c);
 void big_div(cb *a, cb *b, big **c);
 void big_div_sub(cb *a, cb *b, big **c);
-void big_div_internal(cb *a, cb *b, big **c);
-void big_sub_internal(cb *a, cb *b, big **c);
 
 // Assets
 void big_print(cb **a);
