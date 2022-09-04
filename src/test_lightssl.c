@@ -37,6 +37,9 @@ int main(int argc, char **argv) {
     } else if (strcmp(argv[1], "big") == 0) {
       int add_t = 5, sub_t = 16, mul_t = 3, div_t = 14, mod_t = 2, hex_t = 1;
       int nrt = add_t + sub_t + mul_t + div_t + mod_t + hex_t;
+      int a_t = add_t, m_t = add_t + mul_t, s_t = add_t + sub_t + mul_t;
+      int d_t = add_t + sub_t + mul_t + div_t;
+      int mo_t= add_t + sub_t + mul_t + div_t + mod_t;
       char *cc = malloc(MAXSTR);
       bigint_t *ac, *ad, *a1;
 
@@ -142,27 +145,24 @@ int main(int argc, char **argv) {
       for (int i = 0; i < nrt; i++) {
         big_alloc_max_m(3, &ac, &ad, &a1);
         big_set(a[i], &ac); big_set(b[i], &ad);
-        if (i < add_t) {
-          // Addition tests
-          big_add(ac, ad, &a1); big_assert_str(c[i], &a1);
-        } else if (i < add_t + mul_t) {
-          // Multiplication tests
-          big_mul(ac, ad, &a1); big_assert_str(c[i], &a1);
-        } else if (i < add_t + sub_t + mul_t) {
-          // Subtraction tests
-          big_sub(ac, ad, &a1); big_assert_str(c[i], &a1);
-        } else if (i < add_t + sub_t + mul_t + div_t) {
-          // Division tests
-          if (i == add_t + sub_t + mul_t + div_t - 1) {
-            for (int ii = 0; ii < 50000; ii++) {
-              big_div(ac, ad, &a1); big_assert_str(c[i], &a1);
-            }
-          } else {big_div(ac, ad, &a1); big_assert_str(c[i], &a1);}
-        } else if (i < add_t + sub_t + mul_t + div_t + mod_t) {
-          // Modulo tests
-          big_mod(ac, ad, &a1); big_assert_str(c[i], &a1);
-        } else if (i < nrt) {
-          // Hex tests
+
+        // Addition tests
+        if (i < a_t) {big_add(ac, ad, &a1); big_assert_str(c[i], &a1);}
+        // Multiplication tests
+        else if (i < m_t) {big_mul(ac, ad, &a1); big_assert_str(c[i], &a1);}
+        // Subtraction tests
+        else if (i < s_t) {big_sub(ac, ad, &a1); big_assert_str(c[i], &a1);}
+        // Division tests
+        else if (i < d_t) {if (i == add_t + sub_t + mul_t + div_t - 1) {
+          for (int ii = 0; ii < 50000; ii++) {
+            big_div(ac, ad, &a1); big_assert_str(c[i], &a1);
+          }}
+          else {big_div(ac, ad, &a1); big_assert_str(c[i], &a1);}
+        }
+        // Modulo tests
+        else if (i < mo_t) {big_mod(ac, ad, &a1); big_assert_str(c[i], &a1);}
+        // Hex tests
+        else if (i < nrt) {
           big_mul(ac, ad, &a1); (*a1).base = HEX; big_assert_str(c[i], &a1);
         }
       }
