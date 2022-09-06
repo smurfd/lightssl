@@ -162,7 +162,7 @@ void big_set_null(big **b) {(*b)->null = true; big_set("0", b);}
 
 //
 // Allocate memory for digits
-void big_alloc(big **b) {(*b)->dig = malloc((*b)->len*LEN);(*b)->alloc_d=true;}
+void big_alloc(big **b) {(*b)->dig = malloc((*b)->len*LEN); (*b)->alloc_d=true;}
 
 //
 // Allocate memory for digits
