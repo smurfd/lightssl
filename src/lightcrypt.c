@@ -222,10 +222,10 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
     big_copy(old_s, &x);
     big_copy(old_t, &y);
 
-    big_assert_str("1", &gcd);
+    big_assert("1", &gcd);
     big_mul(key, x, &xt);
     big_mod(xt, p, &xp);
-    big_assert_str("1", &xp);
+    big_assert("1", &xp);
 
     big_mod(x, p, ret);
     // big_free_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);

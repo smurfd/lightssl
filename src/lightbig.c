@@ -680,7 +680,7 @@ void big_print(cb **a) {
 
 //
 // Assert two bigints are the same
-void big_assert(big **b1, big **b2) {
+void big_assert_big(big **b1, big **b2) {
   char *aaa = malloc(MAXSTR), *bbb = malloc(MAXSTR);
 
   big_get(*b1, aaa);
@@ -692,7 +692,7 @@ void big_assert(big **b1, big **b2) {
 
 //
 // Assert a string and bigint is the same
-void big_assert_str(char *str, big **b2) {
+void big_assert(char *str, big **b2) {
   char *bbb = malloc(MAXSTR);
 
   big_get(*b2, bbb); assert(strcmp(str, bbb) == 0);

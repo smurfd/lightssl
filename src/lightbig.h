@@ -51,9 +51,9 @@ bool big_cmp(cb *a, cb *b);
 void big_copy(cb *a, big **c);
 void big_copy_ref(cb *a, big **b);
 bool big_cmp_str(char *str, cb *a);
-void big_assert(big **b1, big **b2);
+void big_assert_big(big **b1, big **b2);
 void big_alloc_len(big **b, int len);
-void big_assert_str(char *str, big **b2);
+void big_assert(char *str, big **b2);
 void big_resize(big **a, int old_len, int new_len);
 
 // Multi

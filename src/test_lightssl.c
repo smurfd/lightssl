@@ -36,10 +36,8 @@ int main(int argc, char **argv) {
       free(hs_srv_recv); free(hs_cli);
     } else if (strcmp(argv[1], "big") == 0) {
       int add_t = 5, sub_t = 16, mul_t = 3, div_t = 14, mod_t = 2, hex_t = 1;
-      int nrt = add_t + sub_t + mul_t + div_t + mod_t + hex_t;
-      int a_t = add_t, m_t = add_t + mul_t, s_t = add_t + sub_t + mul_t;
-      int d_t = add_t + sub_t + mul_t + div_t;
-      int mo_t= add_t + sub_t + mul_t + div_t + mod_t;
+      int m_t = add_t + mul_t, s_t = m_t + sub_t, d_t = s_t + div_t;
+      int mo_t = d_t + mod_t, nrt = mo_t + hex_t, a_t = add_t;
       char *cc = malloc(MAXSTR);
       bigint_t *ac, *ad, *a1;
 
@@ -50,7 +48,7 @@ int main(int argc, char **argv) {
       cc = "21739871283971298371298371289371298371298371298371298371293";
       big_set(cc, &ac);
       big_resize(&ac, ac->len, ac->len);
-      big_assert_str(cc, &ac);
+      big_assert(cc, &ac);
       big_end_m(3, &ac, &ad, &a1);
       big_final_m(3, &ac, &ad, &a1);
 
@@ -141,37 +139,39 @@ int main(int argc, char **argv) {
 9601173911907492700592982131530147912079948541749035857752315481732903160988470\
 021", "27", "1", "37", "0xb85c9"};
 
-      big_init_m(3, &ac, &ad, &a1);
-      for (int i = 0; i < nrt; i++) {
-        big_alloc_max_m(3, &ac, &ad, &a1);
-        big_set(a[i], &ac); big_set(b[i], &ad);
+      // 1.3gb ram used in this loop
+      for (int j = 0; j < 50; j++) {
+        big_init_m(3, &ac, &ad, &a1);
+        for (int i = 0; i < nrt; i++) {
+          big_alloc_max_m(3, &ac, &ad, &a1);
+          big_set(a[i], &ac); big_set(b[i], &ad);
 
-        // Addition tests
-        if (i < a_t) {big_add(ac, ad, &a1); big_assert_str(c[i], &a1);}
-        // Multiplication tests
-        else if (i < m_t) {big_mul(ac, ad, &a1); big_assert_str(c[i], &a1);}
-        // Subtraction tests
-        else if (i < s_t) {big_sub(ac, ad, &a1); big_assert_str(c[i], &a1);}
-        // Division tests
-        else if (i < d_t) {if (i == add_t + sub_t + mul_t + div_t - 1) {
-          for (int ii = 0; ii < 50000; ii++) {
-            big_div(ac, ad, &a1); big_assert_str(c[i], &a1);
-          }}
-          else {big_div(ac, ad, &a1); big_assert_str(c[i], &a1);}
+          // Addition tests
+          if (i < a_t) {big_add(ac, ad, &a1); big_assert(c[i], &a1);}
+          // Multiplication tests
+          else if (i < m_t) {big_mul(ac, ad, &a1); big_assert(c[i], &a1);}
+          // Subtraction tests
+          else if (i < s_t) {big_sub(ac, ad, &a1); big_assert(c[i], &a1);}
+          // Division tests
+          else if (i < d_t) {if (i == add_t + sub_t + mul_t + div_t - 1) {
+            for (int ii = 0; ii < 5000; ii++) { // 50000 this loop = 11gb ram
+              big_div(ac, ad, &a1); big_assert(c[i], &a1);
+            }}
+            else {big_div(ac, ad, &a1); big_assert(c[i], &a1);}
+          }
+          // Modulo tests
+          else if (i < mo_t) {big_mod(ac, ad, &a1); big_assert(c[i], &a1);}
+          // Hex tests
+          else if (i < nrt) {
+            big_mul(ac, ad, &a1); (*a1).base = HEX; big_assert(c[i], &a1);
+          }
         }
-        // Modulo tests
-        else if (i < mo_t) {big_mod(ac, ad, &a1); big_assert_str(c[i], &a1);}
-        // Hex tests
-        else if (i < nrt) {
-          big_mul(ac, ad, &a1); (*a1).base = HEX; big_assert_str(c[i], &a1);
-        }
+        big_end_m(2, &ac, &ad);
+        big_final_m(3, &ac, &ad, &a1);
       }
-      big_final_m(3, &ac, &ad, &a1);
       printf("OK\n");
-    } else if (strcmp(argv[1], "crypt") == 0) {
-      lc_init();
-      printf("OK!\n");
-    } else if (strcmp(argv[1], "hash") == 0) {
+    } else if (strcmp(argv[1], "crypt") == 0) {lc_init(); printf("OK!\n");}
+    else if (strcmp(argv[1], "hash") == 0) {
       const char *rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb20\
 1cbb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7e70f3d1";
       const char *in = "smurfd";
