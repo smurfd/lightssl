@@ -50,7 +50,6 @@ int main(int argc, char **argv) {
       big_resize(&ac, ac->len, ac->len);
       big_assert(cc, &ac);
       big_end_m(3, &ac, &ad, &a1);
-      big_final_m(3, &ac, &ad, &a1);
 
       // Big test suite
       char *a[] = {"11111111111111111111111111111111111111111111111111111111111\
@@ -166,9 +165,8 @@ int main(int argc, char **argv) {
           else if (i < nrt) {
             big_mul(ac, ad, &a1); (*a1).base = HEX; big_assert(c[i], &a1);
           }
-          big_free_m(2, &ac, &ad);
         }
-        big_final_m(2, &ac, &ad);
+        big_end_m(2, &ac, &ad);
       }
       printf("OK\n");
     } else if (strcmp(argv[1], "crypt") == 0) {lc_init(); printf("OK!\n");}

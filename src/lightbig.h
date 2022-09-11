@@ -27,8 +27,6 @@ typedef const big cb;
 // Init
 void big_end(big **a);
 void big_init(big **a);
-void big_free(big **a);
-void big_final(big **a);
 void big_end_str(char *a);
 void big_set_null(big **b);
 void big_get(cb *a, char *b);
@@ -60,8 +58,6 @@ void big_resize(big **a, int old_len, int new_len);
 void big_end_m(int len, ...);
 void big_set_m(int len, ...);
 void big_init_m(int len, ...);
-void big_free_m(int len, ...);
-void big_final_m(int len, ...);
 void big_alloc_m(int len, ...);
 void big_alloc_max_m(int len, ...);
 

@@ -48,11 +48,8 @@ void lc_init() {
 
   lc_publkey(priv1, &publ11, &publ12);
   lc_publkey(priv2, &publ21, &publ22);
-
-  big_free_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
-  big_free_m(4, &publ11, &publ12, &publ21, &publ22);
-  big_final_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
-  big_final_m(4, &publ11, &publ12, &publ21, &publ22);
+  big_end_m(6, &curve_p, &curve_g1, &curve_g2, &curve_n, &priv1, &priv2);
+  big_end_m(4, &publ11, &publ12, &publ21, &publ22);
   free(tmpstr);
   free(curve_name);
 }
@@ -107,7 +104,7 @@ void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2) {
         lc_inverse_mod(y1y1, curve_p, &imd1);
         big_mul(bcax, imd1, &m);
 
-        big_final_m(8, &bca, &bcax, &two, &three, &y1y1, &x1x1, &x13, &imd1);
+        big_end_m(8, &bca, &bcax, &two, &three, &y1y1, &x1x1, &x13, &imd1);
         free(ca);
       } else {
         printf("point add aftr els2\n");
@@ -121,7 +118,7 @@ void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2) {
         lc_inverse_mod(x1x2, curve_p, &imd1);
         big_mul(y1y2, imd1, &m);
 
-        big_final_m(3, &y1y2, &x1x2, &imd1);
+        big_end_m(3, &y1y2, &x1x2, &imd1);
       }
       printf("after ifs\n");
       big *x3, *y3, *mm, *x1x2, *y1m, *x3x1, *x3m, *r1, *r2;
@@ -159,8 +156,8 @@ void lc_point_add(big *p1, big *p2, big *p3, big *p4, big **ret1, big **ret2) {
       big_mul(tmp1, curve_p, &tmp2);
       big_sub(y3, tmp2, ret2);
       big_clear_zeros(ret2);
-      big_final_m(7, &x3, &y3, &mm, &x1x2, &y1m, &x3x1, &x3m);
-      big_final_m(7, &x1, &x2, &y1, &y2, &m, &r1, &r2);
+      big_end_m(7, &x3, &y3, &mm, &x1x2, &y1m, &x3x1, &x3m);
+      big_end_m(7, &x1, &x2, &y1, &y2, &m, &r1, &r2);
     }
     // assert on_curve ret1, ret2
   }
@@ -178,8 +175,7 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
     key->neg = false;
     lc_inverse_mod(key, p, &r);
     big_sub(p, r, ret);
-    // big_free_m(1, &r);
-    big_final_m(1, &r);
+    big_end_m(1, &r);
   } else {
     big *q, *r, *s, *t, *old_r, *old_s, *old_t, *r_tmp, *s_tmp, *t_tmp, *qt;
     big *gcd, *x, *y, *xt, *xp;
@@ -228,10 +224,8 @@ void lc_inverse_mod(big *key, big *p, big **ret) {
     big_assert("1", &xp);
 
     big_mod(x, p, ret);
-    // big_free_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
-    // big_free_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
-    // big_final_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
-    // big_final_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
+    big_end_m(9, &q, &r, &s, &t, &old_r, &old_s, &old_t, &r_tmp, &s_tmp);
+    big_end_m(7, &t_tmp, &qt, &gcd, &x, &y, &xt, &xp);
   }
 }
 
@@ -274,8 +268,7 @@ bool lc_on_curve(big *p1, big *p2) {
   printf("ret = %d : %s\n", ret, a);
   free(b);
   free(a);
-  // big_free_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
-  big_final_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
+  big_end_m(10, &x, &y, &xx, &yy, &xxx, &cax, &yyx, &yyc, &yycc, &cccc);
   return ret;
 }
 
@@ -297,7 +290,7 @@ void lc_point_neg(big *p1, big *p2, big **ret1, big **ret2) {
     big_mod(y, curve_p, ret2);
 
     // assert on_curve(ret1, ret2)
-    big_final_m(2, &x, &y);
+    big_end_m(2, &x, &y);
   }
 }
 
@@ -327,8 +320,7 @@ void lc_point_mul(big *key, big *p1, big *p2, big **ret1, big **ret2) {
     key->neg = false;
     lc_point_neg(p1, p1, &po1, &po2);
     lc_point_mul(key, po1, po2, ret1, ret2);
-    big_free_m(2, &po1, &po2);
-    big_final_m(2, &po1, &po2);
+    big_end_m(2, &po1, &po2);
   } else {
     printf("mul else\n");
     big_set_null(ret1);
@@ -358,14 +350,11 @@ void lc_point_mul(big *key, big *p1, big *p2, big **ret1, big **ret2) {
       big_div(key, two, &k);
       printf("mul else in while aftr div\n");
       big_copy(k, &key);
-      // big_free_m(1, &k);
-      big_final_m(5, &k, &a1, &a2, &r1, &r2);
-      // big_final_m(1, &k);
+      big_end_m(5, &k, &a1, &a2, &r1, &r2);
     }
     // assert on_curve(ret1, ret2)
   }
-  big_free_m(3, &two, &addend1, &addend2);
-  big_final_m(4, &kcn, &two, &addend1, &addend2);
+  big_end_m(4, &kcn, &two, &addend1, &addend2);
 }
 
 void lc_publkey(big *privkey, big **pub1, big **pub2) {
@@ -390,4 +379,4 @@ void lc_random(big **p) {
 
 //
 // Initialize private key
-void lc_privkey(big **privkey) { lc_random(privkey); }
+void lc_privkey(big **privkey) {lc_random(privkey);}

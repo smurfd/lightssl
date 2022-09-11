@@ -33,41 +33,6 @@ void big_init_m(int len, ...) {
 }
 
 //
-// Free a bigint
-void big_free(big **a) {
-  if ((*a)->alloc_d) {
-    (*a)->alloc_d = false;
-    if ((*a)->dig != NULL) {free((*a)->dig);}
-  }
-}
-
-//
-// Free several bigint
-void big_free_m(int len, ...) {
-  va_list valist;
-
-  va_start(valist, len);
-  for (int i = 0; i < len; i++) {big_free(va_arg(valist, big **));}
-  va_end(valist);
-}
-
-//
-// Finalize bigint
-void big_final(big **a) {
-  if ((*a)->alloc_t) {(*a)->alloc_t = false;if ((*a) != NULL) {free((*a));}}
-}
-
-//
-// Finalize several bigint
-void big_final_m(int len, ...) {
-  va_list valist;
-
-  va_start(valist, len);
-  for (int i = 0; i < len; i++) {big_final(va_arg(valist, big **));}
-  va_end(valist);
-}
-
-//
 // Clear a bigint
 void big_end(big **a) {
   if ((*a)->alloc_d) {free((*a)->dig); (*a)->alloc_d = false;}
@@ -158,6 +123,8 @@ void big_set(char *a, big **b) {
   }
 }
 
+//
+// Set a bigint to null
 void big_set_null(big **b) {(*b)->null = true; big_set("0", b);}
 
 //
@@ -251,9 +218,9 @@ void big_clear_zeros(big **b) {
 // Get string from bigint
 void big_get(cb *a, char *b) {
   int len = (int)strlen(b) > (*a).len ? strlen(b) : (*a).len, mod = 0;
+
   // Reset outparam
   memset(b, 0, len);
-
   if (a->neg && a->dig[0] != '-') {mod = 1; b[0] = '-';}
   if (a->base == HEX) {b[0 + mod] = '0'; b[1 + mod] = 'x'; mod = mod + 2;}
   for (int i = 0; i < a->len; i++) {
@@ -530,7 +497,6 @@ void big_div_sub(cb *a, cb *b, big **c) {
   big_end_m(7, &one, &co1, &bb, &aa, &co2, &co4, &e);
 }
 
-
 void big_div(cb *a, cb *b, big **c) {
   big *aa = NULL, *bb = NULL, *cc = NULL, *cc1 = NULL, *aa1 = NULL, *cc2 = NULL;
   char *aaa = malloc(MAXSTR), *bbb = malloc(MAXSTR);
@@ -619,7 +585,6 @@ void big_mod(cb *a, cb *b, big **c) {
   (*cc1).len = (*a).len;
   (*g).len = (*a).len;
   big_alloc_m(5, &aa, &bb, &cc, &cc1, &g);
-
   (*c)->neg = false;
   (*c)->len = 1;
 
