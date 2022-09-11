@@ -66,7 +66,7 @@ void big_alloc_m(int len, ...);
 void big_alloc_max_m(int len, ...);
 
 // Hex
-i08 big_get_hex(i08 a, i08 base);
+i08 big_hex(i08 a, i08 base);
 i08 big_check_set_base(cb *a, big **b);
 
 #endif
