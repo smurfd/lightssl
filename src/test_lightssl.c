@@ -139,8 +139,8 @@ int main(int argc, char **argv) {
 021", "27", "1", "37", "0xb85c9"};
 
       // 0.7gb ram used in this loop
+      big_init_m(3, &ac, &ad, &a1);
       for (int j = 0; j < 50; j++) {
-        big_init_m(3, &ac, &ad, &a1);
         for (int i = 0; i < nrt; i++) {
           big_alloc_max_m(3, &ac, &ad, &a1);
           big_set("0", &a1);
@@ -153,12 +153,7 @@ int main(int argc, char **argv) {
           // Subtraction tests
           else if (i < s_t) {big_sub(ac, ad, &a1); big_assert(c[i], &a1);}
           // Division tests
-          else if (i < d_t) {if (i == add_t + sub_t + mul_t + div_t - 1) {
-            for (int ii = 0; ii < 10000; ii++) {
-              big_div(ac, ad, &a1); big_assert(c[i], &a1);
-            }}
-            else {big_div(ac, ad, &a1); big_assert(c[i], &a1);}
-          }
+          else if (i < d_t) {big_div(ac, ad, &a1); big_assert(c[i], &a1);}
           // Modulo tests
           else if (i < mo_t) {big_mod(ac, ad, &a1); big_assert(c[i], &a1);}
           // Hex tests
@@ -166,8 +161,8 @@ int main(int argc, char **argv) {
             big_mul(ac, ad, &a1); (*a1).base = HEX; big_assert(c[i], &a1);
           }
         }
-        big_end_m(2, &ac, &ad);
       }
+      big_end_m(2, &ac, &ad);
       printf("OK\n");
     } else if (strcmp(argv[1], "crypt") == 0) {lc_init(); printf("OK!\n");}
     else if (strcmp(argv[1], "hash") == 0) {

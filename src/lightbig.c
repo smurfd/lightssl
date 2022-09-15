@@ -68,14 +68,12 @@ void big_resize(big **a, int old_len, int new_len) {
       big_set(aaa, &aa);
       big_get(aa, bbb);
 
-      big_free_m(1, a);
-      big_final_m(1, a);
+      big_end_m(1, a);
       big_init_m(1, a);
       big_alloc_len(a, new_len);
       big_set(aaa, a);
       big_get(*a, aaa);
-      big_free_m(1, &aa);
-      big_final_m(1, &aa);
+      big_end_m(1, &aa);
       big_end_str(bbb); big_end_str(aaa);
     } else {(*a)->len = old_len;}
   }
