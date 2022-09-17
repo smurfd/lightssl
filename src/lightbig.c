@@ -20,6 +20,7 @@ void big_init(big **a) {
   (*a)->alloc_t = true;
   (*a)->alloc_d = false;
   (*a)->null = false;
+  (*a)->dig = NULL;
 }
 
 //

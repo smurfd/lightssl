@@ -138,11 +138,11 @@ int main(int argc, char **argv) {
 9601173911907492700592982131530147912079948541749035857752315481732903160988470\
 021", "27", "1", "37", "0xb85c9"};
 
-      // 0.7gb ram used in this loop
       big_init_m(3, &ac, &ad, &a1);
-      for (int j = 0; j < 50; j++) {
+      big_alloc_max_m(2, &ac, &ad);
+      for (int j = 0; j < 500; j++) { // 300mb ram
         for (int i = 0; i < nrt; i++) {
-          big_alloc_max_m(3, &ac, &ad, &a1);
+          big_alloc_max_m(1, &a1);
           big_set("0", &a1);
           big_set(a[i], &ac); big_set(b[i], &ad);
 
