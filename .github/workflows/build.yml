@@ -14,7 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install dep
-      run: sudo apt update && sudo apt install meson
+      run: sudo apt update && sudo apt -y install meson git
+    - name: clone lightbig
+      run: git clone https://github.com/smurfd/lightbig src/lightbig
     - name: meson build
       run: meson build
     - name: cd build
