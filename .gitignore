@@ -5,3 +5,4 @@ src/vsh/__*
 build/
 server.pem
 src/vsh/build
+src/lightbig

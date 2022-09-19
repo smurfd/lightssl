@@ -8,6 +8,7 @@ Do SSL really need to be so hard?
 ### Compile lightssl
 
 ```bash
+git clone https://github.com/smurfd/lightbig src/lightbig
 meson build
 cd build
 meson compile
@@ -23,10 +24,6 @@ In one terminal run
 In another teerminal run
 ```
 ./build/test_lightssl client
-```
-Test Big number math
-```
-./build/test_lightssl big
 ```
 Test cryptography
 ```
@@ -45,10 +42,10 @@ Test hashing
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-#include "lightbig.h"
 #include "lightssl.h"
 #include "lighthash.h"
 #include "lightcrypt.h"
+#include "lightbig/src/lightbig.h"
 
 int main(int argc, char **argv) {
   char *out = NULL;

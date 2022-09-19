@@ -9,8 +9,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "lightbig.h"
 #include "lightdefs.h"
+#include "lightbig/src/lightbig.h"
 
 u08 curve_h;
 u08 curve_a;

@@ -4,10 +4,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
-#include "lightbig.h"
 #include "lightssl.h"
 #include "lighthash.h"
 #include "lightcrypt.h"
+#include "lightbig/src/lightbig.h"
 
 int main(int argc, char **argv) {
   b08 avail[] = {TLSCIPHER};
