@@ -17,13 +17,9 @@ jobs:
       run: sudo apt-get update && sudo apt-get -y install meson git ninja-build
     - name: clone lightbig
       run: git clone https://github.com/smurfd/lightbig src/lightbig
-    - name: meson build
+    - name: Build
       run: meson build
-    - name: cd build
-      run: cd build
-    - name: meson compile
-      run: meson compile
-    - name: cd build
-      run: cd build
-    - name: meson test
-      run: meson test
+    - name: Compile
+      run: cd build && meson compile
+    - name: Test
+      run: cd build && meson test
