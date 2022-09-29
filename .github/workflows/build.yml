@@ -20,6 +20,6 @@ jobs:
     - name: Build
       run: meson build
     - name: Compile
-      run: cd build && meson compile
+      run: cd build && ls -l && pwd && meson compile
     - name: Test
       run: cd build && meson test
