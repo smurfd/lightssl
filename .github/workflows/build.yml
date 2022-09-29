@@ -22,4 +22,4 @@ jobs:
     - name: Compile
       run: ls -l && pwd && meson compile && ls compile
     - name: Test
-      run: ls -l && pwd && cd compile && ls -l && pwd && meson test
+      run: ls -l && pwd && meson compile && cd compile && ls -l && pwd && meson test
