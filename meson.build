@@ -4,10 +4,10 @@ liblightbig = static_library('lightbig', 'src/lightbig/src/lightbig.c')
 liblightssl = static_library('lightssl', 'src/lightssl.c', link_args: '-pthread')
 liblightdefs = static_library('lightdefs', 'src/lightdefs.c')
 liblighthash = static_library('lighthash', 'src/lighthash.c')
-libvsh = static_library('vsh', 'src/vsh/vsh.c', link_args: '-lm')
+libvsh = static_library('vsh', 'src/vsh/vsh.c')
 test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
   link_with: [liblightssl, liblighthash, liblightdefs, liblightbig, libvsh],
-  link_args: '-pthread', '-lm',
+  link_args: '-lm',
   install: true)
 
 test('server', test_lightssl, args: ['server'])
