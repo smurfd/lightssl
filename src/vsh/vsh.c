@@ -83,7 +83,7 @@ int vsh_listen(int s, sock *cli) {
 //
 // Random uint64_t
 u64 vsh_rand() {
-  u64 r = 0;
+  u64 r = 1;
 
   for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
   return r & 0xFFFFFFFFFFFFFFFFULL;
@@ -110,7 +110,7 @@ void vsh_genshare(key *k1, key *k2, u64 p, bool srv) {
 // Generate a keypair & shared key then print it (test / demo)
 int vsh_keys() {
   u64 g1 = vsh_rand(), g2 = vsh_rand(), p1 = vsh_rand(), p2 = vsh_rand();
-  u64 c = 123456, d = 0, e = 0;
+  u64 c = 123456, d = 1, e = 1;
   key k1 = vsh_genkeys(g1, p1), k2 = vsh_genkeys(g2, p2);
 
   vsh_genshare(&k1, &k2, p1, false);
