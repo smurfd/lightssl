@@ -122,8 +122,7 @@ int vsh_keys() {
   vsh_crypt(c, k1, &d);
   vsh_crypt(d, k2, &e);
   printf("Before:  0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n",c,d,e);
-  assert(c == e);
-  return c == e;
+  return assert(c == e);
 }
 
 //
