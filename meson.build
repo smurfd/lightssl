@@ -8,6 +8,7 @@ libvsh = static_library('vsh', 'src/vsh/vsh.c')
 test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
   link_with: [liblightssl, liblighthash, liblightdefs, liblightbig, libvsh],
   link_args: '-lm',
+  link_args: '-pthread',
   install: true)
 
 test('server', test_lightssl, args: ['server'])
