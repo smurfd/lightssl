@@ -14,23 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install dep
-      run: sudo apt update && sudo apt -y install meson git
-    - name: clone lightbig
-      run: git clone https://github.com/smurfd/lightbig src/lightbig
-    - name: meson build
-      run: meson build
-    - name: cd build
-      run: cd build
-    - name: meson compile
-      run: meson compile
-
-  tests:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: install dep
-      run: sudo apt update && sudo apt -y install meson git
+      run: sudo apt-get update && sudo apt-get -y install meson git ninja-build
     - name: clone lightbig
       run: git clone https://github.com/smurfd/lightbig src/lightbig
     - name: meson build
