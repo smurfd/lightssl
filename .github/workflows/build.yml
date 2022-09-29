@@ -20,6 +20,6 @@ jobs:
     - name: Build
       run: meson build && ls -l && pwd && ls build
     - name: Compile
-      run: ls -l && pwd && meson compile && ls compile
+      run: ninja -C build
     - name: Test
-      run: ls -l && pwd && meson compile && cd compile && ls -l && pwd && meson test
+      run: ninja -C build test
