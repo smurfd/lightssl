@@ -1,5 +1,17 @@
 //                                                                            //
 // Very simple handshake
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <assert.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include "vsh.h"
 #include "vsh_defs.h"
 
