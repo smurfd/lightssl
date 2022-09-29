@@ -6,7 +6,6 @@
 #include <assert.h>
 #include "lightssl.h"
 #include "lighthash.h"
-#include "lightcrypt.h"
 #include "lightbig/src/lightbig.h"
 
 int main(int argc, char **argv) {
@@ -164,8 +163,7 @@ int main(int argc, char **argv) {
       }
       big_end_m(2, &ac, &ad);
       printf("OK\n");
-    } else if (strcmp(argv[1], "crypt") == 0) {lc_init(); printf("OK!\n");}
-    else if (strcmp(argv[1], "hash") == 0) {
+    } else if (strcmp(argv[1], "hash") == 0) {
       const char *rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb20\
 1cbb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7e70f3d1";
       const char *in = "smurfd";
