@@ -2,10 +2,10 @@
 // Very simple handshake
 #ifndef VSH_DEFS_H
 #define VSH_DEFS_H 1
-
+#include "../lightdefs.h"
 #define BLOCK 1024
 
-typedef uint64_t u64;
+//typedef uint64_t u64;
 typedef struct keys key;
 typedef struct header head;
 typedef struct sockaddr sock;
