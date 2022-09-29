@@ -18,8 +18,8 @@ jobs:
     - name: clone lightbig
       run: git clone https://github.com/smurfd/lightbig src/lightbig
     - name: Build
-      run: meson build && ls -l && pwd
+      run: meson build && ls -l && pwd && ls build
     - name: Compile
-      run: ls -l && pwd && meson compile
+      run: ls -l && pwd && meson compile && ls compile
     - name: Test
-      run: ls -l && pwd && meson test
+      run: ls -l && pwd && cd compile && ls -l && pwd && meson test
