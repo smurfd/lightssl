@@ -23,5 +23,7 @@ jobs:
       run: cd build
     - name: meson compile
       run: meson compile
+    - name: cd build
+      run: cd build
     - name: meson test
       run: meson test
