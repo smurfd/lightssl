@@ -44,7 +44,7 @@ void *vsh_handler(void *sdesc) {
 
   vsh_transferdata(s, &dat, false, h.len);
   // Decrypt the data
-  for (int i = 0; i < h.len - 1; i++) {vsh_crypt(dat[i], k2, &cd[i]);}
+  for (u64 i = 0; i < h.len - 1; i++) {vsh_crypt(dat[i], k2, &cd[i]);}
   free(d);
   pthread_exit(NULL);
   return 0;
@@ -99,7 +99,7 @@ void vsh_genshare(key *k1, key *k2, u64 p, bool srv) {
 int vsh_keys() {
   u64 g1 = vsh_rand(), g2 = vsh_rand(), p1 = vsh_rand(), p2 = vsh_rand();
   u64 c = 123456, d = 0, e = 0;
-  key k1 = vsh_genkeys(g1, p1), k2 = vsh_genkeys(g1, p2);
+  key k1 = vsh_genkeys(g1, p1), k2 = vsh_genkeys(g2, p2);
 
   vsh_genshare(&k1, &k2, p1, false);
   vsh_genshare(&k1, &k2, p1, true);

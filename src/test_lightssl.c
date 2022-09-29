@@ -7,6 +7,7 @@
 #include "lightssl.h"
 #include "lighthash.h"
 #include "lightbig/src/lightbig.h"
+#include "vsh/vsh.h"
 
 int main(int argc, char **argv) {
   b08 avail[] = {TLSCIPHER};
@@ -173,6 +174,10 @@ int main(int argc, char **argv) {
       assert(lighthash_verify(out, rh));
       free(out);
       printf("OK!\n");
+    } else if (strcmp(argv[1], "vsh") == 0) {
+      // locally generate two keypairs
+      srand(time(0));
+      vsh_keys();
     }
   }
 }
