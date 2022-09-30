@@ -86,7 +86,7 @@ u64 vsh_rand() {
   u64 r = 1;
 
   for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
-  return r & 0xFFFFFF;//FFFFFFFFFFULL; // will overflow
+  return r & 0xFFFFFFFFFFFFFFFF;
 }
 
 //
@@ -103,8 +103,8 @@ key vsh_genkeys(u64 g, u64 p) {
 //
 // Generate the shared key
 void vsh_genshare(key *k1, key *k2, u64 p, bool srv) {
-  if (!srv) {(*k1).shar = p % (u64)pow((*k1).publ, (*k2).priv);}
-  else {(*k2).shar = p % (u64)pow((*k2).publ, (*k1).priv);}
+  if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
+  else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
 }
 
 //
