@@ -86,16 +86,17 @@ u64 vsh_rand() {
   u64 r = 1;
 
   for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
-  return r & 0xFFFFFFFFFFFFFFFFULL;
+  return r & 0xFFFFFF;//FFFFFFFFFFULL;
 }
 
 //
 // Generate a public and private keypair
 key vsh_genkeys(u64 g, u64 p) {
   key k;
-
-  k.priv = vsh_rand();
-  k.publ = (u64)pow(g, k.priv) % p;
+  while (k.publ <= 0 || k.priv <= 0) {
+    k.priv = vsh_rand();
+    k.publ = (u64)pow(g, k.priv) % p;
+  }
   return k;
 }
 
