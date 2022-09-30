@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v2
@@ -18,8 +18,8 @@ jobs:
     - name: clone lightbig
       run: git clone https://github.com/smurfd/lightbig src/lightbig
     - name: Build
-      run: meson build
+      run: CC=clang meson build
     - name: Compile
-      run: ninja -C build
+      run: CC=clang ninja -C build
     - name: Test
-      run: ninja -C build test -v -d stats -d explain
+      run: CC=clang ninja -C build test -v -d stats -d explain

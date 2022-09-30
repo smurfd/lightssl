@@ -6,6 +6,7 @@ if [ -d "src/lightbig" ]; then
 else
     git clone https://github.com/smurfd/lightbig src/lightbig
 fi
+CC=clang
 meson build
 cd build
 meson compile
