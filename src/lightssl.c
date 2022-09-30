@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include "lightssl.h"
 
+struct handshake {struct hello hi;} hs;
+
 // TODO: rework variable names to differ from functionnames
 // TODO: rework listen server loop
 

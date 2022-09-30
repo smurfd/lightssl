@@ -17,8 +17,6 @@ struct hello {
   u64 session_id; // session id
 };
 
-struct handshake {struct hello hi;} hs;
-
 void lightssl_print_hello(struct hello *hi);
 
 // Server
