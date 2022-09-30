@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
 
       big_init_m(3, &ac, &ad, &a1);
       big_alloc_max_m(2, &ac, &ad);
-      for (int j = 0; j < 50; j++) { // 300mb ram
+      for (int j = 0; j < 5; j++) {
         for (int i = 0; i < nrt; i++) {
           big_alloc_max_m(1, &a1);
           big_set("0", &a1);
