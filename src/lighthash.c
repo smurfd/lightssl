@@ -8,6 +8,9 @@
 #include "lightdefs.h"
 
 extern u64 sha[80], sha_init[BYTE];
+u64 m_h[8];
+u08 m_len, m_tot_len;
+b08 m_block[2 * SHA512_BLOCK_SIZE];
 
 //
 // "Construct"

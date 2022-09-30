@@ -16,10 +16,6 @@ typedef long long unsigned int u64;
 #define RAND() (rand() & SEVENFFF)
 #define SHA512_BLOCK_SIZE 1024 / BYTE
 
-u64 m_h[8];
-u08 m_len, m_tot_len;
-b08 m_block[2 * SHA512_BLOCK_SIZE];
-
 // TLS
 #define TLSCIPHER 222
 #define TLSVERSION 0x304
