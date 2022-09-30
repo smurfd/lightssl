@@ -86,7 +86,7 @@ u64 vsh_rand() {
   u64 r = 1;
 
   for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
-  return r & 0xFFFFFF;//FFFFFFFFFFULL;
+  return r & 0xFFFFFF;//FFFFFFFFFFULL; // will overflow
 }
 
 //
