@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
       strcpy(out, lighthash_new(in));
       assert(lighthash_verify(out, rh));
       free(out);
-      printf("OK!\n");
+      printf("OK\n");
     } else if (strcmp(argv[1], "vsh") == 0) {
       // locally generate two keypairs
       srand(time(0));
