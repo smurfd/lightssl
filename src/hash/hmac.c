@@ -4,7 +4,7 @@
 
 //
 // Compute a HMAC message digest
-int hmac(const unsigned char *message_array, int length, const unsigned char *key, 
+int hmac(const unsigned char *message_array, int length, const unsigned char *key,
   int key_len, uint8_t digest[SHA512HashSize]) {
   HMACContext context;
 

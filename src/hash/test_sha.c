@@ -10,7 +10,7 @@
 #include "test_const.h"
 
 //
-// Check the hash value against the expected string, expressed in hex 
+// Check the hash value against the expected string, expressed in hex
 int checkmatch(const unsigned char *hashvalue,
   const char *hexstr, int hashsize) {
   int i;
