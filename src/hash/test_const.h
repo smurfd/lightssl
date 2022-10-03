@@ -65,8 +65,8 @@ struct hash {
     int extrabits;
     int numberExtrabits;
     const char *resultarray;
-  } tests[TESTCOUNT];
-} hashes[HASHCOUNT] = {{SHA512HashSize, {
+  } t[TESTCOUNT];
+} h[HASHCOUNT] = {{SHA512HashSize, {
   {TEST1, length(TEST1), 1, 0, 0, "DDAF35A193617ABACC417349AE20413112E6FA4E89A9\
 7EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54\
 CA49F"},

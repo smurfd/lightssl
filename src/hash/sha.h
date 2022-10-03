@@ -30,10 +30,10 @@ enum {
 //
 // This structure will hold context information for the SHA-512 hashing operation.
 typedef struct SHA512Context {
-  uint64_t Intermediate_Hash[SHA512HashSize / 8];   // Message Digest
+  uint64_t imh[SHA512HashSize / 8];                 // Intermediate Message Digest
   uint64_t Length_High, Length_Low;                 // Message length in bits
   int_least16_t Message_Block_Index;                // Message_Block array index
-  uint8_t Message_Block[SHA512_Message_Block_Size]; // 1024-bit message blocks
+  uint8_t mb[SHA512_Message_Block_Size];            // 1024-bit message blocks
   int Computed;                                     // Is the hash computed?
   int Corrupted;                                    // Cumulative corrupt code
 } SHA512Context;
@@ -50,10 +50,10 @@ typedef struct HMACContext {
   int Corrupted;                                 // Cumulative corruption code
 } HMACContext;
 
-int SHA512Reset(SHA512Context *context);
-int SHA512Input(SHA512Context *, const uint8_t *bytes, unsigned int bytecount);
+int SHA512Reset(SHA512Context *c);
+int SHA512Input(SHA512Context *c, const uint8_t *bytes, unsigned int bytecount);
 int SHA512FinalBits(SHA512Context *, uint8_t bits, unsigned int bit_count);
-int SHA512Result(SHA512Context *,uint8_t Message_Digest[SHA512HashSize]);
+int SHA512Result(SHA512Context *c,uint8_t Message_Digest[SHA512HashSize]);
 
 //
 // HMAC Keyed-Hashing for Message Authentication, RFC 2104, for all SHAs.
@@ -68,8 +68,8 @@ extern int hmac(
 //
 // HMAC Keyed-Hashing for Message Authentication, RFC 2104, for all SHAs.
 // This interface allows any length of text input to be used.
-extern int hmacReset(HMACContext *context,const unsigned char *key, int key_len);
-extern int hmacInput(HMACContext *context, const unsigned char *text,int text_len);
-extern int hmacFinalBits(HMACContext *context, uint8_t bits, unsigned int bit_count);
-extern int hmacResult(HMACContext *context, uint8_t digest[SHA512HashSize]);
+int hmacReset(HMACContext *c,const unsigned char *key, int key_len);
+int hmacInput(HMACContext *c, const unsigned char *text,int text_len);
+int hmacFinalBits(HMACContext *c, uint8_t bits, unsigned int bit_count);
+int hmacResult(HMACContext *c, uint8_t digest[SHA512HashSize]);
 #endif
