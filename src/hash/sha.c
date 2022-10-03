@@ -24,9 +24,9 @@ int SHA512Reset(SHA512Context *c) {
 static void SHA_ProcessMessageBlock(SHA512Context *c) {
   u64 A, B, C, D, E, F, G, H, W[80], temp1, temp2;
   int t, t8;
-  
+
   // Initialize the first 16 words in the array W
-  for (t = t8 = 0; t < 16; t++, t8 += 8) W[t] = 
+  for (t = t8 = 0; t < 16; t++, t8 += 8) W[t] =
     ((u64)(c->mb[t8    ]) << 56) |
     ((u64)(c->mb[t8 + 1]) << 48) |
     ((u64)(c->mb[t8 + 2]) << 40) |
