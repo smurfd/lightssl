@@ -35,15 +35,13 @@ void printResult(uint8_t *md, int hashsize,const char *resultarray, int testnr) 
 
 int hash(int testno, const char *testarray, int length, long repeatcount,
   int numberExtrabits, int extrabits, const unsigned char *keyarray,
-  int keylen, const unsigned char *info, int okmlen,
-  const char *resultarray, int hashsize) {
+  int keylen, const char *resultarray, int hashsize) {
   uint8_t Message_Digest_Buf[SHA512HashSize];
   uint8_t *Message_Digest = Message_Digest_Buf;
   SHA512Context sha;
   HMACContext hmac;
   int err;
 
-  if (info) Message_Digest = malloc(okmlen);
   memset(&sha, '\343', sizeof(sha)); // force bad data into struct
   memset(&hmac, '\343', sizeof(hmac));
 
@@ -66,16 +64,22 @@ int hash(int testno, const char *testarray, int length, long repeatcount,
   if (keyarray) {err = hmacResult(&hmac, Message_Digest);}
   else {err = SHA512Result((SHA512Context*)&sha, Message_Digest);}
   if (err != shaSuccess) {return err;}
-
   printResult(Message_Digest, hashsize, resultarray, testno + 1);
   return err;
 }
 
 int main() {
+  printf("SHA\n"); // 11 of 11 tests pass
   for (int i = 0; (i <= TESTCOUNT - 1); ++i) {
     hash(i, h[0].t[i].testarray, h[0].t[i].length,
       h[0].t[i].repeatcount, h[0].t[i].numberExtrabits,
-      h[0].t[i].extrabits,0, 0, 0, 0, h[0].t[i].resultarray, h[0].hashsize);
+      h[0].t[i].extrabits,0, 0, h[0].t[i].resultarray, h[0].hashsize);
+  }
+  printf("HMAC %d\n", HMACTESTCOUNT); // 5 of 7 tests pass
+  for (int i = 0; (i <= HMACTESTCOUNT-1); ++i) {
+    hash(i, hm[i].dataarray[0], hm[i].datalength[0], 1, 0, 0,
+      (const unsigned char *)(hm[i].keyarray[0]),hm[i].keylength[0],
+      hm[i].resultarray[0], hm[i].resultlength[0]);
   }
   return 0;
 }
