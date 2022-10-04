@@ -1,3 +1,6 @@
+typedef const char cc;
+typedef const unsigned char cuc;
+
 static const char hexdigits[] = "0123456789ABCDEF";
 
 #define TEST1 "abc"
