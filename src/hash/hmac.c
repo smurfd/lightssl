@@ -27,9 +27,10 @@ int hmacReset(HMACContext *c, const unsigned char *key, int key_len) {
 
   // If key is longer than the hash blocksize, reset it to key = HASH(key).
   if (key_len > blocksize) {
-    int err = SHA512Reset((SHA512Context*)&c) ||
-      SHA512Input((SHA512Context*)&c, key, key_len) ||
-      SHA512Result((SHA512Context*)&c, tempkey);
+    SHA512Context cc;
+    int err = SHA512Reset((SHA512Context*)&cc) ||
+      SHA512Input((SHA512Context*)&cc, key, key_len) ||
+      SHA512Result((SHA512Context*)&cc, tempkey);
     if (err != shaSuccess) return err;
 
     key = tempkey;
@@ -40,15 +41,16 @@ int hmacReset(HMACContext *c, const unsigned char *key, int key_len) {
   // where K is an n byte key, 0-padded to a total of blocksize bytes,
   // ipad is the byte 0x36 repeated blocksize times,
   // opad is the byte 0x5c repeated blocksize times, and text is the data being protected.
-
   // store key into the pads, XOR'd with ipad and opad values
   for (int i = 0; i < key_len; i++) {
     k_ipad[i] = key[i] ^ 0x36; c->k_opad[i] = key[i] ^ 0x5c;
   }
+
   // remaining pad bytes are '\0' XOR'd with ipad and opad values
-  for (int i = key_len ; i < blocksize; i++) {
+  for (int i = key_len; i < blocksize; i++) {
    k_ipad[i] = 0x36; c->k_opad[i] = 0x5c;
   }
+
   ret = SHA512Reset((SHA512Context*)&c->shaContext) ||
     SHA512Input((SHA512Context*)&c->shaContext, k_ipad, blocksize);
   return c->Corrupted = ret;

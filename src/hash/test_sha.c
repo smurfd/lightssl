@@ -72,11 +72,13 @@ int main() {
       h[0].t[i].repeatcount, h[0].t[i].numberExtrabits,
       h[0].t[i].extrabits,0, 0, h[0].t[i].resultarray, h[0].hashsize);
   }
-  printf("HMAC %d\n", HMACTESTCOUNT); // 5 of 7 tests pass
+  printf("HMAC\n"); // 7 of 7 tests pass
   for (int i = 0; (i <= HMACTESTCOUNT-1); ++i) {
-    hash(hm[i].dataarray[0], hm[i].datalength[0], 1, 0, 0,
-      (const unsigned char *)(hm[i].keyarray[0]),hm[i].keylength[0],
-      hm[i].resultarray[0], hm[i].resultlength[0]);
+    cc *da = hm[i].dataarray[1] ? hm[i].dataarray[1] : hm[i].dataarray[0];
+    int dl = hm[i].datalength[1] ? hm[i].datalength[1] : hm[i].datalength[0];
+    cuc* ka = (cuc*)(hm[i].keyarray[1] ? hm[i].keyarray[1] : hm[i].keyarray[0]);
+    int kl = hm[i].keylength[1] ? hm[i].keylength[1] : hm[i].keylength[0];
+    hash(da, dl, 1, 0, 0, ka, kl, hm[i].resultarray[0], hm[i].resultlength[0]);
   }
   return 0;
 }
