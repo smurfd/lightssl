@@ -56,7 +56,6 @@ int sha_reset(shactx *c) {
   for (int i = 0; i < sha_hsh_sz / 8; i++) c->imh[i] = SHA_H0[i];
   c->compute = 0;
   c->corrupt = sha_ok;
-
   return sha_ok;
 }
 
@@ -109,7 +108,6 @@ static void sha_proc_msgblk(shactx *c) {
   c->imh[5] += F;
   c->imh[6] += G;
   c->imh[7] += H;
-
   c->msg_blk_i = 0;
 }
 
@@ -131,7 +129,6 @@ int sha_input(shactx *c, const u08 *message_array, unsigned int length) {
 
     message_array++;
   }
-
   return c->corrupt;
 }
 
@@ -166,7 +163,6 @@ static void sha_pad_msg(shactx *c, u08 pad_byte) {
   c->mb[125] = (u08)(c->len_lo >> 16);
   c->mb[126] = (u08)(c->len_lo >> 8);
   c->mb[127] = (u08)(c->len_lo);
-
   sha_proc_msgblk(c);
 }
 
@@ -190,10 +186,8 @@ int sha_final(shactx *c, u08 msg_bit, unsigned int length) {
   if (c->corrupt) return c->corrupt;
   if (c->compute) return c->corrupt = sha_err;
   if (length >= 8) return c->corrupt = sha_bad;
-
   SHA_AddLength(c, length, tmp);
   sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
-
   return c->corrupt;
 }
 
@@ -207,7 +201,6 @@ int sha_result(shactx *c, u08 msg_dig[sha_hsh_sz]) {
 
   for (int i = 0; i < sha_hsh_sz; ++i)
     msg_dig[i] = (u08)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
-
   return sha_ok;
 }
 
@@ -248,8 +241,8 @@ int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
   }
 
   if (neb > 0) {
-    if (k) {hmac_final(&hmac, (uint8_t)eb, neb);}
-    else {sha_final((shactx*)&sha, (uint8_t)eb, neb);}
+    if (k) {err = hmac_final(&hmac, (uint8_t)eb, neb);}
+    else {err = sha_final((shactx*)&sha, (uint8_t)eb, neb);}
     if (err != sha_ok) {return err;}
   }
 
@@ -258,7 +251,6 @@ int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
   if (err != sha_ok) {return err;}
   // To print the hashes add this below row :
   // sha_print(msg_dig, hs, ra);
-
   return sha_match(msg_dig, ra, hs);
 }
 
@@ -283,7 +275,6 @@ int hmac_reset(hmacctx *c, cuc *key, int key_len) {
       sha_input((shactx*)&cc, key, key_len) ||
       sha_result((shactx*)&cc, tempkey);
     if (err != sha_ok) return err;
-
     key = tempkey;
     key_len = hashsize;
   }
@@ -299,7 +290,7 @@ int hmac_reset(hmacctx *c, cuc *key, int key_len) {
 
   // remaining pad bytes are '\0' XOR'd with ipad and opad values
   for (int i = key_len; i < blocksize; i++) {
-   k_ipad[i] = 0x36; c->k_opad[i] = 0x5c;
+    k_ipad[i] = 0x36; c->k_opad[i] = 0x5c;
   }
 
   ret = sha_reset((shactx*)&c->shactx) ||
@@ -342,7 +333,6 @@ int hmac_result(hmacctx *c, uint8_t *digest) {
     sha_input((shactx*)&c->shactx, c->k_opad, c->blk_size) ||
     sha_input((shactx*)&c->shactx, digest, c->size) ||
     sha_result((shactx*)&c->shactx, digest);
-
   c->compute = 1;
   return c->corrupt = ret;
 }

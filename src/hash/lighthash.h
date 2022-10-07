@@ -66,9 +66,9 @@ typedef struct shactx {
 //
 // This structure will hold context information for the HMAC keyed-hashing operation.
 typedef struct hmacctx {
-  int which;                                  // Which SHA is being used
-  int size;                                  // Hash size of SHA being used
-  int blk_size;                                 // Block size of SHA being used
+  int which;                                     // Which SHA is being used
+  int size;                                      // Hash size of SHA being used
+  int blk_size;                                  // Block size of SHA being used
   shactx shactx;                                 // SHA Context
   uc k_opad[sha_blk_sz];                         // Key XORd with opad
   int compute;                                   // Is the MAC computed?
