@@ -49,10 +49,10 @@ struct hash {
     int length;
     long repeatcount;
     int extrabits;
-    int numberExtrabits;
-    const char* resultarray;
+    int nr_extrabits;
+    const char* res_arr;
   } t[TESTCOUNT];
-} h = {shaHashSize,
+} h = {sha_hsh_sz,
        {{TEST1, length(TEST1), 1, 0, 0,
          "DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A21929"
          "92A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F"},
@@ -93,8 +93,8 @@ struct hmachash {
   int keylength[5];
   const char* dataarray[5];
   int datalength[5];
-  const char* resultarray[5];
-  int resultlength[5];
+  const char* res_arr[5];
+  int res_len[5];
 } hm[HMACTESTCOUNT] = {
     // "Hi There"
     {{"\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"
@@ -104,7 +104,7 @@ struct hmachash {
      {8},
      {"87AA7CDEA5EF619D4FF0B4241A1D6CB02379F4E2CE4EC2787AD0B30545E17CDEDAA833B7"
       "D6B8A702038B274EAEA3F4E4BE9D914EEB61F1702E696C203A126854"},
-     {shaHashSize}},
+     {sha_hsh_sz}},
     // "Jefe"
     {{"\x4a\x65\x66\x65"},
      {4},
@@ -113,7 +113,7 @@ struct hmachash {
      {28},
      {"164B7A7BFCF819E2E395FBE73B56E0A387BD64222E831FD610270CD7EA2505549758BF75"
       "C05A994A6D034F65F8F0E6FDCAEAB1A34D4A6B4B636E070A38BCE737"},
-     {shaHashSize}},
+     {sha_hsh_sz}},
     {{"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
       "\xaa\xaa"},
      {20},
@@ -123,7 +123,7 @@ struct hmachash {
      {50},
      {"FA73B0089D56A284EFB0F0756C890BE9B1B5DBDD8EE81A3655F83E33B2279D39BF3E8482"
       "79A722C806B485A47E67C807B946A337BEE8942674278859E13292FB"},
-     {shaHashSize}},
+     {sha_hsh_sz}},
     {{"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12"
       "\x13\x14\x15\x16\x17\x18\x19"},
      {25},
@@ -133,7 +133,7 @@ struct hmachash {
      {50},
      {"B0BA465637458C6990E5A8C5F61D4AF7E576D97FF94B872DE76F8050361EE3DBA91CA5C1"
       "1AA25EB4D679275CC5788063A5F19741120C4F2DE2ADEBEB10A298DD"},
-     {shaHashSize}},
+     {sha_hsh_sz}},
     {{"\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"
       "\x0c\x0c"},
      {20},
@@ -154,7 +154,7 @@ struct hmachash {
      {54},
      {"80B24263C7C1A3EBB71493C1DD7BE8B49B46D1F41B4AEEC1121B013783F8F3526B56D037"
       "E05F2598BD0FD2215D6A1E5295E64F73F63F0AEC8B915A985D786598"},
-     {shaHashSize}},
+     {sha_hsh_sz}},
     {{"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
       "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
       "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
@@ -178,4 +178,4 @@ struct hmachash {
      {73, 152},
      {"E37B6A775DC87DBAA4DFA9F96E5E3FFDDEBD71F8867289865DF5A32D20CDC944B6022CAC"
       "3C4982B10D5EEB55C3E4DE15134676FB6DE0446065C97440FA8C6A58"},
-     {shaHashSize}}};
+     {sha_hsh_sz}}};

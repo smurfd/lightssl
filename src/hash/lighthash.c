@@ -49,15 +49,15 @@ static const u64 SHA_K[80] = {
 //
 //
 int sha_reset(shactx *c) {
-  if (!c) return shaNull;
+  if (!c) return sha_null;
   c->msg_blk_i = 0;
   c->len_hi = c->len_lo = 0;
 
-  for (int i = 0; i < shaHashSize / 8; i++) c->imh[i] = SHA_H0[i];
+  for (int i = 0; i < sha_hsh_sz / 8; i++) c->imh[i] = SHA_H0[i];
   c->compute = 0;
-  c->corrupt = shaSuccess;
+  c->corrupt = sha_ok;
 
-  return shaSuccess;
+  return sha_ok;
 }
 
 //
@@ -115,20 +115,18 @@ static void sha_proc_msgblk(shactx *c) {
 
 //
 //
-int sha_input(shactx *c, const u08 *message_array,
-  unsigned int length) {
+int sha_input(shactx *c, const u08 *message_array, unsigned int length) {
   uint64_t tmp;
 
-  if (!c) return shaNull;
-  if (!length) return shaSuccess;
-  if (!message_array) return shaNull;
-  if (c->compute) return c->corrupt = shaStateError;
+  if (!c) return sha_null;
+  if (!length) return sha_ok;
+  if (!message_array) return sha_null;
+  if (c->compute) return c->corrupt = sha_err;
   if (c->corrupt) return c->corrupt;
 
   while (length--) {
     c->mb[c->msg_blk_i++] = *message_array;
-    if ((SHA_AddLength(c, 8, tmp) == shaSuccess) &&
-      (c->msg_blk_i == shaMsgBlockSize))
+    if ((SHA_AddLength(c, 8, tmp) == sha_ok) && (c->msg_blk_i == sha_blk_sz))
       sha_proc_msgblk(c);
 
     message_array++;
@@ -144,16 +142,13 @@ static void sha_pad_msg(shactx *c, u08 pad_byte) {
    // the initial padding bits and length.  If so, we will pad the
    // block, process it, and then continue padding into a second
    // block.
-  if (c->msg_blk_i >= (shaMsgBlockSize-16)) {
+  if (c->msg_blk_i >= (sha_blk_sz - 16)) {
     c->mb[c->msg_blk_i++] = pad_byte;
-    while (c->msg_blk_i < shaMsgBlockSize)
-      c->mb[c->msg_blk_i++] = 0;
-
+    while (c->msg_blk_i < sha_blk_sz) c->mb[c->msg_blk_i++] = 0;
     sha_proc_msgblk(c);
   } else c->mb[c->msg_blk_i++] = pad_byte;
 
-  while (c->msg_blk_i < (shaMsgBlockSize-16)) c->mb[c->msg_blk_i++] = 0;
-
+  while (c->msg_blk_i < (sha_blk_sz - 16)) c->mb[c->msg_blk_i++] = 0;
   c->mb[112] = (u08)(c->len_hi >> 56);
   c->mb[113] = (u08)(c->len_hi >> 48);
   c->mb[114] = (u08)(c->len_hi >> 40);
@@ -180,8 +175,7 @@ static void sha_pad_msg(shactx *c, u08 pad_byte) {
 static void sha_finalize(shactx *c, u08 pad_byte) {
   sha_pad_msg(c, pad_byte);
   // Clear message
-  for (int_least16_t i = 0; i < shaMsgBlockSize; ++i) c->mb[i] = 0;
-
+  for (int_least16_t i = 0; i < sha_blk_sz; ++i) c->mb[i] = 0;
   c->len_hi = c->len_lo = 0;
   c->compute = 1;
 }
@@ -191,11 +185,11 @@ static void sha_finalize(shactx *c, u08 pad_byte) {
 int sha_final(shactx *c, u08 msg_bit, unsigned int length) {
   uint64_t tmp;
 
-  if (!c) return shaNull;
-  if (!length) return shaSuccess;
+  if (!c) return sha_null;
+  if (!length) return sha_ok;
   if (c->corrupt) return c->corrupt;
-  if (c->compute) return c->corrupt = shaStateError;
-  if (length >= 8) return c->corrupt = shaBadParam;
+  if (c->compute) return c->corrupt = sha_err;
+  if (length >= 8) return c->corrupt = sha_bad;
 
   SHA_AddLength(c, length, tmp);
   sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
@@ -205,16 +199,16 @@ int sha_final(shactx *c, u08 msg_bit, unsigned int length) {
 
 //
 //
-int sha_result(shactx *c, u08 msg_dig[shaHashSize]) {
-  if (!c) return shaNull;
-  if (!msg_dig) return shaNull;
+int sha_result(shactx *c, u08 msg_dig[sha_hsh_sz]) {
+  if (!c) return sha_null;
+  if (!msg_dig) return sha_null;
   if (c->corrupt) return c->corrupt;
   if (!c->compute) sha_finalize(c, 0x80);
 
-  for (int i = 0; i < shaHashSize; ++i)
+  for (int i = 0; i < sha_hsh_sz; ++i)
     msg_dig[i] = (u08)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
 
-  return shaSuccess;
+  return sha_ok;
 }
 
 int sha_match(cuc *hashvalue, cc *hexstr, int hashsize) {
@@ -235,9 +229,9 @@ void sha_print(uint8_t *md, int hashsize, cc *resultarray) {
 }
 
 int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
-  uint8_t msg_dig[shaHashSize];
-  shactx sha;
+  uint8_t msg_dig[sha_hsh_sz];
   hmacctx hmac;
+  shactx sha;
   int err;
 
   memset(&sha, '\343', sizeof(sha)); // force bad data into struct
@@ -245,24 +239,25 @@ int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
 
   if (k) {err = hmac_reset(&hmac, k, kl);}
   else {err = sha_reset((shactx*)&sha);}
-  if (err != shaSuccess) {return err;}
+  if (err != sha_ok) {return err;}
 
   for (int i = 0; i < r; ++i) {
     if (k) {err = hmac_input(&hmac, (const uint8_t *)ta, l);}
     else {err = sha_input((shactx*)&sha, (const uint8_t *)ta, l);}
-    if (err != shaSuccess) {return err;}
+    if (err != sha_ok) {return err;}
   }
 
   if (neb > 0) {
     if (k) {hmac_final(&hmac, (uint8_t)eb, neb);}
     else {sha_final((shactx*)&sha, (uint8_t)eb, neb);}
-    if (err != shaSuccess) {return err;}
+    if (err != sha_ok) {return err;}
   }
 
   if (k) {err = hmac_result(&hmac, msg_dig);}
   else {err = sha_result((shactx*)&sha, msg_dig);}
-  if (err != shaSuccess) {return err;}
-  //sha_print(msg_dig, hs, ra);
+  if (err != sha_ok) {return err;}
+  // To print the hashes add this below row :
+  // sha_print(msg_dig, hs, ra);
 
   return sha_match(msg_dig, ra, hs);
 }
@@ -270,27 +265,16 @@ int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
 // HMAC
 
 //
-// Compute a HMAC message digest
-int hmac(const unsigned char *msg_arr, int length, const unsigned char *key,
-  int key_len, uint8_t digest[shaHashSize]) {
-  hmacctx c;
-
-  return hmac_reset(&c, key, key_len) ||
-    hmac_input(&c, msg_arr, length) || hmac_result(&c, digest);
-}
-
-//
 // initialize the hmacctx
 int hmac_reset(hmacctx *c, cuc *key, int key_len) {
+  uc k_ipad[sha_blk_sz], tempkey[sha_hsh_sz];
   int blocksize, hashsize, ret;
-  uc k_ipad[shaMsgBlockSize];
-  uc tempkey[shaHashSize];
 
-  if (!c) return shaNull;
+  if (!c) return sha_null;
   c->compute = 0;
-  c->corrupt = shaSuccess;
-  blocksize = c->blockSize = shaMsgBlockSize;
-  hashsize = c->hashSize = shaHashSize;
+  c->corrupt = sha_ok;
+  blocksize = c->blk_size = sha_blk_sz;
+  hashsize = c->size = sha_hsh_sz;
 
   // If key is longer than the hash blocksize, reset it to key = HASH(key).
   if (key_len > blocksize) {
@@ -298,7 +282,7 @@ int hmac_reset(hmacctx *c, cuc *key, int key_len) {
     int err = sha_reset((shactx*)&cc) ||
       sha_input((shactx*)&cc, key, key_len) ||
       sha_result((shactx*)&cc, tempkey);
-    if (err != shaSuccess) return err;
+    if (err != sha_ok) return err;
 
     key = tempkey;
     key_len = hashsize;
@@ -325,39 +309,38 @@ int hmac_reset(hmacctx *c, cuc *key, int key_len) {
 
 //
 //
-int hmac_input(hmacctx *c, const unsigned char *text, int text_len) {
-  if (!c) return shaNull;
+int hmac_input(hmacctx *c, cuc *text, int text_len) {
+  if (!c) return sha_null;
   if (c->corrupt) return c->corrupt;
-  if (c->compute) return c->corrupt = shaStateError;
+  if (c->compute) return c->corrupt = sha_err;
   return c->corrupt = sha_input((shactx*)&c->shactx, text, text_len);
 }
 
 //
 // Add final bits
 int hmac_final(hmacctx *c, uint8_t bits, unsigned int bit_count) {
-  if (!c) return shaNull;
+  if (!c) return sha_null;
   if (c->corrupt) return c->corrupt;
-  if (c->compute) return c->corrupt = shaStateError;
+  if (c->compute) return c->corrupt = sha_err;
   return c->corrupt = sha_final((shactx*)&c->shactx, bits,bit_count);
 }
 
 //
 // Get the hmac digest
 int hmac_result(hmacctx *c, uint8_t *digest) {
-  int ret;
-  if (!c) return shaNull;
+  if (!c) return sha_null;
   if (c->corrupt) return c->corrupt;
-  if (c->compute) return c->corrupt = shaStateError;
+  if (c->compute) return c->corrupt = sha_err;
 
   // finish up 1st pass
   // perform outer SHA, init context for 2nd pass
   // start with outer pad
   // then results of 1st hash
   // finish up 2nd pass
-  ret = sha_result((shactx*)&c->shactx, digest) ||
+  int ret = sha_result((shactx*)&c->shactx, digest) ||
     sha_reset((shactx*)&c->shactx) ||
-    sha_input((shactx*)&c->shactx, c->k_opad, c->blockSize) ||
-    sha_input((shactx*)&c->shactx, digest, c->hashSize) ||
+    sha_input((shactx*)&c->shactx, c->k_opad, c->blk_size) ||
+    sha_input((shactx*)&c->shactx, digest, c->size) ||
     sha_result((shactx*)&c->shactx, digest);
 
   c->compute = 1;
