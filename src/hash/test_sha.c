@@ -20,21 +20,14 @@ int checkmatch(cuc *hashvalue, cc *hexstr, int hashsize) {
 }
 
 void printResult(uint8_t *md, int hashsize, cc *resultarray) {
-  printf("Hash : ");
-  for (int i = 0; i < hashsize; ++i) {
-    printf("%c%c", hexdigits[(md[i] >> 4) & 0xF], hexdigits[md[i] & 0xF]);
-  }
-  printf("\nMatch: ");
-  for (int i = 0; i < hashsize * 2; i += 2) {
-    printf("%c%c", resultarray[i], resultarray[i + 1]);
-  }
+  printf("Hash 0x");
+  for (int i = 0; i < hashsize * 2; i++) printf("%c", resultarray[i]);
   if (checkmatch(md, resultarray, hashsize) == 1)
     printf(" PASSED\n"); else printf(" FAILED\n");
 }
 
 int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
-  uint8_t Message_Digest_Buf[SHA512HashSize];
-  uint8_t *Message_Digest = Message_Digest_Buf;
+  uint8_t Message_Digest[SHA512HashSize];
   SHA512Context sha;
   HMACContext hmac;
   int err;

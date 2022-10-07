@@ -88,7 +88,7 @@ int hmacResult(HMACContext *c, uint8_t *digest) {
   // perform outer SHA, init context for 2nd pass
   // start with outer pad
   // then results of 1st hash
-  //finish up 2nd pass
+  // finish up 2nd pass
   ret = SHA512Result((SHA512Context*)&c->shaContext, digest) ||
     SHA512Reset((SHA512Context*)&c->shaContext) ||
     SHA512Input((SHA512Context*)&c->shaContext, c->k_opad, c->blockSize) ||

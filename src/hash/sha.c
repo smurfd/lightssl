@@ -99,12 +99,10 @@ int SHA512Input(SHA512Context *c, const u08 *message_array,
 //
 //
 static void SHA_PadMessage(SHA512Context *c, u08 Pad_Byte) {
-  /*
-   * Check to see if the current message block is too small to hold
-   * the initial padding bits and length.  If so, we will pad the
-   * block, process it, and then continue padding into a second
-   * block.
-   */
+   // Check to see if the current message block is too small to hold
+   // the initial padding bits and length.  If so, we will pad the
+   // block, process it, and then continue padding into a second
+   // block.
   if (c->Message_Block_Index >= (SHA512_Message_Block_Size-16)) {
     c->mb[c->Message_Block_Index++] = Pad_Byte;
     while (c->Message_Block_Index < SHA512_Message_Block_Size)
