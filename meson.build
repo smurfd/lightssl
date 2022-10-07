@@ -8,13 +8,13 @@ liblightssl = static_library('lightssl', 'src/lightssl.c', link_args: '-pthread'
 liblightdefs = static_library('lightdefs', 'src/lightdefs.c')
 liblighthash = static_library('lighthash', 'src/lighthash.c')
 libvsh = static_library('vsh', 'src/vsh/vsh.c', dependencies: m_dep)
-liblighthash0 = static_library('lighthash0', 'src/hash/sha.c')
+liblighthash0 = static_library('lighthash0', 'src/hash/lightssl.c')
 test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
   link_with: [liblightssl, liblighthash, liblightdefs, liblightbig, libvsh],
   link_args: '-pthread',
   dependencies: m_dep,
   install: true)
-test_lighthash0 = executable('test_lighthash0', 'src/hash/test_sha.c',
+test_lighthash0 = executable('test_lighthash0', 'src/hash/test_lightssl.c',
   link_with: [liblighthash0],
   dependencies: m_dep,
   install: true)

@@ -2,8 +2,8 @@
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
 #include <stdio.h>
 #include <assert.h>
-#include "sha.h"
-#include "test_const.h"
+#include "lightssl.h"
+#include "test_lightssl.h"
 
 int test() {
   // 11 of 11 SHA tests pass

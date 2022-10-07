@@ -1,7 +1,7 @@
 //                                                                            //
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
-#ifndef _SHA_H_
-#define _SHA_H_
+#ifndef _LIGHTSSL_H_
+#define _LIGHTSSL_H_
 
 #include <stdint.h>
 
