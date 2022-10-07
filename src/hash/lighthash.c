@@ -2,7 +2,7 @@
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
 #include <stdio.h>
 #include <string.h>
-#include "lightssl.h"
+#include "lighthash.h"
 
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
 static u64 SHA_H0[] = {
