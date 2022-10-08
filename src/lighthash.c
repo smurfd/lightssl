@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lightdefs.h"
-#include "lighthash0.h"
+#include "lighthash.h"
 
 extern u64 SHA_H0[], SHA_K[];
 extern u08 masks[], markbit[];

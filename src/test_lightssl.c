@@ -8,7 +8,7 @@
 #include "lightssl.h"
 #include "lightbig/src/lightbig.h"
 #include "vsh/vsh.h"
-#include "lighthash0.h"
+#include "lighthash.h"
 #include "test_lightssl.h"
 
 int test_sha() {
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
       // locally generate two keypairs
       srand(time(0));
       vsh_keys();
-    } else if (strcmp(argv[1], "hash0") == 0) {
+    } else if (strcmp(argv[1], "hash") == 0) {
       char* ra = "555CFC37FC24D4971DE9B091EF13401B8C5CB8B5B55804DA571FB201CBB4F"
         "C5D147AC6F528656456651606546CA42A1070BDFD79D024F3B97DD1BDAC7E70F3D1";
 
