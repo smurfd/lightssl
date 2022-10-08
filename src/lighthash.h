@@ -5,27 +5,22 @@
 
 #include <stdint.h>
 
-#ifndef _SHA_enum_
-#define _SHA_enum_
+#ifndef _SHA_DEFINES_
+#define _SHA_DEFINES_
+//
+// These constants hold size information for each of the SHA hashing operations
+#define sha_blk_sz 128                           // SHA Message Block Size
+#define sha_hsh_sz 64                            // SHA Hash Size
+#define sha_hsh_sb 512                           // SHA Hash Size Bits
 
 //
 // All SHA functions return one of these values.
-enum {
-  sha_ok = 0,                                    // Success
-  sha_null,                                      // Null pointer parameter
-  sha_itl,                                       // Input data too long
-  sha_err,                                       // State error
-  sha_bad                                        // passed a bad parameter
-};
+#define sha_ok 0                                 // Success
+#define sha_null 1                               // Null pointer parameter
+#define sha_itl 2                                // Input data too long
+#define sha_err 3                                // State error
+#define sha_bad 4                                // passed a bad parameter
 #endif
-
-//
-// These constants hold size information for each of the SHA hashing operations
-enum {
-  sha_blk_sz = 128,                              // SHA Message Block Size
-  sha_hsh_sz = 64,                               // SHA Hash Size
-  sha_hsh_sb = 512                               // SHA Hash Size Bits
-};
 
 //
 // This structure will hold context information for the SHA hashing operation.
@@ -66,5 +61,4 @@ int hmac_reset(hmacctx *c, cuc *key, int key_len);
 int hmac_input(hmacctx *c, cuc *text,int text_len);
 int hmac_final(hmacctx *c, uint8_t bits, unsigned int bit_count);
 int hmac_result(hmacctx *c, uint8_t digest[sha_hsh_sz]);
-
 #endif

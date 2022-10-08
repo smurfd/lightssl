@@ -3,7 +3,7 @@
 #ifndef VSH_H
 #define VSH_H 1
 
-#include "vsh_defs.h"
+#include "../lightdefs.h"
 
 key vsh_genkeys(u64 g, u64 p);
 

@@ -3,25 +3,5 @@
 #ifndef VSH_DEFS_H
 #define VSH_DEFS_H 1
 #include "../lightdefs.h"
-#define BLOCK 1024
-
-//typedef uint64_t u64;
-typedef struct keys key;
-typedef struct header head;
-typedef struct sockaddr sock;
-typedef struct sockaddr_in sock_in;
-
-struct header {
-  u64 len;
-  u64 ver;
-  u64 g;
-  u64 p;
-};
-
-struct keys {
-  u64 publ;
-  u64 priv;
-  u64 shar;
-};
 
 #endif
