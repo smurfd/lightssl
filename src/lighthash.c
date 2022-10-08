@@ -292,4 +292,3 @@ int hmac_result(hmacctx *c, uint8_t *digest) {
   c->compute = 1;
   return c->corrupt = ret;
 }
-
