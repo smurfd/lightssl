@@ -23,7 +23,7 @@ void hash_new(const char *in, char* s) {
   memset(&sha, '\343', sizeof(sha)); // force bad data into struct
 
   sha_reset((shactx*)&sha);
-  sha_input((shactx*)&sha, inn, strlen(in));  
+  sha_input((shactx*)&sha, inn, strlen(in));
   sha_final((shactx*)&sha, (uint8_t)0, 0);
   sha_result((shactx*)&sha, msg_dig);
   sha_match(msg_dig, ra, 64);
