@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include "lightssl.h"
-#include "lighthash.h"
 #include "lightbig/src/lightbig.h"
 #include "vsh/vsh.h"
 #include "lighthash0.h"
@@ -193,23 +192,20 @@ int main(int argc, char **argv) {
       }
       big_end_m(2, &ac, &ad);
       printf("OK\n");
-    } else if (strcmp(argv[1], "hash") == 0) {
-      const char *rh = "555cfc37fc24d4971de9b091ef13401b8c5cb8b5b55804da571fb20\
-1cbb4fc5d147ac6f528656456651606546ca42a1070bdfd79d024f3b97dd1bdac7e70f3d1";
-      const char *in = "smurfd";
-      char *out = malloc(100);
-
-      strcpy(out, lighthash_new(in));
-      assert(lighthash_verify(out, rh));
-      free(out);
-      printf("OK\n");
     } else if (strcmp(argv[1], "vsh") == 0) {
       // locally generate two keypairs
       srand(time(0));
       vsh_keys();
     } else if (strcmp(argv[1], "hash0") == 0) {
+      char* ra = "555CFC37FC24D4971DE9B091EF13401B8C5CB8B5B55804DA571FB201CBB4F"
+        "C5D147AC6F528656456651606546CA42A1070BDFD79D024F3B97DD1BDAC7E70F3D1";
+
       if (test_sha() == 1) printf("OK\n");
       if (test_hmac() == 1) printf("OK\n");
+      char *s = malloc(sha_blk_sz);
+      hash_new("smurfd", s);
+      assert(strcmp(ra, s) == 0);
+      free(s);
     }
   }
 }

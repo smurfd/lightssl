@@ -6,7 +6,10 @@
 
 typedef int8_t i08;
 typedef uint8_t u08;
+typedef const char cc;
+typedef unsigned char uc;
 typedef unsigned char b08;
+typedef const unsigned char cuc;
 typedef long long unsigned int u64;
 
 // SSL
@@ -23,38 +26,24 @@ typedef long long unsigned int u64;
 #define TLSCOMPRESSION 123
 
 // Hash
-#define SHFR(x, n) (x >> n)
-#define CH(x, y, z) ((x & y) ^ (~x & z))
-#define MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
-#define ROTR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define ROTL(x, n) ((x << n) | (x >> ((sizeof(x) << 3) - n)))
+#define SHA_Ch(x, y, z)    (((x) & ((y) ^ (z))) ^ (z))
+#define SHA_Maj(x, y, z)   (((x) & ((y) | (z))) | ((y) & (z)))
+#define SHA_Parity(x, y, z) ((x) ^  (y) ^ (z))
 
-#define SHA512_F1(x) (ROTR(x, 28) ^ ROTR(x, 34) ^ ROTR(x, 39))
-#define SHA512_F2(x) (ROTR(x, 14) ^ ROTR(x, 18) ^ ROTR(x, 41))
-#define SHA512_F3(x) (ROTR(x,  1) ^ ROTR(x,  8) ^ SHFR(x, 7))
-#define SHA512_F4(x) (ROTR(x, 19) ^ ROTR(x, 61) ^ SHFR(x, 6))
+// Define the SHA shift, rotate left and rotate right macros
+#define SHA_SHRI(b,w)  (((u64)(w)) >> (b))
+#define SHA_ROTR(b,w) ((((u64)(w)) >> (b)) | (((u64)(w)) << (64-(b))))
 
-#define SHA2_UNPACK32(x, str) {                                                \
-  *((str) + 3) = (u08)((x));                                                   \
-  *((str) + 2) = (u08)((x) >> 8);                                              \
-  *((str) + 1) = (u08)((x) >> 16);                                             \
-  *((str) + 0) = (u08)((x) >> 24);}
+// Define the SHA SIGMA and sigma macros
+#define SHA_S0(w) (SHA_ROTR(28,w) ^ SHA_ROTR(34,w) ^ SHA_ROTR(39,w))
+#define SHA_S1(w) (SHA_ROTR(14,w) ^ SHA_ROTR(18,w) ^ SHA_ROTR(41,w))
+#define SHA_s0(w) (SHA_ROTR( 1,w) ^ SHA_ROTR( 8,w) ^ SHA_SHRI( 7,w))
+#define SHA_s1(w) (SHA_ROTR(19,w) ^ SHA_ROTR(61,w) ^ SHA_SHRI( 6,w))
 
-#define SHA2_UNPACK64(x, str) {                                                \
-  *((str) + 7) = (u08)((x));                                                   \
-  *((str) + 6) = (u08)((x) >> 8);                                              \
-  *((str) + 5) = (u08)((x) >> 16);                                             \
-  *((str) + 4) = (u08)((x) >> 24);                                             \
-  *((str) + 3) = (u08)((x) >> 32);                                             \
-  *((str) + 2) = (u08)((x) >> 40);                                             \
-  *((str) + 1) = (u08)((x) >> 48);                                             \
-  *((str) + 0) = (u08)((x) >> 56);}
-
-#define SHA2_PACK64(str, x) {                                                  \
-  *(x) = ((u64) * ((str) + 7))  | ((u64) * ((str) + 6) << 8)                   \
-  | ((u64) * ((str) + 5) << 16) | ((u64) * ((str) + 4) << 24)                  \
-  | ((u64) * ((str) + 3) << 32) | ((u64) * ((str) + 2) << 40)                  \
-  | ((u64) * ((str) + 1) << 48) | ((u64) * ((str) + 0) << 56);}
+// Add "length" to the length. Set Corrupted when overflow has occurred.
+#define SHA_AddLength(c, l, t)(t = c->len_lo,\
+  c->corrupt = ((c->len_lo += l) < t) &&\
+  (++c->len_hi == 0) ? sha_itl : (c)->corrupt)
 
 #define RAND64()                                                               \
   ((u64)(RAND()) << 48) ^ ((u64)(RAND()) << 35) ^ ((u64)(RAND()) << 22)        \
