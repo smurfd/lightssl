@@ -12,8 +12,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include "vsh.h"
-#include "../lightdefs.h"//vsh_defs.h"
+#include "lightvsh.h"
+#include "lightdefs.h"
 
 //
 // Initialize server and client (b=true for server deamon)
