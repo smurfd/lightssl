@@ -6,9 +6,7 @@
 #include "lightdefs.h"
 
 key vsh_genkeys(u64 g, u64 p);
-
 u64 vsh_rand();
-
 int vsh_keys();
 int vsh_getblock();
 int vsh_init(const char *host, const char *port, bool b);

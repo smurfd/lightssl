@@ -1,12 +1,10 @@
 //                                                                            //
 // Very simple handshake
 #include <math.h>
-#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
@@ -37,23 +35,20 @@ void vsh_end(int s) {close(s);}
 //
 // Server handler
 void *vsh_handler(void *sdesc) {
-  u64 g1 = vsh_rand(), p1 = vsh_rand();
+  u64 g1 = vsh_rand(), p1 = vsh_rand(), dat[BLOCK], cd[BLOCK];
   char (*d) = malloc(vsh_getblock());
   key k1 = vsh_genkeys(g1, p1), k2;
-  u64 dat[BLOCK], cd[BLOCK];
   head h; h.g = g1; h.p = p1;
   int s = *(int*)sdesc;
 
   // Send and receive stuff
   if (s == -1) {return (void*)-1;}
   if (h.len > BLOCK) {return (void*)-1;}
-
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   vsh_transferkey(s, true, &h, &k1);
   vsh_transferkey(s, false, &h, &k2);
   vsh_genshare(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
-
   vsh_transferdata(s, &dat, false, h.len);
   // Decrypt the data
   for (u64 i = 0; i < h.len - 1; i++) {vsh_crypt(dat[i], k2, &cd[i]);}
@@ -71,7 +66,7 @@ int vsh_listen(int s, sock *cli) {
   while (c >= 1) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
-    ns = (int*)malloc(sizeof(*ns));
+    ns = malloc(sizeof(*ns));
     *ns = c;
     if (pthread_create(&thrd, NULL, vsh_handler, (void*)ns) < 0) {return -1;}
     pthread_join(thrd, NULL);
@@ -85,7 +80,7 @@ int vsh_listen(int s, sock *cli) {
 u64 vsh_rand() {
   u64 r = 1;
 
-  for (int i = 0; i < 5; ++i) { r = (r << 15) | (rand() & 0x7FFF);}
+  for (int i = 0; i < 5; ++i) {r = (r << 15) | (rand() & 0x7FFF);}
   return r & 0xFFFFFFFFFFFFFFFF;
 }
 
@@ -118,11 +113,9 @@ int vsh_keys() {
   printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
   printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
   printf("Alice & Bobs shared key: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
-
   vsh_crypt(c, k1, &d);
   vsh_crypt(d, k2, &e);
   printf("Before:  0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n",c,d,e);
-  assert(c == e);
   return c == e;
 }
 

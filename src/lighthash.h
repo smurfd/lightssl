@@ -1,19 +1,18 @@
 //                                                                            //
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
-#ifndef _LIGHTHASH_H_
-#define _LIGHTHASH_H_
+#ifndef LIGHTHASH_H
+#define LIGHTHASH_H 1
 
 #include <stdint.h>
 
-#ifndef _SHA_DEFINES_
-#define _SHA_DEFINES_
-//
+#ifndef SHA_DEFINES
+#define SHA_DEFINES 1
+
 // These constants hold size information for each of the SHA hashing operations
 #define sha_blk_sz 128                           // SHA Message Block Size
 #define sha_hsh_sz 64                            // SHA Hash Size
 #define sha_hsh_sb 512                           // SHA Hash Size Bits
 
-//
 // All SHA functions return one of these values.
 #define sha_ok 0                                 // Success
 #define sha_null 1                               // Null pointer parameter
@@ -22,43 +21,40 @@
 #define sha_bad 4                                // passed a bad parameter
 #endif
 
-//
 // This structure will hold context information for the SHA hashing operation.
-typedef struct shactx {
+typedef struct ctxs {
   u64 imh[sha_hsh_sz / 8];                       // Intermediate Message Digest
   u64 len_hi, len_lo;                            // Message length in bits
   int_least16_t msg_blk_i;                       // Message_Block array index
   u08 mb[sha_blk_sz];                            // 1024-bit message blocks
   int compute;                                   // Is the hash computed?
   int corrupt;                                   // Cumulative corrupt code
-} shactx;
+} ctxs;
 
-//
 // This structure will hold context information for the HMAC keyed-hashing operation.
-typedef struct hmacctx {
+typedef struct ctxh {
   int which;                                     // Which SHA is being used
   int size;                                      // Hash size of SHA being used
   int blk_size;                                  // Block size of SHA being used
-  shactx shactx;                                 // SHA Context
-  uc k_opad[sha_blk_sz];                         // Key XORd with opad
+  ctxs sha;                                      // SHA Context
+  b08 k_opad[sha_blk_sz];                        // Key XORd with opad
   int compute;                                   // Is the MAC computed?
   int corrupt;                                   // Cumulative corruption code
-} hmacctx;
+} ctxh;
 
-void sha_print(uint8_t *md, int hashsize, cc *resultarray);
-int sha_reset(shactx *c);
-int sha_input(shactx *c, const uint8_t *bytes, unsigned int bytecount);
-int sha_final(shactx *, uint8_t bits, unsigned int bit_count);
-int sha_result(shactx *c,uint8_t msg_dig[sha_hsh_sz]);
-int sha_match(cuc *hashvalue, cc *hexstr, int hashsize);
+// SHA Hashing
+int sha_reset(ctxs *c);
+int sha_input(ctxs *c, cu8 *bytes, ui bytecount);
+int sha_final(ctxs *, u08 bits, ui bit_count);
+int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]);
+int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s);
+void hash_new(cc *in, char* s);
+
+// HMAC Keyed-Hashing for Message Authentication, RFC 2104
+int hmac_reset(ctxh *c, cuc *key, int key_len);
+int hmac_input(ctxh *c, cuc *text,int text_len);
+int hmac_final(ctxh *c, u08 bits, ui bit_count);
+int hmac_result(ctxh *c, u08 digest[sha_hsh_sz]);
+
 int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs);
-void hash_new(const char *in, char* s);
-
-//
-// HMAC Keyed-Hashing for Message Authentication, RFC 2104, for all SHAs.
-// This interface allows any length of text input to be used.
-int hmac_reset(hmacctx *c, cuc *key, int key_len);
-int hmac_input(hmacctx *c, cuc *text,int text_len);
-int hmac_final(hmacctx *c, uint8_t bits, unsigned int bit_count);
-int hmac_result(hmacctx *c, uint8_t digest[sha_hsh_sz]);
 #endif

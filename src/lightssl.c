@@ -12,10 +12,9 @@
 #include <sys/socket.h>
 #include "lightssl.h"
 
-struct handshake {struct hello hi;} hs;
-
 // TODO: rework variable names to differ from functionnames
 // TODO: rework listen server loop
+struct handshake {struct hello hi;} hs;
 
 //
 // Print hello on server
@@ -34,7 +33,6 @@ int lightssl_srv_init(const char *host, const char *port) {
   saddr.sin_family = AF_INET;
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
-
   bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr));
   return ssock;
 }
@@ -43,13 +41,10 @@ int lightssl_srv_init(const char *host, const char *port) {
 // Server handler
 void *lightssl_srv_handler(void *sdesc) {
   struct hello *hs_srv, *hs_cli_recv;
-  b08 select[] = {TLSCIPHERAVAIL};
-  b08 compress = TLSCOMPRESSION;
-  b08 avail[] = {TLSCIPHER};
+  b08 select[]={TLSCIPHERAVAIL}, compress=TLSCOMPRESSION, avail[]={TLSCIPHER};
   int s = *(int *)sdesc;
 
   if (s == -1) {return (void *)-1;}
-
   hs_srv = malloc(sizeof(struct hello));
   hs_cli_recv = malloc(sizeof(struct hello));
   lightssl_hs_set_hello(
@@ -77,8 +72,7 @@ int lightssl_srv_listen(int ssock, struct sockaddr *cli) {
     new_sock = (int *)malloc(sizeof *new_sock);
     *new_sock = csock;
     if (pthread_create(
-          &sniffer_thread, NULL, lightssl_srv_handler, (void *)new_sock)
-      < 0) {
+          &sniffer_thread, NULL, lightssl_srv_handler, (void *)new_sock) < 0) {
       printf("error\n");
       return -1;
     }
@@ -108,12 +102,8 @@ int lightssl_cli_init(const char *host, const char *port) {
   saddr.sin_family = AF_INET;
   saddr.sin_port = htons(atoi(port));
   saddr.sin_addr.s_addr = inet_addr(host);
-
   cs = connect(csock, (struct sockaddr *)&saddr, sizeof(saddr));
-  if (cs < 0) {
-    printf("Connection error\n");
-    exit(1);
-  }
+  if (cs < 0) {printf("Connection error\n"); exit(1);}
   return csock;
 }
 
@@ -138,10 +128,10 @@ void lightssl_cli_end(int csock) { close(csock); }
 struct hello *lightssl_hs_set_hello(struct hello *hi, bool srv, int tls, u64 r,
   b08 avail[], b08 sel[], b08 c, u64 sess) {
   hi->server = srv;
-  hi->tls_v = tls; // will be 4 = TLS1.3
+  hi->tls_v = tls;                               // will be 4 = TLS1.3
   hi->rnd = r;
-  hi->ciph_avail[0] = avail[0]; // will only use 1 cipher
-  hi->ciph_select[0] = sel[0]; // will only use 1 cipher
+  hi->ciph_avail[0] = avail[0];                  // will only use 1 cipher
+  hi->ciph_select[0] = sel[0];                   // will only use 1 cipher
   hi->compress = c;
   hi->session_id = sess;
   return hi;
@@ -152,7 +142,6 @@ struct hello *lightssl_hs_set_hello(struct hello *hi, bool srv, int tls, u64 r,
 b08 lightssl_hs_send_hi(int csock, bool srv, struct hello *hi) {
   if (srv) {printf("Sending Hello from server\n");}
   else {printf("Sending Hello from client\n");}
-
   send(csock, hi, sizeof(struct hello), 0);
   lightssl_print_hello(hi);
   return 0;

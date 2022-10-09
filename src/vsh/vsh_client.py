@@ -2,21 +2,18 @@ import vsh, socket, random, math
 
 def vsh_rand():
   r = 0
-  for i in range(0, 5):
-    r = (r << 15) | (random.randint(0, 31337) & 0x7FFF)
-  return r & 0xFFFFF #FFFFFFFFFFF # C code overflows, python doesnt = huge nrs
+  for i in range(0, 5): r = (r << 15) | (random.randint(0, 31337) & 0x7FFF)
+  return r & 0xFFFFFFFFFFFFFFFF
 
 def vsh_genkeys(g, p):
   priv = vsh_rand()
-  publ = pow(g, priv, p)
-  return priv, publ
+  return priv, pow(g, priv, p)
 
 def vsh_genshare(priv1, publ1, priv2, publ2, p, s=False):
   if not s: return p % pow(publ1, priv2)
   else: return p % pow(publ2, priv1)
 
-def vsh_crypt(data, s1):
-  return data ^ s1
+def vsh_crypt(data, s1): return data ^ s1
 
 def keys():
   random.seed(31337)
@@ -26,14 +23,11 @@ def keys():
 
   priv1, pub1 = vsh_genkeys(g1, p1)
   priv2, pub2 = vsh_genkeys(g2, p2)
-
   s1 = vsh_genshare(priv1, pub1, priv2, pub2, p1, s=False)
   s2 = vsh_genshare(priv1, pub1, priv2, pub2, p1, s=True)
-
   print("Alice public & private key:", hex(pub1), hex(priv1))
   print("Bobs public & private key:", hex(pub2), hex(priv2))
   print("Alice & Bobs shared key:", hex(s1), hex(s2))
-
   d = vsh_crypt(c, s1)
   e = vsh_crypt(d, s2)
   assert(c == e)
@@ -48,7 +42,6 @@ def main():
     vsh.send(sock, ([str(g), str(p), str((g ** priv) % p)]))
     vsh.send(sock, vsh.crypt("Secret1", str(((int(vsh.recv(sock))) ** priv) % p)))
     sock.close()
-
     vsh.keypair()
     # (g ** priv) % p = alices public key, g & p shared public values
     # int(vsh.recv(sock)) = bobs public key

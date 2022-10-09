@@ -11,19 +11,15 @@
 #include "lightvsh.h"
 #include "test_lightssl.h"
 
-int test_sha() {
+// TEST SHA
+int test_sha_hmac() {
   // 11 of 11 SHA tests pass
   for (int i = 0; (i <= TESTCOUNT - 1); ++i) {
     int err = hash(h.t[i].testarray, h.t[i].length,
       h.t[i].repeatcount, h.t[i].nr_extrabits,
-      h.t[i].extrabits,0, 0, h.t[i].res_arr, h.hashsize);
-    assert(err == 1);
-    if (err != 1) return 0;
+      h.t[i].extrabits, 0, 0, h.t[i].res_arr, h.hashsize);
+    assert(err == 1); if (err != 1) return 0;
   }
-  return 1;
-}
-
-int test_hmac() {
   // 7 of 7 HMAC tests pass
   for (int i = 0; (i <= HMACTESTCOUNT-1); ++i) {
     cc *da = hm[i].dataarray[1] ? hm[i].dataarray[1] : hm[i].dataarray[0];
@@ -31,16 +27,13 @@ int test_hmac() {
     cuc* ka = (cuc*)(hm[i].keyarray[1] ? hm[i].keyarray[1] : hm[i].keyarray[0]);
     int kl = hm[i].keylength[1] ? hm[i].keylength[1] : hm[i].keylength[0];
     int err = hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
-    assert(err == 1);
-    if (err != 1) return 0;
+    assert(err == 1); if (err != 1) return 0;
   }
   return 1;
 }
 
 int main(int argc, char **argv) {
-  b08 avail[] = {TLSCIPHER};
-  b08 select[] = {TLSCIPHERAVAIL};
-  b08 compress = TLSCOMPRESSION;
+  b08 avail[] = {TLSCIPHER}, select[] = {TLSCIPHERAVAIL}, cmpr = TLSCOMPRESSION;
 
   if (argc == 2 && argv) {
     if (strcmp(argv[1], "server") == 0) {
@@ -54,7 +47,7 @@ int main(int argc, char **argv) {
 
       hs_cli = malloc(sizeof(struct hello));
       lightssl_hs_set_hello(hs_cli, false, TLSVERSION, 1337, avail, select,
-        compress, 13371337);
+        cmpr, 13371337);
       cl = lightssl_cli_init("127.0.0.1", "12345");
       lightssl_hs_send_hi(cl, false, hs_cli);
       hs_srv_recv = malloc(sizeof(struct hello));
@@ -110,9 +103,8 @@ int main(int argc, char **argv) {
         "C5D147AC6F528656456651606546CA42A1070BDFD79D024F3B97DD1BDAC7E70F3D1";
       char *s = malloc(sha_blk_sz);
 
-      assert(test_sha() == 1);
-      assert(test_hmac() == 1);
       hash_new("smurfd", s);
+      assert(test_sha_hmac() == 1);
       assert(strcmp(ra, s) == 0);
       free(s);
       printf("OK\n");
@@ -134,7 +126,6 @@ int main(int argc, char **argv) {
         vsh_transferdata(s, cd, true, h.len);
         vsh_end(s);
       }
-
       // locally generate two keypairs
       srand(time(0));
       vsh_keys();
@@ -142,7 +133,7 @@ int main(int argc, char **argv) {
       int s = vsh_init("127.0.0.1", "9998", true);
       sock *cli = NULL;
 
-      if (vsh_listen(s, cli) < 0) {printf("Thread creating problems\n"); exit(0);}
+      if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
     }
   }

@@ -1,5 +1,7 @@
 //                                                                            //
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
+#ifndef LIGHTSSL_TEST_H
+#define LIGHTSSL_TEST_H 1
 #define TEST1 "abc"
 #define TEST2_2a "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
 #define TEST2_2b "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
@@ -266,3 +268,4 @@ char *c[] = {"44444444444444444444444444444444444444444444444444444444444\
 9274629945080222978568386987953363923621183144968799380292173671165888872943803\
 9601173911907492700592982131530147912079948541749035857752315481732903160988470\
 021", "27", "1", "37", "0xb85c9"};
+#endif

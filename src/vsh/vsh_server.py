@@ -15,9 +15,7 @@ def shakeloop(c, priv, shake=False):
       g, p, ap = map(int, vsh.liteval(vsh.recv(c)))
       vsh.send(c, str((g ** priv) % p)) # Send bobs public key
     else: vsh.crypt(vsh.recv(c, b=True), (ap ** priv) % p); break
-    # We break after crypt because handshake is done and data
-    # is transfered encrypted
-
+    # Exit after handshake, data is transfered encrypted
     # ap = alices public key, g & p shared public values
     # (g ** priv) % p = bobs public key
     # (ap ** priv) % p = shared secret
