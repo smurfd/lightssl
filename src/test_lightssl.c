@@ -8,6 +8,7 @@
 #include "lightssl.h"
 #include "lightbig/src/lightbig.h"
 #include "lighthash.h"
+#include "lighthash3.h"
 #include "lightvsh.h"
 #include "test_lightssl.h"
 
@@ -135,6 +136,16 @@ int main(int argc, char **argv) {
 
       if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
+    } else if (strcmp(argv[1], "hash3") == 0) {
+      uint64_t A[5][5][64], Ap[5][5][64];
+      char *str = malloc(64*5*5);
+
+      str2state("smurfd", Ap);
+      state2str(Ap, str);
+      printf("str = %s\n", str);
+      th(A, Ap);
+      p(A, Ap);
+      free(str);
     }
   }
 }
