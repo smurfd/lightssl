@@ -212,7 +212,7 @@ int sponge(char *N, int r, int b, int d, char *Sr) {
   for (int i = 0; i < strlen(N); i++) P[i+strlen(Pp)] = N[i];
   int n = strlen(P) / r;
 
-  for (int i = 0; i < n; i++) 
+  for (int i = 0; i < n; i++)
     for (int j = 0; j < r; j++) Pn[i][j] = P[j+(i*r)];
 
   for (int i = 0; i < b; i++) S[i] = 0;
