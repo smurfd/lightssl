@@ -139,12 +139,20 @@ int main(int argc, char **argv) {
     } else if (strcmp(argv[1], "hash3") == 0) {
       uint64_t A[5][5][64], Ap[5][5][64];
       char *str = malloc(64*5*5);
+      char *str1 = malloc(64*5*5);
+      char *str2 = malloc(64*5*5);
 
       str2state("smurfd", Ap);
       state2str(Ap, str);
       printf("str = %s\n", str);
-      th(A, Ap);
-      p(A, Ap);
+      print_state(Ap);
+
+      for (int i = 0; i < 1600; i++) str1[i] = 's';
+      keccak(str1, 12, 128, str2);
+      printf("str = %s\n", str2);
+
+      free(str2);
+      free(str1);
       free(str);
     }
   }
