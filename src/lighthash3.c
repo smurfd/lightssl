@@ -176,8 +176,7 @@ void el1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
 
 void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
   uint64_t Ap1[5][5][64], Ap2[5][5][64], Ap3[5][5][64], Ap4[5][5][64];
-  
-  //clr_state(Ap);
+
   clr_state(Ap1);
   clr_state(Ap2);
   clr_state(Ap3);
@@ -197,8 +196,6 @@ void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
 // 4. Return S′.
 void keccak_p(int b, int nr, char *S, char *Sp) {
   uint64_t A[5][5][64], Ap[5][5][64];
-  //clr_state(A);
-  //clr_state(Ap);
 
   str2state(S, A);
   print_state(A);
