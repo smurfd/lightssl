@@ -266,7 +266,7 @@ void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S
 
 void f(char *S, int b, int r, int d, char *Sr) {
   int co = 0;
-  char *ZS = malloc(256);//b);
+  char *ZS = malloc(256);
   while (true) {
     char *Z = malloc(256);
     char *Zp = malloc(256);
@@ -277,8 +277,8 @@ void f(char *S, int b, int r, int d, char *Sr) {
     co = 1;
     for (uint64_t i = 0; i < strlen(Zp); i++) Zpp[i] = Zp[i];
     for (uint64_t i = 0; i < strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
-    printf("F %d %llu %llu\n", d, strlen(Zpp), strlen(Zp));
-    if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} free(ZS); Sr[d-1]='\0'; break;}
+    printf("F %d %lu %lu\n", d, strlen(Zpp), strlen(Zp));
+    if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} free(ZS); Sr[d]='\0'; break;}
     else f(Zpp, b, r, d, ZS);
     free(Zpp);
     free(Zp);
@@ -287,8 +287,8 @@ void f(char *S, int b, int r, int d, char *Sr) {
 }
 
 void sponge(char *N, int r, int b, int d, char *Sr) {
+  d = 10; // dunno what d should be, forcing 10 for now
   printf("in spong\n");
-  d = 10;
   int c = b - r;
   char S[b];
   char *Pp = malloc(256);//strlen(N));
@@ -308,7 +308,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   printf("in spong aft pad\n");
 
   int n = strlen(P) / r;
-  printf("spong c=%d, r=%d, b=%d, d=%d, n=%d %d %d\n", c, r, b, d, n, strlen(N),strlen(P));
+  printf("spong c=%d, r=%d, b=%d, d=%d, n=%d %lu %lu\n", c, r, b, d, n, strlen(N),strlen(P));
 
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < r; j++) {Pn[j + (i * r)] = P[j + (i * r)];}
@@ -321,11 +321,11 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
     char *sss = malloc(256);//b * r * c * sizeof(int));
     int *pns = malloc(256);//strlen(*Pn) * c * sizeof(int));
 
-      printf("spong loop %llu\n", strlen(P));
+    printf("spong loop %lu\n", strlen(P));
     for (uint64_t j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
 
     for (int j = 0; j < c; j++) pns[j+strlen(Pn)] = 0;
-      printf("spong loop\n");
+    printf("spong loop\n");
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
     //sss[b]='\0';
     printf("sss = %s\n", sss);
@@ -334,7 +334,6 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
     printf("Sr = %s\n", Sr);
 
     free(pns);
-    free(sss);
   }
   printf("aftr spong\n");
   Sr[b] = '\0';

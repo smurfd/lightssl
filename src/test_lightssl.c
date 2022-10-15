@@ -154,6 +154,7 @@ int main(int argc, char **argv) {
 
       for (int i = 0; i < 1600; i++) str1[i] = 's';
       keccak(str1, 5, 128, str2);
+      printf("------ // -----\n");
       printf("str = %s\n", str2);
 
       free(str2);
