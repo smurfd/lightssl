@@ -151,7 +151,7 @@ void ex(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ ((A[(x+1) % 5][y][z] ^ 1) & A[(x+2)%5][y][z]));
+        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ (uint64_t)((A[(x+1) % 5][y][z] ^ 1) & A[(x+2)%5][y][z]));
       }
     }
   }
@@ -160,7 +160,7 @@ void ex(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
 int el(int t) {
   int R[] = {1,0,0,0,0,0,0,0};
   int m = t % 255;
-  int *Rp = malloc(t * sizeof(int));
+  int *Rp = malloc(1256);//t * sizeof(int));
   int Rj[8];
   int co = 8;
   if (m == 0) return 1;
@@ -199,9 +199,13 @@ void el1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
       }
     }
   }
+  printf("------ aftr cop\n");
   for (int i = 0; i < 64; i++) RC[i] = 0;
+  printf("------ aftr cop\n");
   for (int j = 0; j < 6; j++) RC[(int)pow(2, j) - 1] = el(j + (7 * ir));
+  printf("------ aftr cop\n");
   for (int z = 0; z < 64; z++) Ap[0][0][z] = (uint64_t)(Ap[0][0][z] ^ RC[z]);
+  printf("------ aftr cop\n");
 }
 
 void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
@@ -227,7 +231,7 @@ void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
   printf("------ pi\n");
   ex(Ap1, Ap1);
   printf("------ ex\n");
-  print_state(Ap1);
+  //print_state(Ap1);
   printf("------ ex\n");
   el1(Ap1, ir, Ap);
   printf("------ el1\n");
@@ -266,37 +270,47 @@ void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S
 
 void f(char *S, int b, int r, int d, char *Sr) {
   int co = 0;
-  char *ZS = malloc(256);
+  printf("Ffff \n");
+  char ZS[1600];
+  //char ZS = malloc(256);
+  printf("Ffff \n");
   while (true) {
-    char *Z = malloc(256);
-    char *Zp = malloc(256);
-    char *Zpp = malloc(256);
-
+  char Z[1600];
+  char Zp[1600];
+  char Zpp[1600];
+    //char *Z = malloc(256);
+    //char *Zp = malloc(256);
+    //char *Zpp = malloc(256);
+    printf("Ffff \n");
     if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
     co = 1;
     for (uint64_t i = 0; i < strlen(Zp); i++) Zpp[i] = Zp[i];
     for (uint64_t i = 0; i < strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
     printf("F %d %lu %lu\n", d, strlen(Zpp), strlen(Zp));
-    if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} free(ZS); Sr[d]='\0'; break;}
+    if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
     else f(Zpp, b, r, d, ZS);
-    free(Zpp);
-    free(Zp);
-    free(Z);
+    //free(Zpp);
+    //free(Zp);
+    //free(Z);
   }
 }
 
 void sponge(char *N, int r, int b, int d, char *Sr) {
+  printf("in spong\n");
   d = 10; // dunno what d should be, forcing 10 for now
   printf("in spong\n");
   int c = b - r;
-  char S[b];
-  char *Pp = malloc(256);//strlen(N));
-  char *Pn = malloc(256);//r * strlen(N));
+  char S[1600];//b
+  char Pp[1600];
+  char Pn[1600];
+  //char *Pp = malloc(256);//strlen(N));
+  //char *Pn = malloc(256);//r * strlen(N));
   printf("in spong bef pad\n");
   pad(N, r, strlen(N), Pp);
   printf("in spong aft pad\n");
-  char *P = malloc(256);//strlen(Pp) + strlen(N));
+  //char *P = malloc(256);//strlen(Pp) + strlen(N));
+  char P[1600];
 
   printf("in spong aft pad\n");
 
@@ -318,8 +332,10 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   printf("spong loop\n");
 
   for (int i = 0; i < n; i++) {
-    char *sss = malloc(256);//b * r * c * sizeof(int));
-    int *pns = malloc(256);//strlen(*Pn) * c * sizeof(int));
+    char sss[1600];
+    int pns[1600];
+    //char *sss = malloc(256);//b * r * c * sizeof(int));
+    //int *pns = malloc(256);//strlen(*Pn) * c * sizeof(int));
 
     printf("spong loop %lu\n", strlen(P));
     for (uint64_t j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
@@ -333,13 +349,13 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
     f(sss, b, r, d, Sr);
     printf("Sr = %s\n", Sr);
 
-    free(pns);
+    //free(pns);
   }
   printf("aftr spong\n");
-  Sr[b] = '\0';
-  free(Pn);
-  free(Pp);
-  free(P);
+  //Sr[b] = '\0';
+  //free(Pn);
+  //free(Pp);
+  //free(P);
 }
 
 // Steps:
@@ -353,11 +369,14 @@ void pad10(int x, int m, char *P) {
 }
 
 void keccak(char *N, int c, int d, char *S) {
-  char *Pp = malloc(strlen(N));
+  //char *Pp = malloc(strlen(N));
+  char Pp[1601];
   keccak_p(10, 2, N, Pp);
-  printf("Pp = %s %d %d\n", Pp, c, d);
+  printf("Pp = %s %d %d %s %d\n", Pp, c, d, N, strlen(N));
   pad10(5, c, Pp);
   printf("Befoer sponge\n");
-  sponge(Pp, c, strlen(N), d, S);
-  free(Pp);
+  sponge(Pp, c, 1600, d, S);
+  printf("aft sponge\n");
+
+  //free(Pp);
 }
