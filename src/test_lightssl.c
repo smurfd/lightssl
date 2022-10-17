@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
       if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
     } else if (strcmp(argv[1], "hash3") == 0) {
-      uint64_t Ap[5][5][64];
+      u64 Ap[5][5][64];
       char str[1601], str1[1601], str2[1601];
 
       str2state("smurfd", Ap);
