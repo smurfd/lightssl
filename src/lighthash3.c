@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "lightdefs.h"
+
+typedef uint64_t u64;
 
 void clr_state(u64 Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
@@ -243,8 +244,8 @@ void f(char *S, int b, int r, int d, char *Sr) {
     char Zp[1601], Zpp[1601];
     if (co == 0) for (int i = 0; i < r; i++) {Zp[i] = S[i]; co = 1;}
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
-    for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i] = Zp[i];
-    for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
+    for (u64 i = 0; i < strlen(Zp); i++) Zpp[i] = Zp[i];
+    for (u64 i = 0; i < strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
     if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
     else {f(Zpp, b, r, d, ZS);}
   }
@@ -256,8 +257,8 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
 
   d = 10; // dunno what d should be, forcing 10 for now
   pad(N, r, strlen(N), Pp);
-  for (int i = 0; i < (int)strlen(N); i++) P[i] = N[i];
-  for (int i = 0; i < (int)strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
+  for (u64 i = 0; i < strlen(N); i++) P[i] = N[i];
+  for (u64 i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
   int n = (int)strlen(P) / r;
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < r; j++) {Pn[j + (i * r)] = P[j + (i * r)];}
@@ -267,7 +268,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   for (int i = 0; i < n; i++) {
     char sss[1601];
     int pns[1601];
-    for (int j = 0; j < (int)strlen(Pn); j++) {pns[j] = Pn[j];}
+    for (u64 j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
     for (int j = 0; j < c; j++) pns[j + strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
     f(sss, b, r, d, Sr);
