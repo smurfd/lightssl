@@ -271,14 +271,14 @@ void pad10(int x, int m, char *P, char *Pp) {
   int j = (-m - 2) % x;
   for (int i = 0; i < (int)strlen(P); i++) {Pp[i] = P[i];}
   Pp[0] = 1;
-  for (int i = 0; i < j; i++) Pp[i+1] = 0;
+  for (int i = 0; i < j; i++) Pp[i] = 0;
   Pp[j] = 1;
 }
 
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601], Ps[1601];
 
-  keccak_p(12, 3, N, Pp);
-  pad10(6, c, Pp, Ps);
+  keccak_p(12, 2, N, Pp);
+  pad10(5, c, Pp, Ps);
   sponge(Ps, c, 1600, d, S);
 }
