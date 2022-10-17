@@ -279,6 +279,6 @@ void keccak(char *N, int c, int d, char *S) {
   char Pp[1601], Ps[1601];
 
   keccak_p(12, 2, N, Pp);
-  pad10(5, c, Pp, Ps);
-  sponge(Ps, c, 1600, d, S);
+  //pad10(5, c, Pp, Ps);
+  //sponge(Ps, c, 1600, d, S);
 }
