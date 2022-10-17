@@ -230,9 +230,9 @@ void keccak_f(int b, char *S, char *Sp) {
 
 void pad(char *S, int x, int y, char *p) {
   for (int i = x; i < y; i++) {
-    p[i-x] = S[i];
+    p[i - x] = S[i];
   }
-  p[y] = '\0';
+  p[y - x] = '\0';
 }
 
 void f(char *S, int b, int r, int d, char *Sr) {
@@ -245,7 +245,7 @@ void f(char *S, int b, int r, int d, char *Sr) {
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
     co = 1;
     for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i] = Zp[i];
-    for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i + (int)strlen(Zp)] = Zp[i];
+    for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
     if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
     else {f(Zpp, b, r, d, ZS);}
   }
@@ -258,7 +258,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   d = 10; // dunno what d should be, forcing 10 for now
   pad(N, r, d, Pp);
   for (int i = 0; i < (int)strlen(N); i++) P[i] = N[i];
-  for (int i = 0; i < (int)strlen(Pp); i++) P[i + (int)strlen(N)] = Pp[i];
+  for (int i = 0; i < (int)strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
   int n = (int)strlen(P) / r;
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < r; j++) {Pn[j + (i * r)] = P[j + (i * r)];}
@@ -269,7 +269,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
     char sss[1601];
     int pns[1601];
     for (int j = 0; j < (int)strlen(Pn); j++) {pns[j] = Pn[j];}
-    for (int j = 0; j < c; j++) pns[j + (int)strlen(Pn)] = 0;
+    for (int j = 0; j < c; j++) pns[j + strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
     f(sss, b, r, d, Sr);
   }
@@ -288,7 +288,7 @@ void pad10(int x, int m, char *P) {
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
 
-  keccak_p(12, 2, N, Pp);
+  keccak_p(10, 2, N, Pp);
   pad10(5, c, Pp);
   sponge(Pp, c, 1600, d, S);
 }
