@@ -233,10 +233,11 @@ void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S
 
 void f(char *S, int b, int r, int d, char *Sr) {
   char ZS[1601];
+    char Zp[1601], Zpp[1601];
+
   int co = 0;
 
   while (true) {
-    char Zp[1601], Zpp[1601];
     if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
     co = 1;
@@ -248,10 +249,10 @@ void f(char *S, int b, int r, int d, char *Sr) {
 }
 
 void sponge(char *N, int r, int b, int d, char *Sr) {
-  d = 24; // dunno what d should be, forcing 24 for now
-  int c = b - r;
-  char S[1601], Pp[1601], Pn[1601], P[1601];
+  int c = b - r, pns[1601];
+  char S[1601], Pp[1601], Pn[1601], P[1601], sss[1601];
 
+  d = 24; // dunno what d should be, forcing 24 for now
   pad(N, r, strlen(N), Pp);
   for (u64 i = 0; i < strlen(N); i++) P[i] = N[i];
   for (u64 i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
@@ -259,12 +260,8 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < r; j++) {Pn[j + (i * r)] = P[j + (i * r)];}
   }
-  //Pn[r*n-1]='\0';
   for (int i = 0; i < b; i++) S[i] = 0;
   for (int i = 0; i < n; i++) {
-    char sss[1601];
-    int pns[1601];
-
     for (u64 j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
     for (int j = 0; j < c; j++) pns[j+strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
