@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
       printf("------ --- -----\n");
       printf("str = %s\n", str);
 
-      for (int i = 0; i < 1600; i++) str1[i] = 's';
+      for (int i = 0; i < 1599; i++) str1[i] = 's';
       keccak(str1, 12, 128, str2);
       printf("------ // -----\n");
       printf("str = %s\n", str2);

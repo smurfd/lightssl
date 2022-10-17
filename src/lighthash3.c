@@ -76,7 +76,7 @@ void state2str(u64 A[5][5][64], char *S) {
       }
     }
   }
-  //S[64*5*5] = '\0';
+  S[64*5*5] = '\0';
 }
 
 // 1. For all pairs (x, z) such that 0 ≤ x < 5 and 0 ≤ z < w, let
@@ -229,22 +229,17 @@ void keccak_f(int b, char *S, char *Sp) {
   keccak_p(b, 12 + 12, S, Sp);
 }
 
-void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S[i]; /*p[y]='\0';*/}
+void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S[i];}
 
 void f(char *S, int b, int r, int d, char *Sr) {
-  char ZS[1601];
-    char Zp[1601], Zpp[1601];
+  char ZS[1601], Zp[1601], Zpp[1601];
 
-  int co = 0;
-
+  for (int i = 0; i < r; i++) Zp[i] = S[i];
   while (true) {
-    if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
-    else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
-    co = 1;
-    for (u64 i = 0; i < strlen(Zp); i++) Zpp[i] = Zp[i];
-    for (u64 i = 0; i < strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
-    if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} /*Sr[d]='\0';*/ break;}
-    else f(Zpp, b, r, d, ZS);
+    for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i] = Zp[i];
+    for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i + (int)strlen(Zp)] = Zp[i];
+    if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
+    else {f(Zpp, b, r, d, ZS); for (int i = 0; i < r; i++) Zp[i] = ZS[i];}
   }
 }
 
@@ -253,17 +248,17 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   char S[1601], Pp[1601], Pn[1601], P[1601], sss[1601];
 
   d = 24; // dunno what d should be, forcing 24 for now
-  pad(N, r, strlen(N), Pp);
-  for (u64 i = 0; i < strlen(N); i++) P[i] = N[i];
-  for (u64 i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
-  int n = strlen(P) / r;
+  pad(N, r, d, Pp);
+  for (int i = 0; i < (int)strlen(N); i++) P[i] = N[i];
+  for (int i = 0; i < (int)strlen(Pp); i++) P[i + (int)strlen(N)] = Pp[i];
+  int n = (int)strlen(P) / r;
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < r; j++) {Pn[j + (i * r)] = P[j + (i * r)];}
   }
   for (int i = 0; i < b; i++) S[i] = 0;
   for (int i = 0; i < n; i++) {
-    for (u64 j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
-    for (int j = 0; j < c; j++) pns[j+strlen(Pn)] = 0;
+    for (int j = 0; j < (int)strlen(Pn); j++) {pns[j] = Pn[j];}
+    for (int j = 0; j < c; j++) pns[j + (int)strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
     f(sss, b, r, d, Sr);
   }
