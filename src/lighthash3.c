@@ -278,18 +278,17 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-void pad10(int x, int m, char *P, char *Pp) {
+void pad10(int x, int m, char *P) {
   int j = (-m - 2) % x;
-  for (int i = 0; i < (int)strlen(P); i++) {Pp[i] = P[i];}
-  for (int i = 0; i < j; i++) Pp[i] = 0;
+  for (int i = 0; i < j; i++) Pp[i+1] = 0;
   Pp[0] = 1;
   Pp[j] = 1;
 }
 
 void keccak(char *N, int c, int d, char *S) {
-  char Pp[1601], Ps[1601];
+  char Pp[1601];
 
   keccak_p(12, 2, N, Pp);
-  pad10(5, c, Pp, Ps);
-  sponge(Ps, c, 1600, d, S);
+  pad10(5, c, Pp);
+  sponge(Pp, c, 1600, d, S);
 }
