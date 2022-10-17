@@ -241,9 +241,8 @@ void f(char *S, int b, int r, int d, char *Sr) {
 
   while (true) {
     char Zp[1601], Zpp[1601];
-    if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
+    if (co == 0) for (int i = 0; i < r; i++) {Zp[i] = S[i]; co = 1;}
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
-    co = 1;
     for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i] = Zp[i];
     for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
     if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
@@ -256,7 +255,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   char S[1601], Pp[1601], Pn[1601], P[1601];
 
   d = 10; // dunno what d should be, forcing 10 for now
-  pad(N, r, d, Pp);
+  pad(N, r, strlen(N), Pp);
   for (int i = 0; i < (int)strlen(N); i++) P[i] = N[i];
   for (int i = 0; i < (int)strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
   int n = (int)strlen(P) / r;
