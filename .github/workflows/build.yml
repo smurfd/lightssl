@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -20,6 +20,6 @@ jobs:
     - name: Build
       run: CC=clang meson build
     - name: Compile
-      run: CC=clang ninja -C build
+      run: CC=clang ninja -C build -v
     - name: Test
       run: CC=clang ninja -C build test -v -d stats -d explain
