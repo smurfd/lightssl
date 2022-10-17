@@ -280,9 +280,9 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
 // 2. Return P = 1 || 0j || 1.
 void pad10(int x, int m, char *P) {
   int j = (-m - 2) % x;
-  for (int i = 0; i < j; i++) Pp[i+1] = 0;
-  Pp[0] = 1;
-  Pp[j] = 1;
+  for (int i = 0; i < j; i++) P[i+1] = 0;
+  P[0] = 1;
+  P[j] = 1;
 }
 
 void keccak(char *N, int c, int d, char *S) {
