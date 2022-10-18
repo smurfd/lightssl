@@ -67,6 +67,7 @@ void str2state(char *S, uint64_t Ap[5][5][64]) {
 // by Lane(i,j)= A[i,j,0] || A[i,j,1] || A[i,j,2] || ... || A[i,j,w-2] || A[i,j,w-1].
 void state2str(uint64_t A[5][5][64], char *S) {
   int count = 0;
+
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
@@ -219,13 +220,13 @@ void keccak_p(int b, int nr, char *S, char *Sp) {
   uint64_t A[5][5][64], Ap[5][5][64], Ap1[5][5][64];
 
   str2state(S, A);
-  copy_state(A, Ap1);
+  //copy_state(A, Ap1);
   for (int ir = 24 - nr; ir < 23; ir++) {
-    rnd1(Ap1, ir, Ap);
-    copy_state(Ap, Ap1);
+    rnd1(A, ir, A);
+    //copy_state(Ap, Ap1);
   }
-  state2str(Ap1, Sp);
-  Sp[b] = '\0';
+  state2str(A, Sp);
+  Sp[b-1] = '\0';
 }
 
 void keccak_f(int b, char *S, char *Sp) {
@@ -295,7 +296,7 @@ void pad10(int x, int m, char *P) {
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
 
-  //keccak_p(12, 3, N, Pp);
+  keccak_p(12, 3, N, Pp);
   //pad10(5, c, Pp);
   //sponge(Pp, c, 12, d, S);
 }
