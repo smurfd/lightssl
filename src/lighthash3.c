@@ -201,13 +201,7 @@ void el1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
 }
 
 void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
-  uint64_t Ap1[5][5][64], Ap2[5][5][64], Ap3[5][5][64], Ap4[5][5][64];
-
-  clr_state(Ap);
-  clr_state(Ap1);
-  clr_state(Ap2);
-  clr_state(Ap3);
-  clr_state(Ap4);
+  uint64_t Ap1[5][5][64];
 
   th(A, Ap1);
   p(Ap1, Ap1);
@@ -230,7 +224,7 @@ void keccak_p(int b, int nr, char *S, char *Sp) {
     rnd1(Ap1, ir, Ap);
     copy_state(Ap, Ap1);
   }
-  state2str(Ap, Sp);
+  state2str(Ap1, Sp);
   Sp[b] = '\0';
 }
 
@@ -242,12 +236,11 @@ void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S
 
 void f(char *S, int b, int r, int d, char *Sr) {
   int co = 0;
-  char ZS[1600];
+  char ZS[256];
 
   while (true) {
-    char Z[1600];
-    char Zp[1600];
-    char Zpp[1600];
+    char Zp[256];
+    char Zpp[256];
     if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
     co = 1;
@@ -261,12 +254,13 @@ void f(char *S, int b, int r, int d, char *Sr) {
 void sponge(char *N, int r, int b, int d, char *Sr) {
   d = 10; // dunno what d should be, forcing 10 for now
   int c = b - r;
-  char S[1600];
-  char Pp[1600];
-  char Pn[1600];
+  char S[256];
+  char Pp[256];
+  char Pn[256];
 
   pad(N, r, strlen(N), Pp);
-  char P[1600];
+  char P[256];
+  char sss[256];
 
   for (uint64_t i = 0; i < strlen(N); i++) P[i] = N[i];
   for (uint64_t i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
@@ -277,16 +271,15 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   }
   Pn[r*n-1]='\0';
   for (int i = 0; i < b; i++) S[i] = 0;
-
   for (int i = 0; i < n; i++) {
-    char sss[1600];
-    int pns[1600];
+    int pns[256];
 
     for (uint64_t j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
     for (int j = 0; j < c; j++) pns[j+strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
-    f(sss, b, r, d, Sr);
+    f(sss, b, r, d, S);
   }
+  for (int i = 0; i < (int)strlen(S); i++) Sr[i] = S[i];
 }
 
 // Steps:
@@ -301,7 +294,7 @@ void pad10(int x, int m, char *P) {
 
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
-  keccak_p(10, 2, N, Pp);
+  keccak_p(12, 3, N, Pp);
   pad10(5, c, Pp);
-  sponge(Pp, c, 1600, d, S);
+  sponge(Pp, c, 12, d, S);
 }
