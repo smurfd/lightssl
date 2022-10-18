@@ -7,9 +7,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-typedef uint64_t u64;
-
-void clr_state(u64 Ap[5][5][64]) {
+void clr_state(uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
@@ -19,7 +17,7 @@ void clr_state(u64 Ap[5][5][64]) {
   }
 }
 
-void print_state(u64 Ap[5][5][64]) {
+void print_state(uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
@@ -30,7 +28,7 @@ void print_state(u64 Ap[5][5][64]) {
   }
 }
 
-void copy_state(u64 A[5][5][64], u64 Ap[5][5][64]) {
+void copy_state(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
@@ -53,7 +51,7 @@ void copy_state(u64 A[5][5][64], u64 Ap[5][5][64]) {
 // The corresponding state array, denoted by A, is defined as follows:
 // For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, A[x, y, z]=S[w(5y+x)+z].
 // For example, if b=1600, so that w=64,
-void str2state(char *S, u64 Ap[5][5][64]) {
+void str2state(char *S, uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
@@ -67,7 +65,7 @@ void str2state(char *S, u64 Ap[5][5][64]) {
 // can be constructed from the lanes and planes of A, as follows:
 // For each pair of integers (i, j) such that 0≤i<5 and 0≤j<5, define the string Lane(i, j)
 // by Lane(i,j)= A[i,j,0] || A[i,j,1] || A[i,j,2] || ... || A[i,j,w-2] || A[i,j,w-1].
-void state2str(u64 A[5][5][64], char *S) {
+void state2str(uint64_t A[5][5][64], char *S) {
   int count = 0;
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
@@ -86,19 +84,19 @@ void state2str(u64 A[5][5][64], char *S) {
 // D[x, z] = C[(x1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w].
 // 3. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
-void th(u64 A[5][5][64], u64 Ap[5][5][64]) {
-  u64 C[5][64], D[5][64];
+void th(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
+  uint64_t C[5][64], D[5][64];
 
   for (int x = 0; x < 5; x++) {
     for (int z = 0; z < 64; z++) {
-      C[x][z] = (u64)(A[x][0][z] ^ A[x][1][z] ^ A[x][2][z] ^ A[x][3][z] ^ A[x][4][z]);
-      D[x][z] = (u64)(C[(x - 1) % 5][z] ^ C[(x + 1) % 5][(z - 1) % 64]);
+      C[x][z] = (uint64_t)(A[x][0][z] ^ A[x][1][z] ^ A[x][2][z] ^ A[x][3][z] ^ A[x][4][z]);
+      D[x][z] = (uint64_t)(C[(x - 1) % 5][z] ^ C[(x + 1) % 5][(z - 1) % 64]);
     }
   }
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = (u64)(A[x][y][z] ^ D[x][z]);
+        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ D[x][z]);
       }
     }
   }
@@ -111,12 +109,14 @@ void th(u64 A[5][5][64], u64 Ap[5][5][64]) {
 // a. for all z such that 0 ≤ z < w, let A′[x, y, z] = A[x, y, (z – (t + 1)(t + 2)/2) mod w];
 // b. let (x, y) = (y, (2x + 3y) mod 5).
 // 4. Return A′.
-void p(u64 A[5][5][64], u64 Ap[5][5][64]) {
-  int x = 1, y = 0, xtmp = 0;
+void p(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
+  int x = 0, y = 0, xtmp = 0;
 
   for (int z = 0; z < 64; z++) {
     Ap[0][0][z] = A[0][0][z];
   }
+  x = 1;
+  y = 0;
   for (int t = 0; t < 23; t++) {
     for (int z = 0; z < 64; z++) {
       Ap[x][y][z] = A[x][y][(z - ((t + 1) * (t + 2) / 2)) % 64];
@@ -131,7 +131,7 @@ void p(u64 A[5][5][64], u64 Ap[5][5][64]) {
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z]= A[(x + 3y) mod 5, x, z].
 // 2. Return A′.
-void pi(u64 A[5][5][64], u64 Ap[5][5][64]) {
+void pi(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
@@ -144,11 +144,11 @@ void pi(u64 A[5][5][64], u64 Ap[5][5][64]) {
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′ [x, y, z] = A[x, y, z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5, y, z]).
 // 2. Return A′.
-void ex(u64 A[5][5][64], u64 Ap[5][5][64]) {
+void ex(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = (u64)(A[x][y][z] ^ (u64)((A[(x+1) % 5][y][z] ^ 1) & A[(x+2)%5][y][z]));
+        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ (uint64_t)((A[(x+1) % 5][y][z] ^ 1) & A[(x+2)%5][y][z]));
       }
     }
   }
@@ -156,7 +156,10 @@ void ex(u64 A[5][5][64], u64 Ap[5][5][64]) {
 
 int el(int t) {
   int R[] = {1,0,0,0,0,0,0,0};
-  int m = t % 255, Rp[1601], Rj[8], co = 8;
+  int m = t % 255;
+  int *Rp = malloc(1256);//t * sizeof(int));
+  int Rj[8];
+  int co = 8;
   if (m == 0) return 1;
 
   for (int i = 1; i < m; i++) {
@@ -181,7 +184,7 @@ int el(int t) {
 // 3. For j from 0 to l, let RC[2j – 1] = rc(j + 7ir).
 // 4. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A′ [0, 0, z] ⊕ RC[z].
 // 5. Return A′.
-void el1(u64 A[5][5][64], int ir, u64 Ap[5][5][64]) {
+void el1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
   // log2(64) = 6
   int RC[64];
 
@@ -194,11 +197,17 @@ void el1(u64 A[5][5][64], int ir, u64 Ap[5][5][64]) {
   }
   for (int i = 0; i < 64; i++) RC[i] = 0;
   for (int j = 0; j < 6; j++) RC[(int)pow(2, j) - 1] = el(j + (7 * ir));
-  for (int z = 0; z < 64; z++) Ap[0][0][z] = (u64)(Ap[0][0][z] ^ RC[z]);
+  for (int z = 0; z < 64; z++) Ap[0][0][z] = (uint64_t)(Ap[0][0][z] ^ RC[z]);
 }
 
-void rnd1(u64 A[5][5][64], int ir, u64 Ap[5][5][64]) {
-  u64 Ap1[5][5][64];
+void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
+  uint64_t Ap1[5][5][64], Ap2[5][5][64], Ap3[5][5][64], Ap4[5][5][64];
+
+  clr_state(Ap);
+  clr_state(Ap1);
+  clr_state(Ap2);
+  clr_state(Ap3);
+  clr_state(Ap4);
 
   th(A, Ap1);
   p(Ap1, Ap1);
@@ -213,7 +222,7 @@ void rnd1(u64 A[5][5][64], int ir, u64 Ap[5][5][64]) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 void keccak_p(int b, int nr, char *S, char *Sp) {
-  u64 A[5][5][64], Ap[5][5][64], Ap1[5][5][64];
+  uint64_t A[5][5][64], Ap[5][5][64], Ap1[5][5][64];
 
   str2state(S, A);
   copy_state(A, Ap1);
@@ -229,47 +238,52 @@ void keccak_f(int b, char *S, char *Sp) {
   keccak_p(b, 12 + 12, S, Sp);
 }
 
-void pad(char *S, int x, int y, char *p) {
-  for (int i = x; i < y; i++) {
-    p[i - x] = S[i];
-  }
-  p[y - x] = '\0';
-}
+void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S[i]; p[y]='\0';}
 
 void f(char *S, int b, int r, int d, char *Sr) {
-  char ZS[1601];
   int co = 0;
+  char ZS[1600];
 
   while (true) {
-    char Zp[1601], Zpp[1601];
-    if (co == 0) for (int i = 0; i < r; i++) {Zp[i] = S[i]; co = 1;}
+    char Z[1600];
+    char Zp[1600];
+    char Zpp[1600];
+    if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
-    for (u64 i = 0; i < strlen(Zp); i++) Zpp[i] = Zp[i];
-    for (u64 i = 0; i < strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
+    co = 1;
+    for (uint64_t i = 0; i < strlen(Zp); i++) Zpp[i] = Zp[i];
+    for (uint64_t i = 0; i < strlen(Zp); i++) Zpp[i + strlen(Zp)] = Zp[i];
     if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
-    else {f(Zpp, b, r, d, ZS);}
+    else f(Zpp, b, r, d, ZS);
   }
 }
 
 void sponge(char *N, int r, int b, int d, char *Sr) {
-  int c = b - r;
-  char S[1601], Pp[1601], Pn[1601], P[1601];
-
   d = 10; // dunno what d should be, forcing 10 for now
+  int c = b - r;
+  char S[1600];
+  char Pp[1600];
+  char Pn[1600];
+
   pad(N, r, strlen(N), Pp);
-  for (u64 i = 0; i < strlen(N); i++) P[i] = N[i];
-  for (u64 i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
-  int n = (int)strlen(P) / r;
+  char P[1600];
+
+  for (uint64_t i = 0; i < strlen(N); i++) P[i] = N[i];
+  for (uint64_t i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
+  int n = strlen(P) / r;
+
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < r; j++) {Pn[j + (i * r)] = P[j + (i * r)];}
   }
   Pn[r*n-1]='\0';
   for (int i = 0; i < b; i++) S[i] = 0;
+
   for (int i = 0; i < n; i++) {
-    char sss[1601];
-    int pns[1601];
-    for (u64 j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
-    for (int j = 0; j < c; j++) pns[j + strlen(Pn)] = 0;
+    char sss[1600];
+    int pns[1600];
+
+    for (uint64_t j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
+    for (int j = 0; j < c; j++) pns[j+strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = S[j] ^ pns[j];}
     f(sss, b, r, d, Sr);
   }
@@ -280,14 +294,13 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
 // 2. Return P = 1 || 0j || 1.
 void pad10(int x, int m, char *P) {
   int j = (-m - 2) % x;
-  for (int i = 0; i < j; i++) P[i+1] = 0;
   P[0] = 1;
+  for (int i = 0; i < j; i++) P[i+1] = 0;
   P[j] = 1;
 }
 
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
-
   keccak_p(10, 2, N, Pp);
   pad10(5, c, Pp);
   sponge(Pp, c, 1600, d, S);
