@@ -294,7 +294,8 @@ void pad10(int x, int m, char *P) {
 
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
-  keccak_p(12, 3, N, Pp);
-  pad10(5, c, Pp);
-  sponge(Pp, c, 12, d, S);
+
+  //keccak_p(12, 3, N, Pp);
+  //pad10(5, c, Pp);
+  //sponge(Pp, c, 12, d, S);
 }
