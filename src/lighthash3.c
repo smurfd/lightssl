@@ -288,7 +288,10 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
 // 2. Return P = 1 || 0j || 1.
 void pad10(int x, int m, char *P) {
   int j = (-m - 2) % x;
+
+  if (j < 0) j = j * -1; // think this was the problem, j became negative
   P[0] = 1;
+  printf("pad: %d %d %d\n", x, m, j);
   for (int i = 0; i < j; i++) P[i+1] = 0;
   P[j] = 1;
 }
@@ -297,6 +300,6 @@ void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
 
   keccak_p(12, 3, N, Pp);
-  //pad10(5, c, Pp);
-  //sponge(Pp, c, 12, d, S);
+  pad10(12, c, Pp);
+  sponge(Pp, c, 12, d, S);
 }
