@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
       vsh_end(s);
     } else if (strcmp(argv[1], "hash3") == 0) {
       char str[256];
+      char str1[1601], str2[1601];
       uint64_t Ap[5][5][64];
 
       str2state("smurfd", Ap);
@@ -102,10 +103,24 @@ int main(int argc, char **argv) {
       printf("------ --- -----\n");
       printf("str = %s\n", str);
 
-      //for (int i = 0; i < 128; i++) str[i] = 's';
       keccak(str, 7, 128, str);
       printf("------ // -----\n");
       printf("str = %s\n", str);
+      printf("------------------------------------------------------------------------\n");
+
+
+      for (int i = 0; i < 1600; i++) str1[i] = 's';
+      str2state(str1, Ap);
+      print_state(Ap);
+      state2str(Ap, str2);
+      printf("str2 = %s\n", str2);
+      printf("---------------------------------------------------- TH\n");
+      th(Ap, Ap);
+      print_state(Ap);
+      printf("---------------------------------------------------- P\n");
+
+      p(Ap, Ap);
+      print_state(Ap);
     }
   }
 }

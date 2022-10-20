@@ -7,6 +7,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+// Imitate pythons %. -1 % 5 = 4, not -1
+int mod(int n, int M) {return ((n % M) + M) % M;}
+
 void clr_state(uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
@@ -55,7 +58,9 @@ void str2state(char *S, uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = S[64 * ((5 * y) + x) + z];
+        int len = 64 * ((5 * y) + x) + z;
+        if (len <= (int)strlen(S)) Ap[x][y][z] = S[len];
+        else Ap[x][y][z] = 0;
       }
     }
   }
@@ -90,14 +95,21 @@ void th(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
 
   for (int x = 0; x < 5; x++) {
     for (int z = 0; z < 64; z++) {
-      C[x][z] = (uint64_t)(A[x][0][z] ^ A[x][1][z] ^ A[x][2][z] ^ A[x][3][z] ^ A[x][4][z]);
-      D[x][z] = (uint64_t)(C[(x - 1) % 5][z] ^ C[(x + 1) % 5][(z - 1) % 64]);
+      C[x][z] = (uint64_t)((uint64_t)A[x][0][z] ^ (uint64_t)A[x][1][z] ^ (uint64_t)A[x][2][z] ^ (uint64_t)A[x][3][z] ^ (uint64_t)A[x][4][z]);
+      printf("c=%llu = a0=%llu xor a1=%llu xor a2=%llu xor a3=%llu xor a4=%llu :: %d %d\n", C[x][z], A[x][0][z], A[x][1][z], A[x][2][z], A[x][3][z], A[x][4][z], x, z);
+    }
+  }
+  for (int x = 0; x < 5; x++) {
+    for (int z = 0; z < 64; z++) {
+      D[x][z] = (uint64_t)((uint64_t)C[(int)mod((x - 1), 5)][z] ^ (uint64_t)C[(int)mod((x + 1), 5)][(int)mod((z - 1), 64)]);
+      printf("d=%llu = c=%llu xor c=%llu  :: %d %d %d\n", D[x][z], C[(int)mod((x - 1), 5)][z], C[(int)mod((x + 1), 5)][(int)mod((z - 1), 64)], mod((x - 1), 5), mod((x + 1), 5), mod((z - 1), 64));
     }
   }
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ D[x][z]);
+        Ap[x][y][z] = (uint64_t)((uint64_t)A[x][y][z] ^ (uint64_t)D[x][z]);
+        //printf("Ap=%llu, A=%llu XOR D=%llu\n", Ap[x][y][z], A[x][y][z], D[x][z]);
       }
     }
   }
@@ -120,11 +132,12 @@ void p(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   y = 0;
   for (int t = 0; t < 23; t++) {
     for (int z = 0; z < 64; z++) {
-      Ap[x][y][z] = A[x][y][(z - ((t + 1) * (t + 2) / 2)) % 64];
+      Ap[x][y][z] = A[x][y][mod((z - ((t + 1) * (t + 2) / 2)), 64)];
+      printf("ap=%llu A=%llu, %d :: %d %d %d\n",Ap[x][y][z],A[x][y][mod((z - ((t + 1) * (t + 2) / 2)), 64)], mod((z - ((t + 1) * (t + 2) / 2)), 64), x, y, z);
     }
     xtmp = x;
     x = y;
-    y = (2 * xtmp + 3 * y) % 5;
+    y = mod((2 * xtmp + 3 * y), 5);
   }
 }
 
@@ -136,7 +149,7 @@ void pi(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = A[(x + (3 * y)) % 5][x][z];
+        Ap[x][y][z] = A[mod((x + (3 * y)), 5)][x][z];
       }
     }
   }
@@ -149,7 +162,7 @@ void ex(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       for (int z = 0; z < 64; z++) {
-        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ (uint64_t)((A[(x+1) % 5][y][z] ^ 1) & A[(x+2)%5][y][z]));
+        Ap[x][y][z] = (uint64_t)(A[x][y][z] ^ (uint64_t)((A[mod((x + 1), 5)][y][z] ^ 1) & A[mod((x+2), 5)][y][z]));
       }
     }
   }
@@ -157,12 +170,9 @@ void ex(uint64_t A[5][5][64], uint64_t Ap[5][5][64]) {
 
 int el(int t) {
   int R[] = {1,0,0,0,0,0,0,0};
-  int m = t % 255;
-  int *Rp = malloc(1256);//t * sizeof(int));
-  int Rj[8];
-  int co = 8;
-  if (m == 0) return 1;
+  int m = mod(t, 255), Rp[1601], Rj[8], co = 8;
 
+  if (m == 0) return 1;
   for (int i = 1; i < m; i++) {
     for (int j = 0; j < co; j++) {
       if (co == 8) Rp[j + 1] = R[j];
@@ -202,13 +212,13 @@ void el1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
 }
 
 void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
-  uint64_t Ap1[5][5][64];
+  //uint64_t Ap1[5][5][64];
 
-  th(A, Ap1);
-  p(Ap1, Ap1);
-  pi(Ap1, Ap1);
-  ex(Ap1, Ap1);
-  el1(Ap1, ir, Ap);
+  th(A, Ap);
+  p(Ap, Ap);
+  pi(Ap, Ap);
+  ex(Ap, Ap);
+  el1(Ap, ir, Ap);
 }
 
 // Steps:
@@ -217,13 +227,11 @@ void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 void keccak_p(int b, int nr, char *S, char *Sp) {
-  uint64_t A[5][5][64], Ap[5][5][64], Ap1[5][5][64];
+  uint64_t A[5][5][64];//, Ap[5][5][64], Ap1[5][5][64];
 
   str2state(S, A);
-  //copy_state(A, Ap1);
   for (int ir = 24 - nr; ir < 23; ir++) {
     rnd1(A, ir, A);
-    //copy_state(Ap, Ap1);
   }
   state2str(A, Sp);
   Sp[b-1] = '\0';
@@ -237,11 +245,11 @@ void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S
 
 void f(char *S, int b, int r, int d, char *Sr) {
   int co = 0;
-  char ZS[256];
+  char ZS[1601];
 
   while (true) {
-    char Zp[256];
-    char Zpp[256];
+    char Zp[1601];
+    char Zpp[1601];
     if (co == 0) for (int i = 0; i < r; i++) Zp[i] = S[i];
     else for (int i = 0; i < r; i++) Zp[i] = ZS[i];
     co = 1;
@@ -255,13 +263,13 @@ void f(char *S, int b, int r, int d, char *Sr) {
 void sponge(char *N, int r, int b, int d, char *Sr) {
   d = 10; // dunno what d should be, forcing 10 for now
   int c = b - r;
-  char S[256];
-  char Pp[256];
-  char Pn[256];
+  char S[1601];
+  char Pp[1601];
+  char Pn[1601];
 
   pad(N, r, strlen(N), Pp);
-  char P[256];
-  char sss[256];
+  char P[1601];
+  char sss[1601];
 
   for (uint64_t i = 0; i < strlen(N); i++) P[i] = N[i];
   for (uint64_t i = 0; i < strlen(Pp); i++) P[i + strlen(N)] = Pp[i];
@@ -273,7 +281,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   Pn[r*n-1]='\0';
   for (int i = 0; i < b; i++) S[i] = 0;
   for (int i = 0; i < n; i++) {
-    int pns[256];
+    int pns[1601];
 
     for (uint64_t j = 0; j < strlen(Pn); j++) {pns[j] = Pn[j];}
     for (int j = 0; j < c; j++) pns[j+strlen(Pn)] = 0;
@@ -287,12 +295,11 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
 void pad10(int x, int m, char *P) {
-  int j = (-m - 2) % x;
+  int j = mod((-m - 2), x);
 
   if (j < 0) j = j * -1; // think this was the problem, j became negative
   P[0] = 1;
-  printf("pad: %d %d %d\n", x, m, j);
-  for (int i = 0; i < j; i++) P[i+1] = 0;
+  for (int i = 0; i < j; i++) P[i + 1] = 0;
   P[j] = 1;
 }
 
@@ -300,6 +307,7 @@ void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
 
   keccak_p(12, 3, N, Pp);
+  printf("kekka: %s\n", Pp);
   pad10(12, c, Pp);
   sponge(Pp, c, 12, d, S);
 }
