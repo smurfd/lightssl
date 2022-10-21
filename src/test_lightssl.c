@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
       p(Ap, Ap);
       print_state(Ap);
-      keccak(str1, 17, 128, str2);
+      keccak(str1, 24, 512, str2);
       printf("------ // -----\n");
       printf("str = %s\n", str2);
       printf("------------------------------------------------------------------------\n");

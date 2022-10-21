@@ -249,7 +249,9 @@ void keccak_f(int b, char *S, char *Sp) {
   keccak_p(b, 12 + 12, S, Sp);
 }
 
-void pad(char *S, int x, int y, char *p) {for (int i = x; i < y; i++) p[x-i] = S[i]; p[y]='\0';}
+void pad(char *S, int x, int y, char *p) {
+  for (int i = x; i < y; i++) p[x-i] = S[i]; p[y]='\0';
+}
 
 void f(char *S, int b, int r, int d, char *Sr) {
   char ZS[1601], Zp[1601], Zpp[1601];
@@ -259,15 +261,16 @@ void f(char *S, int b, int r, int d, char *Sr) {
     for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i] = Zp[i];
     for (int i = 0; i < (int)strlen(Zp); i++) Zpp[i + (int)strlen(Zp)] = Zp[i];
     if (d <= (int)strlen(Zpp)) {for (int j = 0; j < d; j++) {Sr[j] = Zpp[j];} Sr[d]='\0'; break;}
-    else f(Zpp, b, r, d, ZS);
-    for (int i = 0; i < r; i++) Zp[i] = ZS[i];
+    else {f(Zpp, b, r, d, Zp);//Zpp);//ZS);
+    //for (int i = 0; i < r; i++) {Zp[i] = ZS[i]; Sr[i] = ZS[i];}
+    }
   }
 }
 
 // Steps:
 // 1. Let P=N || pad(r, len(N)).
 // 2. Let n = len(P)/r.
-// 3. Letc=b-r.
+// 3. Let c=b-r.
 // 4. Let P0, ... , Pn-1 be the unique sequence of strings of length r such
 //      that P = P0 || ... || Pn-1.
 // 5. Let S=0b.
@@ -280,9 +283,10 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   char Pp[1601], Pn[1601], P[1601], sss[1601];
   int c = b - r, pns[1601];
 
-  pad(N, r, strlen(N), Pp);
+  pad(N, c, strlen(N), Pp);
   for (int i = 0; i < (int)strlen(N); i++) P[i] = N[i];
   for (int i = 0; i < (int)strlen(Pp); i++) P[i + (int)strlen(N)] = Pp[i];
+  P[(int)strlen(N)+(int)strlen(Pp)]='\0';
   int n = (int)strlen(P) / r;
 
   for (int i = 0; i < n; i++) {
@@ -290,7 +294,7 @@ void sponge(char *N, int r, int b, int d, char *Sr) {
   }
   Pn[r*n-1]='\0';
   for (int i = 0; i < b; i++) sss[i] = 0;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n-1; i++) {
     for (int j = 0; j < (int)strlen(Pn); j++) {pns[j] = Pn[j];}
     for (int j = 0; j < c; j++) pns[j + (int)strlen(Pn)] = 0;
     for (int j = 0; j < b; j++) {sss[j] = sss[j] ^ pns[j];}
@@ -309,6 +313,8 @@ void pad10(int x, int m, char *P) {
   P[0] = 1;
   for (int i = 0; i < j; i++) P[i + 1] = 0;
   P[j] = 1;
+
+  printf("j=%d x=%d m=%d : %d %d\n", j, x, m, (int)strlen(P), m + (int)strlen(P));
 }
 
 // Specification of KECCAK[c]
@@ -330,9 +336,9 @@ void pad10(int x, int m, char *P) {
 void keccak(char *N, int c, int d, char *S) {
   char Pp[1601];
 
-  keccak_p(512, 24, N, Pp);
-  pad10(512, c, Pp);
-  sponge(Pp, c, 12, d, S);
+  keccak_p(1600-c, 24, N, Pp);
+  pad10(100, c, Pp);
+  sponge(Pp, 1600-c, 1600, d, S);
 }
 
 // SHA3-512(M) = KECCAK[1024] (M || 01, 512).
