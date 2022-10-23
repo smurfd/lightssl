@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
       if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
     } else if (strcmp(argv[1], "hash3") == 0) {
-      char str[256];
+      char str[1601];
       char str1[1601], str2[1601];
       uint64_t Ap[5][5][64];
 
@@ -103,29 +103,22 @@ int main(int argc, char **argv) {
       printf("------ --- -----\n");
       printf("str = %s\n", str);
 
-      keccak(str, 7, 128, str);
+      keccak(str, 24, 512, str1);
       printf("------ // -----\n");
-      printf("str = %s\n", str);
+      printf("str = %s\n", str1);
       printf("------------------------------------------------------------------------\n");
 
-
+/*
       for (int i = 0; i < 1600; i++) str1[i] = 's';
       str2state(str1, Ap);
       print_state(Ap);
       state2str(Ap, str2);
       printf("str2 = %s\n", str2);
-      printf("---------------------------------------------------- TH\n");
-      th(Ap, Ap);
-      print_state(Ap);
-      printf("---------------------------------------------------- P\n");
-
-      p(Ap, Ap);
-      print_state(Ap);
       keccak(str1, 24, 512, str2);
       printf("------ // -----\n");
       printf("str = %s\n", str2);
       printf("------------------------------------------------------------------------\n");
-
+*/
     }
   }
 }
