@@ -188,7 +188,7 @@ void iota(uint64_t (*A)[5][5], uint32_t ir) {
   uint64_t RC = 0;
 
   for (uint32_t j = 0; j <= 6; j++) {RC += ROL64(rc(j + 7 * ir), (int)pow(2, j)-1);}
-  (*A)[0][0] ^= RC; 
+  (*A)[0][0] ^= RC;
 }
 
 // Steps:
@@ -441,7 +441,7 @@ void FIPS202_SHA3_Final(void *outPtr, uint64_t *ss, uint64_t *sav, size_t *bi, s
   // pad and finish
   ss[*wi] ^= *sav;
   ss[*wi] ^= (uint64_t)(0x06) << (*bi*8);
-  ss[SHA3_STATE_WORDS - CPW-1] ^= MSB_U64; 
+  ss[SHA3_STATE_WORDS - CPW-1] ^= MSB_U64;
   sha3f(ss);
   memcpy(out, ss, BIT);
 }
@@ -454,7 +454,7 @@ int main() {
   uint64_t sav = 0;
 
   FIPS202_SHA3_Update(in, strlen(in), s, &sav, &bi, &wi);
-  FIPS202_SHA3_Final(out, s, &sav, &bi, &wi); 
+  FIPS202_SHA3_Final(out, s, &sav, &bi, &wi);
   for (uint64_t i = 0; i < 64; i++) {printf("%.2x", out[i]);} printf("\n");
   free(out);
 }
