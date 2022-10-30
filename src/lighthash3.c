@@ -212,11 +212,12 @@ void keccak_p(uint8_t *sm, uint8_t (*S)[200]) {
   state2str(&A, (*S));
 }
 
-uint32_t concatenate(uint8_t **z, const uint8_t *x, uint32_t xl, const uint8_t *y, uint32_t yl) {
+uint32_t concatenate(uint8_t **z, const uint8_t *x, uint32_t xl, const uint8_t *y, const uint32_t yl) {
   uint32_t zbil = xl + yl, xl8 = xl / 8, mxl8 = mod(xl, 8);
   uint32_t zbyl = (zbil / 8) + (mod(zbil, 8) ? 1 : 0);
 
-  *z = calloc(zbyl, sizeof(uint8_t));
+  //*z = calloc(zbyl, sizeof(uint8_t)); // this does not work with r=b-d?!!?
+  *z = calloc(256, sizeof(uint8_t));
   if (*z == NULL) return 0;
   memcpy(*z, x, xl8);
   for (uint32_t i = 0; i < mxl8; i++) {(*z)[xl8] |= (x[xl8] & (1 << i));}
@@ -256,29 +257,29 @@ uint32_t pad10(uint32_t x, uint32_t m, uint8_t **P) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-void sponge(uint8_t *N, uint32_t d, int l, uint8_t **ps) {
-  uint8_t *p, *pi, *pad, az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *z, str[1088 / 8]= {0};
-  int b = 1600, c = 512, r = 1088, len, sl, plen;
+void sponge(uint8_t *N, int32_t d, int l, uint8_t **ps) {
+  int32_t b = 1600, c = 512, len, sl, plen, zl = 0, r = b - d;
+  uint8_t *pad, az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, str[200] = {0};
+  uint8_t *p, *pi, *z;
 
   len = pad10(r, l, &pad);
   plen = concatenate(&p, N, l, pad, len);
-
-  int nn = plen / r;
-  for (int i = 0; i < nn; i++) {
+  for (int32_t i = 0; i < plen / r; i++) {
     concatenate(&pi, &p[i * r/8], r, az, c); // P_i || 0^c
     for (int j = 0; j < b/8; j++) {sxor[j] = s[j] ^ pi[j];} // S XOR P_i || 0^c
     free(pi);
     keccak_p(sxor, &s); // f(S XOR (P_i || 0^c))
   }
-  uint32_t zl = 0;
+
   while (true) {
     memcpy(str, s, r/8);
     zl = concatenate(&z, z, zl, str, r); // Z = Z || Trunc_r(S)
-    if (d <= zl) {memcpy((*ps), z, 256/8); break;}
+    if (d <= zl) {memcpy((*ps), z, 512/8); break;}
     memcpy(sc, s, b/8);
     keccak_p(sc, &s);
   }
   free(pad);
+  free(p);
   free(z);
 }
 
