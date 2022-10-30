@@ -10,22 +10,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-int el(int t);
-void clr_state(uint64_t Ap[5][5][64]);
-void print_state(uint64_t Ap[5][5][64]);
-void str2state(char *S, uint64_t Ap[5][5][64]);
-void state2str(uint64_t A[5][5][64], char *S);
-void theta(uint64_t A[5][5][64], uint64_t Ap[5][5][64]);
-void rho(uint64_t A[5][5][64], uint64_t Ap[5][5][64]);
-void pi(uint64_t A[5][5][64], uint64_t Ap[5][5][64]);
-void chi(uint64_t A[5][5][64], uint64_t Ap[5][5][64]);
-void iota(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]);
-void rnd1(uint64_t A[5][5][64], int ir, uint64_t Ap[5][5][64]);
-void keccak(char *N, int c, int d, char *S);
-void keccak_p(int b, int nr, char *S, char *Sp);
-void keccak_f(int b, char *S, char *Sp);
-void pad(char *S, int x, int y, char *p);
-void f(char *S, int b, int r, int d, char *Sr);
-void sponge(char *N, int r, int b, int d, char *Sr);
-void pad10(int x, int m, int *P);
+uint64_t ROL64(uint64_t a, uint64_t n);
+int mod(int n, int M);
+void str2state(const uint8_t *S, uint64_t (*A)[5][5]);
+void state2str(uint64_t (*A)[5][5], uint8_t *S);
+uint8_t rc(uint32_t t);
+void theta(uint64_t (*A)[5][5]);
+void rho(uint64_t (*A)[5][5]);
+void pi(uint64_t (*A)[5][5]);
+void chi(uint64_t (*A)[5][5]);
+void iota(uint64_t (*A)[5][5], uint32_t ir);
+void keccak_p(uint8_t *sm, uint8_t (*S)[200]);
+uint32_t concatenate(uint8_t **z, const uint8_t *x, uint32_t xl, const uint8_t *y, uint32_t yl);
+uint32_t pad10(uint32_t x, uint32_t m, uint8_t **P);
+void sponge(uint8_t *N, uint32_t d, int l, uint8_t **ps);
+void keccak(uint8_t *N, int c, int d, unsigned char *S);
 #endif

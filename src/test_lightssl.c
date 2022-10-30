@@ -94,31 +94,18 @@ int main(int argc, char **argv) {
       vsh_end(s);
     } else if (strcmp(argv[1], "hash3") == 0) {
       char str[1601];
-      char str1[1601], str2[1601];
-      uint64_t Ap[5][5][64];
+      uint64_t Ap[5][5];
+      uint8_t *str1 = calloc(1600, sizeof(uint8_t));
+      uint8_t *smurfd = (uint8_t*)"smurfd";
+      uint8_t *othr = (uint8_t*)"someotherlongerstringthatmightnotworkor";
 
-      str2state("smurfd", Ap);
-      print_state(Ap);
-      state2str(Ap, str);
-      printf("------ --- -----\n");
-      printf("str = %s\n", str);
-
-      keccak(str, 24, 512, str1);
+      keccak(smurfd, 512, 48, str1);
       printf("------ // -----\n");
-      printf("str = %s\n", str1);
-      printf("------------------------------------------------------------------------\n");
-
-/*
-      for (int i = 0; i < 1600; i++) str1[i] = 's';
-      str2state(str1, Ap);
-      print_state(Ap);
-      state2str(Ap, str2);
-      printf("str2 = %s\n", str2);
-      keccak(str1, 24, 512, str2);
+      for (int i=0; i < 32; i++) {printf("%.2x", str1[i]);} printf("\n");
+      keccak(othr, 512, 312, str1);
       printf("------ // -----\n");
-      printf("str = %s\n", str2);
-      printf("------------------------------------------------------------------------\n");
-*/
+      for (int i=0; i < 32; i++) {printf("%.2x", str1[i]);} printf("\n");
+      free(str1);
     }
   }
 }
