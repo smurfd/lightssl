@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "lighthash3.h"
+
+typedef uint8_t u08;
+typedef uint64_t u64;
 
 // Imitate pythons %. -1 % 5 = 4, not -1
 static int mod(int n, int M) {return ((n % M) + M) % M;}
