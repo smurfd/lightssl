@@ -10,5 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-void keccak(uint8_t *N, int c, int d, unsigned char *S);
+typedef uint8_t u08;
+typedef uint64_t u64;
+
+void keccak(u08 *N, int c, int d, u08 *S);
 #endif
