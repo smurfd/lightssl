@@ -10,5 +10,5 @@
 #include <stdlib.h>
 #include <string.h>
 
-void keccak(u08 *N, int c, int d, u08 *S);
+void keccak(u08 *n, int c, int d, u08 *s);
 #endif

@@ -11,7 +11,7 @@ typedef uint8_t u08;
 typedef uint64_t u64;
 
 // Imitate pythons %. -1 % 5 = 4, not -1
-static int mod(int n, int M) {return ((n % M) + M) % M;}
+static int mod(int n, int m) {return ((n % m) + m) % m;}
 
 static u64 ROL64(u64 a, u64 n) {
   if (mod(n, 64) != 0) return (a << (mod(n, 64))) ^ (a >> (64 - (mod(n, 64))));
@@ -31,17 +31,16 @@ static u64 ROL64(u64 a, u64 n) {
 // The corresponding state array, denoted by A, is defined as follows:
 // For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, A[x, y, z]=S[w(5y+x)+z].
 // For example, if b=1600, so that w=64,
-static void str2state(const u08 *S, u64 (*A)[5][5]) {
+static void str2state(const u08 *s, u64 (*a)[5][5]) {
   u64 lane;
 
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       lane = 0;
       for (int z = 0; z < 8; z++) {
-        u64 len = 8 * (5 * y + x) + z;
-        lane += ROL64((u64) S[len], z*8);
+        lane = lane + ROL64(s[8 * (5 * y + x) + z], z * 8);
       }
-      (*A)[x][y] = lane;
+      (*a)[x][y] = lane;
     }
   }
 }
@@ -50,14 +49,13 @@ static void str2state(const u08 *S, u64 (*A)[5][5]) {
 // can be constructed from the lanes and planes of A, as follows:
 // For each pair of integers (i, j) such that 0≤i<5 and 0≤j<5, define the string Lane(i, j)
 // by Lane(i,j)= A[i,j,0] || A[i,j,1] || A[i,j,2] || ... || A[i,j,w-2] || A[i,j,w-1].
-static void state2str(u64 (*A)[5][5], u08 *S) {
+static void state2str(u64 (*a)[5][5], u08 *s) {
   int count = 0;
 
   for (int y = 0; y < 5; y++) {
     for (int x = 0; x < 5; x++) {
       for (int z = 0; z < 8; z++) {
-        S[count] = (u08) (ROL64((*A)[x][y], 64 - z * 8) & (u64) 255);
-        count++;
+        s[count++] = (u08) (ROL64((*a)[x][y], 64 - z * 8) & (u64)255);
       }
     }
   }
@@ -69,24 +67,22 @@ static void state2str(u64 (*A)[5][5], u08 *S) {
 // D[x, z] = C[(x1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w].
 // 3. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
-static void theta(u64 (*A)[5][5]) {
-  u64 C[5], D[5] = {0}, xor;
+static void theta(u64 (*a)[5][5]) {
+  u64 c[5], d[5] = {0};
 
   for (int x = 0; x < 5; x++) {
-    C[x] = ((*A)[x][0] ^ (*A)[x][1] ^ (*A)[x][2] ^ (*A)[x][3] ^ (*A)[x][4]);
+    c[x] = ((*a)[x][0] ^ (*a)[x][1] ^ (*a)[x][2] ^ (*a)[x][3] ^ (*a)[x][4]);
   }
   for (int x = 0; x < 5; x++) {
     for (int z = 0; z < 64; z++) {
-      u64 r1 = ROL64(C[mod(x - 1, 5)], 64 - z);
-      u64 r2 = ROL64(C[mod(x + 1, 5)], 64 - mod(z - 1, 64));
-      xor = r1 ^ r2;
-      xor &= 1;
-      D[x] += ROL64(xor, z);
+      u64 r1 = ROL64(c[mod(x - 1, 5)], 64 - z);
+      u64 r2 = ROL64(c[mod(x + 1, 5)], 64 - mod(z - 1, 64));
+      d[x] = d[x] + ROL64((r1 ^ r2) & 1, z);
     }
   }
   for (int y = 0; y < 5; y++) {
     for (int x = 0; x < 5; x++) {
-      (*A)[x][y] ^= D[x];
+      (*a)[x][y] ^= d[x];
     }
   }
 }
@@ -98,18 +94,17 @@ static void theta(u64 (*A)[5][5]) {
 // a. for all z such that 0 ≤ z < w, let A′[x, y, z] = A[x, y, (z – (t + 1)(t + 2)/2) mod w];
 // b. let (x, y) = (y, (2x + 3y) mod 5).
 // 4. Return A′.
-static void rho(u64 (*A)[5][5]) {
+static void rho(u64 (*a)[5][5]) {
   int x = 1, y = 0, xtmp = 0;
-  u64 Ap[5][5], cb;
+  u64 ap[5][5], cb;
 
-  memcpy(Ap, *A, sizeof(u64) * 5 * 5);
+  memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int t = 0; t < 24; t++) {
-    (*A)[x][y] = 0;
+    (*a)[x][y] = 0;
     for (int z = 0; z < 64; z++) {
-      cb = ROL64(Ap[x][y], 64 - mod((z - (t + 1)*(t + 2) / 2), 64));
-      cb &= 1;
+      cb = (ROL64(ap[x][y], 64 - mod((z - (t + 1) * (t + 2) / 2), 64)) & 1);
       cb = ROL64(cb, z);
-      (*A)[x][y] += cb;
+      (*a)[x][y] += cb;
     }
     xtmp = x;
     x = y;
@@ -121,13 +116,13 @@ static void rho(u64 (*A)[5][5]) {
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z]= A[(x + 3y) mod 5, x, z].
 // 2. Return A′.
-static void pi(u64 (*A)[5][5]) {
-  u64 Ap[5][5];
+static void pi(u64 (*a)[5][5]) {
+  u64 ap[5][5];
 
-  memcpy(Ap, *A, sizeof(u64) * 5 * 5);
+  memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int y = 0; y < 5; y++) {
     for (int x = 0; x < 5; x++) {
-      (*A)[x][y] = Ap[mod((x + 3 * y), 5)][x];
+      (*a)[x][y] = ap[mod((x + 3 * y), 5)][x];
     }
   }
 }
@@ -135,18 +130,18 @@ static void pi(u64 (*A)[5][5]) {
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′ [x, y, z] = A[x, y, z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5, y, z]).
 // 2. Return A′.
-static void chi(u64 (*A)[5][5]) {
-  u64 Ap[5][5], one = 1, t1, t2, t3;
+static void chi(u64 (*a)[5][5]) {
+  u64 ap[5][5], one = 1, t1, t2, t3;
 
-  memcpy(Ap, *A, sizeof(u64) * 5 * 5);
+  memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int y = 0; y < 5; y++) {
     for (int x = 0; x < 5; x++) {
-      (*A)[x][y] = 0;
+      (*a)[x][y] = 0;
       for (int z = 0; z < 64; z++) {
-        t1 = Ap[x][y] & ROL64(one, z); // A[x,y,z]
-        t2 = (Ap[mod(x+1, 5)][y] & ROL64(one, z)) ^ ROL64(one, z); // A[(x+1) mod 5, y, z] XOR 1
-        t3 = Ap[mod(x+2, 5)][y] & ROL64(one, z); // A[(x+2) mod 5, y, z]
-        (*A)[x][y] += t1 ^ (t2 & t3);
+        t1 = ap[x][y] & ROL64(one, z);
+        t2 = (ap[mod(x + 1, 5)][y] & ROL64(one, z)) ^ ROL64(one, z);
+        t3 = ap[mod(x + 2, 5)][y] & ROL64(one, z);
+        (*a)[x][y] += t1 ^ (t2 & t3);
       }
     }
   }
@@ -165,19 +160,19 @@ static void chi(u64 (*A)[5][5]) {
 // 4. Return R[0]
 static u08 rc(u64 t) {
   u64 m = mod(t, 255);
-  u08 R = 0x80, R0;
+  u08 r1 = 128, r0;
 
   if (m == 0) return 1;
   for (u64 i = 1; i <= m; i++) {
-    R0 = 0;
-    R0 ^= (R & 1);
-    R ^= (R & 0x1) << 4;
-    R ^= (R & 0x1) << 3;
-    R ^= (R & 0x1) << 2;
-    R >>= 1;
-    R ^= R0 << 7;
+    r0 = 0;
+    r0 ^= mod(r1, 2);
+    r1 ^= mod(r1, 2) << 4;
+    r1 ^= mod(r1, 2) << 3;
+    r1 ^= mod(r1, 2) << 2;
+    r1 /= 2;
+    r1 ^= r0 << 7;
   }
-  return R >> 7;
+  return r1 >> 7;
 }
 
 // Steps:
@@ -188,12 +183,10 @@ static u08 rc(u64 t) {
 // 4. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A′ [0, 0, z] ⊕ RC[z].
 // 5. Return A′.
 static void iota(u64 (*A)[5][5], u64 ir) {
-  u64 RC = 0;
+  u64 r = 0;
 
-  for (u64 j = 0; j <= 6; j++) {
-    RC += ROL64(rc(j + 7 * ir), (int)pow(2, j)-1);
-  }
-  (*A)[0][0] ^= RC;
+  for (u64 j = 0; j <= 6; j++) {r += ROL64(rc(j + 7 * ir), (int)pow(2, j) -1);}
+  (*A)[0][0] ^= r;
 }
 
 // Steps:
@@ -201,26 +194,21 @@ static void iota(u64 (*A)[5][5], u64 ir) {
 // 2. For ir from 12 + 2l – nr to 12 + 2l – 1, let A = Rnd(A, ir).
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
-static void keccak_p(u08 *sm, u08 (*S)[200]) {
-  u64 A[5][5];
-  int nr = 24;
+static void keccak_p(u08 *sm, u08 (*s)[200]) {
+  u64 a[5][5];
 
-  str2state(sm, &A);
-  for (int ir = 24 - nr; ir <= 23; ir++) {
-    // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir).
-    theta(&A);
-    rho(&A);
-    pi(&A);
-    chi(&A);
-    iota(&A, ir);
+  str2state(sm, &a);
+  // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir).
+  for (int ir = 0; ir <= 23; ir++) { // nr = 24; ir = 24 - nr; ir <= 23;
+    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, ir);
   }
-  state2str(&A, (*S));
+  state2str(&a, (*s));
 }
 
 static u64 cat(u08 **z, const u08 *x, u64 xl, const u08 *y, const u64 yl) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = mod(xl, 8);
 
-  *z = calloc(256, sizeof(u08));
+  *z = calloc(512, sizeof(u08));
   if (*z == NULL) return 0;
   memcpy(*z, x, xl8);
   for (u64 i = 0; i < mxl8; i++) {(*z)[xl8] |= (x[xl8] & (1 << i));}
@@ -237,14 +225,14 @@ static u64 cat(u08 **z, const u08 *x, u64 xl, const u08 *y, const u64 yl) {
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static u64 pad10(u64 x, u64 m, u08 **P) {
+static u64 pad10(u64 x, u64 m, u08 **p) {
   long j = mod((-m - 2), x);
-  int bl = (2+j)/8 + (mod(2+j, 8) ? 1 : 0);
+  int bl = (2 + j) / 8 + (mod(2 + j, 8) ? 1 : 0);
 
-  *P = calloc(bl, sizeof(u08));
-  (*P)[0] |= 1;
-  (*P)[bl-1] |= (1 << mod(j+1, 8));
-  return j+2;
+  *p = calloc(bl, sizeof(u08));
+  (*p)[0] |= 1;
+  (*p)[bl - 1] |= (1 << mod(j + 1, 8));
+  return j + 2;
 }
 
 // Steps:
@@ -259,25 +247,25 @@ static u64 pad10(u64 x, u64 m, u08 **P) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void sponge(u08 *N, u64 d, int l, u08 **ps) {
+static void sponge(u08 *n, u64 d, int l, u08 **ps) {
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - d;
   u08 az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0};
   u08 *p, *pi, *z, *pad, str[200] = {0};
 
   len = pad10(r, l, &pad);
-  plen = cat(&p, N, l, pad, len);
+  plen = cat(&p, n, l, pad, len);
   for (u64 i = 0; i < plen / r; i++) {
-    cat(&pi, &p[i * r/8], r, az, c); // P_i || 0^c
-    for (u64 j = 0; j < b/8; j++) {sxor[j] = s[j] ^ pi[j];} // S XOR P_i || 0^c
+    cat(&pi, &p[i * r / 8], r, az, c);
+    for (u64 j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
     free(pi);
-    keccak_p(sxor, &s); // f(S XOR (P_i || 0^c))
+    keccak_p(sxor, &s);
   }
 
   while (true) {
-    memcpy(str, s, r/8);
-    zl = cat(&z, z, zl, str, r); // Z = Z || Trunc_r(S)
-    if (d <= zl) {memcpy((*ps), z, 512/8); break;}
-    memcpy(sc, s, b/8);
+    memcpy(str, s, r / 8);
+    zl = cat(&z, z, zl, str, r);
+    if (d <= zl) {memcpy((*ps), z, 512 / 8); break;}
+    memcpy(sc, s, b / 8);
     keccak_p(sc, &s);
   }
   free(pad);
@@ -301,11 +289,11 @@ static void sponge(u08 *N, u64 d, int l, u08 **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void keccak(u08 *N, int c, int d, u08 *S) {
-  u08 *M, z1[] = {0x02};
+void keccak(u08 *n, int c, int d, u08 *s) {
+  u08 *m, z1[] = {2};
 
-  cat(&M, N, d, z1, 2);
-  sponge(M, c, d+2, &S);
+  cat(&m, n, d, z1, 2);
+  sponge(m, c, d + 2, &s);
 }
 
 // SHA3-512(M) = KECCAK[1024] (M || 01, 512).
