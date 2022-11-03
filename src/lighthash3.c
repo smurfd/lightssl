@@ -80,8 +80,8 @@ static void theta(u64 (*a)[5][5]) {
       d[x] = d[x] + ROL64((r1 ^ r2) & 1, z);
     }
   }
-  for (int y = 0; y < 5; y++) {
-    for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++) {
+    for (int y = 0; y < 5; y++) {
       (*a)[x][y] ^= d[x];
     }
   }
@@ -95,8 +95,7 @@ static void theta(u64 (*a)[5][5]) {
 // b. let (x, y) = (y, (2x + 3y) mod 5).
 // 4. Return A′.
 static void rho(u64 (*a)[5][5]) {
-  int x = 1, y = 0, xtmp = 0;
-  u64 ap[5][5], cb;
+  u64 x = 1, y = 0, xtmp = 0, ap[5][5], cb;
 
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int t = 0; t < 24; t++) {
@@ -120,8 +119,8 @@ static void pi(u64 (*a)[5][5]) {
   u64 ap[5][5];
 
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
-  for (int y = 0; y < 5; y++) {
-    for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++) {
+    for (int y = 0; y < 5; y++) {
       (*a)[x][y] = ap[mod((x + 3 * y), 5)][x];
     }
   }
@@ -134,8 +133,8 @@ static void chi(u64 (*a)[5][5]) {
   u64 ap[5][5], one = 1, t1, t2, t3;
 
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
-  for (int y = 0; y < 5; y++) {
-    for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++) {
+    for (int y = 0; y < 5; y++) {
       (*a)[x][y] = 0;
       for (int z = 0; z < 64; z++) {
         t1 = ap[x][y] & ROL64(one, z);
@@ -159,8 +158,7 @@ static void chi(u64 (*a)[5][5]) {
 //   f. R =Trunc8[R].
 // 4. Return R[0]
 static u08 rc(u64 t) {
-  u64 m = mod(t, 255);
-  u08 r1 = 128, r0;
+  u08 m = mod(t, 255), r1 = 128, r0;
 
   if (m == 0) return 1;
   for (u64 i = 1; i <= m; i++) {
@@ -289,11 +287,14 @@ static void sponge(u08 *n, u64 d, int l, u08 **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void keccak(u08 *n, int c, int d, u08 *s) {
-  u08 *m, z1[] = {2};
+void keccak(u08 *n, char *s) {
+  u08 *m, z1[] = {2}, *ss = malloc(128 * sizeof(u08));
+  u64 d = strlen((char*)n) * 8, c = 1024; // c=512 SHA3-256, c=1024 SHA3-512
 
   cat(&m, n, d, z1, 2);
-  sponge(m, c, d + 2, &s);
+  sponge(m, c, d + 2, &ss);
+  for (u64 i = 0; i < c / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
+  free(ss);
 }
 
 // SHA3-512(M) = KECCAK[1024] (M || 01, 512).

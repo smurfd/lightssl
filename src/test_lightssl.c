@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
       if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
     } else if (strcmp(argv[1], "hash3") == 0) {
-      uint8_t str1[1600] = {0};
+      char s[64] = {0};
       uint8_t *smurfd = (uint8_t*)"smurfd";
       uint8_t *othr = (uint8_t*)"someotherlongerstringthatmightnotworkor";
       uint8_t *las = (uint8_t*)"thisisasuperlongstringthatmay not say alot but "
@@ -101,18 +101,18 @@ int main(int argc, char **argv) {
 "ing or will things work as usual?!!?! what do you think.super super super long,"
 " long long long what could we do. over 256 characters maby?! ";
 
-      keccak(smurfd, 512, 48, str1);
+      keccak(smurfd, s);
+      printf("s=%s\n", s);
       printf("------ // -----\n");
-      for (int i=0; i < 32; i++) {printf("%.2x", str1[i]);} printf("\n");
-      keccak(othr, 512, 312, str1);
+      keccak(othr, s);
+      printf("s=%s\n", s);
       printf("------ // -----\n");
-      for (int i=0; i < 32; i++) {printf("%.2x", str1[i]);} printf("\n");
-      keccak(smurfd, 1024, 48, str1);
+      keccak(smurfd, s);
+      printf("s=%s\n", s);
       printf("------ // -----\n");
-      for (int i=0; i < 64; i++) {printf("%.2x", str1[i]);} printf("\n");
-      keccak(las, 1024, 2128, str1);
+      keccak(las, s);
+      printf("s=%s\n", s);
       printf("------ // -----\n");
-      for (int i=0; i < 64; i++) {printf("%.2x", str1[i]);} printf("\n");
     }
   }
 }
