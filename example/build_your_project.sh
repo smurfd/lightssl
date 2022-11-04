@@ -3,6 +3,6 @@
 # Lastly after you have build lightssl copy build/*.a to your new project source folder.
 cp ../src/*.h .
 cp ../build/*.a .
-gcc -o example example.c -llightdefs -llighthash3 -L.
+clang -o example example.c -llightdefs -llighthash3 -L.
 ./example
 rm lib* light* test* example
