@@ -93,26 +93,15 @@ int main(int argc, char **argv) {
       if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
     } else if (strcmp(argv[1], "hash3") == 0) {
-      char s[64] = {0};
+      char s[128] = {0};
+      char hash[] = "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2d"
+        "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cda25f20";
       uint8_t *smurfd = (uint8_t*)"smurfd";
-      uint8_t *othr = (uint8_t*)"someotherlongerstringthatmightnotworkor";
-      uint8_t *las = (uint8_t*)"thisisasuperlongstringthatmay not say alot but "
-"it should be longer than the other strings i have tried, will this break someth"
-"ing or will things work as usual?!!?! what do you think.super super super long,"
-" long long long what could we do. over 256 characters maby?! ";
 
       keccak(smurfd, s);
       printf("s=%s\n", s);
       printf("------ // -----\n");
-      keccak(othr, s);
-      printf("s=%s\n", s);
-      printf("------ // -----\n");
-      keccak(smurfd, s);
-      printf("s=%s\n", s);
-      printf("------ // -----\n");
-      keccak(las, s);
-      printf("s=%s\n", s);
-      printf("------ // -----\n");
+      assert(strcmp(s, hash) == 0);
     }
   }
 }
