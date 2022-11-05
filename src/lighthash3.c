@@ -14,9 +14,15 @@ typedef uint64_t u64;
 // Imitate pythons %. -1 % 5 = 4, not -1
 static int mod(int n, int m) {return ((n % m) + m) % m;}
 
+// Circular shift
 static u64 ROL64(u64 a, u64 n) {
   if (mod(n, 64) != 0) return (a << (mod(n, 64))) ^ (a >> (64 - (mod(n, 64))));
   return a;
+}
+
+// Convert a hex bitstring to a string
+static void bit2str(u08 *ss, char *s) {
+  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }
 
 // The state for the KECCAK-p[b, nr] permutation is comprised of b bits.
@@ -27,7 +33,6 @@ static u64 ROL64(u64 a, u64 n) {
 // b 25 50 100 200 400 800 1600
 // w  1  2   4   8  16  32   64
 // l  0  1   2   3   4   5    6
-
 // Let S denote a string of b bits that represents the state for the KECCAK-p[b, nr] permutation.
 // The corresponding state array, denoted by A, is defined as follows:
 // For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, A[x, y, z]=S[w(5y+x)+z].
@@ -204,17 +209,15 @@ static void keccak_p(u08 *sm, u08 (*s)[200]) {
   state2str(&a, (*s));
 }
 
-static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
+static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 *z) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = mod(xl, 8);
 
-  *z = calloc(512, sizeof(u08));
-  if (*z == NULL) return 0;
-  memcpy(*z, x, xl8);
-  for (u64 i = 0; i < mxl8; i++) {(*z)[xl8] |= (x[xl8] & (1 << i));}
-  u64 zbyc = xl8, zbic = mxl8, ybyc = 0, ybic = 0, v;
+  memcpy(z, x, xl8);
+  for (u64 i = 0; i < mxl8; i++) {z[xl8] |= (x[xl8] & (1 << i));}
+  u64 zbyc = xl8, zbic = mxl8, ybyc = 0, ybic = 0;
+
   for (u64 i = 0; i < yl; i++) {
-    v = ((y[ybyc] >> ybic) & 1);
-    (*z)[zbyc] |= (v << zbic);
+    z[zbyc] |= (((y[ybyc] >> ybic) & 1) << zbic);
     if (++ybic == 8) {ybyc++; ybic = 0;}
     if (++zbic == 8) {zbyc++; zbic = 0;}
   }
@@ -224,14 +227,12 @@ static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static u64 pad10(u64 x, u64 m, u08 **p) {
-  long j = mod((-m - 2), x);
-  int bl = (2 + j) / 8 + (mod(2 + j, 8) ? 1 : 0);
+static u64 pad10(u64 x, u64 m, u08 *p) {
+  long j = mod((-m - 2), x) + 2, b = j / 8 + (mod(j, 8) ? 1 : 0) - 1;
 
-  *p = calloc(bl, sizeof(u08));
-  (*p)[0] |= 1;
-  (*p)[bl - 1] |= (1 << mod(j + 1, 8));
-  return j + 2;
+  p[0] |= 1;
+  p[b] |= (1 << mod(j - 1, 8));
+  return j;
 }
 
 // Steps:
@@ -246,30 +247,26 @@ static u64 pad10(u64 x, u64 m, u08 **p) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void sponge(u08 *n, int l, u08 **ps) {
+static void sponge(u08 *n, int l, u08 *ps) {
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
   u08 az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0};
-  u08 *p, *pi, *z, *pad, str[200] = {0};
+  u08 p[1600], pi[1600], z[1600], str[200] = {0}, ppad[1600];
 
-  len = pad10(r, l, &pad);
-  plen = cat(n, l, pad, len, &p);
+  len = pad10(r, l, ppad);
+  plen = cat(n, l, ppad, len, p);
   for (u64 i = 0; i < plen / r; i++) {
-    cat(&p[i * r / 8], r, az, c, &pi);
+    cat(&p[i * r / 8], r, az, c, pi);
     for (u64 j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
-    free(pi);
     keccak_p(sxor, &s);
   }
 
   while (true) {
     memcpy(str, s, r / 8);
-    zl = cat(z, zl, str, r, &z);
-    if (zl >= SHA3_BITS) {memcpy((*ps), z, 512 / 8); break;}
+    zl = cat(z, zl, str, r, z);
+    if (zl >= SHA3_BITS) {memcpy(ps, z, 512 / 8); break;}
     memcpy(sc, s, b / 8);
     keccak_p(sc, &s);
   }
-  free(pad);
-  free(p);
-  free(z);
 }
 
 // Specification of KECCAK[c]
@@ -289,13 +286,12 @@ static void sponge(u08 *n, int l, u08 **ps) {
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void keccak(u08 *n, char *s) {
-  u08 *m, z1[] = {2}, *ss = malloc(128 * sizeof(u08));
+  u08 m[1600], z1[] = {2}, ss[128];
   u64 d = strlen((char*)n) * 8;
 
-  cat(n, d, z1, 2, &m);
-  sponge(m, d + 2, &ss);
-  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
-  free(ss);
+  cat(n, d, z1, 2, m);
+  sponge(m, d + 2, ss);
+  bit2str(ss, s);
 }
 
 // Good link to compare hashes
