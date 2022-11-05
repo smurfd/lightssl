@@ -1,9 +1,10 @@
-# Very simple handshake
-very simple handshake in Python
-[VSH](https://github.com/smurfd/lightssl/tree/main/src/vsh)
 
 # lightssl
 Do SSL really need to be so hard?
+
+Hashing: SHA2-256, SHA3-256, SHA3-512
+Crypto: Custom
+Keys: Custom
 
 ### Compile lightssl
 
@@ -20,17 +21,20 @@ meson test
 ### Run client and server
 In one terminal run
 ```
-./build/test_lightssl server
+./build/test_lightssl vcs_srv
 ```
 In another terminal run
 ```
-./build/test_lightssl client
+./build/test_lightssl vcs_cli
 ```
-Test hashing
+Test hashing (SHA2-256)
 ```
 ./build/test_lightssl hash
 ```
-
+Test hashing (SHA3-512)
+```
+./build/test_lightssl hash3
+```
 
 ### Use lightssl
 ```c
@@ -173,3 +177,7 @@ int main() {
   free(s);
 }
 ```
+
+# Very simple handshake
+very simple handshake in Python
+[VSH](https://github.com/smurfd/lightssl/tree/main/src/vsh)
