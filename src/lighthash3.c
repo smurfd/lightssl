@@ -298,6 +298,9 @@ void keccak(u08 *n, char *s) {
   free(ss);
 }
 
+// Good link to compare hashes
+// https://toolsyep.com/en/hash-generator/sha3-512/
+
 // SHA3-512(M) = KECCAK[1024] (M || 01, 512).
 
 // smurfd =
