@@ -102,7 +102,6 @@ int main(int argc, char **argv) {
       printf("s=%s\n", s);
       printf("------ // -----\n");
       assert(strcmp(s, hash) == 0);
-      printf("OK\n");
     }
   }
 }
