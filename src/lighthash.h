@@ -57,4 +57,5 @@ int hmac_final(ctxh *c, u08 bits, ui bit_count);
 int hmac_result(ctxh *c, u08 digest[sha_hsh_sz]);
 
 int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs);
+int test_sha_hmac();
 #endif

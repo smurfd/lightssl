@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "lightdefs.h"
 #include "lighthash.h"
+#include "lighthash_testdata.h"
 
 extern u64 SHA_H0[], SHA_K[];
 extern u08 masks[], markbit[];
@@ -244,4 +246,24 @@ int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
   else {err = sha_result(&sha, msg_dig);}
   if (err != sha_ok) {return err;}
   return sha_match_to_str(msg_dig, ra, hs, NULL);
+}
+
+int test_sha_hmac() {
+  // 11 of 11 SHA tests pass
+  for (int i = 0; (i <= TESTCOUNT - 1); ++i) {
+    int err = hash(h.t[i].testarray, h.t[i].length,
+      h.t[i].repeatcount, h.t[i].nr_extrabits,
+      h.t[i].extrabits, 0, 0, h.t[i].res_arr, h.hashsize);
+    assert(err == 1); if (err != 1) return 0;
+  }
+  // 7 of 7 HMAC tests pass
+  for (int i = 0; (i <= HMACTESTCOUNT-1); ++i) {
+    cc *da = hm[i].dataarray[1] ? hm[i].dataarray[1] : hm[i].dataarray[0];
+    int dl = hm[i].datalength[1] ? hm[i].datalength[1] : hm[i].datalength[0];
+    cuc* ka = (cuc*)(hm[i].keyarray[1] ? hm[i].keyarray[1] : hm[i].keyarray[0]);
+    int kl = hm[i].keylength[1] ? hm[i].keylength[1] : hm[i].keylength[0];
+    int err = hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
+    assert(err == 1); if (err != 1) return 0;
+  }
+  return 1;
 }
