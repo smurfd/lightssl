@@ -3,6 +3,7 @@
 #ifndef LIGHTVSH_H
 #define LIGHTVSH_H 1
 
+#include <stdbool.h>
 #include "lightdefs.h"
 
 key vsh_genkeys(u64 g, u64 p);
@@ -19,7 +20,7 @@ void vsh_recvkey(int s, head *h, key *k);
 void vsh_sendkey(int s, head *h, key *k);
 void vsh_genshare(key *k1, key *k2, u64 p, bool srv);
 void vsh_transferkey(int s, bool snd, head *h, key *k);
-void vsh_transferdata(int s, void* data, bool snd, u64 len);
+void vsh_transferdata(const int s, void* data, head *h, bool snd, u64 len);
 
 #endif
 /*

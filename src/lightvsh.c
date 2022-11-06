@@ -35,23 +35,25 @@ void vsh_end(int s) {close(s);}
 //
 // Server handler
 void *vsh_handler(void *sdesc) {
-  u64 g1 = vsh_rand(), p1 = vsh_rand(), dat[BLOCK], cd[BLOCK];
-  char (*d) = malloc(vsh_getblock());
-  key k1 = vsh_genkeys(g1, p1), k2;
-  head h; h.g = g1; h.p = p1;
   int s = *(int*)sdesc;
+  char (*d) = malloc(vsh_getblock());
+  u64 dat[BLOCK], cd[BLOCK];
+
+  if (s == -1) {return (void*)-1;}
+  u64 g1 = vsh_rand(), p1 = vsh_rand();
+  key k1 = vsh_genkeys(g1, p1), k2;
+  k2.publ = 0; k2.priv = 0; k2.shar = 0;
+  head h; h.g = g1; h.p = p1;// h.len=11;
 
   // Send and receive stuff
-  if (s == -1) {return (void*)-1;}
   if (h.len > BLOCK) {return (void*)-1;}
-  k2.publ = 0; k2.priv = 0; k2.shar = 0;
   vsh_transferkey(s, true, &h, &k1);
   vsh_transferkey(s, false, &h, &k2);
   vsh_genshare(&k1, &k2, h.p, true);
-  printf("share : 0x%.16llx\n", k2.shar);
-  vsh_transferdata(s, &dat, false, h.len);
+  printf("share : 0x%.16llx %llu %d\n", k2.shar, h.len, s);
   // Decrypt the data
-  for (u64 i = 0; i < h.len - 1; i++) {vsh_crypt(dat[i], k2, &cd[i]);}
+  vsh_transferdata(s, &dat, &h, false, BLOCK-1);
+  for (u64 i = 0; i < 10; i++) {vsh_crypt(dat[i], k2, &cd[i]);}
   free(d);
   pthread_exit(NULL);
   return 0;
@@ -59,14 +61,14 @@ void *vsh_handler(void *sdesc) {
 
 //
 // Server listener
-int vsh_listen(int s, sock *cli) {
+int vsh_listen(const int s, sock *cli) {
   int c = 1, *ns, len = sizeof(sock_in);
 
   listen(s, 3);
   while (c >= 1) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
-    ns = malloc(sizeof(*ns));
+    ns = (int*)malloc(sizeof(*ns));
     *ns = c;
     if (pthread_create(&thrd, NULL, vsh_handler, (void*)ns) < 0) {return -1;}
     pthread_join(thrd, NULL);
@@ -157,9 +159,7 @@ void vsh_sendkey(int s, head *h, key *k) {
 
 //
 // Transfer data (send and receive)
-void vsh_transferdata(int s, void* data, bool snd, u64 len) {
-  head h;
-
-  if (snd) {send(s, &h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
-  else {recv(s, &h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
+void vsh_transferdata(const int s, void* data, head *h, bool snd, u64 len) {
+  if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
+  else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
