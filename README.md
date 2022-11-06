@@ -2,19 +2,17 @@
 # lightssl
 Do SSL really need to be so hard?
 
-Hashing: SHA2-256, SHA3-256, SHA3-512
-Crypto: Custom
-Keys: Custom
+Ciphers: TODO: Blowfish / AES
+Keys: TODO: ECDH / ECDSA
+Crypto: TODO: ASN1
+Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512
 
 ### Compile lightssl
 
 ```bash
-git clone https://github.com/smurfd/lightbig src/lightbig
-CC=clang
-meson build
-cd build
-meson compile
-meson test
+CC=clang meson build
+CC=clang ninja -C build
+CC=clang ninja -C build test -v -d stats -d explain
 ```
 `./build.sh` has those parts in it
 
