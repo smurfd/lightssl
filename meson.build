@@ -16,7 +16,6 @@ build_args = [
   '-O2',
   '-pthread']
 
-liblightssl = static_library('lightssl', 'src/lightssl.c', link_args: '-pthread')
 liblightdefs = static_library('lightdefs', 'src/lightdefs.c')
 liblighthash = static_library('lighthash', 'src/lighthash.c')
 liblighthash3 = static_library('lighthash3', 'src/lighthash3.c')
@@ -26,14 +25,12 @@ liblightcrypto = static_library('lightcrypto', 'src/lightcrypto.c',
   c_args: build_args)
 
 test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
-  link_with: [liblightssl, liblightdefs, liblighthash, liblighthash3, liblightcrypto],
+  link_with: [liblightdefs, liblighthash, liblighthash3, liblightcrypto],
   link_args: '-pthread',
   c_args: build_args,
   dependencies: [m_dep, p_dep],
   install: true)
 
-test('server', test_lightssl, args: ['server'])
-test('client', test_lightssl, args: ['client'])
 test('hash', test_lightssl, args: ['hash'])
 test('hash3', test_lightssl, args: ['hash3'])
 test('crypto_cli', test_lightssl, args: ['crypto_cli'])

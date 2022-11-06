@@ -4,6 +4,7 @@
 #define LIGHTHASH_H 1
 
 #include <stdint.h>
+#include "lightdefs.h"
 
 #ifndef SHA_DEFINES
 #define SHA_DEFINES 1
