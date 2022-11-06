@@ -30,25 +30,23 @@ static u64 lightcrypto_rand() {
 // Server handler
 static void *lightcrypto_handler(void *sdesc) {
   int s = *(int*)sdesc;
-  char (*d) = malloc(lightcrypto_getblock());
-  u64 dat[BLOCK], cd[BLOCK];
+  u64 dat[lightcrypto_getblock()], cd[lightcrypto_getblock()];
 
   if (s == -1) {return (void*)-1;}
   u64 g1 = lightcrypto_rand(), p1 = lightcrypto_rand();
   key k1 = lightcrypto_genkeys(g1, p1), k2;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
-  head h; h.g = g1; h.p = p1;// h.len=11;
+  head h; h.g = g1; h.p = p1;
 
   // Send and receive stuff
   if (h.len > BLOCK) {return (void*)-1;}
   lightcrypto_transferkey(s, true, &h, &k1);
   lightcrypto_transferkey(s, false, &h, &k2);
   lightcrypto_genshare(&k1, &k2, h.p, true);
-  printf("share : 0x%.16llx %llu %d\n", k2.shar, h.len, s);
+  printf("share : 0x%.16llx\n", k2.shar);
   // Decrypt the data
   lightcrypto_transferdata(s, &dat, &h, false, BLOCK-1);
   for (u64 i = 0; i < 10; i++) {lightcrypto_crypt(dat[i], k2, &cd[i]);}
-  free(d);
   pthread_exit(NULL);
   return 0;
 }
