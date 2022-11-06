@@ -11,20 +11,24 @@
 typedef uint8_t u08;
 typedef uint64_t u64;
 
+//
 // Imitate pythons %. -1 % 5 = 4, not -1
 static int mod(int n, int m) {return ((n % m) + m) % m;}
 
+//
 // Circular shift
 static u64 ROL64(u64 a, u64 n) {
   if (mod(n, 64) != 0) return (a << (mod(n, 64))) ^ (a >> (64 - (mod(n, 64))));
   return a;
 }
 
+//
 // Convert a hex bitstring to a string
 static void bit2str(u08 *ss, char *s) {
   for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }
 
+//
 // The state for the KECCAK-p[b, nr] permutation is comprised of b bits.
 // The specifications in this Standard contain two other quantities related to
 // b: b/25 and log2(b/25), denoted by w and l, respectively.
@@ -51,6 +55,7 @@ static void str2state(const u08 *s, u64 (*a)[5][5]) {
   }
 }
 
+//
 // Let A denote a state array. The corresponding string representation, denoted by S,
 // can be constructed from the lanes and planes of A, as follows:
 // For each pair of integers (i, j) such that 0≤i<5 and 0≤j<5, define the string Lane(i, j)
@@ -67,6 +72,7 @@ static void state2str(u64 (*a)[5][5], u08 *s) {
   }
 }
 
+//
 // 1. For all pairs (x, z) such that 0 ≤ x < 5 and 0 ≤ z < w, let
 // C[x, z] = A[x, 0, z] ⊕ A[x, 1, z] ⊕ A[x, 2, z] ⊕ A[x, 3, z] ⊕ A[x, 4, z].
 // 2. For all pairs (x, z) such that 0 ≤ x < 5 and 0 ≤ z < w let
@@ -93,6 +99,7 @@ static void theta(u64 (*a)[5][5]) {
   }
 }
 
+//
 // Steps:
 // 1. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A[0, 0, z].
 // 2. Let (x, y) = (1, 0).
@@ -117,6 +124,7 @@ static void rho(u64 (*a)[5][5]) {
   }
 }
 
+//
 // Steps:
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z]= A[(x + 3y) mod 5, x, z].
@@ -132,6 +140,7 @@ static void pi(u64 (*a)[5][5]) {
   }
 }
 
+//
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′ [x, y, z] = A[x, y, z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5, y, z]).
 // 2. Return A′.
@@ -152,6 +161,7 @@ static void chi(u64 (*a)[5][5]) {
   }
 }
 
+//
 // Steps:
 // 1. If t mod 255 = 0, return 1.
 // 2. Let R = 10000000.
@@ -179,6 +189,7 @@ static u08 rc(u64 t) {
   return r1 >> 7;
 }
 
+//
 // Steps:
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and
 //      0 ≤ z < w, let A′[x, y, z] = A[x, y, z].
@@ -193,6 +204,7 @@ static void iota(u64 (*A)[5][5], u64 ir) {
   (*A)[0][0] ^= r;
 }
 
+//
 // Steps:
 // 1. Convert S into a state array, A, as described in Sec. 3.1.2.
 // 2. For ir from 12 + 2l – nr to 12 + 2l – 1, let A = Rnd(A, ir).
@@ -209,6 +221,8 @@ static void keccak_p(u08 *sm, u08 (*s)[200]) {
   state2str(&a, (*s));
 }
 
+//
+// Concatenate
 static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = mod(xl, 8);
 
@@ -226,6 +240,7 @@ static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
   return zbil;
 }
 
+//
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
@@ -239,6 +254,7 @@ static u64 pad10(u64 x, u64 m, u08 **p) {
   return j;
 }
 
+//
 // Steps:
 // 1. Let P=N || pad(r, len(N)).
 // 2. Let n = len(P)/r.
@@ -275,6 +291,7 @@ static void sponge(u08 *n, int l, u08 **ps) {
   free(pad); free(p); free(z);
 }
 
+//
 // Specification of KECCAK[c]
 // KECCAK is the family of sponge functions with the KECCAK-p[b, 12 + 2l]
 // permutation (defined in Sec 3.3) as the underlying function and with pad10*1

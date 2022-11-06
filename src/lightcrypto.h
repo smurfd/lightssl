@@ -1,27 +1,28 @@
 //                                                                            //
 // Very simple handshake
-#ifndef LIGHTVSH_H
-#define LIGHTVSH_H 1
+#ifndef LIGHTCRYPTO_H
+#define LIGHTCRYPTO_H 1
 
 #include <stdbool.h>
 #include "lightdefs.h"
 
-key vsh_genkeys(u64 g, u64 p);
-u64 vsh_rand();
-int vsh_keys();
-int vsh_getblock();
-int vsh_init(const char *host, const char *port, bool b);
-int vsh_listen(int s, sock *cli);
+key lightcrypto_genkeys(u64 g, u64 p);
+int lightcrypto_keys();
+int lightcrypto_init(const char *host, const char *port, bool b);
+int lightcrypto_listen(int s, sock *cli);
 
-void vsh_end(int s);
-void *vsh_handler(void *sdesc);
-void vsh_crypt(u64 data, key k, u64 *enc);
-void vsh_recvkey(int s, head *h, key *k);
-void vsh_sendkey(int s, head *h, key *k);
-void vsh_genshare(key *k1, key *k2, u64 p, bool srv);
-void vsh_transferkey(int s, bool snd, head *h, key *k);
-void vsh_transferdata(const int s, void* data, head *h, bool snd, u64 len);
+void lightcrypto_end(int s);
+void lightcrypto_crypt(u64 data, key k, u64 *enc);
+void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv);
+void lightcrypto_transferkey(int s, bool snd, head *h, key *k);
+void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
 
+// Keep static functions
+// u64 lightcrypto_rand();
+// int lightcrypto_getblock();
+// void *lightcrypto_handler(void *sdesc);
+// void lightcrypto_recvkey(int s, head *h, key *k);
+// void lightcrypto_sendkey(int s, head *h, key *k);
 #endif
 /*
 ```
