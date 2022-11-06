@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include "lightvsh.h"
+#include "lightcrypto.h"
 #include "lightdefs.h"
 
 //

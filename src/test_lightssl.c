@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <assert.h>
 #include "lightssl.h"
-#include "lightvsh.h"
 #include "lighthash.h"
 #include "lighthash3.h"
+#include "lightcrypto.h"
 
 int main(int argc, char **argv) {
   b08 avail[] = {TLSCIPHER}, select[] = {TLSCIPHERAVAIL}, cmpr = TLSCOMPRESSION;
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
       lightssl_print_hello(hs_srv_recv);
       lightssl_cli_end(cl);
       free(hs_srv_recv); free(hs_cli);
-    } else if (strcmp(argv[1], "vsh_cli") == 0) {
+    } else if (strcmp(argv[1], "crypto_cli") == 0) {
       int s = vsh_init("127.0.0.1", "9998", false);
 
       if (s >= 0) {
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
       // locally generate two keypairs
       srand(time(0));
       vsh_keys();
-    } else if (strcmp(argv[1], "vsh_srv") == 0) {
+    } else if (strcmp(argv[1], "crypto_srv") == 0) {
       int s = vsh_init("127.0.0.1", "9998", true);
       sock *cli = NULL;
 
