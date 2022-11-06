@@ -81,8 +81,65 @@ static int sha_error(ctxs *c, cu8 *msg_arr, ui length, int b) {
 }
 
 //
+// SHA Clear
+static int sha_reset(ctxs *c) {
+  if (!c) return sha_null;
+  c->msg_blk_i = 0;
+  c->len_hi = c->len_lo = 0;
+  c->compute = 0;
+  c->corrupt = sha_ok;
+  for (int i = 0; i < sha_hsh_sz / 8; i++) {c->imh[i] = SHA_H0[i];}
+  return sha_ok;
+}
+
+//
+// SHA Input
+static int sha_input(ctxs *c, cu8 *msg_arr, ui length) {
+  sha_error(c, msg_arr, length, 0);
+  while (length--) {
+    c->mb[c->msg_blk_i++] = *msg_arr;
+    if ((SHA_AddLength(c, 8) == sha_ok) && (c->msg_blk_i == sha_blk_sz))
+      sha_proc_msgblk(c);
+    msg_arr++;
+  }
+  return c->corrupt;
+}
+
+//
+// SHA Add final bits
+static int sha_final(ctxs *c, u08 msg_bit, ui length) {
+  sha_error(c, (cu8 *)0, length, 1);
+  SHA_AddLength(c, length);
+  sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
+  return c->corrupt;
+}
+
+//
+// SHA Get digest
+static int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]) {
+  sha_error(c, msg_dig, 0, 2);
+  if (!c->compute) sha_finalize(c, 0x80);
+  for (int i = 0; i < sha_hsh_sz; ++i) {
+    msg_dig[i] = (u08)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
+  }
+  return sha_ok;
+}
+
+//
+// SHA Check if hashvalue matches a predef hexstr and convert to str if s!=NULL
+static int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
+  int j = 0, k, l;
+  for (int i = 0; i < hashsize; ++i) {
+    k = hexdigits[(hashvalue[i] >> 4) & 0xF]; l = hexdigits[hashvalue[i] & 0xF];
+    if (s != NULL) {s[j++] = k; s[j++] = l; s[j]='\0';}
+    if (*hexstr++ != k) return 0; if (*hexstr++ != l) return 0;
+  }
+  return 1;
+}
+
+//
 // Create a SHA hash from string
-void hash_new(cc *in, char* s) {
+void lightssl_hash_new(cc *in, char* s) {
   u08 *inn = malloc(sizeof(u08) * strlen(in)), msg_dig[sha_hsh_sz];
   ctxs sha;
 
@@ -98,63 +155,6 @@ void hash_new(cc *in, char* s) {
 }
 
 //
-// SHA Clear
-int sha_reset(ctxs *c) {
-  if (!c) return sha_null;
-  c->msg_blk_i = 0;
-  c->len_hi = c->len_lo = 0;
-  c->compute = 0;
-  c->corrupt = sha_ok;
-  for (int i = 0; i < sha_hsh_sz / 8; i++) {c->imh[i] = SHA_H0[i];}
-  return sha_ok;
-}
-
-//
-// SHA Input
-int sha_input(ctxs *c, cu8 *msg_arr, ui length) {
-  sha_error(c, msg_arr, length, 0);
-  while (length--) {
-    c->mb[c->msg_blk_i++] = *msg_arr;
-    if ((SHA_AddLength(c, 8) == sha_ok) && (c->msg_blk_i == sha_blk_sz))
-      sha_proc_msgblk(c);
-    msg_arr++;
-  }
-  return c->corrupt;
-}
-
-//
-// SHA Add final bits
-int sha_final(ctxs *c, u08 msg_bit, ui length) {
-  sha_error(c, (cu8 *)0, length, 1);
-  SHA_AddLength(c, length);
-  sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
-  return c->corrupt;
-}
-
-//
-// SHA Get digest
-int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]) {
-  sha_error(c, msg_dig, 0, 2);
-  if (!c->compute) sha_finalize(c, 0x80);
-  for (int i = 0; i < sha_hsh_sz; ++i) {
-    msg_dig[i] = (u08)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
-  }
-  return sha_ok;
-}
-
-//
-// SHA Check if hashvalue matches a predef hexstr and convert to str if s!=NULL
-int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
-  int j = 0, k, l;
-  for (int i = 0; i < hashsize; ++i) {
-    k = hexdigits[(hashvalue[i] >> 4) & 0xF]; l = hexdigits[hashvalue[i] & 0xF];
-    if (s != NULL) {s[j++] = k; s[j++] = l; s[j]='\0';}
-    if (*hexstr++ != k) return 0; if (*hexstr++ != l) return 0;
-  }
-  return 1;
-}
-
-//
 // HMAC error check
 static int hmac_error(ctxh *c) {
   if (!c) return sha_null;
@@ -165,7 +165,7 @@ static int hmac_error(ctxh *c) {
 
 //
 // HMAC initialize Context
-int hmac_reset(ctxh *c, cuc *key, int key_len) {
+static int hmac_reset(ctxh *c, cuc *key, int key_len) {
   b08 k_ipad[sha_blk_sz], tmp[sha_hsh_sz], blocksize, hashsize, ret;
 
   if (!c) return sha_null;
@@ -196,19 +196,19 @@ int hmac_reset(ctxh *c, cuc *key, int key_len) {
 
 //
 // HMAC input
-int hmac_input(ctxh *c, cuc *text, int text_len) {
+static int hmac_input(ctxh *c, cuc *text, int text_len) {
   hmac_error(c); return c->corrupt = sha_input(&c->sha, text, text_len);
 }
 
 //
 // HMAC Add final bits
-int hmac_final(ctxh *c, u08 bits, ui bit_count) {
+static int hmac_final(ctxh *c, u08 bits, ui bit_count) {
   hmac_error(c); return c->corrupt = sha_final(&c->sha, bits, bit_count);
 }
 
 //
 // HMAC Get digest
-int hmac_result(ctxh *c, u08 *digest) {
+static int hmac_result(ctxh *c, u08 *digest) {
   // Finish up 1st pass. Perform outer SHA, init context for 2nd pass.
   // Start with outer pad, then results of 1st hash. Finish up 2nd pass
   hmac_error(c);
@@ -221,7 +221,7 @@ int hmac_result(ctxh *c, u08 *digest) {
 
 //
 // HMAC & SHA Test suite runner
-int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
+int lightssl_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
   u08 msg_dig[sha_hsh_sz], err;
   ctxh hmac;
   ctxs sha;
@@ -248,10 +248,10 @@ int hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
   return sha_match_to_str(msg_dig, ra, hs, NULL);
 }
 
-int test_sha_hmac() {
+int lightssl_hash_test() {
   // 11 of 11 SHA tests pass
   for (int i = 0; (i <= TESTCOUNT - 1); ++i) {
-    int err = hash(h.t[i].testarray, h.t[i].length,
+    int err = lightssl_hash(h.t[i].testarray, h.t[i].length,
       h.t[i].repeatcount, h.t[i].nr_extrabits,
       h.t[i].extrabits, 0, 0, h.t[i].res_arr, h.hashsize);
     assert(err == 1); if (err != 1) return 0;
@@ -262,7 +262,7 @@ int test_sha_hmac() {
     int dl = hm[i].datalength[1] ? hm[i].datalength[1] : hm[i].datalength[0];
     cuc* ka = (cuc*)(hm[i].keyarray[1] ? hm[i].keyarray[1] : hm[i].keyarray[0]);
     int kl = hm[i].keylength[1] ? hm[i].keylength[1] : hm[i].keylength[0];
-    int err = hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
+    int err = lightssl_hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
     assert(err == 1); if (err != 1) return 0;
   }
   return 1;

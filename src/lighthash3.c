@@ -291,7 +291,7 @@ static void sponge(u08 *n, int l, u08 **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void keccak(u08 *n, char *s) {
+void lightssl_hash3_new(u08 *n, char *s) {
   u08 *m, z1[] = {2}, *ss = malloc(128 * sizeof(u08));
   u64 d = strlen((char*)n) * 8;
 
