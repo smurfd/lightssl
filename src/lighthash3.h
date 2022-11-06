@@ -11,5 +11,5 @@
 #include <string.h>
 
 #define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
-void lightssl_hash3_new(uint8_t *n, char *ss);
+void lighthash3_hash_new(uint8_t *n, char *ss);
 #endif

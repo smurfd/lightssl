@@ -64,8 +64,8 @@ int main(int argc, char **argv) {
         "C5D147AC6F528656456651606546CA42A1070BDFD79D024F3B97DD1BDAC7E70F3D1";
       char *s = malloc(sha_blk_sz);
 
-      lightssl_hash_new("smurfd", s);
-      assert(lightssl_hash_test() == 1);
+      lighthash_hash_new("smurfd", s);
+      assert(lighthash_hash_test() == 1);
       assert(strcmp(ra, s) == 0);
       free(s);
       printf("OK\n");
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
         "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cda25f20";
       uint8_t *smurfd = (uint8_t*)"smurfd";
 
-      lightssl_hash3_new(smurfd, s);
+      lighthash3_hash_new(smurfd, s);
       assert(strcmp(s, hash) == 0);
       printf("OK\n");
     }

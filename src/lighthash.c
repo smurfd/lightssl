@@ -139,7 +139,7 @@ static int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
 
 //
 // Create a SHA hash from string
-void lightssl_hash_new(cc *in, char* s) {
+void lighthash_hash_new(cc *in, char* s) {
   u08 *inn = malloc(sizeof(u08) * strlen(in)), msg_dig[sha_hsh_sz];
   ctxs sha;
 
@@ -221,7 +221,7 @@ static int hmac_result(ctxh *c, u08 *digest) {
 
 //
 // HMAC & SHA Test suite runner
-int lightssl_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
+int lighthash_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
   u08 msg_dig[sha_hsh_sz], err;
   ctxh hmac;
   ctxs sha;
@@ -248,10 +248,10 @@ int lightssl_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, 
   return sha_match_to_str(msg_dig, ra, hs, NULL);
 }
 
-int lightssl_hash_test() {
+int lighthash_hash_test() {
   // 11 of 11 SHA tests pass
   for (int i = 0; (i <= TESTCOUNT - 1); ++i) {
-    int err = lightssl_hash(h.t[i].testarray, h.t[i].length,
+    int err = lighthash_hash(h.t[i].testarray, h.t[i].length,
       h.t[i].repeatcount, h.t[i].nr_extrabits,
       h.t[i].extrabits, 0, 0, h.t[i].res_arr, h.hashsize);
     assert(err == 1); if (err != 1) return 0;
@@ -262,7 +262,7 @@ int lightssl_hash_test() {
     int dl = hm[i].datalength[1] ? hm[i].datalength[1] : hm[i].datalength[0];
     cuc* ka = (cuc*)(hm[i].keyarray[1] ? hm[i].keyarray[1] : hm[i].keyarray[0]);
     int kl = hm[i].keylength[1] ? hm[i].keylength[1] : hm[i].keylength[0];
-    int err = lightssl_hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
+    int err = lighthash_hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
     assert(err == 1); if (err != 1) return 0;
   }
   return 1;

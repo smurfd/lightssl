@@ -55,7 +55,7 @@ typedef struct ctxh {
 // int hmac_final(ctxh *c, u08 bits, ui bit_count);
 // int hmac_result(ctxh *c, u08 digest[sha_hsh_sz]);
 
-void lightssl_hash_new(cc *in, char* s);
-int lightssl_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs);
-int lightssl_hash_test();
+void lighthash_hash_new(cc *in, char* s);
+int lighthash_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs);
+int lighthash_hash_test();
 #endif
