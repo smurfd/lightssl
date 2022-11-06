@@ -1,5 +1,3 @@
-CC=clang
-meson build
-cd build
-meson compile
-meson test
+CC=clang meson build
+CC=clang ninja -C build
+CC=clang ninja -C build test -v -d stats -d explain

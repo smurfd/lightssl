@@ -55,16 +55,6 @@ int main(int argc, char **argv) {
       lightssl_print_hello(hs_srv_recv);
       lightssl_cli_end(cl);
       free(hs_srv_recv); free(hs_cli);
-    } else if (strcmp(argv[1], "hash") == 0) {
-      char* ra = "555CFC37FC24D4971DE9B091EF13401B8C5CB8B5B55804DA571FB201CBB4F"
-        "C5D147AC6F528656456651606546CA42A1070BDFD79D024F3B97DD1BDAC7E70F3D1";
-      char *s = malloc(sha_blk_sz);
-
-      hash_new("smurfd", s);
-      assert(test_sha_hmac() == 1);
-      assert(strcmp(ra, s) == 0);
-      free(s);
-      printf("OK\n");
     } else if (strcmp(argv[1], "vsh_cli") == 0) {
       int s = vsh_init("127.0.0.1", "9998", false);
 
@@ -91,6 +81,16 @@ int main(int argc, char **argv) {
 
       if (vsh_listen(s, cli) < 0) {printf("Can't create Thread\n"); exit(0);}
       vsh_end(s);
+    } else if (strcmp(argv[1], "hash") == 0) {
+      char* ra = "555CFC37FC24D4971DE9B091EF13401B8C5CB8B5B55804DA571FB201CBB4F"
+        "C5D147AC6F528656456651606546CA42A1070BDFD79D024F3B97DD1BDAC7E70F3D1";
+      char *s = malloc(sha_blk_sz);
+
+      hash_new("smurfd", s);
+      assert(test_sha_hmac() == 1);
+      assert(strcmp(ra, s) == 0);
+      free(s);
+      printf("OK\n");
     } else if (strcmp(argv[1], "hash3") == 0) {
       char s[128] = {0};
       char hash[] = "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2d"
@@ -98,9 +98,8 @@ int main(int argc, char **argv) {
       uint8_t *smurfd = (uint8_t*)"smurfd";
 
       keccak(smurfd, s);
-      printf("s=%s\n", s);
-      printf("------ // -----\n");
       assert(strcmp(s, hash) == 0);
+      printf("OK\n");
     }
   }
 }
