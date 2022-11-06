@@ -1,11 +1,11 @@
 
-# lightssl
+# lightSSL
 Do SSL really need to be so hard?
 
-Ciphers: TODO: Blowfish / AES
-Keys: TODO: ECDH / ECDSA
-Crypto: TODO: ASN1
-Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512
+Ciphers: TODO: Blowfish / AES<br>
+Keys: TODO: ECDH / ECDSA<br>
+Crypto: TODO: ASN1<br>
+Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 
 ### Compile lightssl
 
@@ -19,11 +19,11 @@ CC=clang ninja -C build test -v -d stats -d explain
 ### Run client and server
 In one terminal run
 ```
-./build/test_lightssl vcs_srv
+./build/test_lightssl crypto_srv
 ```
 In another terminal run
 ```
-./build/test_lightssl vcs_cli
+./build/test_lightssl crypto_cli
 ```
 Test hashing (SHA2-256)
 ```
@@ -70,6 +70,6 @@ int main() {
 }
 ```
 
-# Very simple handshake
-very simple handshake in Python
-[VSH](https://github.com/smurfd/lightssl/tree/main/src/vsh)
+# Very simple Crypto handshake
+very simple Crypto handshake in Python
+[lightcrypto](https://github.com/smurfd/lightssl/tree/main/src/lightcrypto)
