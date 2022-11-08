@@ -163,3 +163,8 @@ void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 le
   if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
   else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
+
+// ASN.1
+// https://en.wikipedia.org/wiki/ASN.1
+// https://www.rfc-editor.org/rfc/rfc6025
+// https://www.rfc-editor.org/rfc/rfc5912
