@@ -77,4 +77,9 @@ typedef struct curves {
   int DEGR; // Degree
   int MARG; // Margin
 } cur;
+
+typedef struct points {
+  bit x;
+  bit y;
+} pt;
 #endif

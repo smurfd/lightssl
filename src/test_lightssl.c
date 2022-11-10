@@ -68,14 +68,17 @@ int main(int argc, char **argv) {
     assert(strcmp(s, hash) == 0);
     printf("OK\n");
   } else if (strcmp(argv[1], "keys") == 0) {
-    cur *c = malloc(sizeof(bit));
+    cur *c = malloc(sizeof(cur));
     bit a, b;
+    pt *p1 = malloc(sizeof(pt)), *p2 = malloc(sizeof(pt));
     lightecdh_curves_init(c);
     lightecdh_bit_copy(&a, (*c).ecdh_x, c);
     lightecdh_bit_copy(&b, (*c).ecdh_y, c);
     print_bit(a, c);
     print_bit(b, c);
+    lightecdh_point_copy(p1, *p2, c);
     lightecdh_curves_end(c);
+    free(p2); free(p1);
     printf("OK\n");
   } else {print_usage();}
 }

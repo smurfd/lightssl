@@ -38,6 +38,13 @@ void lightecdh_bit_copy(bit *x, const bit y, cur* cc) {
 }
 
 //
+// Copy point
+void lightecdh_point_copy(pt *p1, const pt p2, cur* cc) {
+  lightecdh_bit_copy(&(*p1).x, p2.x, cc);
+  lightecdh_bit_copy(&(*p1).y, p2.y, cc);
+}
+
+//
 // Print bits
 void print_bit(bit a, cur* cc) {
   printf("[ ");
@@ -47,6 +54,8 @@ void print_bit(bit a, cur* cc) {
   printf("]\n");
 }
 
+//
+// Init curve
 void lightecdh_curves_init(cur* cc) {
   memcpy((*cc).ecdh_p, ecdh_p, sizeof(bit));
   memcpy((*cc).ecdh_b, ecdh_b, sizeof(bit));
@@ -65,6 +74,8 @@ void lightecdh_curves_init(cur* cc) {
   (*cc).NBYT = (sizeof(u64) + (*cc).NWOR);
 }
 
+//
+// End / Free curve
 void lightecdh_curves_end(cur* cc) {
   free(cc);
 }
