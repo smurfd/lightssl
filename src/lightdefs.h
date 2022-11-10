@@ -13,6 +13,9 @@ typedef const uint8_t cu8;
 typedef const unsigned char cuc;
 typedef long long unsigned int u64;
 
+typedef uint64_t bit[571];
+typedef uint64_t sig[72];
+
 // VSH
 typedef struct keys key;
 typedef struct header head;
@@ -54,4 +57,24 @@ typedef struct sockaddr_in sock_in;
 // VSH Structs
 struct header {u64 len, ver, g, p;};
 struct keys {u64 publ, priv, shar;};
+
+// Keys struct
+typedef struct curves {
+  bit ecdh_p;
+  bit ecdh_b;
+  bit ecdh_x;
+  bit ecdh_y;
+  bit ecdh_n;
+  int ecdh_a;
+  int ecdh_h;
+
+  int CURV; // Curve type
+  int PRIV; // Private key sisze
+  int PUBL; // Publik key size
+  int NBYT; // Nbytes
+  int NBIT; // Nbits
+  int NWOR; // Nwords
+  int DEGR; // Degree
+  int MARG; // Margin
+} cur;
 #endif

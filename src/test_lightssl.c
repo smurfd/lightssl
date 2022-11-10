@@ -8,10 +8,11 @@
 #include "lighthash.h"
 #include "lighthash3.h"
 #include "lightcrypto.h"
+#include "lightkeys.h"
 
 void print_usage() {
   printf("Usage: ./build/test_lightssl <test>\n");
-  printf("  <test> crypto_cli | crypto_srv | hash | hash3\n");
+  printf("  <test> crypto_cli | crypto_srv | hash | hash3 | keys\n");
 }
 
 int main(int argc, char **argv) {
@@ -66,8 +67,15 @@ int main(int argc, char **argv) {
     lighthash3_hash_new(smurfd, s);
     assert(strcmp(s, hash) == 0);
     printf("OK\n");
-  } else {
-    printf("Usage: ./build/test_lightssl <test>\n");
-    printf("  <test> crypto_cli | crypto_srv | hash | hash3\n");
-  }
+  } else if (strcmp(argv[1], "keys") == 0) {
+    cur *c = malloc(sizeof(bit));
+    bit a, b;
+    lightecdh_curves_init(c);
+    lightecdh_bit_copy(&a, (*c).ecdh_x, c);
+    lightecdh_bit_copy(&b, (*c).ecdh_y, c);
+    print_bit(a, c);
+    print_bit(b, c);
+    lightecdh_curves_end(c);
+    printf("OK\n");
+  } else {print_usage();}
 }
