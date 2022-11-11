@@ -193,13 +193,12 @@ void lightkeys_bit_mul(bit *z, const bit x, const bit y, cur* cc) {
 // field inversion 'z := 1/x'
 void lightkeys_bit_inv(bit *z, const bit x, cur* cc) {
   bit u, v, g, h;
- // extern bit ecdh_p;
 
   lightkeys_bit_copy(&u, x, cc);
   lightkeys_bit_copy(&v, (*cc).ecdh_p, cc);
   lightkeys_bit_zero(g, cc);
   lightkeys_bit_one((*z), cc);
-  
+
   while (!lightkeys_bit_is_one(u, cc)) {
     int i = (lightkeys_bit_degree(u, cc) - lightkeys_bit_degree(v, cc));
     if (i < 0) {
@@ -360,4 +359,3 @@ void lightkeys_keygen(u64* pubkey, u64* privkey, cur* cc) {
   free(p);
   free(p2);
 }
-
