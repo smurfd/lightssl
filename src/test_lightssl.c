@@ -71,13 +71,13 @@ int main(int argc, char **argv) {
     cur *c = malloc(sizeof(cur));
     bit a, b;
     pt *p1 = malloc(sizeof(pt)), *p2 = malloc(sizeof(pt));
-    lightecdh_curves_init(c);
-    lightecdh_bit_copy(&a, (*c).ecdh_x, c);
-    lightecdh_bit_copy(&b, (*c).ecdh_y, c);
-    print_bit(a, c);
-    print_bit(b, c);
-    lightecdh_point_copy(p1, *p2, c);
-    lightecdh_curves_end(c);
+    lightkeys_curves_init(c);
+    lightkeys_bit_copy(&a, (*c).ecdh_x, c);
+    lightkeys_bit_copy(&b, (*c).ecdh_y, c);
+    lightkeys_print_bit(a, c);
+    lightkeys_print_bit(b, c);
+    lightkeys_point_copy(p1, *p2, c);
+    lightkeys_curves_end(c);
     free(p2); free(p1);
     printf("OK\n");
   } else {print_usage();}

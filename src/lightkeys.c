@@ -31,7 +31,7 @@ static int mod(int n, int m) {return ((n % m) + m) % m;}
 
 //
 // Copy bits
-void lightecdh_bit_copy(bit *x, const bit y, cur* cc) {
+void lightkeys_bit_copy(bit *x, const bit y, cur* cc) {
   for (int i = 0; i < (*cc).NWOR; ++i) {
     (*x)[i] = y[i];
   }
@@ -39,14 +39,14 @@ void lightecdh_bit_copy(bit *x, const bit y, cur* cc) {
 
 //
 // Copy point
-void lightecdh_point_copy(pt *p1, const pt p2, cur* cc) {
-  lightecdh_bit_copy(&(*p1).x, p2.x, cc);
-  lightecdh_bit_copy(&(*p1).y, p2.y, cc);
+void lightkeys_point_copy(pt *p1, const pt p2, cur* cc) {
+  lightkeys_bit_copy(&(*p1).x, p2.x, cc);
+  lightkeys_bit_copy(&(*p1).y, p2.y, cc);
 }
 
 //
 // Print bits
-void print_bit(bit a, cur* cc) {
+void lightkeys_print_bit(bit a, cur* cc) {
   printf("[ ");
   for (int i = 0; i < (*cc).NWOR; ++i) {
     printf("0x%.8llx ", (u64)a[i]);
@@ -56,7 +56,7 @@ void print_bit(bit a, cur* cc) {
 
 //
 // Init curve
-void lightecdh_curves_init(cur* cc) {
+void lightkeys_curves_init(cur* cc) {
   memcpy((*cc).ecdh_p, ecdh_p, sizeof(bit));
   memcpy((*cc).ecdh_b, ecdh_b, sizeof(bit));
   memcpy((*cc).ecdh_x, ecdh_x, sizeof(bit));
@@ -76,6 +76,6 @@ void lightecdh_curves_init(cur* cc) {
 
 //
 // End / Free curve
-void lightecdh_curves_end(cur* cc) {
+void lightkeys_curves_end(cur* cc) {
   free(cc);
 }
