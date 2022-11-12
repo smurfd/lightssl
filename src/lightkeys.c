@@ -156,9 +156,6 @@ static void keys_sqr(u64 *a, const u64 *b) {
   a[kd2] = (u64)r;
 }
 
-// Points functions
-static int keys_p_zero(pt *a) {return keys_zero(a->x) && keys_zero(a->y);}
-
 //
 static void keys_o_mul(u64 *a, const u64 *b) {
   u64 t[KD], ovr, d;
@@ -246,4 +243,70 @@ static void keys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
     --pb;
   }
   keys_set(a, p);
+}
+
+// Points functions
+static int keys_p_zero(pt *a) {return keys_zero(a->x) && keys_zero(a->y);}
+
+static void keys_p_double(u64 *a, u64 *b, u64 *c) {
+  u64 t4[KD], t5[KD];
+
+  if (keys_zero(c)) {return;}
+  keys_m_sqr(t4, b);
+  keys_m_mul(t5, a, t4);
+  keys_m_sqr(t4, t4);
+  keys_m_mul(b, b, c);
+  keys_m_sqr(c, c);
+
+  keys_m_add(a, a, c, curve_p);
+  keys_m_add(c, c, c, curve_p);
+  keys_m_sub(c, a, c, curve_p);
+  keys_m_mul(a, a, c);
+
+  keys_m_add(c, a, a, curve_p);
+  keys_m_add(a, a, c, curve_p);
+  if (keys_chk(a, 0)) {
+    u64 ovr = keys_add(a, a, curve_p);
+    keys_rs1(a);
+    a[KD-1] |= ovr << 63;
+  } else {keys_rs1(a);}
+  keys_m_sqr(c, a);
+  keys_m_sub(c, c, t5, curve_p);
+  keys_m_sub(c, c, t5, curve_p);
+  keys_m_sub(t5, t5, c, curve_p);
+  keys_m_mul(a, a, t5);
+  keys_m_sub(t4, a, t4, curve_p);
+  keys_set(a, c);
+  keys_set(c, b);
+  keys_set(b, t4);
+}
+
+static void keys_p_decom(pt *a, const u64 b[KD + 1]) {
+  u64 tr[KD] = {3};
+  keys_set(a->x, b + 1);
+  keys_m_sqr(a->y, a->x);
+  keys_m_sub(a->y, a->y, tr, curve_p);
+  keys_m_mul(a->y, a->y, a->x);
+  keys_m_add(a->y, a->y, curve_b, curve_p);
+  keys_m_sqrt(a->y);
+  if ((a->y[0] & 0x01) != (b[0] & 0x01)) {keys_sub(a->y, curve_p, a->y);}
+}
+
+static void keys_p_appz(u64 *a, u64 *b, const u64 *z) {
+  u64 t[KD];
+  keys_m_sqr(t, z);
+  keys_m_mul(a, a, t);
+  keys_m_mul(t, t, z);
+  keys_m_mul(b, b, t);
+}
+
+// P = (x1, y1) => 2P, (x2, y2) => P'
+static void keys_p_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
+  u64 z[KD];
+  keys_set(c, a); keys_set(d, b);
+  keys_clear(z); z[0] = 1;
+  if (p) {keys_set(z, p);}
+  keys_p_appz(a, c, z);
+  keys_p_double(a, c, z);
+  keys_p_appz(b, d, z);
 }
