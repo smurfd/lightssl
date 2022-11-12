@@ -68,6 +68,13 @@ int main(int argc, char **argv) {
     assert(strcmp(s, hash) == 0);
     printf("OK\n");
   } else if (strcmp(argv[1], "keys") == 0) {
+    u64 sig[KB * 2], h[KB * 2], pubkey[KB + 1], privkey[KB], sec[KB];
+
+    prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
+    for (int i = 0; i < KB; ++i) {
+      usleep(10); h[i] = prng_next();
+    }
+    usleep(1); assert(keys_make_keys(pubkey, privkey));
     printf("OK\n");
   } else {print_usage();}
 }
