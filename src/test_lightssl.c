@@ -68,17 +68,6 @@ int main(int argc, char **argv) {
     assert(strcmp(s, hash) == 0);
     printf("OK\n");
   } else if (strcmp(argv[1], "keys") == 0) {
-    cur *c = malloc(sizeof(cur));
-    bit a, b;
-    pt *p1 = malloc(sizeof(pt)), *p2 = malloc(sizeof(pt));
-    lightkeys_curves_init(c);
-    lightkeys_bit_copy(&a, (*c).ecdh_x, c);
-    lightkeys_bit_copy(&b, (*c).ecdh_y, c);
-    lightkeys_print_bit(a, c);
-    lightkeys_print_bit(b, c);
-    lightkeys_point_copy(p1, *p2, c);
-    lightkeys_curves_end(c);
-    free(p2); free(p1);
     printf("OK\n");
   } else {print_usage();}
 }

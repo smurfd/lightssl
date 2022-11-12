@@ -32,6 +32,7 @@ test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
   dependencies: [m_dep, p_dep],
   install: true)
 
+test('keys', test_lightssl, args: ['keys'])
 test('hash', test_lightssl, args: ['hash'])
 test('hash3', test_lightssl, args: ['hash3'])
-test('crypto_cli', test_lightssl, args: ['crypto_cli'])
+test('crypto', test_lightssl, args: ['crypto_cli'])
