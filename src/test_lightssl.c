@@ -75,6 +75,9 @@ int main(int argc, char **argv) {
       usleep(10); h[i] = prng_next();
     }
     usleep(1); assert(keys_make_keys(pubkey, privkey));
+    usleep(1); assert(keys_shar_secr(pubkey, privkey, sec));
+    //usleep(1); assert(keys_sign(privkey, h, sig));
+    //usleep(1); assert(keys_vrfy(pubkey, h, sig));
     printf("OK\n");
   } else {print_usage();}
 }
