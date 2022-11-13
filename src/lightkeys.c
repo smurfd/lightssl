@@ -537,3 +537,82 @@ int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
   return !keys_p_zero(&product);
 }
 
+//
+// Create signature
+int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB * 2]) {
+  u64 k[DI], tmp[DI], s[DI];
+  pt p;
+
+  do {
+    if (keys_zero(k)) {continue;}
+    if (keys_cmp(curve_n, k) != 1) {keys_sub(k, k, curve_n);}
+    keys_p_mul(&p, &curve_g, k, NULL);
+    if (keys_cmp(curve_n, p.x) != 1) {keys_sub(p.x, p.x, curve_n);}
+  } while(keys_zero(p.x));
+  keys_set(tmp, priv);
+  keys_m_mmul(s, p.x, tmp, curve_n);
+  keys_set(tmp, hash);
+  keys_m_add(s, tmp, s, curve_n);
+  keys_m_inv(k, k, curve_n);
+  keys_m_mmul(s, s, k, curve_n);
+  keys_set(sign, p.x);
+  keys_set(sign + KB, s);
+  return 1;
+}
+
+//
+// Verify signature
+int lee_vrfy(const u64 publ[KB+1], const u64 hash[KB], const u64 sign[KB*2]) {
+  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
+  pt public, sum;
+
+  keys_p_decom(&public, publ);
+  keys_set(r, sign);
+  keys_set(s, sign + KB);
+  if (keys_zero(r) || keys_zero(s)) {return 0;}
+  if (keys_cmp(curve_n, r) != 1 || keys_cmp(curve_n, s) != 1) {return 0;}
+  keys_m_inv(z, s, curve_n);
+  keys_set(u1, hash);
+  keys_m_mmul(u1, u1, z, curve_n);
+  keys_m_mmul(u2, r, z, curve_n);
+
+  // Calculate sum = G + Q.
+  keys_set(sum.x, public.x);
+  keys_set(sum.y, public.y);
+  keys_set(tx, curve_g.x);
+  keys_set(ty, curve_g.y);
+  keys_m_sub(z, sum.x, tx, curve_p);
+  keys_p_add(tx, ty, sum.x, sum.y);
+  keys_m_inv(z, z, curve_p);
+  keys_p_appz(sum.x, sum.y, z);
+
+  // Use Shamir's trick to calculate u1*G + u2*Q
+  pt *points[4] = {NULL, &curve_g, &public, &sum};
+  ui nb = (keys_bits(u1) > keys_bits(u2) ? keys_bits(u1) : keys_bits(u2));
+
+  pt *point = points[(!!keys_chk(u1, nb - 1)) | ((!!keys_chk(u2, nb - 1)) << 1)];
+
+  keys_set(rx, point->x);
+  keys_set(ry, point->y);
+  keys_clear(z);
+  z[0] = 1;
+
+  for (int i = nb - 2; i >= 0; --i) {
+    keys_p_double(rx, ry, z);
+    int index = (!!keys_chk(u1, i)) | ((!!keys_chk(u2, i)) << 1);
+    pt *point = points[index];
+    if (point) {
+      keys_set(tx, point->x);
+      keys_set(ty, point->y);
+      keys_p_appz(tx, ty, z);
+      keys_m_sub(tz, rx, tx, curve_p);
+      keys_p_add(tx, ty, rx, ry);
+      keys_m_mul(z, z, tz);
+    }
+  }
+  keys_m_inv(z, z, curve_p);
+  keys_p_appz(rx, ry, z);
+  if (keys_cmp(curve_n, rx) != 1) {keys_sub(rx, rx, curve_n);}
+  return (keys_cmp(rx, r) == 0);
+}
+
