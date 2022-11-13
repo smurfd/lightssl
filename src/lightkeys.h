@@ -10,9 +10,9 @@
 #include "lightdefs.h"
 
 // Random
-u32 prng_rotate(u32 x, u32 k);
-u32 prng_next(void);
-void prng_init(u32 seed);
+u64 prng_rotate(u64 x, u64 k);
+u64 prng_next(void);
+void prng_init(u64 seed);
 
 int keys_make_keys(u64 publ[KB + 1], u64 priv[KB]);
 int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]);

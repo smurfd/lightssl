@@ -168,15 +168,12 @@ static void keys_o_mul(u64 *a, const u64 *b) {
 
   keys_set(a, b);
   ovr = keys_ls(t, b, 32);
-  a[1+DI] = ovr + keys_add(a + 1, a + 1, t);
-  a[2+DI] = keys_add(a + 2, a + 2, b);
+  a[DI + 1] = ovr + keys_add(a + 1, a + 1, t);
+  a[DI + 2] = keys_add(a + 2, a + 2, b);
   ovr += keys_sub(a, a, t);
   u64 d = a[DI] - ovr;
   if (d > a[DI]) {
-    for (u08 i = 1+DI; ; ++i) {
-      --a[i];
-      if (a[i] != (u64) - 1) {break;}
-    }
+    for (u08 i = 1+DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
   }
   a[DI] = d;
 }
@@ -184,6 +181,7 @@ static void keys_o_mul(u64 *a, const u64 *b) {
 // Modulo functions
 static void keys_m_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
   u64 ovr = keys_add(a, b, c);
+
   if (ovr || keys_cmp(a, m) >= 0) {keys_sub(a, a, m);}
 }
 
@@ -243,7 +241,7 @@ static void keys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   if (pb < mb) {keys_set(a, p); return;}
 
   keys_clear(mm); keys_clear(mm + DI);
-  ds = (pb - mb) / 64; bs = (pb - mb) % 64;//mod(pb - mb, 64);
+  ds = (pb - mb) / 64; bs = mod(pb - mb, 64);
   if (bs) {mm[ds + DI] = keys_ls(mm + ds, m, bs);}
   else {keys_set(mm + ds, m);}
 
@@ -455,10 +453,10 @@ static void keys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
 // Public functions
 
 // Random
-u32 prng_rotate(u32 x, u32 k) {return (x << k) | (x >> (32 - k));}
+u64 prng_rotate(u64 x, u64 k) {return (x << k) | (x >> (32 - k));}
 
-u32 prng_next(void) {
-  u32 e = prng_ctx.a - prng_rotate(prng_ctx.b, 27);
+u64 prng_next(void) {
+  u64 e = prng_ctx.a - prng_rotate(prng_ctx.b, 27);
 
   prng_ctx.a = prng_ctx.b ^ prng_rotate(prng_ctx.c, 17);
   prng_ctx.b = prng_ctx.c + prng_ctx.d;
@@ -467,7 +465,7 @@ u32 prng_next(void) {
   return prng_ctx.d;
 }
 
-void prng_init(u32 seed) {
+void prng_init(u64 seed) {
   prng_ctx.a = 0xea7f00d1;
   prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
   for (u64 i = 0; i < 31; ++i) {(void) prng_next();}
@@ -475,12 +473,9 @@ void prng_init(u32 seed) {
 
 // Make public key
 int keys_make_keys(u64 publ[KB + 1], u64 priv[KB]) {
-  u64 private[DI];
+  u64 private[DI]; //range [1, n-1]
   pt public;
   do {
-    // Make sure the private key is in the range [1, n-1].
-    // For the supported curves, n is always large enough that we only need to
-    // subtract once at most.
     if (keys_zero(private)) {continue;}
     if (keys_cmp(curve_n, private) != 1) {keys_sub(private, private, curve_n);}
     keys_p_mul(&public, &curve_g, private, NULL);
