@@ -16,6 +16,6 @@ void prng_init(u64 seed);
 
 int keys_make_keys(u64 publ[KB + 1], u64 priv[KB]);
 int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]);
-int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB * 2]);
-int keys_vrfy(const u64 publ[KB+1], const u64 hash[KB], const u64 sign[KB*2]);
+int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]);
+int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]);
 #endif

@@ -3,7 +3,7 @@
 Do SSL really need to be so hard?
 
 Ciphers: TODO: Blowfish / AES<br>
-Keys: TODO: ECDH / ECDSA<br>
+Keys: ECDSA<br>
 Crypto: TODO: ASN1<br>
 Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 
@@ -32,6 +32,10 @@ Test hashing (SHA2-256)
 Test hashing (SHA3-512)
 ```
 ./build/test_lightssl hash3
+```
+Test keys (secp384r1)
+```
+./build/test_lightssl keys
 ```
 
 ### Use lightssl

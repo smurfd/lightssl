@@ -37,7 +37,7 @@ static void keys_clear(u64 *a) {for (u08 i = 0; i < DI; ++i) {a[i] = 0;}}
 //
 // Check if a is zero, return 1, if not return 0
 static int keys_zero(const u64 *a) {
-  for (uint8_t i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
+  for (u08 i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
   return 1;
 }
 
@@ -58,7 +58,7 @@ static ui keys_count(const u64 *a) {
 //
 // Set a from b
 static void keys_set(u64 *a, const u64 *b) {
-  for (uint8_t i = 0; i < DI; ++i) {a[i] = b[i];}
+  for (u08 i = 0; i < DI; ++i) {a[i] = b[i];}
 }
 
 //
@@ -127,12 +127,14 @@ static u64 keys_sub(u64 *a, const u64 *b, const u64 *c) {
   return ovr;
 }
 
+//
+//
 static void akrr(u64 **a, u64 k, u128 *r, u64 *r2) {
   (*a)[k] = (u64)(*r); (*r) = ((*r) >> 64) | (((u128)(*r2)) << 64); (*r2) = 0;
 }
 
 //
-//
+// Multiply
 static void keys_mul(u64 *a, const u64 *b, const u64 *c) {
   u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
@@ -147,6 +149,8 @@ static void keys_mul(u64 *a, const u64 *b, const u64 *c) {
   a[di22] = (u64)r;
 }
 
+//
+// Square
 static void keys_sqr(u64 *a, const u64 *b) {
   u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
@@ -162,6 +166,7 @@ static void keys_sqr(u64 *a, const u64 *b) {
   a[di22] = (u64)r;
 }
 
+//
 //
 static void keys_o_mul(u64 *a, const u64 *b) {
   u64 t[DI], ovr;
@@ -179,16 +184,23 @@ static void keys_o_mul(u64 *a, const u64 *b) {
 }
 
 // Modulo functions
+
+//
+// Modulo add
 static void keys_m_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
   u64 ovr = keys_add(a, b, c);
 
   if (ovr || keys_cmp(a, m) >= 0) {keys_sub(a, a, m);}
 }
 
+//
+// Modulo sub
 static void keys_m_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
   if (keys_sub(a, b, c)) {keys_add(a, a, m);}
 }
 
+//
+// Modulo mod
 static void keys_m_mod(u64 *a, u64 *b) {
   u64 t[DI2];
 
@@ -207,18 +219,24 @@ static void keys_m_mod(u64 *a, u64 *b) {
   keys_set(a, b);
 }
 
+//
+// Modulo multiply
 static void keys_m_mul(u64 *a, const u64 *b, const u64 *c) {
   u64 p[DI2];
 
   keys_mul(p, b, c); keys_m_mod(a, p);
 }
 
+//
+// Modulo square
 static void keys_m_sqr(u64 *a, const u64 *b) {
   u64 p[DI2];
 
   keys_sqr(p, b); keys_m_mod(a, p);
 }
 
+//
+// Modulo square root
 static void keys_m_sqrt(u64 a[DI]) {
   u64 p1[DI] = {1}, r[DI] = {1};
 
@@ -230,6 +248,8 @@ static void keys_m_sqrt(u64 a[DI]) {
   keys_set(a, r);
 }
 
+//
+//
 static void keys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   u64 p[DI2], mm[DI2];
   ui ds, bs, pb, mb = keys_bits(m);
@@ -261,8 +281,13 @@ static void keys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
 }
 
 // Points functions
+
+//
+// Points is this zero?
 static int keys_p_zero(pt *a) {return (keys_zero(a->x) && keys_zero(a->y));}
 
+//
+// Points double
 static void keys_p_double(u64 *a, u64 *b, u64 *c) {
   u64 t4[DI], t5[DI];
 
@@ -296,6 +321,8 @@ static void keys_p_double(u64 *a, u64 *b, u64 *c) {
   keys_set(b, t4);
 }
 
+//
+//
 static void keys_p_decom(pt *a, const u64 b[KB + 1]) {
   u64 tr[DI] = {3};
 
@@ -308,6 +335,7 @@ static void keys_p_decom(pt *a, const u64 b[KB + 1]) {
   if ((a->y[0] & 0x01) != (b[0] & 0x01)) {keys_sub(a->y, curve_p, a->y);}
 }
 
+//
 // Modify (x1, y1) => (x1 * z^2, y1 * z^3)
 static void keys_p_appz(u64 *a, u64 *b, const u64 *z) {
   u64 t[DI];
@@ -318,6 +346,7 @@ static void keys_p_appz(u64 *a, u64 *b, const u64 *z) {
   keys_m_mul(b, b, t);
 }
 
+//
 // P = (x1, y1) => 2P, (x2, y2) => P'
 static void keys_p_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
   u64 z[DI];
@@ -330,6 +359,8 @@ static void keys_p_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
   keys_p_appz(c, d, z);
 }
 
+//
+// Points add
 static void keys_p_add(u64 *a, u64 *b, u64 *c, u64 *d) {
   u64 t5[DI];
 
@@ -350,6 +381,8 @@ static void keys_p_add(u64 *a, u64 *b, u64 *c, u64 *d) {
   keys_set(c, t5);
 }
 
+//
+// Points add
 static void keys_p_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
   // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
   u64 t5[DI], t6[DI], t7[DI];
@@ -379,6 +412,8 @@ static void keys_p_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
   keys_set(a, t7);
 }
 
+//
+// Modulo inversion
 static void keys_m_inv(u64 *r, u64 *p, u64 *m) {
   u64 a[DI], b[DI], u[DI], v[DI], car;
   int cmpResult;
@@ -421,6 +456,8 @@ static void keys_m_inv(u64 *r, u64 *p, u64 *m) {
   keys_set(r, u);
 }
 
+//
+// Point multiplication
 static void keys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
   u64 Rx[2][DI], Ry[2][DI], z[DI];
   int nb;
@@ -452,40 +489,47 @@ static void keys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
 
 // Public functions
 
-// Random
+//
+// Random rotate
 u64 prng_rotate(u64 x, u64 k) {return (x << k) | (x >> (32 - k));}
 
+//
+// Random next
 u64 prng_next(void) {
   u64 e = prng_ctx.a - prng_rotate(prng_ctx.b, 27);
 
   prng_ctx.a = prng_ctx.b ^ prng_rotate(prng_ctx.c, 17);
   prng_ctx.b = prng_ctx.c + prng_ctx.d;
-  prng_ctx.c = prng_ctx.d + e;
-  prng_ctx.d = e + prng_ctx.a;
+  prng_ctx.c = prng_ctx.d + e; prng_ctx.d = e + prng_ctx.a;
   return prng_ctx.d;
 }
 
+//
+// Random init
 void prng_init(u64 seed) {
-  prng_ctx.a = 0xea7f00d1;
-  prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
-  for (u64 i = 0; i < 31; ++i) {(void) prng_next();}
+  prng_ctx.a = 0xea7f00d1; prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
+  for (u64 i = 0; i < 31; ++i) {(void)prng_next();}
 }
 
+//
 // Make public key
 int keys_make_keys(u64 publ[KB + 1], u64 priv[KB]) {
-  u64 private[DI]; //range [1, n-1]
+  u64 private[DI], x = 1; // range [1, n-1]
   pt public;
-  do {
+
+  while(x) {
     if (keys_zero(private)) {continue;}
     if (keys_cmp(curve_n, private) != 1) {keys_sub(private, private, curve_n);}
     keys_p_mul(&public, &curve_g, private, NULL);
-  } while(keys_p_zero(&public));
+    x = keys_p_zero(&public);
+  }
   keys_set(priv, private);
   keys_set(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
   return 1;
 }
 
+//
 // create a secret from the public and private key
 int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
   pt public, product;
@@ -500,16 +544,17 @@ int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
 
 //
 // Create signature
-int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB * 2]) {
-  u64 k[DI], tmp[DI], s[DI];
+int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]) {
+  u64 k[DI], tmp[DI], s[DI], x = 1;
   pt p;
 
-  do {
+  while (x) {
     if (keys_zero(k)) {continue;}
     if (keys_cmp(curve_n, k) != 1) {keys_sub(k, k, curve_n);}
     keys_p_mul(&p, &curve_g, k, NULL);
     if (keys_cmp(curve_n, p.x) != 1) {keys_sub(p.x, p.x, curve_n);}
-  } while(keys_zero(p.x));
+    x = keys_zero(p.x);
+  }
   keys_set(tmp, priv);
   keys_m_mmul(s, p.x, tmp, curve_n);
   keys_set(tmp, hash);
@@ -523,7 +568,7 @@ int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB * 2]) {
 
 //
 // Verify signature
-int keys_vrfy(const u64 publ[KB+1], const u64 hash[KB], const u64 sign[KB*2]) {
+int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
   pt public, sum;
 
