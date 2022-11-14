@@ -17,8 +17,8 @@ def lightcrypto_crypt(data, s1): return data ^ s1
 
 def keys():
   random.seed(31337)
-  g1 = lightcrypto_rand(); g2 = vsh_rand()
-  p1 = lightcrypto_rand(); p2 = vsh_rand()
+  g1 = lightcrypto_rand(); g2 = lightcrypto_rand()
+  p1 = lightcrypto_rand(); p2 = lightcrypto_rand()
   c = 123456; d = 0; e = 0
 
   priv1, pub1 = lightcrypto_genkeys(g1, p1)
