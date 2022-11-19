@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "lightdefs.h"
+#include "lightkeys.h"
 
 //
 // Imitate pythons %. -1 % 5 = 4, not -1

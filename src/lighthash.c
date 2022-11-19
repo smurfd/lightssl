@@ -8,10 +8,6 @@
 #include "lighthash.h"
 #include "lighthash_testdata.h"
 
-extern u64 SHA_H0[], SHA_K[];
-extern u08 masks[], markbit[];
-extern cc hexdigits[];
-
 //
 // SHA Process message block
 static void sha_proc_msgblk(ctxs *c) {
@@ -129,6 +125,7 @@ static int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]) {
 // SHA Check if hashvalue matches a predef hexstr and convert to str if s!=NULL
 static int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
   int j = 0, k, l;
+
   for (int i = 0; i < hashsize; ++i) {
     k = hexdigits[(hashvalue[i] >> 4) & 0xF]; l = hexdigits[hashvalue[i] & 0xF];
     if (s != NULL) {s[j++] = k; s[j++] = l; s[j]='\0';}

@@ -1,8 +1,8 @@
-# First copy this script to your new projects source folder
-# Then copy src/*.h to your new projects source folder
-# Lastly after you have build lightssl copy build/*.a to your new project source folder.
-cp ../src/*.h .
-cp ../build/*.a .
-clang -o example example.c -llightdefs -llighthash3 -L.
+clang -c -o lighthash.o ../src/lighthash.c -fPIC
+clang -c -o lighthash3.o ../src/lighthash3.c -fPIC
+clang -c -o lightkeys.o ../src/lightkeys.c -fPIC
+clang -c -o lightcrypto.o ../src/lightcrypto.c -fPIC
+clang -c -o lightciphers.o ../src/lightciphers.c -fPIC
+clang example.c -o example lighthash3.o
 ./example
-rm lib* light* test* example
+rm -f example *.o

@@ -4,7 +4,9 @@
 #define LIGHTHASH_H 1
 
 #include <stdint.h>
-#include "lightdefs.h"
+
+typedef const char cc;
+typedef const unsigned char cuc;
 
 #ifndef SHA_DEFINES
 #define SHA_DEFINES 1
@@ -24,10 +26,10 @@
 
 // This structure will hold context information for the SHA hashing operation.
 typedef struct ctxs {
-  u64 imh[sha_hsh_sz / 8];                       // Intermediate Message Digest
-  u64 len_hi, len_lo;                            // Message length in bits
+  uint64_t imh[sha_hsh_sz / 8];                  // Intermediate Message Digest
+  uint64_t len_hi, len_lo;                       // Message length in bits
   int_least16_t msg_blk_i;                       // Message_Block array index
-  u08 mb[sha_blk_sz];                            // 1024-bit message blocks
+  uint8_t mb[sha_blk_sz];                        // 1024-bit message blocks
   int compute;                                   // Is the hash computed?
   int corrupt;                                   // Cumulative corrupt code
 } ctxs;
@@ -38,7 +40,7 @@ typedef struct ctxh {
   int size;                                      // Hash size of SHA being used
   int blk_size;                                  // Block size of SHA being used
   ctxs sha;                                      // SHA Context
-  b08 k_opad[sha_blk_sz];                        // Key XORd with opad
+  unsigned char k_opad[sha_blk_sz];              // Key XORd with opad
   int compute;                                   // Is the MAC computed?
   int corrupt;                                   // Cumulative corruption code
 } ctxh;

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
-#include "lighthash3.h"
+#include "../src/lighthash3.h"
 
 int main() {
  char *s = malloc(128);
@@ -12,7 +12,7 @@ int main() {
     "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cda25f20";
   uint8_t *smurfd = (uint8_t*)"smurfd";
 
-  keccak(smurfd, s);
+  lighthash3_hash_new(smurfd, s);
   printf("s=%s\n", s);
   printf("------ // -----\n");
   assert(strcmp(s, hash) == 0);

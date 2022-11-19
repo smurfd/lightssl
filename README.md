@@ -43,12 +43,14 @@ See the [tests](https://github.com/smurfd/lightssl/raw/main/src/test_lightssl.c)
 
 ### Compile your project (in the example folder)
 ```bash
-rm -rf build && ./build.sh
-cd example
-cp ../src/*.h .
-cp ../build/*.a .
-./build_your_project.sh
+clang -c -o lighthash.o ../src/lighthash.c -fPIC
+clang -c -o lighthash3.o ../src/lighthash3.c -fPIC
+clang -c -o lightkeys.o ../src/lightkeys.c -fPIC
+clang -c -o lightcrypto.o ../src/lightcrypto.c -fPIC
+clang -c -o lightciphers.o ../src/lightciphers.c -fPIC
+clang example.c -o example lighthash3.o
 ./example
+rm -f example *.o
 ```
 ### Small example (in the example folder)
 ```c
@@ -58,7 +60,7 @@ cp ../build/*.a .
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
-#include "lighthash3.h"
+#include "../src/lighthash3.h"
 
 int main() {
  char *s = malloc(128);
@@ -66,7 +68,7 @@ int main() {
     "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cda25f20";
   uint8_t *smurfd = (uint8_t*)"smurfd";
 
-  keccak(smurfd, s);
+  lighthash3_hash_new(smurfd, s);
   printf("s=%s\n", s);
   printf("------ // -----\n");
   assert(strcmp(s, hash) == 0);

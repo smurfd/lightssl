@@ -11,7 +11,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "lightcrypto.h"
-#include "lightdefs.h"
 
 //
 // Get BLOCK size
@@ -27,10 +26,66 @@ static u64 lightcrypto_rand() {
 }
 
 //
+// Generate the shared key
+void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv) {
+  if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
+  else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
+}
+
+//
+// Generate a public and private keypair
+key lightcrypto_genkeys(u64 g, u64 p) {
+  key k;
+
+  k.priv = lightcrypto_rand();
+  k.publ = (int64_t)pow(g, k.priv) % p;
+  return k;
+}
+
+//
+// Encrypt and decrypt data with shared key
+void lightcrypto_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
+
+//
+// Receive key
+static void lightcrypto_recvkey(int s, head *h, key *k) {
+  recv(s, h, sizeof(head), 0); recv(s, k, sizeof(key), 0); (*k).priv = 0;
+  // This to ensure if we receive a private key we clear it
+}
+
+//
+// Send key
+static void lightcrypto_sendkey(int s, head *h, key *k) {
+  key kk;
+
+  // This to ensure not to send the private key
+  kk.publ = (*k).publ; kk.shar = (*k).shar; kk.priv = 0;
+  send(s, h, sizeof(head), 0); send(s, &kk, sizeof(key), 0);
+}
+
+//
+// Transfer data (send and receive)
+void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len) {
+  if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
+  else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
+}
+
+//
+// Transfer keys (send and receive)
+void lightcrypto_transferkey(int s, bool snd, head *h, key *k) {
+  key tmp;
+
+  if (snd) {lightcrypto_sendkey(s, h, k);}
+  else {lightcrypto_recvkey(s, h, &tmp);
+    (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
+    // This to ensure if we receive a private key we clear it
+}
+
+//
 // Server handler
 static void *lightcrypto_handler(void *sdesc) {
-  int s = *(int*)sdesc;
   u64 dat[lightcrypto_getblock()], cd[lightcrypto_getblock()];
+  int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
   u64 g1 = lightcrypto_rand(), p1 = lightcrypto_rand();
@@ -49,23 +104,6 @@ static void *lightcrypto_handler(void *sdesc) {
   for (u64 i = 0; i < 10; i++) {lightcrypto_crypt(dat[i], k2, &cd[i]);}
   pthread_exit(NULL);
   return 0;
-}
-
-//
-// Receive key
-static void lightcrypto_recvkey(int s, head *h, key *k) {
-  recv(s, h, sizeof(head), 0); recv(s, k, sizeof(key), 0); (*k).priv = 0;
-  // This to ensure if we receive a private key we clear it
-}
-
-//
-// Send key
-static void lightcrypto_sendkey(int s, head *h, key *k) {
-  key kk;
-
-  // This to ensure not to send the private key
-  kk.publ = (*k).publ; kk.shar = (*k).shar; kk.priv = 0;
-  send(s, h, sizeof(head), 0); send(s, &kk, sizeof(key), 0);
 }
 
 //
@@ -108,23 +146,6 @@ int lightcrypto_listen(const int s, sock *cli) {
 }
 
 //
-// Generate a public and private keypair
-key lightcrypto_genkeys(u64 g, u64 p) {
-  key k;
-
-  k.priv = lightcrypto_rand();
-  k.publ = (int64_t)pow(g, k.priv) % p;
-  return k;
-}
-
-//
-// Generate the shared key
-void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv) {
-  if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
-  else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
-}
-
-//
 // Generate a keypair & shared key then print it (test / demo)
 int lightcrypto_keys() {
   u64 g1 = lightcrypto_rand(), g2 = lightcrypto_rand(), p1 = lightcrypto_rand();
@@ -140,28 +161,6 @@ int lightcrypto_keys() {
   lightcrypto_crypt(d, k2, &e);
   printf("Before:  0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n",c,d,e);
   return c == e;
-}
-
-//
-// Encrypt and decrypt data with shared key
-void lightcrypto_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
-
-//
-// Transfer keys (send and receive)
-void lightcrypto_transferkey(int s, bool snd, head *h, key *k) {
-  key tmp;
-
-  if (snd) {lightcrypto_sendkey(s, h, k);}
-  else {lightcrypto_recvkey(s, h, &tmp);
-    (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
-    // This to ensure if we receive a private key we clear it
-}
-
-//
-// Transfer data (send and receive)
-void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len) {
-  if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
-  else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
 
 // ASN.1

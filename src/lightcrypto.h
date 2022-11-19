@@ -4,7 +4,17 @@
 #define LIGHTCRYPTO_H 1
 
 #include <stdbool.h>
-#include "lightdefs.h"
+
+typedef long long unsigned int u64;
+typedef struct keys key;
+typedef struct header head;
+typedef struct sockaddr sock;
+typedef struct sockaddr_in sock_in;
+
+struct header {u64 len, ver, g, p;};
+struct keys {u64 publ, priv, shar;};
+
+#define BLOCK 1024
 
 key lightcrypto_genkeys(u64 g, u64 p);
 int lightcrypto_keys();
