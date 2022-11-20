@@ -14,98 +14,6 @@
 // KEY: 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
 
 // Pseudodcode from fips 197
-/*
-Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
-begin
-  byte state[4,Nb]
-  state = in
-  AddRoundKey(state, w[0, Nb-1]) // See Sec. 5.1.4
-  for round = 1 step 1 to Nr–1
-    SubBytes(state) // See Sec. 5.1.1
-    ShiftRows(state) // See Sec. 5.1.2
-    MixColumns(state) // See Sec. 5.1.3
-    AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
-  end for
-  SubBytes(state)
-  ShiftRows(state)
-  AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
-  out = state
-end
-
-KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk)
-begin
-  word temp
-  i = 0
-  while (i < Nk)
-    w[i] = word(key[4*i], key[4*i+1], key[4*i+2], key[4*i+3])
-    i = i+1
-  end while
-  i = Nk
-  while (i < Nb * (Nr+1)]
-    temp = w[i-1]
-    if (i mod Nk = 0)
-      temp = SubWord(RotWord(temp)) xor Rcon[i/Nk]
-    else if (Nk > 6 and i mod Nk = 4)
-      temp = SubWord(temp)
-    end if
-    w[i] = w[i-Nk] xor temp
-    i = i + 1
-  end while
-end
-
-InvCipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
-begin
-  byte state[4,Nb]
-  state = in
-  AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1]) // See Sec. 5.1.4
-  for round = Nr-1 step -1 downto 1
-    InvShiftRows(state) // See Sec. 5.3.1
-    InvSubBytes(state) // See Sec. 5.3.2
-    AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
-    InvMixColumns(state) // See Sec. 5.3.3
-  end for
-  InvShiftRows(state)
-  InvSubBytes(state)
-  AddRoundKey(state, w[0, Nb-1])
-  out = state
-end
-
-
-EqInvCipher(byte in[4*Nb], byte out[4*Nb], word dw[Nb*(Nr+1)])
-begin
-  byte state[4,Nb]
-  state = in
-  AddRoundKey(state, dw[Nr*Nb, (Nr+1)*Nb-1])
-  for round = Nr-1 step -1 downto 1
-    InvSubBytes(state)
-    InvShiftRows(state)
-    InvMixColumns(state)
-    AddRoundKey(state, dw[round*Nb, (round+1)*Nb-1])
-  end for
-  InvSubBytes(state)
-  InvShiftRows(state)
-  AddRoundKey(state, dw[0, Nb-1])
-  out = state
-end
-
-For the Equivalent Inverse Cipher, the following pseudo code is added at
-the end of the Key Expansion routine (Sec. 5.2):
-
-for i = 0 step 1 to (Nr+1)*Nb-1
-  dw[i] = w[i]
-end for
-for round = 1 step 1 to Nr-1
-  InvMixColumns(dw[round*Nb, (round+1)*Nb-1]) // note change of type
-end for
-
-Note that, since InvMixColumns operates on a two-dimensional array of bytes
-while the Round Keys are held in an array of words, the call to
-InvMixColumns in this code sequence involves a change of type (i.e. the
-input to InvMixColumns() is normally the State array, which is considered
-to be a two-dimensional array of bytes, whereas the input here is a Round
-Key computed as a one-dimensional array of words).
-*/
-
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
@@ -117,82 +25,99 @@ Key computed as a one-dimensional array of words).
 #include "lightdefs.h"
 #include "lightciphers.h"
 
-static void copy_state(u08 s[4][NB], u08 in[NB4]) {
-  int count = 0;
+static void copy_state(u08 s[4][NB], u08 in[4][NB]) {
+  //int count = 0;
 
   for (int j = 0; j < 4; ++j) {
     for (int i = 0; i < NB; ++i) {
-      s[j][i] = in[count];
-      count++;
+      s[j][i] = in[j][i];
+      //count++;
     }
   }
 }
 
 // 5.3.x
-static void lightciphers_invshiftrows(u08 *state) {// See Sec. 5.3.1
-
+static void lightciphers_invshiftrows(u08 state[4][NB]) {// See Sec. 5.3.1
+  if (state[0][0]) {}
 }
 
-static void lightciphers_invsubbytes(u08 *state) {// See Sec. 5.3.2
-
+static void lightciphers_invsubbytes(u08 state[4][NB]) {// See Sec. 5.3.2
+  if (state[0][0]) {}
 }
 
-static void lightciphers_invmixcolumns(u08 *state) {// See Sec. 5.3.3
-
+static void lightciphers_invmixcolumns(u08 state[4][NB]) {// See Sec. 5.3.3
+  if (state[0][0]) {}
 }
 
-static void lightciphers_addroundkey(u08 *state, w[4][NB-1]) {// See Sec. 5.1.4
-
+static void lightciphers_addroundkey(u08 state[4][NB], u64 w[4][NB]) {// See Sec. 5.1.4
+  if (state[0][0] || w[0][0]) {}
 }
 
 // 5.1.x
-static void lightciphers_subbytes(u08 *state) {// See Sec. 5.1.1
-
+static void lightciphers_subbytes(u08 state[4][NB]) {// See Sec. 5.1.1
+  if (state[0][0]) {}
 }
 
-static void lightciphers_shiftrows(u08 *state) {// See Sec. 5.1.2
-
+static void lightciphers_shiftrows(u08 state[4][NB]) {// See Sec. 5.1.2
+  if (state[0][0]) {}
 }
 
-static void lightciphers_mixcolumns(u08 *state) {// See Sec. 5.1.3
-
+static void lightciphers_mixcolumns(u08 state[4][NB]) {// See Sec. 5.1.3
+  if (state[0][0]) {}
 }
 
-static void lightciphers_cipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
+static void lightciphers_cipher(u08 in[4][NB], u08 out[4][NB], u64 w[NR][NB]) {
+  u08 state[4][NB];
 
+  copy_state(state, in);
+  lightciphers_addroundkey(state, w);//[0][NB-1]); //w[0, Nb-1]
+  for (int r = 1; r < NR -1; ++r) {
+    lightciphers_subbytes(state);
+    lightciphers_shiftrows(state);
+    lightciphers_mixcolumns(state);
+    lightciphers_addroundkey(state, w); //w[r*NB, (r+1)*NB-1]
+  }
+  lightciphers_subbytes(state);
+  lightciphers_shiftrows(state);
+  lightciphers_addroundkey(state, w); //w[NR*NB, (NR+1)*NB-1]
+  copy_state(out, state);
 }
 
 static u64 lightciphers_subword(u64 wrd) {// define?
-
+  return wrd;
 }
 
 static u64 lightciphers_rotword(u64 wrd) {// define?
-
+  return wrd;
 }
 
 static u64 lightciphers_rcon(u64 wrd) {// define?
-
+  return wrd;
 }
 
-static void lightciphers_keyexpansion(u08 key[NK4], u64 w[NBR1], u08 n) {
+static void lightciphers_keyexpansion(u08 key[4][NK], u64 w[NB][NR], u08 n) {
   u64 tmp;
 
-  for (int i = 0; i < n; ++i) {
-    w[i] = (u64)(key[4*i + 0], key[4*i + 1], key[4*i + 2], key[4*i + 3]);
-  }
-  for (int i = n; i < NB * (NR - 1); ++i) {
-    tmp = w[i];
-    if (MOD(i, n) == 0) {
-      tmp = lightciphers_subword(lightciphers_rotword(tmp)) ^
-        lightciphers_rcon(i/n);
-    } else if (n > 6 && MOD(i, n) == 4) {
-      tmp = lightciphers_subword(tmp);
+  for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < n; ++i) {
+      w[j][i] = (u64)(key[j][4*i+0] | key[j][4*i+1]| key[j][4*i+2]| key[j][4*i+3]);
     }
-    w[i] = w[i-n] ^ tmp;
+  }
+  for (int j = 0; j < 4; ++j) {
+    for (int i = n; i < NB * (NR - 1); ++i) {
+      tmp = w[j][i];
+      if (MOD(i, n) == 0) {
+        tmp = lightciphers_subword(lightciphers_rotword(tmp)) ^
+          lightciphers_rcon(i/n);
+      } else if (n > 6 && MOD(i, n) == 4) {
+        tmp = lightciphers_subword(tmp);
+      }
+      w[j][i] = w[j][i-n] ^ tmp;
+    }
   }
 }
 
-static void lightciphers_invcipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
+static void lightciphers_invcipher(u08 in[4][NB], u08 out[4][NB], u64 w[NR][NB]) {
   u08 state[4][NB];
 
   copy_state(state, in);
@@ -209,7 +134,7 @@ static void lightciphers_invcipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
   copy_state(out, state);
 }
 
-static void lightciphers_eqinvcipher(u08 in[NB4], u08 out[NB4], u64 dw[NBR1]) {
+static void lightciphers_eqinvcipher(u08 in[4][NB], u08 out[4][NB], u64 dw[NR][NB]) {
   u08 state[4][NB];
 
   copy_state(state, in);
