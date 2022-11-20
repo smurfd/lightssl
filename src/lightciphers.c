@@ -116,48 +116,72 @@ Key computed as a one-dimensional array of words).
 #include <assert.h>
 #include "lightciphers.h"
 
+static void copy_state(u08 s[4][NB], u08 in[NB4]) {
+  int count = 0;
+  
+  for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < NB; ++i) {
+      s[j][i] = in[count];
+      count++;
+    }
+  }
+}
+
 // 5.3.x
-static void lightciphers_invshiftrows(u64 *state) {// See Sec. 5.3.1
+static void lightciphers_invshiftrows(u08 *state) {// See Sec. 5.3.1
 
 }
 
-static void lightciphers_invsubbytes(u64 *state) {// See Sec. 5.3.2
+static void lightciphers_invsubbytes(u08 *state) {// See Sec. 5.3.2
 
 }
 
-static void InvMixColumns(u64 *state) {// See Sec. 5.3.3
+static void lightciphers_invmixcolumns(u08 *state) {// See Sec. 5.3.3
 
 }
 
-static void lightciphers_addroundkey(u64 *state, w[0, NB-1]) {// See Sec. 5.1.4
+static void lightciphers_addroundkey(u08 *state, w[4][NB-1]) {// See Sec. 5.1.4
 
 }
 
 // 5.1.x
-static void lightciphers_subbytes(u64 *state) {// See Sec. 5.1.1
+static void lightciphers_subbytes(u08 *state) {// See Sec. 5.1.1
 
 }
 
-static void lightciphers_shiftrows(u64 *state) {// See Sec. 5.1.2
+static void lightciphers_shiftrows(u08 *state) {// See Sec. 5.1.2
 
 }
 
-static void lightciphers_mixcolumns(u64 *state) {// See Sec. 5.1.3
+static void lightciphers_mixcolumns(u08 *state) {// See Sec. 5.1.3
 
 }
 
-static void lightciphers_cipher(b08 in[NB4], b08 out[NB4], u64 w[NBR1]) {
+static void lightciphers_cipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
 
 }
 
-static void lightciphers_keyexpansion(b08 key[NK4], u64 w[NBR1], b08 NK) {
+static void lightciphers_keyexpansion(u08 key[NK4], u64 w[NBR1], u08 n) {
 
 }
 
-static void lightciphers_invcipher(b08 in[NB4], b08 out[NB4], u64 w[NBR1]) {
+static void lightciphers_invcipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
+  u08 state[4][NB];
 
+  copy_state(state, in);
+  lightciphers_addroundkey(state, w); //w[Nr*Nb, (Nr+1)*Nb-1])
+  for (int r = NR -1; r >= 1; r--) {
+    lightciphers_invshiftrows(state);
+    lightciphers_invsubbytes(state);
+    lightciphers_addroundkey(state, w); //w[round*Nb, (round+1)*Nb-1]
+    lightciphers_invmixcolumns(state);
+  }
+  lightciphers_invshiftrows(state);
+  lightciphers_invsubbytes(state);
+  lightciphers_addroundkey(state, w); //w[0, Nb-1]
+  copy_state(out, state);
 }
 
-static void lightciphers_eqinvcipher(b08 in[NB4], b08 out[NB4], u64 dw[NBR1]) {
+static void lightciphers_eqinvcipher(u08 in[NB4], u08 out[NB4], u64 dw[NBR1]) {
 
 }
