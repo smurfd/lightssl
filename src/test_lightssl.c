@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
     usleep(1); assert(keys_vrfy(pubkey, h, sig));
     printf("OK\n");
   } else if (strcmp(argv[1], "ciphers") == 0) {
+    lightciphers_cip();
     printf("OK\n");
   } else {print_usage();}
 }
