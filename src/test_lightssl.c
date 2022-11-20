@@ -9,6 +9,7 @@
 #include "lighthash3.h"
 #include "lightcrypto.h"
 #include "lightkeys.h"
+#include "lightciphers.h"
 
 void print_usage() {
   printf("Usage: ./build/test_lightssl <test>\n");
@@ -77,6 +78,8 @@ int main(int argc, char **argv) {
     usleep(1); assert(keys_shar_secr(pubkey, privkey, sec));
     usleep(1); assert(keys_sign(privkey, h, sig));
     usleep(1); assert(keys_vrfy(pubkey, h, sig));
+    printf("OK\n");
+  } else if (strcmp(argv[1], "ciphers") == 0) {
     printf("OK\n");
   } else {print_usage();}
 }

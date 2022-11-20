@@ -23,9 +23,10 @@ liblightcrypto = static_library('lightcrypto', 'src/lightcrypto.c',
   link_args: '-pthread',
   dependencies: [m_dep, p_dep],
   c_args: build_args)
+liblightciphers = static_library('lightciphers', 'src/lightciphers.c')
 
 test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
-  link_with: [liblighthash, liblighthash3, liblightcrypto, liblightkeys],
+  link_with: [liblighthash, liblighthash3, liblightcrypto, liblightkeys, liblightciphers],
   link_args: '-pthread',
   c_args: build_args,
   dependencies: [m_dep, p_dep],
@@ -35,3 +36,4 @@ test('keys', test_lightssl, args: ['keys'])
 test('hash', test_lightssl, args: ['hash'])
 test('hash3', test_lightssl, args: ['hash3'])
 test('crypto', test_lightssl, args: ['crypto_cli'])
+test('ciphers', test_lightssl, args: ['ciphers'])

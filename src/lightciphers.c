@@ -105,3 +105,13 @@ input to InvMixColumns() is normally the State array, which is considered
 to be a two-dimensional array of bytes, whereas the input here is a Round
 Key computed as a one-dimensional array of words).
 */
+
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <assert.h>
+#include "lightciphers.h"
