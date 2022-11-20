@@ -114,6 +114,7 @@ Key computed as a one-dimensional array of words).
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
+#include "lightdefs.h"
 #include "lightciphers.h"
 
 static void copy_state(u08 s[4][NB], u08 in[NB4]) {
@@ -161,8 +162,34 @@ static void lightciphers_cipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
 
 }
 
-static void lightciphers_keyexpansion(u08 key[NK4], u64 w[NBR1], u08 n) {
+static u64 lightciphers_subword(u64 wrd) {// define?
 
+}
+
+static u64 lightciphers_rotword(u64 wrd) {// define?
+
+}
+
+static u64 lightciphers_rcon(u64 wrd) {// define?
+
+}
+
+static void lightciphers_keyexpansion(u08 key[NK4], u64 w[NBR1], u08 n) {
+  u64 tmp;
+
+  for (int i = 0; i < n; ++i) {
+    w[i] = (u64)(key[4*i + 0], key[4*i + 1], key[4*i + 2], key[4*i + 3]);
+  }
+  for (int i = n; i < NB * (NR - 1); ++i) {
+    tmp = w[i];
+    if (MOD(i, n) == 0) {
+      tmp = lightciphers_subword(lightciphers_rotword(tmp)) ^
+        lightciphers_rcon(i/n);
+    } else if (n > 6 && MOD(i, n) == 4) {
+      tmp = lightciphers_subword(tmp);
+    }
+    w[i] = w[i-n] ^ tmp;
+  }
 }
 
 static void lightciphers_invcipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
@@ -170,7 +197,7 @@ static void lightciphers_invcipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
 
   copy_state(state, in);
   lightciphers_addroundkey(state, w); //w[Nr*Nb, (Nr+1)*Nb-1])
-  for (int r = NR -1; r >= 1; r--) {
+  for (int r = NR - 1; r >= 1; r--) {
     lightciphers_invshiftrows(state);
     lightciphers_invsubbytes(state);
     lightciphers_addroundkey(state, w); //w[round*Nb, (round+1)*Nb-1]
@@ -183,5 +210,18 @@ static void lightciphers_invcipher(u08 in[NB4], u08 out[NB4], u64 w[NBR1]) {
 }
 
 static void lightciphers_eqinvcipher(u08 in[NB4], u08 out[NB4], u64 dw[NBR1]) {
+  u08 state[4][NB];
 
+  copy_state(state, in);
+  lightciphers_addroundkey(state, dw); //dw[Nr*Nb, (Nr+1)*Nb-1]
+  for (int r = NR - 1; r >= 1; r--) {
+    lightciphers_invsubbytes(state);
+    lightciphers_invshiftrows(state);
+    lightciphers_invmixcolumns(state);
+    lightciphers_addroundkey(state, dw); //dw[round*Nb, (round+1)*Nb-1]
+  }
+  lightciphers_invsubbytes(state);
+  lightciphers_invshiftrows(state);
+  lightciphers_addroundkey(state, dw); //w[0, Nb-1]
+  copy_state(out, state);
 }

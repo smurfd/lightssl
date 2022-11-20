@@ -91,4 +91,6 @@ const u64 SHA_K[80] = {
 #define SHA_T(c, l) c->corrupt = ((c->len_lo += l) < 0)
 #define SHA_AddLength(c, l) (SHA_T(c, l) && SHA_L(c))
 
+// Imitate pythons %. -1 % 5 = 4, not -1
+#define MOD(n, m) ((n % m)+m) % m
 #endif
