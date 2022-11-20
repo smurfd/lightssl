@@ -115,3 +115,49 @@ Key computed as a one-dimensional array of words).
 #include <stdbool.h>
 #include <assert.h>
 #include "lightciphers.h"
+
+// 5.3.x
+static void lightciphers_invshiftrows(u64 *state) {// See Sec. 5.3.1
+
+}
+
+static void lightciphers_invsubbytes(u64 *state) {// See Sec. 5.3.2
+
+}
+
+static void InvMixColumns(u64 *state) {// See Sec. 5.3.3
+
+}
+
+static void lightciphers_addroundkey(u64 *state, w[0, NB-1]) {// See Sec. 5.1.4
+
+}
+
+// 5.1.x
+static void lightciphers_subbytes(u64 *state) {// See Sec. 5.1.1
+
+}
+
+static void lightciphers_shiftrows(u64 *state) {// See Sec. 5.1.2
+
+}
+
+static void lightciphers_mixcolumns(u64 *state) {// See Sec. 5.1.3
+
+}
+
+static void lightciphers_cipher(b08 in[NB4], b08 out[NB4], u64 w[NBR1]) {
+
+}
+
+static void lightciphers_keyexpansion(b08 key[NK4], u64 w[NBR1], b08 NK) {
+
+}
+
+static void lightciphers_invcipher(b08 in[NB4], b08 out[NB4], u64 w[NBR1]) {
+
+}
+
+static void lightciphers_eqinvcipher(b08 in[NB4], b08 out[NB4], u64 dw[NBR1]) {
+
+}
