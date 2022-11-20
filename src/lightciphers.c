@@ -118,7 +118,7 @@ Key computed as a one-dimensional array of words).
 
 static void copy_state(u08 s[4][NB], u08 in[NB4]) {
   int count = 0;
-  
+
   for (int j = 0; j < 4; ++j) {
     for (int i = 0; i < NB; ++i) {
       s[j][i] = in[count];
