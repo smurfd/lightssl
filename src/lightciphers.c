@@ -25,7 +25,8 @@
 #include "lightdefs.h"
 #include "lightciphers.h"
 
-const u64 WW[8] = {0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781,
+const u64 WW[8] = {
+  0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781,
   0x1f352c07, 0x3b6108d7, 0x2d9810a3, 0x0914dff4};
 const u08 K[32] = {
   0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe,
@@ -68,9 +69,7 @@ const u08 SBOX[16][16] = {
 
 static void copy_state(u08 s[4][NB], u08 in[4][NB]) {
   for (int j = 0; j < 4; ++j) {
-    for (int i = 0; i < NB; ++i) {
-      s[j][i] = in[j][i];
-    }
+    for (int i = 0; i < NB; ++i) {s[j][i] = in[j][i];}
   }
 }
 
@@ -86,11 +85,7 @@ static void multiply_state(int m1, int m2, int mat1[][m2], int n1, int n2, int m
     }
   }
   for (i = 0; i < m1; i++) {
-    for (j = 0; j < n2; j++) {
-      printf("%d ", *(*(res + i) + j));
-      state[i][j] = *(*(res + i) + j);
-    }
-    printf("\n");
+    for (j = 0; j < n2; j++) {state[i][j] = *(*(res + i) + j);}
   }
 }
 
@@ -108,7 +103,15 @@ static void lightciphers_invmixcolumns(u08 state[4][NB]) {// See Sec. 5.3.3
 }
 
 static void lightciphers_addroundkey(u08 state[4][NB], u64 w[4][NB]) {// See Sec. 5.1.4
-  if (state[0][0] || w[0][0]) {}
+  u08 tmp[4][NB];
+
+  copy_state(tmp, state);
+  for (int j = 0; j < NB; ++j) {
+    for (int i = 0; i < 4; ++i) {
+      tmp[i][j] = state[i][j] ^ w[i][j];
+    }
+  }
+  copy_state(state, tmp);
 }
 
 // 5.1.x
