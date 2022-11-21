@@ -88,6 +88,7 @@ static void multiply_state(int m1, int m2, int mat1[][m2], int n1, int n2, int m
   for (i = 0; i < m1; i++) {
     for (j = 0; j < n2; j++) {
       printf("%d ", *(*(res + i) + j));
+      state[i][j] = *(*(res + i) + j);
     }
     printf("\n");
   }
@@ -131,14 +132,23 @@ static void lightciphers_shiftrows(u08 state[4][NB]) {// See Sec. 5.1.2
 }
 
 static void lightciphers_mixcolumns(u08 state[4][NB]) {// See Sec. 5.1.3
-  if (state[0][0]) {}
+  u08 tmp[4][NB], tmp2[4];
+
+  copy_state(tmp, state);
+  for (int j = 0; j < NB; ++j) {
+    for (int i = 0; i < 4; ++i) {
+      tmp2[i] = tmp[i][j];
+    }
+    multiply_state(4, NB, tmp, 1, NB, tmp2, tmp);
+  }
+  copy_state(state, tmp);
 }
 
 static void lightciphers_cipher(u08 in[4][NB], u08 out[4][NB], u64 w[NR][NB]) {
   u08 state[4][NB];
 
   copy_state(state, in);
-  lightciphers_addroundkey(state, w);//[0][NB-1]); //w[0, Nb-1]
+  lightciphers_addroundkey(state, w); //w[0, Nb-1]
   for (int r = 1; r < NR -1; ++r) {
     lightciphers_subbytes(state);
     lightciphers_shiftrows(state);
