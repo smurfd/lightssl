@@ -28,11 +28,13 @@
 const u64 WW[8] = {
   0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781,
   0x1f352c07, 0x3b6108d7, 0x2d9810a3, 0x0914dff4};
+
 const u08 K[32] = {
   0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe,
   0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
   0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7,
   0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4};
+
 const u08 SBOX[16][16] = {
   {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
   0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
@@ -67,10 +69,51 @@ const u08 SBOX[16][16] = {
   {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68,
   0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}};
 
+const u08 SBOXINV[16][16] = {
+  {0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
+  0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb},
+  {0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87,
+  0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb},
+  {0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d,
+  0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e},
+  {0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2,
+  0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25},
+  {0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16,
+  0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92},
+  {0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
+  0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84},
+  {0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a,
+  0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06},
+  {0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02,
+  0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b},
+  {0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea,
+  0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73},
+  {0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85,
+  0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e},
+  {0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89,
+  0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b},
+  {0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20,
+  0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4},
+  {0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31,
+  0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f},
+  {0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d,
+  0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef},
+  {0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0,
+  0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61},
+  {0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26,
+  0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d}};
+
 static void copy_state(u08 s[4][NB], u08 in[4][NB]) {
   for (int j = 0; j < 4; ++j) {
     for (int i = 0; i < NB; ++i) {s[j][i] = in[j][i];}
   }
+}
+
+static void lightciphers_shiftrow(u08 state[4][NB], uint16_t i, uint16_t n) {
+  u08 tmp[NB];
+
+  for (int j = 0; j < NB; j++) {tmp[j] = state[i][(j + n) % NB];}
+  memcpy(state[i], tmp, NB * sizeof(u08));
 }
 
 static void multiply_state(int m1, int m2, u08 mat1[m1][m2], int n1, int n2, u08 mat2[n1][n2], u08 state[4][NB]) {
@@ -90,19 +133,26 @@ static void multiply_state(int m1, int m2, u08 mat1[m1][m2], int n1, int n2, u08
 }
 
 // 5.3.x
-static void lightciphers_invshiftrows(u08 state[4][NB]) {// See Sec. 5.3.1
+static void lightciphers_invshiftrows(u08 state[4][NB]) { // See Sec. 5.3.1
+  lightciphers_shiftrow(state, 1, NB - 1);
+  lightciphers_shiftrow(state, 2, NB - 2);
+  lightciphers_shiftrow(state, 3, NB - 3);
+}
+
+static void lightciphers_invsubbytes(u08 state[4][NB]) { // See Sec. 5.3.2
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < NB; j++) {
+      u08 s = state[i][j];
+      state[i][j] = SBOXINV[s / 16][s % 16];
+    }
+  }
+}
+
+static void lightciphers_invmixcolumns(u08 state[4][NB]) { // See Sec. 5.3.3
   if (state[0][0]) {}
 }
 
-static void lightciphers_invsubbytes(u08 state[4][NB]) {// See Sec. 5.3.2
-  if (state[0][0]) {}
-}
-
-static void lightciphers_invmixcolumns(u08 state[4][NB]) {// See Sec. 5.3.3
-  if (state[0][0]) {}
-}
-
-static void lightciphers_addroundkey(u08 state[4][NB], u64 w[4][NB]) {// See Sec. 5.1.4
+static void lightciphers_addroundkey(u08 state[4][NB], u64 w[4][NB]) { // See Sec. 5.1.4
   u08 tmp[4][NB];
 
   copy_state(tmp, state);
@@ -115,33 +165,27 @@ static void lightciphers_addroundkey(u08 state[4][NB], u64 w[4][NB]) {// See Sec
 }
 
 // 5.1.x
-static void lightciphers_subbytes(u08 state[4][NB]) {// See Sec. 5.1.1
-  if (state[0][0]) {}
-}
-
-static void lightciphers_shiftrows(u08 state[4][NB]) {// See Sec. 5.1.2
-  u08 tmp[4][NB];
-
-  copy_state(tmp, state);
-  for (int j = 1; j < 4; ++j) {
-    int k = NB - j;
-    for (int i = 0; i < NB; ++i) {
-      tmp[j][k] = state[j][i];
-      if (k > NB) k = 0;
-      k++;
+static void lightciphers_subbytes(u08 state[4][NB]) { // See Sec. 5.1.1
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < NB; j++) {
+      u08 s = state[i][j];
+      state[i][j] = SBOX[s / 16][s % 16];
     }
   }
-  copy_state(state, tmp);
 }
 
-static void lightciphers_mixcolumns(u08 state[4][NB]) {// See Sec. 5.1.3
+static void lightciphers_shiftrows(u08 state[4][NB]) { // See Sec. 5.1.2
+  lightciphers_shiftrow(state, 1, 1);
+  lightciphers_shiftrow(state, 2, 2);
+  lightciphers_shiftrow(state, 3, 3);
+}
+
+static void lightciphers_mixcolumns(u08 state[4][NB]) { // See Sec. 5.1.3
   u08 tmp[4][NB], tmp2[4][NB];
 
   copy_state(tmp, state);
   for (int j = 0; j < NB; ++j) {
-    for (int i = 0; i < 4; ++i) {
-      tmp2[i][j] = tmp[i][j];
-    }
+    for (int i = 0; i < 4; ++i) {tmp2[i][j] = tmp[i][j];}
     multiply_state(4, NB, tmp, 1, NB, tmp2, tmp);
   }
   copy_state(state, tmp);
@@ -165,10 +209,8 @@ static void lightciphers_cipher(u08 in[4][NB], u08 out[4][NB], u64 w[NR][NB]) {
 }
 
 static u08 *lightciphers_subword(u08 *wrd) {
-  for (int i = 0; i < 4; i++) {
-    wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];
-  }
-  return *wrd;
+  for (int i = 0; i < 4; i++) {wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];}
+  return wrd;
 }
 
 static u08 *lightciphers_rotword(u08 *wrd) {
@@ -178,18 +220,18 @@ static u08 *lightciphers_rotword(u08 *wrd) {
   wrd[1] = wrd[2];
   wrd[2] = wrd[3];
   wrd[3] = tmp;
-  return *wrd;
+  return wrd;
 }
 
 static u08 *lightciphers_rcon(u08 *wrd, uint16_t a) {
   u08 c = 1;
+
   for (int i = 0; i < a - 1; i++) {
     c = (c << 1) ^ (((c >> 7) & 1) * 0x1b);
   }
-
   wrd[0] = c;
   wrd[1] = wrd[2] = wrd[3] = 0;
-  return *wrd;
+  return wrd;
 }
 
 static void lightciphers_keyexpansion(u08 key[4][NK], u64 w[NB][NR], u08 n) {
@@ -207,7 +249,7 @@ static void lightciphers_keyexpansion(u08 key[4][NK], u64 w[NB][NR], u08 n) {
         tmp[j] = lightciphers_subword(lightciphers_rotword(tmp))[j] ^
           lightciphers_rcon(tmp, i/n)[j];
       } else if (n > 6 && MOD(i, n) == 4) {
-        tmp[j] = lightciphers_subword(tmp);
+        tmp[j] = *lightciphers_subword(tmp);
       }
       w[j][i] = (w[j][i-n] ^ tmp[j]);
     }

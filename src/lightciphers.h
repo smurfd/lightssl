@@ -13,6 +13,7 @@
 extern const u64 WW[8];
 extern const u08 K[32];
 extern const u08 SBOX[16][16];
+extern const u08 SBOXINV[16][16];
 
 void lightciphers_cip();
 
