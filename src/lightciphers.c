@@ -164,20 +164,36 @@ static void lightciphers_cipher(u08 in[4][NB], u08 out[4][NB], u64 w[NR][NB]) {
   copy_state(out, state);
 }
 
-static u64 lightciphers_subword(u64 wrd) {// define?
-  return wrd;
+static u08 *lightciphers_subword(u08 *wrd) {
+  for (int i = 0; i < 4; i++) {
+    wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];
+  }
+  return *wrd;
 }
 
-static u64 lightciphers_rotword(u64 wrd) {// define?
-  return wrd;
+static u08 *lightciphers_rotword(u08 *wrd) {
+  u08 tmp = wrd[0];
+
+  wrd[0] = wrd[1];
+  wrd[1] = wrd[2];
+  wrd[2] = wrd[3];
+  wrd[3] = tmp;
+  return *wrd;
 }
 
-static u64 lightciphers_rcon(u64 wrd) {// define?
-  return wrd;
+static u08 *lightciphers_rcon(u08 *wrd, uint16_t a) {
+  u08 c = 1;
+  for (int i = 0; i < a - 1; i++) {
+    c = (c << 1) ^ (((c >> 7) & 1) * 0x1b);
+  }
+
+  wrd[0] = c;
+  wrd[1] = wrd[2] = wrd[3] = 0;
+  return *wrd;
 }
 
 static void lightciphers_keyexpansion(u08 key[4][NK], u64 w[NB][NR], u08 n) {
-  u64 tmp;
+  u08 tmp[4];
 
   for (int j = 0; j < 4; ++j) {
     for (int i = 0; i < n; ++i) {
@@ -186,14 +202,14 @@ static void lightciphers_keyexpansion(u08 key[4][NK], u64 w[NB][NR], u08 n) {
   }
   for (int j = 0; j < 4; ++j) {
     for (int i = n; i < NB * (NR - 1); ++i) {
-      tmp = w[j][i];
+      tmp[j] = w[j][i];
       if (MOD(i, n) == 0) {
-        tmp = lightciphers_subword(lightciphers_rotword(tmp)) ^
-          lightciphers_rcon(i/n);
+        tmp[j] = lightciphers_subword(lightciphers_rotword(tmp))[j] ^
+          lightciphers_rcon(tmp, i/n)[j];
       } else if (n > 6 && MOD(i, n) == 4) {
-        tmp = lightciphers_subword(tmp);
+        tmp[j] = lightciphers_subword(tmp);
       }
-      w[j][i] = w[j][i-n] ^ tmp;
+      w[j][i] = (w[j][i-n] ^ tmp[j]);
     }
   }
 }
