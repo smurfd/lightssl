@@ -73,7 +73,7 @@ static void copy_state(u08 s[4][NB], u08 in[4][NB]) {
   }
 }
 
-static void multiply_state(int m1, int m2, int mat1[][m2], int n1, int n2, int mat2[][n2], u08 state[4][NB]) {
+static void multiply_state(int m1, int m2, u08 mat1[m1][m2], int n1, int n2, u08 mat2[n1][n2], u08 state[4][NB]) {
   int x, i, j;
   int res[m1][n2];
   for (i = 0; i < m1; i++) {
@@ -135,12 +135,12 @@ static void lightciphers_shiftrows(u08 state[4][NB]) {// See Sec. 5.1.2
 }
 
 static void lightciphers_mixcolumns(u08 state[4][NB]) {// See Sec. 5.1.3
-  u08 tmp[4][NB], tmp2[4];
+  u08 tmp[4][NB], tmp2[4][NB];
 
   copy_state(tmp, state);
   for (int j = 0; j < NB; ++j) {
     for (int i = 0; i < 4; ++i) {
-      tmp2[i] = tmp[i][j];
+      tmp2[i][j] = tmp[i][j];
     }
     multiply_state(4, NB, tmp, 1, NB, tmp2, tmp);
   }
@@ -238,8 +238,8 @@ void lightciphers_cip() {
   u08 in[4][NB], out[4][NB];
   u64 w[4][NB], dw[NR][NB];
 
-  //lightciphers_eqinvcipher(in, out, dw);
-  //lightciphers_invcipher(in, out, w);
+  lightciphers_eqinvcipher(in, out, dw);
+  lightciphers_invcipher(in, out, w);
   //lightciphers_keyexpansion(in, dw, 0);
   //lightciphers_cipher(in, out, w);
 }
