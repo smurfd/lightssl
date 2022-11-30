@@ -457,6 +457,11 @@ static void lightciphers_eqinvcipher(u08 in[4][NB], u08 out[4][NB], u64 dw[NR][N
   copy_state(out, state);
 }
 
+static void lightciphers_xor(const u08 *a, const u08 *b, u08 *c, ui len) {
+  for (ui i = 0; i < len; i++) {
+    c[i] = a[i] ^ b[i];
+  }
+}
 //
 // Just to get rid of warning for not used functions
 void lightciphers_cip() {
@@ -487,16 +492,25 @@ void lightciphers_encryptblock(u08 in[], u08 out[], u08 *roundkeys) {
 }
 
 void lightciphers_encrypt(u08 in[], ui inlen, u08 key[], u08 *iv, u08 out[]) {
-  u08 block[NB*NR], encryptedblock[NB*NR], roundkeys[4*NB*(NR+1)];
+  u08 block[BBL]={0}, encryptedblock[BBL]={0}, roundkeys[4*NB*(NR+1)]={0};
 
   lightciphers_keyexpansion(key, roundkeys);
   memcpy(block, iv, BBL);
   for (ui i = 0; i < inlen; i += BBL) {
     lightciphers_encryptblock(block, encryptedblock, roundkeys);
-    for (ui j = 0; j < BBL; j++) {
-      (out + i)[j] = (in+i)[j] ^ encryptedblock[j];
-    }
+    lightciphers_xor(in + i, encryptedblock, out + i, BBL);
     memcpy(block, out + i, BBL);
   }
+}
 
+void lightciphers_decrypt(u08 in[], ui inlen, u08 key[], u08 *iv, u08 out[]) {
+  u08 block[NB*NR]={0}, encryptedblock[NB*NR]={0}, roundkeys[4*NB*(NR+1)]={0};
+
+  lightciphers_keyexpansion(key, roundkeys);
+  memcpy(block, iv, BBL);
+  for (ui i = 0; i < inlen; i += BBL) {
+    lightciphers_encryptblock(block, encryptedblock, roundkeys);
+    lightciphers_xor(in + i, encryptedblock, out + i, BBL);
+    memcpy(block, in + i, BBL);
+  }
 }

@@ -21,4 +21,5 @@ extern const u08 MIX[4][4];
 
 void lightciphers_cip();
 void lightciphers_encrypt(u08 in[], ui inlen, u08 key[], u08 *iv, u08 out[]);
+void lightciphers_decrypt(u08 in[], ui inlen, u08 key[], u08 *iv, u08 out[]);
 #endif
