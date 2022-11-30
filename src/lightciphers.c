@@ -468,3 +468,35 @@ void lightciphers_cip() {
   lightciphers_keyexpansion(in, dw);
   lightciphers_cipher(in, out, w);
 }
+
+void lightciphers_encryptblock(u08 in[], u08 out[], u08 *roundkeys) {
+  u08 state[4][NB];
+
+  copy_state(state, in);
+  lightciphers_addroundkey(state, roundkeys);
+  for (ui round = 1; round <= NR - 1; round++) {
+    lightciphers_subbytes(state);
+    lightciphers_shiftrows(state);
+    lightciphers_mixcolumns(state);
+    lightciphers_addroundkey(state, roundkeys + round * 4 * NB);
+  }
+  lightciphers_subbytes(state);
+  lightciphers_shiftrows(state);
+  lightciphers_addroundkey(state, roundkeys + NR * 4 * NB);
+  copy_state(out, state);
+}
+
+void lightciphers_encrypt(u08 in[], ui inlen, u08 key[], u08 *iv, u08 out[]) {
+  u08 block[NB*NR], encryptedblock[NB*NR], roundkeys[4*NB*(NR+1)];
+
+  lightciphers_keyexpansion(key, roundkeys);
+  memcpy(block, iv, BBL);
+  for (ui i = 0; i < inlen; i += BBL) {
+    lightciphers_encryptblock(block, encryptedblock, roundkeys);
+    for (ui j = 0; j < BBL; j++) {
+      (out + i)[j] = (in+i)[j] ^ encryptedblock[j];
+    }
+    memcpy(block, out + i, BBL);
+  }
+
+}
