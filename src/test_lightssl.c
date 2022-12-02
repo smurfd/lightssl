@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     printf("OK\n");
   } else if (strcmp(argv[1], "ciphers") == 0) {
     ui BBLE = 16 * sizeof(u08);
-    u08 out[32] = {0}, in[32] = {0};
+    u08 out[BBL] = {0}, in[BBL] = {0};
 
     u08 plain[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
       0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
@@ -91,18 +91,11 @@ int main(int argc, char **argv) {
       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
       0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f};
+
     lightciphers_cip();
     lightciphers_encrypt(plain, BBL, key, iv, out);
     lightciphers_decrypt(out, BBL, key, iv, in);
-    for (int i =0; i < BBL; i++) {
-      printf("%x %x\n", plain[i], in[i]);
-      if (plain[i] == in[i]) {
-        printf("SWEET\n");
-      } else {
-        printf("NOOOO\n");
-        break;
-      }
-    }
+    for (int i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
     printf("OK\n");
   } else {print_usage();}
 }
