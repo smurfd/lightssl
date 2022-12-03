@@ -386,10 +386,7 @@ static void lightciphers_subword(u08 *wrd) {
 static void lightciphers_rotword(u08 *wrd) {
   u08 tmp = wrd[0];
 
-  wrd[0] = wrd[1];
-  wrd[1] = wrd[2];
-  wrd[2] = wrd[3];
-  wrd[3] = tmp;
+  for (int i = 0; i < 4; i++) {wrd[i] = wrd[i + 1]; if (i == 3) wrd[3] = tmp;}
 }
 
 //

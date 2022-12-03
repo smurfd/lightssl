@@ -11,7 +11,7 @@ lllll iiii ggggggg hhhh hh ttttttt sssssss sssssss lllllll
 # lightSSL
 Do SSL really need to be so hard?
 
-Ciphers: TODO: Blowfish / AES<br>
+Ciphers: AES<br>
 Keys: ECDSA<br>
 Crypto: TODO: ASN1<br>
 Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
