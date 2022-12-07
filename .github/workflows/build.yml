@@ -19,8 +19,6 @@ jobs:
       run: CC=clang meson build
     - name: Generate cert
       run: sh example/gen_cert.sh
-    - name: Install dependencies
-      run: sudo apt-get -y remove openssl
     - name: Compile
       run: CC=clang ninja -C build
     - name: Test
