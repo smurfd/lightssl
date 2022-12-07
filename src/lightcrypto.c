@@ -213,7 +213,7 @@ static u64 read_cert(char *fn, u08 c[]) {
   while (ch != EOF) {
     ch = fgetc(ptr);
     c[len] = ch;
-    len++; 
+    len++;
   }
   fclose(ptr);
   return len;
