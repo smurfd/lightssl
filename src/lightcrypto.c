@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include "lightcrypto.h"
 
+typedef uint8_t u08;
 //
 // Get BLOCK size
 static int lightcrypto_getblock() {return BLOCK;}
@@ -167,3 +168,69 @@ int lightcrypto_keys() {
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
+static u64 get_header(u08 c[], u08 h[]) {
+  u64 i = 0;
+
+  while (c[i] != '\n') {
+    h[i] = c[i];
+    i++;
+  }
+  h[i] = '\0';
+  return i;
+}
+
+static u64 get_footer(u08 c[], u64 len, u08 f[]) {
+  u64 i = 0, j = len - 36;
+
+  while (c[j] != '\n') {j++;}
+  while (c[j] != '-' && c[j+1] != '-' && c[j+2] != '-' && c[j+3] != '-' && c[j+4] != '-' && c[j+5] != 'E') {j++;}
+  j++;
+  while (c[j] != '\n') {
+    f[i] = c[j];
+    i++;j++;
+  }
+  f[i] = '\0';
+  return i;
+}
+
+static u64 get_data(u08 c[], u64 h, u64 f, u64 l, u08 d[]) {
+  u64 co = l - f - h - 3, i = 0;
+  while (i < co) {
+    d[i] = c[h + i + 1];
+    i++;
+  }
+  d[i - 1] = '\0';
+  return i;
+}
+
+static u64 read_cert(char *fn, u08 c[]) {
+  u64 len = 0;
+  char ch = '\0';
+  FILE* ptr;
+
+  ptr = fopen(fn, "r");
+  if (NULL == ptr) {printf("Can't find cert\n");}
+  while (ch != EOF) {
+    ch = fgetc(ptr);
+    c[len] = ch;
+    len++; 
+  }
+  fclose(ptr);
+  return len;
+}
+
+u64 lightcrypto_handle_cert() {
+  u64 len = 0, foot, head, data;
+  u08 crt[2048], h[36], f[36], d[2048];
+
+  len = read_cert("ca.crt", crt);
+  printf("length %llu\n", len);
+
+  head = get_header(crt, h);
+  printf("Header: %s\n", h);
+  foot = get_footer(crt, len, f);
+  printf("Footer: %s\n", f);
+  data = get_data(crt, head, foot, len, d);
+  printf("Data: %s\n", d);
+  return data;
+}

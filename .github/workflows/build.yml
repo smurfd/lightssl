@@ -13,10 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: install dep
-      run: sudo apt-get update && sudo apt-get -y install clang meson git ninja-build
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get -y install clang meson git ninja-build openssl
     - name: Build
       run: CC=clang meson build
+    - name: Generate cert
+      run: sh example/gen_cert.sh
+    - name: Install dependencies
+      run: sudo apt-get -y remove openssl
     - name: Compile
       run: CC=clang ninja -C build
     - name: Test

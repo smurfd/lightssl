@@ -101,5 +101,8 @@ int main(int argc, char **argv) {
     lightciphers_decrypt(out, BBL, key, iv, in, true);
     for (u64 i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
     printf("OK\n");
+  } else if (strcmp(argv[1], "cert") == 0) {
+    lightcrypto_handle_cert();
+    printf("OK\n");
   } else {print_usage();}
 }
