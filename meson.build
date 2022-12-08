@@ -73,4 +73,3 @@ test('new keys', test_lightkeys)
 test('new hash3', test_lighthash3)
 test('new hash', test_lighthash)
 test('new crypto cli', test_lightcrypto_cli)
-
