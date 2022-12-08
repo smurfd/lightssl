@@ -25,16 +25,52 @@ liblightcrypto = static_library('lightcrypto', 'src/lightcrypto.c',
   c_args: build_args)
 liblightciphers = static_library('lightciphers', 'src/lightciphers.c')
 
-test_lightssl = executable('test_lightssl', 'src/test_lightssl.c',
-  link_with: [liblighthash, liblighthash3, liblightcrypto, liblightkeys, liblightciphers],
+test_lightcrypto = executable('test_lightcrypto', 'src/tests/test_lightcrypto.c',
+  link_with: [liblightcrypto],
   link_args: '-pthread',
   c_args: build_args,
   dependencies: [m_dep, p_dep],
   install: true)
 
-test('keys', test_lightssl, args: ['keys'])
-test('hash', test_lightssl, args: ['hash'])
-test('hash3', test_lightssl, args: ['hash3'])
-test('crypto', test_lightssl, args: ['crypto_cli'])
-test('ciphers', test_lightssl, args: ['ciphers'])
-test('cert', test_lightssl, args: ['cert'])
+test_lightciphers = executable('test_lightciphers', 'src/tests/test_lightciphers.c',
+  link_with: [liblightciphers],
+  link_args: '-pthread',
+  c_args: build_args,
+  dependencies: [m_dep, p_dep],
+  install: true)
+
+test_lightkeys = executable('test_lightkeys', 'src/tests/test_lightkeys.c',
+  link_with: [liblightkeys],
+  link_args: '-pthread',
+  c_args: build_args,
+  dependencies: [m_dep, p_dep],
+  install: true)
+
+test_lighthash3 = executable('test_lighthash3', 'src/tests/test_lighthash3.c',
+  link_with: [liblighthash3],
+  link_args: '-pthread',
+  c_args: build_args,
+  dependencies: [m_dep, p_dep],
+  install: true)
+
+test_lighthash = executable('test_lighthash', 'src/tests/test_lighthash.c',
+  link_with: [liblighthash],
+  link_args: '-pthread',
+  c_args: build_args,
+  dependencies: [m_dep, p_dep],
+  install: true)
+
+test_lightcrypto_cli = executable('test_lightcrypto_cli', 'src/tests/test_lightcrypto_cli.c',
+  link_with: [liblightcrypto],
+  link_args: '-pthread',
+  c_args: build_args,
+  dependencies: [m_dep, p_dep],
+  install: true)
+
+test('new crypto', test_lightcrypto)
+test('new ciphers', test_lightciphers)
+test('new keys', test_lightkeys)
+test('new hash3', test_lighthash3)
+test('new hash', test_lighthash)
+test('new crypto cli', test_lightcrypto_cli)
+
