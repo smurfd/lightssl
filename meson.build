@@ -67,9 +67,16 @@ test_lightcrypto_cli = executable('test_lightcrypto_cli', 'src/tests/test_lightc
   dependencies: [m_dep, p_dep],
   install: true)
 
-test('new crypto', test_lightcrypto)
-test('new ciphers', test_lightciphers)
-test('new keys', test_lightkeys)
-test('new hash3', test_lighthash3)
-test('new hash', test_lighthash)
-test('new crypto cli', test_lightcrypto_cli)
+test_lightcrypto_srv = executable('test_lightcrypto_srv', 'src/tests/test_lightcrypto_srv.c',
+  link_with: [liblightcrypto],
+  link_args: '-pthread',
+  c_args: build_args,
+  dependencies: [m_dep, p_dep],
+  install: true)
+
+test('crypto', test_lightcrypto)
+test('ciphers', test_lightciphers)
+test('keys', test_lightkeys)
+test('hash3', test_lighthash3)
+test('hash', test_lighthash)
+test('crypto cli', test_lightcrypto_cli)

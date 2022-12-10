@@ -22,37 +22,45 @@ Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 
 ```bash
 CC=clang meson build
+sh ./src/example/gen_cert.sh
 CC=clang ninja -C build
 CC=clang ninja -C build test -v -d stats -d explain
 ```
 `./build.sh` has those parts in it
 
-### Run client and server
-In one terminal run
+### Tests
+Test server, in one terminal run
 ```
-./build/test_lightssl crypto_srv
+./build/test_lightcrypto_srv
 ```
-In another terminal run
+Test client, in another terminal run
 ```
-./build/test_lightssl crypto_cli
+./build/test_lightcrypto_cli
 ```
 Test hashing (SHA2-256)
 ```
-./build/test_lightssl hash
+./build/test_lighthash
 ```
 Test hashing (SHA3-512)
 ```
-./build/test_lightssl hash3
+./build/test_lighthash3
 ```
 Test keys (secp384r1)
 ```
-./build/test_lightssl keys
+./build/test_lightkeys
 ```
-
+Test ciphers (AES)
+```
+./build/test_lightciphers
+```
+Test crypto (ASN.1) not working yet
+```
+./build/test_lightcrypto
+```
 ### Use lightssl
-See the [tests](https://github.com/smurfd/lightssl/raw/main/src/test_lightssl.c)
+See the [tests](https://github.com/smurfd/lightssl/tree/main/src/tests)
 
-### Compile your project (in the example folder)
+### Compile your project (in the src/example folder)
 ```bash
 clang -c -o lighthash.o ../src/lighthash.c -fPIC
 clang -c -o lighthash3.o ../src/lighthash3.c -fPIC
@@ -63,7 +71,7 @@ clang example.c -o example lighthash3.o
 ./example
 rm -f example *.o
 ```
-### Small example (in the example folder)
+### Small example (in the src/example folder)
 ```c
 #include <time.h>
 #include <stdio.h>
