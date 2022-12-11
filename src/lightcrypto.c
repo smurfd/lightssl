@@ -129,19 +129,17 @@ void lightcrypto_end(int s) {close(s);}
 //
 // Server listener
 int lightcrypto_listen(const int s, sock *cli) {
-  int c = 1, *ns, len = sizeof(sock_in);
+  int c = 1, ns[sizeof(int)], len = sizeof(sock_in);
 
   listen(s, 3);
   while (c >= 1) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
-    ns = (int*)malloc(sizeof(*ns));
     *ns = c;
     if (pthread_create(&thrd, NULL, lightcrypto_handler, (void*)ns) < 0) {
       return -1;
     }
     pthread_join(thrd, NULL);
-    free(ns);
   }
   return c;
 }

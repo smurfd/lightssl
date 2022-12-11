@@ -174,7 +174,7 @@ int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
 //
 // Create a SHA hash from string
 void lighthash_hash_new(cc *in, char* s) {
-  u08 *inn = malloc(sizeof(u08) * strlen(in)), msg_dig[sha_hsh_sz];
+  u08 msg_dig[sha_hsh_sz], inn[strlen(in)];
   ctxs sha;
 
   // Convert char* to uint8_t*
@@ -185,7 +185,6 @@ void lighthash_hash_new(cc *in, char* s) {
   sha_result(&sha, msg_dig);
   // Convert uint8_t* to char*
   sha_match_to_str(msg_dig, s, 64, s);
-  free(inn);
 }
 
 //

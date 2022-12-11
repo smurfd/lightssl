@@ -244,13 +244,12 @@ static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static u64 pad10(u64 x, u64 m, u08 **p) {
+static u64 pad10(u64 x, u64 m, u08 *p) {
   long j = mod((-m - 2), x) + 2;
   int bl = (j) / 8 + (mod(j, 8) ? 1 : 0);
 
-  *p = calloc(bl, sizeof(u08));
-  (*p)[0] |= 1;
-  (*p)[bl - 1] |= (1 << mod(j - 1, 8));
+  p[0] |= 1;
+  p[bl - 1] |= (1 << mod(j - 1, 8));
   return j;
 }
 
@@ -270,9 +269,9 @@ static u64 pad10(u64 x, u64 m, u08 **p) {
 static void sponge(u08 *n, int l, u08 **ps) {
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
   u08 az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0};
-  u08 *p, *pi, *z, *pad, str[200] = {0};
+  u08 *p, *pi, *z, pad[200], str[200] = {0};
 
-  len = pad10(r, l, &pad);
+  len = pad10(r, l, pad);
   plen = cat(n, l, pad, len, &p);
   for (u64 i = 0; i < plen / r; i++) {
     cat(&p[i * r / 8], r, az, c, &pi);
@@ -288,7 +287,7 @@ static void sponge(u08 *n, int l, u08 **ps) {
     memcpy(sc, s, b / 8);
     keccak_p(sc, &s);
   }
-  free(pad); free(p); free(z);
+  free(p); free(z);
 }
 
 //
