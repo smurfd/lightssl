@@ -7,7 +7,6 @@
 
 #ifndef SHA_DEFINES
 #define SHA_DEFINES 1
-
 extern const char hexdigits[];
 extern const u08 masks[8];
 extern const u08 markbit[8];
@@ -15,18 +14,6 @@ extern const u08 markbit[8];
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
 extern const u64 SHA_H0[];
 extern const u64 SHA_K[80];
-
-// These constants hold size information for each of the SHA hashing operations
-#define sha_blk_sz 128                           // SHA Message Block Size
-#define sha_hsh_sz 64                            // SHA Hash Size
-#define sha_hsh_sb 512                           // SHA Hash Size Bits
-
-// All SHA functions return one of these values.
-#define sha_ok 0                                 // Success
-#define sha_null 1                               // Null pointer parameter
-#define sha_itl 2                                // Input data too long
-#define sha_err 3                                // State error
-#define sha_bad 4                                // passed a bad parameter
 #endif
 
 // This structure will hold context information for the SHA hashing operation.

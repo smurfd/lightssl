@@ -13,8 +13,6 @@ typedef struct sockaddr_in sock_in;
 struct header {u64 len, ver, g, p;};
 struct keys {u64 publ, priv, shar;};
 
-#define BLOCK 1024
-
 key lightcrypto_genkeys(u64 g, u64 p);
 int lightcrypto_keys();
 int lightcrypto_init(const char *host, const char *port, bool b);

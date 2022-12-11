@@ -8,12 +8,6 @@
 #include <stdbool.h>
 #include "lightdefs.h"
 
-#define BT 8
-#define KB 48
-#define KB2 KB * 2
-#define DI (KB / BT)
-#define DI2 (DI * 2)
-#define EVEN(p) (!(p[0] & 1))
 typedef struct pt {u64 x[DI], y[DI];} pt;
 
 static u64 curve_p[DI] = {

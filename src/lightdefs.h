@@ -46,4 +46,40 @@
 #define SHA_L(c) (++c->len_hi == 0) ? sha_itl : (c)->corrupt
 #define SHA_T(c, l) c->corrupt = ((c->len_lo += l) < 0)
 #define SHA_AddLength(c, l) (SHA_T(c, l) && SHA_L(c))
+
+// Lightciphers
+#define NB 4
+#define NK 8
+#define NR 14
+#define NB4 NB * 4
+#define NK4 NK * 4
+#define NBR1 NB * (NR + 1)
+#define BBL 4 * NB * sizeof(unsigned char)
+
+// Lightcrypto
+#define BLOCK 1024
+
+// Lighthash
+// These constants hold size information for each of the SHA hashing operations
+#define sha_blk_sz 128                           // SHA Message Block Size
+#define sha_hsh_sz 64                            // SHA Hash Size
+#define sha_hsh_sb 512                           // SHA Hash Size Bits
+
+// All SHA functions return one of these values.
+#define sha_ok 0                                 // Success
+#define sha_null 1                               // Null pointer parameter
+#define sha_itl 2                                // Input data too long
+#define sha_err 3                                // State error
+#define sha_bad 4                                // passed a bad parameter
+
+// Lighthash3
+#define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
+
+// Lightkeys
+#define BT 8
+#define KB 48
+#define KB2 KB * 2
+#define DI (KB / BT)
+#define DI2 (DI * 2)
+#define EVEN(p) (!(p[0] & 1))
 #endif

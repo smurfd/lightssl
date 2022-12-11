@@ -10,7 +10,5 @@
 #include <string.h>
 #include "lightdefs.h"
 
-#define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
-
 void lighthash3_hash_new(u08 *n, char *ss);
 #endif
