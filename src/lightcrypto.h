@@ -2,11 +2,9 @@
 // Very simple handshake
 #ifndef LIGHTCRYPTO_H
 #define LIGHTCRYPTO_H 1
-
 #include <stdbool.h>
-#include "defs.h"
+#include "lightdefs.h"
 
-//typedef long long unsigned int u64;
 typedef struct keys key;
 typedef struct header head;
 typedef struct sockaddr sock;

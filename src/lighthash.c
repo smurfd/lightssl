@@ -4,9 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "lightdefs.h"
 #include "lighthash.h"
-#include "defs.h"
+#include "lightdefs.h"
 
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
 const u64 SHA_H0[] = {

@@ -5,8 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
-#include "../defs.h"
-//#include "../lightdefs.h"
+#include "../lightdefs.h"
 #include "../lighthash.h"
 #include "lighthash_testdata.h"
 //

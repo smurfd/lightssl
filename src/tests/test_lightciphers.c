@@ -6,8 +6,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdbool.h>
-#include "../defs.h"
-//#include "../lightdefs.h"
+#include "../lightdefs.h"
 #include "../lightciphers.h"
 
 int main() {

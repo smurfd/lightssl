@@ -11,9 +11,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "lightcrypto.h"
-#include "defs.h"
+#include "lightdefs.h"
 
-typedef uint8_t u08;
 //
 // Get BLOCK size
 static int lightcrypto_getblock() {return BLOCK;}

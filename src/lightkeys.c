@@ -25,7 +25,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "lightkeys.h"
-#include "defs.h"
+#include "lightdefs.h"
 
 //
 // Clear a

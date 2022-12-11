@@ -1,8 +1,7 @@
 //                                                                            //
 #ifndef LIGHTCIPHERS_H
 #define LIGHTCIPHERS_H 1
-
-#include "defs.h"
+#include "lightdefs.h"
 
 #define NB 4
 #define NK 8

@@ -1,18 +1,12 @@
 #ifndef LIGHTKEYS_H
 #define LIGHTKEYS_H 1
-
 #include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "defs.h"
-
-//typedef uint8_t u08;
-//typedef uint64_t u64;
-//typedef unsigned int ui;
-//typedef unsigned __int128 u128;
+#include "lightdefs.h"
 
 #define BT 8
 #define KB 48
