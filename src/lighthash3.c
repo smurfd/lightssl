@@ -7,18 +7,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include "lighthash3.h"
-
-typedef uint8_t u08;
-typedef uint64_t u64;
-
-//
-// Imitate pythons %. -1 % 5 = 4, not -1
-static int mod(int n, int m) {return ((n % m) + m) % m;}
+#include "lightdefs.h"
 
 //
 // Circular shift
 static u64 ROL64(u64 a, u64 n) {
-  if (mod(n, 64) != 0) return (a << (mod(n, 64))) ^ (a >> (64 - (mod(n, 64))));
+  if (MOD(n, 64) != 0) return (a << (MOD(n, 64))) ^ (a >> (64 - (MOD(n, 64))));
   return a;
 }
 
@@ -66,7 +60,7 @@ static void state2str(u64 (*a)[5][5], u08 *s) {
   for (int y = 0; y < 5; y++) {
     for (int x = 0; x < 5; x++) {
       for (int z = 0; z < 8; z++) {
-        s[count++] = (u08) (ROL64((*a)[x][y], 64 - z * 8) & (u64)255);
+        s[count++] = (u08)(ROL64((*a)[x][y], 64 - z * 8) & (u64)255);
       }
     }
   }
@@ -87,8 +81,8 @@ static void theta(u64 (*a)[5][5]) {
   }
   for (int x = 0; x < 5; x++) {
     for (int z = 0; z < 64; z++) {
-      u64 r1 = ROL64(c[mod(x - 1, 5)], 64 - z);
-      u64 r2 = ROL64(c[mod(x + 1, 5)], 64 - mod(z - 1, 64));
+      u64 r1 = ROL64(c[MOD(x - 1, 5)], 64 - z);
+      u64 r2 = ROL64(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
       d[x] = d[x] + ROL64((r1 ^ r2) & 1, z);
     }
   }
@@ -114,13 +108,13 @@ static void rho(u64 (*a)[5][5]) {
   for (int t = 0; t < 24; t++) {
     (*a)[x][y] = 0;
     for (int z = 0; z < 64; z++) {
-      cb = (ROL64(ap[x][y], 64 - mod((z - (t + 1) * (t + 2) / 2), 64)) & 1);
+      cb = (ROL64(ap[x][y], 64 - MOD((z - (t + 1) * (t + 2) / 2), 64)) & 1);
       cb = ROL64(cb, z);
       (*a)[x][y] += cb;
     }
     xtmp = x;
     x = y;
-    y = mod((2 * xtmp + 3 * y), 5);
+    y = MOD((2 * xtmp + 3 * y), 5);
   }
 }
 
@@ -135,7 +129,7 @@ static void pi(u64 (*a)[5][5]) {
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
-      (*a)[x][y] = ap[mod((x + 3 * y), 5)][x];
+      (*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];
     }
   }
 }
@@ -153,8 +147,8 @@ static void chi(u64 (*a)[5][5]) {
       (*a)[x][y] = 0;
       for (int z = 0; z < 64; z++) {
         t1 = ap[x][y] & ROL64(one, z);
-        t2 = (ap[mod(x + 1, 5)][y] & ROL64(one, z)) ^ ROL64(one, z);
-        t3 = ap[mod(x + 2, 5)][y] & ROL64(one, z);
+        t2 = (ap[MOD(x + 1, 5)][y] & ROL64(one, z)) ^ ROL64(one, z);
+        t3 = ap[MOD(x + 2, 5)][y] & ROL64(one, z);
         (*a)[x][y] += t1 ^ (t2 & t3);
       }
     }
@@ -174,15 +168,15 @@ static void chi(u64 (*a)[5][5]) {
 //   f. R =Trunc8[R].
 // 4. Return R[0]
 static u08 rc(u64 t) {
-  u08 m = mod(t, 255), r1 = 128, r0;
+  u08 m = MOD(t, 255), r1 = 128, r0;
 
   if (m == 0) return 1;
   for (u64 i = 1; i <= m; i++) {
     r0 = 0;
-    r0 ^= mod(r1, 2);
-    r1 ^= mod(r1, 2) << 4;
-    r1 ^= mod(r1, 2) << 3;
-    r1 ^= mod(r1, 2) << 2;
+    r0 ^= MOD(r1, 2);
+    r1 ^= MOD(r1, 2) << 4;
+    r1 ^= MOD(r1, 2) << 3;
+    r1 ^= MOD(r1, 2) << 2;
     r1 /= 2;
     r1 ^= r0 << 7;
   }
@@ -224,7 +218,7 @@ static void keccak_p(u08 *sm, u08 (*s)[200]) {
 //
 // Concatenate
 static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
-  u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = mod(xl, 8);
+  u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
   *z = calloc(512, sizeof(u08));
   if (*z == NULL) return 0;
@@ -245,12 +239,12 @@ static u64 cat(const u08 *x, u64 xl, const u08 *y, const u64 yl, u08 **z) {
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
 static u64 pad10(u64 x, u64 m, u08 **p) {
-  long j = mod((-m - 2), x) + 2;
-  int bl = (j) / 8 + (mod(j, 8) ? 1 : 0);
+  long j = MOD((-m - 2), x) + 2;
+  int bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
 
   *p = calloc(bl, sizeof(u08));
   (*p)[0] |= 1;
-  (*p)[bl - 1] |= (1 << mod(j - 1, 8));
+  (*p)[bl - 1] |= (1 << MOD(j - 1, 8));
   return j;
 }
 
