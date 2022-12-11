@@ -1,6 +1,7 @@
 //                                                                            //
 #ifndef DEFS_H
 #define DEFS_H 1
+#include <stdint.h>
 
 // Only defines here, no typedefs
 #define i08 int8_t
