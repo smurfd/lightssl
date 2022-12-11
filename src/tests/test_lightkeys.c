@@ -17,6 +17,7 @@ int main() {
   usleep(1); assert(keys_shar_secr(pubkey, privkey, sec));
   usleep(1); assert(keys_sign(privkey, h, sig));
   usleep(1); assert(keys_vrfy(pubkey, h, sig));
+  usleep(1); assert(!keys_vrfy(privkey, h, sig)); // Assume failure
   printf("OK\n");
   return 0;
 }

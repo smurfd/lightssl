@@ -13,7 +13,6 @@
 // PLAINTEXT: 00112233445566778899aabbccddeeff
 // KEY: 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
 
-// Pseudodcode from fips 197
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
@@ -324,7 +323,7 @@ static void lightciphers_invmixcolumns(u08 state[4][NB]) { // See Sec. 5.3.3
       }
     }
   }
-  for (size_t i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
+  for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
 }
 
 //

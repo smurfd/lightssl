@@ -11,7 +11,7 @@ int main() {
   int s = lightcrypto_init("127.0.0.1", "9998", false);
 
   if (s >= 0) {
-    u64 dat[BLOCK], cd[BLOCK], i;
+    u64 dat[BLOCK], cd[BLOCK];
     key k1, k2;
     head h;
 
@@ -20,7 +20,7 @@ int main() {
     lightcrypto_transferkey(s, true, &h, &k2);
     lightcrypto_genshare(&k1, &k2, h.p, false);
     printf("share : 0x%.16llx\n", k1.shar);
-    for (i = 0; i < 12; i++) {
+    for (u64 i = 0; i < 12; i++) {
       dat[i] = (u64)i; lightcrypto_crypt(dat[i],k1,&cd[i]);
     }
     lightcrypto_transferdata(s, cd, &h, true, 11);

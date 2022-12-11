@@ -8,7 +8,7 @@
 #include "../lightcrypto.h"
 
 int main() {
-  lightcrypto_handle_cert();
+  lightcrypto_handle_cert("ca.crt");
   printf("OK\n");
   return 0;
 }

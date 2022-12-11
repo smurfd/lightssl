@@ -47,7 +47,7 @@ extern const u64 SHA_K[80];
 
 // Define the SHA shift, rotate left and rotate right macros
 #define SHA_SHRI(b, w)  (((u64)(w)) >> (b))
-#define SHA_ROTR(b, w) ((((u64)(w)) >> (b)) | (((u64)(w)) << (64-(b))))
+#define SHA_ROTR(b, w) ((((u64)(w)) >> (b)) | (((u64)(w)) << (64 - (b))))
 
 // Define the SHA SIGMA and sigma macros
 #define SHA_S0(w) (SHA_ROTR(28, w) ^ SHA_ROTR(34, w) ^ SHA_ROTR(39, w))
@@ -61,5 +61,5 @@ extern const u64 SHA_K[80];
 #define SHA_AddLength(c, l) (SHA_T(c, l) && SHA_L(c))
 
 // Imitate pythons %. -1 % 5 = 4, not -1
-#define MOD(n, m) ((n % m)+m) % m
+#define MOD(n, m) ((n % m) + m) % m
 #endif

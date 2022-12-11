@@ -51,6 +51,7 @@ static u64 keys_chk(const u64 *a, const ui b) {
 // Count 64bit in a
 static ui keys_count(const u64 *a) {
   int i;
+
   for (i = DI - 1; i >= 0 && a[i] == 0; --i) {}
   return (i + 1);
 }

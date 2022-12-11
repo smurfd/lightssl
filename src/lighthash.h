@@ -46,19 +46,17 @@ typedef struct ctxh {
 } ctxh;
 
 // SHA Hashing (keeping the static ones as commented to get a overview)
-// int sha_reset(ctxs *c);
-// int sha_input(ctxs *c, cu8 *bytes, ui bytecount);
-// int sha_final(ctxs *, u08 bits, ui bit_count);
-// int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]);
-// int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s);
+ int sha_reset(ctxs *c);
+ int sha_input(ctxs *c, cu8 *bytes, ui bytecount);
+ int sha_final(ctxs *, u08 bits, ui bit_count);
+ int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]);
+ int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s);
 
 // HMAC Keyed-Hashing for Message Authentication, RFC 2104
-// int hmac_reset(ctxh *c, cuc *key, int key_len);
-// int hmac_input(ctxh *c, cuc *text,int text_len);
-// int hmac_final(ctxh *c, u08 bits, ui bit_count);
-// int hmac_result(ctxh *c, u08 digest[sha_hsh_sz]);
+ int hmac_reset(ctxh *c, cuc *key, int key_len);
+ int hmac_input(ctxh *c, cuc *text,int text_len);
+ int hmac_final(ctxh *c, u08 bits, ui bit_count);
+ int hmac_result(ctxh *c, u08 digest[sha_hsh_sz]);
 
 void lighthash_hash_new(cc *in, char* s);
-int lighthash_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs);
-int lighthash_hash_test();
 #endif

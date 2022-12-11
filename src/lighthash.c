@@ -6,7 +6,6 @@
 #include <assert.h>
 #include "lightdefs.h"
 #include "lighthash.h"
-#include "lighthash_testdata.h"
 
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
 const u64 SHA_H0[] = {
@@ -116,7 +115,7 @@ static int sha_error(ctxs *c, cu8 *msg_arr, ui length, int b) {
 
 //
 // SHA Clear
-static int sha_reset(ctxs *c) {
+int sha_reset(ctxs *c) {
   if (!c) return sha_null;
   c->msg_blk_i = 0;
   c->len_hi = c->len_lo = 0;
@@ -128,7 +127,7 @@ static int sha_reset(ctxs *c) {
 
 //
 // SHA Input
-static int sha_input(ctxs *c, cu8 *msg_arr, ui length) {
+int sha_input(ctxs *c, cu8 *msg_arr, ui length) {
   sha_error(c, msg_arr, length, 0);
   while (length--) {
     c->mb[c->msg_blk_i++] = *msg_arr;
@@ -141,7 +140,7 @@ static int sha_input(ctxs *c, cu8 *msg_arr, ui length) {
 
 //
 // SHA Add final bits
-static int sha_final(ctxs *c, u08 msg_bit, ui length) {
+int sha_final(ctxs *c, u08 msg_bit, ui length) {
   sha_error(c, (cu8 *)0, length, 1);
   SHA_AddLength(c, length);
   sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
@@ -150,7 +149,7 @@ static int sha_final(ctxs *c, u08 msg_bit, ui length) {
 
 //
 // SHA Get digest
-static int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]) {
+int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]) {
   sha_error(c, msg_dig, 0, 2);
   if (!c->compute) sha_finalize(c, 0x80);
   for (int i = 0; i < sha_hsh_sz; ++i) {
@@ -161,7 +160,7 @@ static int sha_result(ctxs *c, u08 msg_dig[sha_hsh_sz]) {
 
 //
 // SHA Check if hashvalue matches a predef hexstr and convert to str if s!=NULL
-static int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
+int sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
   int j = 0, k, l;
 
   for (int i = 0; i < hashsize; ++i) {
@@ -200,7 +199,7 @@ static int hmac_error(ctxh *c) {
 
 //
 // HMAC initialize Context
-static int hmac_reset(ctxh *c, cuc *key, int key_len) {
+int hmac_reset(ctxh *c, cuc *key, int key_len) {
   b08 k_ipad[sha_blk_sz], tmp[sha_hsh_sz], blocksize, hashsize, ret;
 
   if (!c) return sha_null;
@@ -231,19 +230,19 @@ static int hmac_reset(ctxh *c, cuc *key, int key_len) {
 
 //
 // HMAC input
-static int hmac_input(ctxh *c, cuc *text, int text_len) {
+int hmac_input(ctxh *c, cuc *text, int text_len) {
   hmac_error(c); return c->corrupt = sha_input(&c->sha, text, text_len);
 }
 
 //
 // HMAC Add final bits
-static int hmac_final(ctxh *c, u08 bits, ui bit_count) {
+int hmac_final(ctxh *c, u08 bits, ui bit_count) {
   hmac_error(c); return c->corrupt = sha_final(&c->sha, bits, bit_count);
 }
 
 //
 // HMAC Get digest
-static int hmac_result(ctxh *c, u08 *digest) {
+int hmac_result(ctxh *c, u08 *digest) {
   // Finish up 1st pass. Perform outer SHA, init context for 2nd pass.
   // Start with outer pad, then results of 1st hash. Finish up 2nd pass
   hmac_error(c);
@@ -252,53 +251,4 @@ static int hmac_result(ctxh *c, u08 *digest) {
     sha_input(&c->sha, digest, c->size) || sha_result(&c->sha, digest);
   c->compute = 1;
   return c->corrupt = ret;
-}
-
-//
-// HMAC & SHA Test suite runner
-int lighthash_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
-  u08 msg_dig[sha_hsh_sz], err;
-  ctxh hmac;
-  ctxs sha;
-
-  if (k) {err = hmac_reset(&hmac, k, kl);}
-  else {err = sha_reset(&sha);}
-  if (err != sha_ok) {return err;}
-
-  for (int i = 0; i < r; ++i) {
-    if (k) {err = hmac_input(&hmac, (cu8 *)ta, l);}
-    else {err = sha_input(&sha, (cu8 *)ta, l);}
-    if (err != sha_ok) {return err;}
-  }
-
-  if (neb > 0) {
-    if (k) {err = hmac_final(&hmac, (u08)eb, neb);}
-    else {err = sha_final(&sha, (u08)eb, neb);}
-    if (err != sha_ok) {return err;}
-  }
-
-  if (k) {err = hmac_result(&hmac, msg_dig);}
-  else {err = sha_result(&sha, msg_dig);}
-  if (err != sha_ok) {return err;}
-  return sha_match_to_str(msg_dig, ra, hs, NULL);
-}
-
-int lighthash_hash_test() {
-  // 11 of 11 SHA tests pass
-  for (int i = 0; (i <= TESTCOUNT - 1); ++i) {
-    int err = lighthash_hash(h.t[i].testarray, h.t[i].length,
-      h.t[i].repeatcount, h.t[i].nr_extrabits,
-      h.t[i].extrabits, 0, 0, h.t[i].res_arr, h.hashsize);
-    assert(err == 1); if (err != 1) return 0;
-  }
-  // 7 of 7 HMAC tests pass
-  for (int i = 0; (i <= HMACTESTCOUNT-1); ++i) {
-    cc *da = hm[i].dataarray[1] ? hm[i].dataarray[1] : hm[i].dataarray[0];
-    int dl = hm[i].datalength[1] ? hm[i].datalength[1] : hm[i].datalength[0];
-    cuc* ka = (cuc*)(hm[i].keyarray[1] ? hm[i].keyarray[1] : hm[i].keyarray[0]);
-    int kl = hm[i].keylength[1] ? hm[i].keylength[1] : hm[i].keylength[0];
-    int err = lighthash_hash(da, dl, 1, 0, 0, ka, kl, hm[i].res_arr[0], hm[i].res_len[0]);
-    assert(err == 1); if (err != 1) return 0;
-  }
-  return 1;
 }
