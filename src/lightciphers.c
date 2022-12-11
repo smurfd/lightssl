@@ -21,7 +21,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "lightdefs.h"
+#include "defs.h"
 #include "lightciphers.h"
 
 const u08 K[32] = {

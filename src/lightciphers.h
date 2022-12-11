@@ -2,6 +2,8 @@
 #ifndef LIGHTCIPHERS_H
 #define LIGHTCIPHERS_H 1
 
+#include "defs.h"
+
 #define NB 4
 #define NK 8
 #define NR 14

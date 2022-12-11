@@ -7,7 +7,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include "lighthash3.h"
-#include "lightdefs.h"
+//#include "lightdefs.h"
+#include "defs.h"
 
 //
 // Circular shift

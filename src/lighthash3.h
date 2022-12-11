@@ -9,7 +9,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lightdefs.h"
+//#include "lightdefs.h"
+#include "defs.h"
 
 #define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
 

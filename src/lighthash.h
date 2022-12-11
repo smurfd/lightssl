@@ -4,12 +4,18 @@
 #define LIGHTHASH_H 1
 
 #include <stdint.h>
-
-typedef const char cc;
-typedef const unsigned char cuc;
+#include "defs.h"
 
 #ifndef SHA_DEFINES
 #define SHA_DEFINES 1
+
+extern const char hexdigits[];
+extern const u08 masks[8];
+extern const u08 markbit[8];
+
+// Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
+extern const u64 SHA_H0[];
+extern const u64 SHA_K[80];
 
 // These constants hold size information for each of the SHA hashing operations
 #define sha_blk_sz 128                           // SHA Message Block Size

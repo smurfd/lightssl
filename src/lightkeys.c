@@ -25,10 +25,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "lightkeys.h"
-
-//
-// Imitate pythons %. -1 % 5 = 4, not -1
-static int mod(const int n, const int m) {return ((n % m) + m) % m;}
+#include "defs.h"
 
 //
 // Clear a
@@ -44,7 +41,7 @@ static int keys_zero(const u64 *a) {
 //
 // Check if bit a or b is set, if so return diff from zero
 static u64 keys_chk(const u64 *a, const ui b) {
-  return (a[b / 64] & ((u64)1 << (mod(b, 64))));
+  return (a[b / 64] & ((u64)1 << (MOD(b, 64))));
 }
 
 //
@@ -262,7 +259,7 @@ static void keys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   if (pb < mb) {keys_set(a, p); return;}
 
   keys_clear(mm); keys_clear(mm + DI);
-  ds = (pb - mb) / 64; bs = mod(pb - mb, 64);
+  ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);
   if (bs) {mm[ds + DI] = keys_ls(mm + ds, m, bs);}
   else {keys_set(mm + ds, m);}
 

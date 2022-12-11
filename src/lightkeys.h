@@ -7,11 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "lightcrypto.h"
+#include "defs.h"
 
-typedef uint8_t u08;
-typedef unsigned int ui;
-typedef unsigned __int128 u128;
+//typedef uint8_t u08;
+//typedef uint64_t u64;
+//typedef unsigned int ui;
+//typedef unsigned __int128 u128;
 
 #define BT 8
 #define KB 48

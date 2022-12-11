@@ -6,6 +6,7 @@
 #include <assert.h>
 #include "lightdefs.h"
 #include "lighthash.h"
+#include "defs.h"
 
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
 const u64 SHA_H0[] = {
@@ -209,8 +210,8 @@ int hmac_reset(ctxh *c, cuc *key, int key_len) {
 
   // If key is longer than the hash blocksize, reset it to key = HASH(key).
   if (key_len > blocksize) {
-    ctxs cc;
-    ret = sha_reset(&cc)|| sha_input(&cc, key, key_len)|| sha_result(&cc, tmp);
+    ctxs ct;
+    ret = sha_reset(&ct)|| sha_input(&ct, key, key_len)|| sha_result(&ct, tmp);
     if (ret != sha_ok) return ret;
     key = tmp;
     key_len = hashsize;

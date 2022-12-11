@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "lightcrypto.h"
+#include "defs.h"
 
 typedef uint8_t u08;
 //

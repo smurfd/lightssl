@@ -1,20 +1,21 @@
 //                                                                            //
-#ifndef LIGHTDEFS_H
-#define LIGHTDEFS_H 1
+#ifndef DEFS_H
+#define DEFS_H 1
 
-#include <stdint.h>
-#include "defs.h"
-/*
-typedef uint64_t bit[571];
-typedef uint64_t sig[72];*/
+// Only defines here, no typedefs
+#define i08 int8_t
+#define u08 uint8_t
+#define cc const char
+#define ui unsigned int
+#define b08 unsigned char
+#define cu8 const uint8_t
+#define u128 unsigned __int128
+#define cuc const unsigned char
+#define u64 long long unsigned int
 
-// VSH
-/*typedef struct keys key;
-typedef struct header head;
-typedef struct sockaddr sock;
-typedef struct sockaddr_in sock_in;
-*/
-/*
+// Imitate pythons %. -1 % 5 = 4, not -1
+#define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
+
 // SSL
 #define RAND() (rand() & 0x7FFFFFFFFFFFFFFF)
 #define RAND64() ((u64)(RAND()) << 48) ^ ((u64)(RAND()) << 35) ^ \
@@ -30,17 +31,7 @@ typedef struct sockaddr_in sock_in;
 #define SHA_CH00(x, y, z) (((x) & ((y) ^ (z))) ^ (z))
 #define SHA_MAJ0(x, y, z) (((x) & ((y) | (z))) | ((y) & (z)))
 #define SHA_PARI(x, y, z)  ((x) ^  (y) ^ (z))
-*/
-/*
-extern const char hexdigits[];
-extern const u08 masks[8];
-extern const u08 markbit[8];
 
-// Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
-extern const u64 SHA_H0[];
-extern const u64 SHA_K[80];
-*/
-/*
 // Define the SHA shift, rotate left and rotate right macros
 #define SHA_SHRI(b, w)  (((u64)(w)) >> (b))
 #define SHA_ROTR(b, w) ((((u64)(w)) >> (b)) | (((u64)(w)) << (64 - (b))))
@@ -55,8 +46,4 @@ extern const u64 SHA_K[80];
 #define SHA_L(c) (++c->len_hi == 0) ? sha_itl : (c)->corrupt
 #define SHA_T(c, l) c->corrupt = ((c->len_lo += l) < 0)
 #define SHA_AddLength(c, l) (SHA_T(c, l) && SHA_L(c))
-
-// Imitate pythons %. -1 % 5 = 4, not -1
-#define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
-*/
 #endif
