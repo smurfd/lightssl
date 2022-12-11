@@ -269,7 +269,7 @@ static u64 pad10(u64 x, u64 m, u08 *p) {
 static void sponge(u08 *n, int l, u08 **ps) {
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
   u08 az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0};
-  u08 *p, *pi, *z, pad[200], str[200] = {0};
+  u08 *p, *pi, *z, pad[67], str[200] = {0};
 
   len = pad10(r, l, pad);
   plen = cat(n, l, pad, len, &p);
