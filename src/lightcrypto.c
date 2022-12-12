@@ -109,7 +109,7 @@ static void *lightcrypto_handler(void *sdesc) {
 
 //
 // Initialize server and client (b=true for server deamon)
-int lightcrypto_init(const char *host, const char *port, bool b) {
+int lightcrypto_init(cc *host, cc *port, bool b) {
   int s = socket(AF_INET, SOCK_STREAM, 0);
   sock_in adr;
 

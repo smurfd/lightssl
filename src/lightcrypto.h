@@ -15,7 +15,7 @@ struct keys {u64 publ, priv, shar;};
 
 key lightcrypto_genkeys(u64 g, u64 p);
 int lightcrypto_keys();
-int lightcrypto_init(const char *host, const char *port, bool b);
+int lightcrypto_init(cc *host, cc *port, bool b);
 int lightcrypto_listen(int s, sock *cli);
 
 void lightcrypto_end(int s);
