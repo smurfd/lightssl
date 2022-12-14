@@ -251,3 +251,32 @@ int hmac_result(ctxh *c, u08 *digest) {
   c->compute = 1;
   return c->corrupt = ret;
 }
+
+//
+// HMAC & SHA Test suite runner
+int lighthash_hash(cc *ta, int l, long r,int neb, int eb, cuc *k,int kl, cc *ra, int hs) {
+  u08 msg_dig[sha_hsh_sz], err;
+  ctxh hmac;
+  ctxs sha;
+
+  if (k) {err = hmac_reset(&hmac, k, kl);}
+  else {err = sha_reset(&sha);}
+  if (err != sha_ok) {return err;}
+
+  for (int i = 0; i < r; ++i) {
+    if (k) {err = hmac_input(&hmac, (cu8 *)ta, l);}
+    else {err = sha_input(&sha, (cu8 *)ta, l);}
+    if (err != sha_ok) {return err;}
+  }
+
+  if (neb > 0) {
+    if (k) {err = hmac_final(&hmac, (u08)eb, neb);}
+    else {err = sha_final(&sha, (u08)eb, neb);}
+    if (err != sha_ok) {return err;}
+  }
+
+  if (k) {err = hmac_result(&hmac, msg_dig);}
+  else {err = sha_result(&sha, msg_dig);}
+  if (err != sha_ok) {return err;}
+  return sha_match_to_str(msg_dig, ra, hs, NULL);
+}

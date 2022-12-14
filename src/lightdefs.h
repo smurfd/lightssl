@@ -73,6 +73,8 @@
 #define sha_err 3                                // State error
 #define sha_bad 4                                // passed a bad parameter
 
+#define length(x) (sizeof(x) - 1)
+
 // Lighthash3
 #define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
 
