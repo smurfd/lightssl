@@ -1,9 +1,9 @@
 //                                                                            //
-#include <time.h>
+//#include <time.h>
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <assert.h>
 #include "../lightdefs.h"
 #include "../lighthash.h"
