@@ -75,6 +75,7 @@ rm -f example *.o
 ```c
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "../lighthash3.h"
 
 int main() {
