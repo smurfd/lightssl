@@ -18,7 +18,7 @@ basicConstraints = critical,CA:TRUE
 subjectKeyIdentifier = hash
 EOL
 
-openssl req -x509 -sha256 -days 3650 -newkey rsa:2048 \
+openssl req -x509 -sha256 -days 3650 -newkey rsa:4096 \
   -config build/ca.cnf -keyout build/ca.key -out build/ca.crt &> /dev/null
 
 openssl x509 -in build/ca.crt -text -noout &> /dev/null

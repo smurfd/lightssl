@@ -13,7 +13,7 @@ build_args = [
   '-Wextra',
   '-Wno-unused-parameter',
   '-pedantic',
-  '-O2',
+  '-O3',
   '-pthread']
 
 liblighthash = static_library('lighthash', 'src/lighthash.c')
