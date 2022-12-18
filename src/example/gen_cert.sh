@@ -19,6 +19,6 @@ subjectKeyIdentifier = hash
 EOL
 
 openssl req -x509 -sha256 -days 3650 -newkey rsa:2048 \
-  -config build/ca.cnf -keyout build/ca.key -out build/ca.crt
+  -config build/ca.cnf -keyout build/ca.key -out build/ca.crt &> /dev/null
 
-openssl x509 -in build/ca.crt -text -noout
+openssl x509 -in build/ca.crt -text -noout &> /dev/null
