@@ -234,3 +234,54 @@ u64 lightcrypto_handle_cert(char *cert) {
   printf("Data: %s\n", d);
   return data;
 }
+
+static int mod_table[] = {0, 2, 1};
+static char enc[] = {
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+  'w', 'x', 'y', 'z', '0', '1', '2', '3','4', '5', '6', '7', '8', '9', '+', '/'};
+
+static u32 octet(int i, int inl, const unsigned char d[257]) {
+  if (i < inl) {return d[i];} else {return 0;}
+}
+
+static u32 sextet(const char d[257], char c[257], int i) {
+  if (d[i] == '=') {return 0 & i++;} else {return c[(int)d[i]];}
+}
+
+void lightcrypto_encode64(const unsigned char *data, int inl, int *outl, char encd[*outl]) {
+  *outl = 4 * ((inl + 2) / 3);
+  for (int i = 0, j = 0; i < inl;) {
+    u32 a = octet(i++, inl, data);
+    u32 b = octet(i++, inl, data);
+    u32 c = octet(i++, inl, data);
+    u32 triple = (a << 0x10) + (b << 0x08) + c;
+
+    encd[j++] = enc[(triple >> 3 * 6) & 0x3F];
+    encd[j++] = enc[(triple >> 2 * 6) & 0x3F];
+    encd[j++] = enc[(triple >> 1 * 6) & 0x3F];
+    encd[j++] = enc[(triple >> 0 * 6) & 0x3F];
+  }
+  for (int i = 0; i < mod_table[inl % 3]; i++) encd[*outl - 1 - i] = '=';
+}
+
+void lightcrypto_decode64(const char *data, int inl, int *outl, unsigned char decd[*outl]) {
+  static char dec[257] = {0};
+
+  *outl = inl / 4 * 3;
+  if (data[inl - 1] == '=') (*outl)--;
+  if (data[inl - 2] == '=') (*outl)--;
+  for (int i = 0; i < 64; i++) dec[(unsigned char) enc[i]] = i;
+  for (int i = 0, j = 0; i < inl;) {
+    u32 a = sextet(data, dec, i++);
+    u32 b = sextet(data, dec, i++);
+    u32 c = sextet(data, dec, i++);
+    u32 d = sextet(data, dec, i++);
+    u32 triple = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
+
+    if (j < *outl) decd[j++] = (triple >> 2 * 8) & 0xFF;
+    if (j < *outl) decd[j++] = (triple >> 1 * 8) & 0xFF;
+    if (j < *outl) decd[j++] = (triple >> 0 * 8) & 0xFF;
+  }
+}

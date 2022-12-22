@@ -24,8 +24,10 @@ void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv);
 void lightcrypto_transferkey(int s, bool snd, head *h, key *k);
 void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
 
-
 u64 lightcrypto_handle_cert(char *cert);
+
+void lightcrypto_encode64(const unsigned char *data, int inl, int *outl, char encd[*outl]);
+void lightcrypto_decode64(const char *data, int inl, int *outl, unsigned char decd[*outl]);
 
 // Keep static functions
 // u64 lightcrypto_rand();
