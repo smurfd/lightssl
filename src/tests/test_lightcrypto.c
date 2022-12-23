@@ -13,7 +13,7 @@ int main() {
   char data[LEN];
   int d = 0;
 
-  lightcrypto_handle_cert("ca.crt", data);
+  lightcrypto_handle_cert("ca.key", data);
   lightcrypto_decode64(s0, strlen(s0), &d, s3);
   lightcrypto_encode64(s2, strlen("smurfd and more stuff"), &d, s1);
   assert(strcmp(s1, s0) == 0);
