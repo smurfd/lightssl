@@ -166,21 +166,17 @@ int lightcrypto_keys() {
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
-static u64 lightcrypto_get_header(u08 c[], u08 h[]) {
+static u64 lightcrypto_get_header(char c[], u08 h[]) {
   u64 i = 0;
 
   // Check for the start of -----BEGIN CERTIFICATE-----
   while (c[i] != '-' && c[i + 1] != '-' && c[i + 2] != '-' && c[i + 3] != '-'\
     && c[i + 4] != '-' && c[i + 5] != 'B') {i++;}
-  while (c[i] != '\n') {
-    h[i] = c[i];
-    i++;
-  }
-  h[i] = '\0';
+  while (c[i] != '\n') {h[i] = c[i]; i++;} h[i] = '\0';
   return i;
 }
 
-static u64 lightcrypto_get_footer(u08 c[], u64 len, u08 f[]) {
+static u64 lightcrypto_get_footer(char c[], u64 len, u08 f[]) {
   u64 i = 0, j = len - 36;
 
   // check for the start of -----END CERTIFICATE-----
@@ -188,96 +184,78 @@ static u64 lightcrypto_get_footer(u08 c[], u64 len, u08 f[]) {
   while (c[j] != '-' && c[j + 1] != '-' && c[j + 2] != '-' && c[j + 3] != '-'\
     && c[j + 4] != '-' && c[j + 5] != 'E') {j++;}
   j++;
-  while (c[j] != '\n') {
-    f[i] = c[j];
-    i++; j++;
-  }
-  f[i] = '\0';
+  while (c[j] != '\n') {f[i] = c[j]; i++; j++;} f[i] = '\0';
   return i;
 }
 
-static u64 lightcrypto_get_data(u08 c[], u64 h, u64 f, u64 l, u08 d[]) {
+static u64 lightcrypto_get_data(char c[], u64 h, u64 f, u64 l, char d[]) {
   u64 co = l - f - h - 3, i = 0;
 
-  while (i < co) {d[i] = c[h + i + 1]; i++;}
-  d[i - 1] = '\0';
+  while (i < co) {d[i] = c[h + i + 1]; i++;} d[i - 1] = '\0';
   return i;
 }
 
-static u64 lightcrypto_read_cert(char *fn, u08 c[]) {
+static u64 lightcrypto_read_cert(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "r");
   u64 len = 0;
-  char ch = '\0';
-  FILE* ptr;
 
-  ptr = fopen(fn, "r");
-  if (NULL == ptr) {printf("Can't find cert\n");}
-  while (ch != EOF) {
-    ch = fgetc(ptr);
-    c[len] = ch;
-    len++;
-  }
+  if (ptr == NULL) {printf("Can't find cert: %s\n", fn);}
+  while (c[len - 1] != EOF) {c[len++] = fgetc(ptr);}
   fclose(ptr);
   return len;
 }
 
-u64 lightcrypto_handle_cert(char *cert, u08 d[2048]) {
+static void lightcrypto_print_cert(u64 len, u08 h[], u08 f[], char d[]) {
+  printf("Length %llu\n", len); printf("Header: %s\n", h);
+  printf("Data: %s\n", d); printf("Footer: %s\n", f);
+}
+
+u64 lightcrypto_handle_cert(char *cert, char d[LEN]) {
   u64 len = 0, foot, head, data;
-  u08 crt[2048], h[36], f[36];
+  u08 h[36], f[36];
+  char crt[LEN];
 
   len = lightcrypto_read_cert(cert, crt);
-  printf("length %llu\n", len);
   head = lightcrypto_get_header(crt, h);
-  printf("Header: %s\n", h);
   foot = lightcrypto_get_footer(crt, len, f);
-  printf("Footer: %s\n", f);
   data = lightcrypto_get_data(crt, head, foot, len, d);
-  printf("Data: %s\n", d);
+  lightcrypto_print_cert(len, h, f, d);
   return data;
 }
 
-static u32 octet(int i, int inl, cuc d[257]) {
+static u32 oct(int i, int inl, cuc d[257]) {
   if (i < inl) {return d[i];} else {return 0;}
 }
 
-static u32 sextet(cc d[257], char c[257], int i) {
+static u32 sex(cc d[257], char c[257], int i) {
   if (d[i] == '=') {return 0 & i++;} else {return c[(int)d[i]];}
 }
 
-void lightcrypto_encode64(cuc *data, int inl, int *outl, char encd[*outl]) {
-  static int mod_table[] = {0, 2, 1};
+void lightcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]) {
+  static int tab[] = {0, 2, 1};
+  u32 a, b, c, tri;
 
-  *outl = 4 * ((inl + 2) / 3);
+  *ol = 4 * ((inl + 2) / 3);
   for (int i = 0, j = 0; i < inl;) {
-    u32 a = octet(i++, inl, data);
-    u32 b = octet(i++, inl, data);
-    u32 c = octet(i++, inl, data);
-    u32 triple = (a << 0x10) + (b << 0x08) + c;
-
-    encd[j++] = enc[(triple >> 3 * 6) & 0x3F];
-    encd[j++] = enc[(triple >> 2 * 6) & 0x3F];
-    encd[j++] = enc[(triple >> 1 * 6) & 0x3F];
-    encd[j++] = enc[(triple >> 0 * 6) & 0x3F];
+    a = oct(i++, inl, data); b = oct(i++, inl, data); c = oct(i++, inl, data);
+    tri = (a << 0x10) + (b << 0x08) + c;
+    for (int k = 3; k >=0; k--) {ed[j++] = enc[(tri >> k * 6) & 0x3F];}
   }
-  for (int i = 0; i < mod_table[inl % 3]; i++) encd[*outl - 1 - i] = '=';
-  encd[*outl] = '\0';
+  for (int i = 0; i < tab[inl % 3]; i++) ed[*ol - 1 - i] = '='; ed[*ol] = '\0';
 }
 
-void lightcrypto_decode64(cc *data, int inl, int *outl, u08 decd[*outl]) {
-  static char dec[2048] = {0};
+void lightcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
+  static char dec[LEN] = {0};
+  u32 a, b, c, d, tri;
 
-  *outl = inl / 4 * 3;
-  if (data[inl - 1] == '=') (*outl)--;
-  if (data[inl - 2] == '=') (*outl)--;
-  for (int i = 0; i < 64; i++) dec[(u08) enc[i]] = i;
+  *ol = inl / 4 * 3;
+  if (data[inl - 1] == '=') (*ol)--;
+  if (data[inl - 2] == '=') (*ol)--;
+  for (int i = 0; i < 64; i++) dec[(u08)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
-    u32 a = sextet(data, dec, i++);
-    u32 b = sextet(data, dec, i++);
-    u32 c = sextet(data, dec, i++);
-    u32 d = sextet(data, dec, i++);
-    u32 triple = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
-
-    if (j < *outl) decd[j++] = (triple >> 2 * 8) & 0xFF;
-    if (j < *outl) decd[j++] = (triple >> 1 * 8) & 0xFF;
-    if (j < *outl) decd[j++] = (triple >> 0 * 8) & 0xFF;
+    a = sex(data, dec, i++); b = sex(data, dec, i++);
+    c = sex(data, dec, i++); d = sex(data, dec, i++);
+    tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
+    if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
 }

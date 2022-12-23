@@ -12,6 +12,13 @@ typedef struct sockaddr_in sock_in;
 
 struct header {u64 len, ver, g, p;};
 struct keys {u64 publ, priv, shar;};
+#define LEN 4096
+static char enc[] = {
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+  'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
+  'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+  't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+  '8', '9', '+', '/'};
 
 key lightcrypto_genkeys(u64 g, u64 p);
 int lightcrypto_keys();
@@ -24,17 +31,10 @@ void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv);
 void lightcrypto_transferkey(int s, bool snd, head *h, key *k);
 void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
 
-u64 lightcrypto_handle_cert(char *cert, u08 d[2048]);
+u64 lightcrypto_handle_cert(char *cert, char d[LEN]);
 
-void lightcrypto_encode64(cuc *data, int inl, int *outl, char encd[*outl]);
-void lightcrypto_decode64(cc *data, int inl, int *outl, u08 decd[*outl]);
-static char enc[] = {
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-  'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-  'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-  't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', '+', '/'};
-
+void lightcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
+void lightcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
 // Keep static functions
 // u64 lightcrypto_rand();
 // int lightcrypto_getblock();
