@@ -55,7 +55,7 @@ Test ciphers (AES)
 ```
 Test crypto (ASN.1) not working yet
 ```
-./build/test_lightcrypto
+./build/test_lightcrypto build/ca.key
 ```
 ### Use lightssl
 See the [tests](https://github.com/smurfd/lightssl/tree/main/src/tests)
