@@ -220,9 +220,9 @@ static u64 lightcrypto_read_cert(char *fn, u08 c[]) {
   return len;
 }
 
-u64 lightcrypto_handle_cert(char *cert) {
+u64 lightcrypto_handle_cert(char *cert, u08 d[2048]) {
   u64 len = 0, foot, head, data;
-  u08 crt[2048], h[36], f[36], d[2048];
+  u08 crt[2048], h[36], f[36];
 
   len = lightcrypto_read_cert(cert, crt);
   printf("length %llu\n", len);
@@ -235,22 +235,17 @@ u64 lightcrypto_handle_cert(char *cert) {
   return data;
 }
 
-static int mod_table[] = {0, 2, 1};
-static char enc[] = {
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-  'w', 'x', 'y', 'z', '0', '1', '2', '3','4', '5', '6', '7', '8', '9', '+', '/'};
-
-static u32 octet(int i, int inl, const unsigned char d[257]) {
+static u32 octet(int i, int inl, cuc d[257]) {
   if (i < inl) {return d[i];} else {return 0;}
 }
 
-static u32 sextet(const char d[257], char c[257], int i) {
+static u32 sextet(cc d[257], char c[257], int i) {
   if (d[i] == '=') {return 0 & i++;} else {return c[(int)d[i]];}
 }
 
-void lightcrypto_encode64(const unsigned char *data, int inl, int *outl, char encd[*outl]) {
+void lightcrypto_encode64(cuc *data, int inl, int *outl, char encd[*outl]) {
+  static int mod_table[] = {0, 2, 1};
+
   *outl = 4 * ((inl + 2) / 3);
   for (int i = 0, j = 0; i < inl;) {
     u32 a = octet(i++, inl, data);
@@ -264,15 +259,16 @@ void lightcrypto_encode64(const unsigned char *data, int inl, int *outl, char en
     encd[j++] = enc[(triple >> 0 * 6) & 0x3F];
   }
   for (int i = 0; i < mod_table[inl % 3]; i++) encd[*outl - 1 - i] = '=';
+  encd[*outl] = '\0';
 }
 
-void lightcrypto_decode64(const char *data, int inl, int *outl, unsigned char decd[*outl]) {
-  static char dec[257] = {0};
+void lightcrypto_decode64(cc *data, int inl, int *outl, u08 decd[*outl]) {
+  static char dec[2048] = {0};
 
   *outl = inl / 4 * 3;
   if (data[inl - 1] == '=') (*outl)--;
   if (data[inl - 2] == '=') (*outl)--;
-  for (int i = 0; i < 64; i++) dec[(unsigned char) enc[i]] = i;
+  for (int i = 0; i < 64; i++) dec[(u08) enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
     u32 a = sextet(data, dec, i++);
     u32 b = sextet(data, dec, i++);

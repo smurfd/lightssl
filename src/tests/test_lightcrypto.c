@@ -8,21 +8,16 @@
 #include "../lightcrypto.h"
 
 int main() {
-  lightcrypto_handle_cert("ca.crt");
-
+  char s0[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm", s1[257];
+  u08 s2[] = "smurfd and more stuff", s3[257], s4[2048], data[2048];
   int d = 0;
-  char s2[257];
-  unsigned char s3[257];
-  char s[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm";
-  unsigned char ss[] = "smurfd and more stuff";
 
-  lightcrypto_decode64(s, strlen(s), &d, s3);
-  printf("%s\n", s3);
-  lightcrypto_encode64(ss, strlen("smurfd and more stuff"), &d, s2);
-  s2[d] = '\0';
-  printf("%s\n", s2);
-  assert(strcmp(s2, s) == 0);
+  lightcrypto_handle_cert("ca.crt", data);
 
+  lightcrypto_decode64(s0, strlen(s0), &d, s3);
+  lightcrypto_encode64(s2, strlen("smurfd and more stuff"), &d, s1);
+  assert(strcmp(s1, s0) == 0);
+  lightcrypto_decode64((char*)data, strlen((char*)data), &d, s4);
   printf("OK\n");
   return 0;
 }
