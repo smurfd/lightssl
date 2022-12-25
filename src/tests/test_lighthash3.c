@@ -12,7 +12,7 @@ int main() {
     "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cdffffff";
   uint8_t *smurfd = (uint8_t*)"smurfd";
 
-  lighthash3_hash_new(smurfd, s);
+  lhash3_hash_new(smurfd, s);
   assert(strcmp(s, hash) == 0);
   assert(strcmp(s, wash) != 0); // Assume failure
   printf("OK\n");

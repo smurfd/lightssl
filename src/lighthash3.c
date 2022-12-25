@@ -208,10 +208,8 @@ static void keccak_p(u08 *sm, u08 (*s)[200]) {
   u64 a[5][5];
 
   str2state(sm, &a);
-  // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir).
-  for (int ir = 0; ir <= 23; ir++) { // nr = 24; ir = 24 - nr; ir <= 23;
-    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, ir);
-  }
+  // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
+  for (int ir = 0; ir <= 23; ir++) {theta(&a);rho(&a);pi(&a);chi(&a);iota(&a,ir);}
   state2str(&a, (*s));
 }
 
@@ -302,7 +300,7 @@ static void sponge(u08 *n, int l, u08 **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void lighthash3_hash_new(u08 *n, char *s) {
+void lhash3_hash_new(u08 *n, char *s) {
   u08 *m, z1[] = {2}, *ss = malloc(128 * sizeof(u08));
   u64 d = strlen((char*)n) * 8;
 

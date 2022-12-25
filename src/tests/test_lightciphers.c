@@ -23,12 +23,12 @@ int main() {
     0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f};
   u08 out[BBL] = {0}, in[BBL] = {0};
 
-  lightciphers_encrypt(plain, BBL, key, iv, out, false);
-  lightciphers_decrypt(out, BBL, key, iv, in, false);
+  lciphers_encrypt(plain, BBL, key, iv, out, false);
+  lciphers_decrypt(out, BBL, key, iv, in, false);
   for (u64 i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
 
-  lightciphers_encrypt(plain, BBL, key, iv, out, true);
-  lightciphers_decrypt(out, BBL, key, iv, in, true);
+  lciphers_encrypt(plain, BBL, key, iv, out, true);
+  lciphers_decrypt(out, BBL, key, iv, in, true);
   for (u64 i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
   printf("OK\n");
   return 0;

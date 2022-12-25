@@ -26,7 +26,7 @@ int main() {
     "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
     "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa";
   int kl = 131;
-  int err = lighthash_hash(da, dl, 1, 0, 0, ka, kl, "E37B6A775DC87DBAA4DFA9F96E"
+  int err = lhash_hash(da, dl, 1, 0, 0, ka, kl, "E37B6A775DC87DBAA4DFA9F96E"
     "5E3FFDDEBD71F8867289865DF5A32D20CDC944B6022CAC3C4982B10D5EEB55C3E4DE151346"
     "76FB6DE0446065C97440FA8C6A58", 64);
   assert(err == 1); if (err != 1) return 0;

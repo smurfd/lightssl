@@ -6,5 +6,5 @@
 #include <stdint.h>
 #include "lightdefs.h"
 
-void lighthash3_hash_new(u08 *n, char *ss);
+void lhash3_hash_new(u08 *n, char *ss);
 #endif

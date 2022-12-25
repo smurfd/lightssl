@@ -8,11 +8,11 @@
 #include "../lightcrypto.h"
 
 int main() {
-  int s = lightcrypto_init("127.0.0.1", "9998", true);
+  int s = lcrypto_init("127.0.0.1", "9998", true);
   sock *cli = NULL;
 
-  if (lightcrypto_listen(s, cli) < 0) {printf("Can't Thread\n"); exit(0);}
-  lightcrypto_end(s);
+  if (lcrypto_listen(s, cli) < 0) {printf("Can't Thread\n"); exit(0);}
+  lcrypto_end(s);
   printf("OK\n");
   return 0;
 }

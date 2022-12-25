@@ -11,6 +11,6 @@ extern const u08 GF[15][256];
 extern const u08 MIX[4][4];
 extern const u08 MIX[4][4];
 
-void lightciphers_encrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc);
-void lightciphers_decrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc);
+void lciphers_encrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc);
+void lciphers_decrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc);
 #endif

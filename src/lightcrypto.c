@@ -15,11 +15,11 @@
 
 //
 // Get BLOCK size
-static int lightcrypto_getblock() {return BLOCK;}
+static int lcrypto_getblock() {return BLOCK;}
 
 //
 // Random uint64_t
-static u64 lightcrypto_rand() {
+static u64 lcrypto_rand() {
   u64 r = 1;
 
   for (int i = 0; i < 5; ++i) {r = (r << 15) | (rand() & 0x7FFF);}
@@ -28,35 +28,35 @@ static u64 lightcrypto_rand() {
 
 //
 // Generate the shared key
-void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv) {
+void lcrypto_genshare(key *k1, key *k2, u64 p, bool srv) {
   if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
   else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
 }
 
 //
 // Generate a public and private keypair
-key lightcrypto_genkeys(u64 g, u64 p) {
+key lcrypto_genkeys(u64 g, u64 p) {
   key k;
 
-  k.priv = lightcrypto_rand();
+  k.priv = lcrypto_rand();
   k.publ = (int64_t)pow(g, k.priv) % p;
   return k;
 }
 
 //
 // Encrypt and decrypt data with shared key
-void lightcrypto_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
+void lcrypto_crypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
 
 //
 // Receive key
-static void lightcrypto_recvkey(int s, head *h, key *k) {
+static void lcrypto_recvkey(int s, head *h, key *k) {
   recv(s, h, sizeof(head), 0); recv(s, k, sizeof(key), 0); (*k).priv = 0;
   // This to ensure if we receive a private key we clear it
 }
 
 //
 // Send key
-static void lightcrypto_sendkey(int s, head *h, key *k) {
+static void lcrypto_sendkey(int s, head *h, key *k) {
   key kk;
 
   // This to ensure not to send the private key
@@ -66,50 +66,50 @@ static void lightcrypto_sendkey(int s, head *h, key *k) {
 
 //
 // Transfer data (send and receive)
-void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len) {
+void lcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len) {
   if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64) * len, 0);}
   else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
 
 //
 // Transfer keys (send and receive)
-void lightcrypto_transferkey(int s, bool snd, head *h, key *k) {
+void lcrypto_transferkey(int s, bool snd, head *h, key *k) {
   key tmp;
 
-  if (snd) {lightcrypto_sendkey(s, h, k);}
-  else {lightcrypto_recvkey(s, h, &tmp);
+  if (snd) {lcrypto_sendkey(s, h, k);}
+  else {lcrypto_recvkey(s, h, &tmp);
     (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
     // This to ensure if we receive a private key we clear it
 }
 
 //
 // Server handler
-static void *lightcrypto_handler(void *sdesc) {
-  u64 dat[lightcrypto_getblock()], cd[lightcrypto_getblock()];
+static void *lcrypto_handler(void *sdesc) {
+  u64 dat[lcrypto_getblock()], cd[lcrypto_getblock()];
   int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
-  u64 g1 = lightcrypto_rand(), p1 = lightcrypto_rand();
-  key k1 = lightcrypto_genkeys(g1, p1), k2;
+  u64 g1 = lcrypto_rand(), p1 = lcrypto_rand();
+  key k1 = lcrypto_genkeys(g1, p1), k2;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   head h; h.g = g1; h.p = p1;
 
   // Send and receive stuff
   if (h.len > BLOCK) {return (void*)-1;}
-  lightcrypto_transferkey(s, true, &h, &k1);
-  lightcrypto_transferkey(s, false, &h, &k2);
-  lightcrypto_genshare(&k1, &k2, h.p, true);
+  lcrypto_transferkey(s, true, &h, &k1);
+  lcrypto_transferkey(s, false, &h, &k2);
+  lcrypto_genshare(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
   // Decrypt the data
-  lightcrypto_transferdata(s, &dat, &h, false, BLOCK-1);
-  for (u64 i = 0; i < 10; i++) {lightcrypto_crypt(dat[i], k2, &cd[i]);}
+  lcrypto_transferdata(s, &dat, &h, false, BLOCK-1);
+  for (u64 i = 0; i < 10; i++) {lcrypto_crypt(dat[i], k2, &cd[i]);}
   pthread_exit(NULL);
   return 0;
 }
 
 //
 // Initialize server and client (b=true for server deamon)
-int lightcrypto_init(cc *host, cc *port, bool b) {
+int lcrypto_init(cc *host, cc *port, bool b) {
   int s = socket(AF_INET, SOCK_STREAM, 0);
   sock_in adr;
 
@@ -124,11 +124,11 @@ int lightcrypto_init(cc *host, cc *port, bool b) {
 
 //
 // End connection
-void lightcrypto_end(int s) {close(s);}
+void lcrypto_end(int s) {close(s);}
 
 //
 // Server listener
-int lightcrypto_listen(const int s, sock *cli) {
+int lcrypto_listen(const int s, sock *cli) {
   int c = 1, ns[sizeof(int)], len = sizeof(sock_in);
 
   listen(s, 3);
@@ -136,7 +136,7 @@ int lightcrypto_listen(const int s, sock *cli) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
     *ns = c;
-    if (pthread_create(&thrd, NULL, lightcrypto_handler, (void*)ns) < 0) {
+    if (pthread_create(&thrd, NULL, lcrypto_handler, (void*)ns) < 0) {
       return -1;
     }
     pthread_join(thrd, NULL);
@@ -146,18 +146,18 @@ int lightcrypto_listen(const int s, sock *cli) {
 
 //
 // Generate a keypair & shared key then print it (test / demo)
-int lightcrypto_keys() {
-  u64 g1 = lightcrypto_rand(), g2 = lightcrypto_rand(), p1 = lightcrypto_rand();
-  u64 p2 = lightcrypto_rand(), c = 123456, d = 1, e = 1;
-  key k1 = lightcrypto_genkeys(g1, p1), k2 = lightcrypto_genkeys(g2, p2);
+int lcrypto_keys() {
+  u64 g1 = lcrypto_rand(), g2 = lcrypto_rand(), p1 = lcrypto_rand();
+  u64 p2 = lcrypto_rand(), c = 123456, d = 1, e = 1;
+  key k1 = lcrypto_genkeys(g1, p1), k2 = lcrypto_genkeys(g2, p2);
 
-  lightcrypto_genshare(&k1, &k2, p1, false);
-  lightcrypto_genshare(&k1, &k2, p1, true);
+  lcrypto_genshare(&k1, &k2, p1, false);
+  lcrypto_genshare(&k1, &k2, p1, true);
   printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
   printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
   printf("Alice & Bobs shared key: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
-  lightcrypto_crypt(c, k1, &d);
-  lightcrypto_crypt(d, k2, &e);
+  lcrypto_crypt(c, k1, &d);
+  lcrypto_crypt(d, k2, &e);
   printf("Before:  0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n",c,d,e);
   return c == e;
 }
@@ -166,7 +166,7 @@ int lightcrypto_keys() {
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
-static u64 lightcrypto_get_header(char c[], u08 h[]) {
+static u64 lcrypto_get_header(char c[], u08 h[]) {
   u64 i = 0;
 
   // Check for the start of -----BEGIN CERTIFICATE-----
@@ -176,7 +176,7 @@ static u64 lightcrypto_get_header(char c[], u08 h[]) {
   return i;
 }
 
-static u64 lightcrypto_get_footer(char c[], u64 len, u08 f[]) {
+static u64 lcrypto_get_footer(char c[], u64 len, u08 f[]) {
   u64 i = 0, j = len - 36;
 
   // check for the start of -----END CERTIFICATE-----
@@ -188,14 +188,14 @@ static u64 lightcrypto_get_footer(char c[], u64 len, u08 f[]) {
   return i;
 }
 
-static u64 lightcrypto_get_data(char c[], u64 h, u64 f, u64 l, char d[]) {
+static u64 lcrypto_get_data(char c[], u64 h, u64 f, u64 l, char d[]) {
   u64 co = l - f - h - 3, i = 0;
 
   while (i < co) {d[i] = c[h + i + 1]; i++;} d[i - 1] = '\0';
   return i;
 }
 
-static u64 lightcrypto_read_cert(char *fn, char c[]) {
+static u64 lcrypto_read_cert(char *fn, char c[]) {
   FILE* ptr = fopen(fn, "r");
   u64 len = 0;
 
@@ -205,21 +205,21 @@ static u64 lightcrypto_read_cert(char *fn, char c[]) {
   return len;
 }
 
-static void lightcrypto_print_cert(u64 len, u08 h[], u08 f[], char d[]) {
+static void lcrypto_print_cert(u64 len, u08 h[], u08 f[], char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
   printf("Data: %s\n", d); printf("Footer: %s\n", f);
 }
 
-u64 lightcrypto_handle_cert(char *cert, char d[LEN]) {
+u64 lcrypto_handle_cert(char *cert, char d[LEN]) {
   u64 len = 0, foot, head, data;
   u08 h[36], f[36];
   char crt[LEN];
 
-  len = lightcrypto_read_cert(cert, crt);
-  head = lightcrypto_get_header(crt, h);
-  foot = lightcrypto_get_footer(crt, len, f);
-  data = lightcrypto_get_data(crt, head, foot, len, d);
-  lightcrypto_print_cert(len, h, f, d);
+  len = lcrypto_read_cert(cert, crt);
+  head = lcrypto_get_header(crt, h);
+  foot = lcrypto_get_footer(crt, len, f);
+  data = lcrypto_get_data(crt, head, foot, len, d);
+  lcrypto_print_cert(len, h, f, d);
   return data;
 }
 
@@ -231,7 +231,7 @@ static u32 sex(cc d[257], char c[257], int i) {
   if (d[i] == '=') {return 0 & i++;} else {return c[(int)d[i]];}
 }
 
-void lightcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]) {
+void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]) {
   static int tab[] = {0, 2, 1};
   u32 a, b, c, tri;
 
@@ -244,7 +244,7 @@ void lightcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]) {
   for (int i = 0; i < tab[inl % 3]; i++) ed[*ol - 1 - i] = '='; ed[*ol] = '\0';
 }
 
-void lightcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
+void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
   static char dec[LEN] = {0};
   u32 a, b, c, d, tri;
 

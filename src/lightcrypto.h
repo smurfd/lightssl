@@ -20,21 +20,21 @@ static char enc[] = {
   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
   '8', '9', '+', '/'};
 
-key lightcrypto_genkeys(u64 g, u64 p);
-int lightcrypto_keys();
-int lightcrypto_init(cc *host, cc *port, bool b);
-int lightcrypto_listen(int s, sock *cli);
+key lcrypto_genkeys(u64 g, u64 p);
+int lcrypto_keys();
+int lcrypto_init(cc *host, cc *port, bool b);
+int lcrypto_listen(int s, sock *cli);
 
-void lightcrypto_end(int s);
-void lightcrypto_crypt(u64 data, key k, u64 *enc);
-void lightcrypto_genshare(key *k1, key *k2, u64 p, bool srv);
-void lightcrypto_transferkey(int s, bool snd, head *h, key *k);
-void lightcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
+void lcrypto_end(int s);
+void lcrypto_crypt(u64 data, key k, u64 *enc);
+void lcrypto_genshare(key *k1, key *k2, u64 p, bool srv);
+void lcrypto_transferkey(int s, bool snd, head *h, key *k);
+void lcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
 
-u64 lightcrypto_handle_cert(char *cert, char d[LEN]);
+u64 lcrypto_handle_cert(char *cert, char d[LEN]);
 
-void lightcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
-void lightcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
+void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
+void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
 // Keep static functions
 // u64 lightcrypto_rand();
 // int lightcrypto_getblock();
