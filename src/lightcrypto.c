@@ -38,8 +38,7 @@ void lcrypto_genshare(key *k1, key *k2, u64 p, bool srv) {
 key lcrypto_genkeys(u64 g, u64 p) {
   key k;
 
-  k.priv = lcrypto_rand();
-  k.publ = (int64_t)pow(g, k.priv) % p;
+  k.priv = lcrypto_rand(); k.publ = (int64_t)pow(g, k.priv) % p;
   return k;
 }
 
@@ -136,9 +135,7 @@ int lcrypto_listen(const int s, sock *cli) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
     *ns = c;
-    if (pthread_create(&thrd, NULL, lcrypto_handler, (void*)ns) < 0) {
-      return -1;
-    }
+    if (pthread_create(&thrd, NULL, lcrypto_handler, (void*)ns) < 0) {return -1;}
     pthread_join(thrd, NULL);
   }
   return c;
@@ -170,28 +167,24 @@ static u64 lcrypto_get_header(char c[], u08 h[]) {
   u64 i = 0;
 
   // Check for the start of -----BEGIN CERTIFICATE-----
-  while (c[i] != '-' && c[i + 1] != '-' && c[i + 2] != '-' && c[i + 3] != '-'\
-    && c[i + 4] != '-' && c[i + 5] != 'B') {i++;}
+  i = strlen(c) - strlen(strstr(c, "-----B"));
   while (c[i] != '\n') {h[i] = c[i]; i++;} h[i] = '\0';
-  return i;
+  return i + 1;
 }
 
 static u64 lcrypto_get_footer(char c[], u64 len, u08 f[]) {
-  u64 i = 0, j = len - 36;
+  u64 i = 0, j = 0;
 
   // check for the start of -----END CERTIFICATE-----
-  while (c[j] != '\n') {j++;}
-  while (c[j] != '-' && c[j + 1] != '-' && c[j + 2] != '-' && c[j + 3] != '-'\
-    && c[j + 4] != '-' && c[j + 5] != 'E') {j++;}
-  j++;
-  while (c[j] != '\n') {f[i] = c[j]; i++; j++;} f[i] = '\0';
-  return i;
+  j = strlen(c) - strlen(strstr(c, "-----E"));
+  while (c[i] != '\n') {f[i] = c[j]; i++; j++;} f[i] = '\0';
+  return i + 1;
 }
 
 static u64 lcrypto_get_data(char c[], u64 h, u64 f, u64 l, char d[]) {
-  u64 co = l - f - h - 3, i = 0;
+  u64 co = l - f - h + 1, i = 0;
 
-  while (i < co) {d[i] = c[h + i + 1]; i++;} d[i - 1] = '\0';
+  while (i < co) {d[i] = c[h + i]; i++;} d[i-1] = '\0';
   return i;
 }
 
