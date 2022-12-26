@@ -45,9 +45,9 @@
 #define SHA_s1(w) (SHA_ROTR(19, w) ^ SHA_ROTR(61, w) ^ SHA_SHRI( 6, w))
 
 // Add "length" to the length. Set Corrupted when overflow has occurred.
-#define SHA_L(c) (++c->len_hi == 0) ? sha_itl : (c)->corrupt
+#define SHA_L(c) (++c->len_hi == 0) ? SHA_ITL : (c)->corrupt
 #define SHA_T(c, l) c->corrupt = ((c->len_lo += l) < 0)
-#define SHA_AddLength(c, l) (SHA_T(c, l) && SHA_L(c))
+#define SHA_ADDL(c, l) (SHA_T(c, l) && SHA_L(c))
 
 // Lightciphers
 #define NB 4
@@ -63,16 +63,16 @@
 
 // Lighthash
 // These constants hold size information for each of the SHA hashing operations
-#define sha_blk_sz 128                           // SHA Message Block Size
-#define sha_hsh_sz 64                            // SHA Hash Size
-#define sha_hsh_sb 512                           // SHA Hash Size Bits
+#define SHA_BLK_SZ 128                           // SHA Message Block Size
+#define SHA_HSH_SZ 64                            // SHA Hash Size
+#define SHA_HSH_SB 512                           // SHA Hash Size Bits
 
 // All SHA functions return one of these values.
-#define sha_ok 0                                 // Success
-#define sha_null 1                               // Null pointer parameter
-#define sha_itl 2                                // Input data too long
-#define sha_err 3                                // State error
-#define sha_bad 4                                // passed a bad parameter
+#define SHA_OK 0                                 // Success
+#define SHA_NULL 1                               // Null pointer parameter
+#define SHA_ITL 2                                // Input data too long
+#define SHA_ERR 3                                // State error
+#define SHA_BAD 4                                // passed a bad parameter
 
 #define length(x) (sizeof(x) - 1)
 

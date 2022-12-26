@@ -242,8 +242,7 @@ void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
   u32 a, b, c, d, tri;
 
   *ol = inl / 4 * 3;
-  if (data[inl - 1] == '=') (*ol)--;
-  if (data[inl - 2] == '=') (*ol)--;
+  for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (*ol)--;}
   for (int i = 0; i < 64; i++) dec[(u08)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
     a = sex(data, dec, i++); b = sex(data, dec, i++);

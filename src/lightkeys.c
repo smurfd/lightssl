@@ -421,31 +421,21 @@ static void lkeys_m_inv(u64 *r, u64 *p, u64 *m) {
   while ((cmpResult = lkeys_cmp(a, b)) != 0) {
     car = 0;
     if (EVEN(a)) {
-      lkeys_rs1(a);
-      if (!EVEN(u)) {car = lkeys_add(u, u, m);}
-      lkeys_rs1(u);
-      if (car) {u[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(a); if (!EVEN(u)) {car = lkeys_add(u, u, m);}
+      lkeys_rs1(u); if (car) {u[DI - 1] |= 0x8000000000000000;}
     } else if (EVEN(b)) {
-      lkeys_rs1(b);
-      if (!EVEN(v)) {car = lkeys_add(v, v, m);}
-      lkeys_rs1(v);
-      if (car) {v[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(b); if (!EVEN(v)) {car = lkeys_add(v, v, m);}
+      lkeys_rs1(v); if (car) {v[DI - 1] |= 0x8000000000000000;}
     } else if (cmpResult > 0) {
       lkeys_sub(a, a, b);
-      lkeys_rs1(a);
-      if (lkeys_cmp(u, v) < 0) {lkeys_add(u, u, m);}
-      lkeys_sub(u, u, v);
-      if (!EVEN(u)) {car = lkeys_add(u, u, m);}
-      lkeys_rs1(u);
-      if (car) {u[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(a); if (lkeys_cmp(u, v) < 0) {lkeys_add(u, u, m);}
+      lkeys_sub(u, u, v); if (!EVEN(u)) {car = lkeys_add(u, u, m);}
+      lkeys_rs1(u); if (car) {u[DI - 1] |= 0x8000000000000000;}
     } else {
       lkeys_sub(b, b, a);
-      lkeys_rs1(b);
-      if (lkeys_cmp(v, u) < 0) {lkeys_add(v, v, m);}
-      lkeys_sub(v, v, u);
-      if (!EVEN(v)) {car = lkeys_add(v, v, m);}
-      lkeys_rs1(v);
-      if (car) {v[DI-1] |= 0x8000000000000000;}
+      lkeys_rs1(b); if (lkeys_cmp(v, u) < 0) {lkeys_add(v, v, m);}
+      lkeys_sub(v, v, u); if (!EVEN(v)) {car = lkeys_add(v, v, m);}
+      lkeys_rs1(v); if (car) {v[DI - 1] |= 0x8000000000000000;}
     }
   }
   lkeys_set(r, u);
@@ -457,29 +447,27 @@ static void lkeys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
   u64 Rx[2][DI], Ry[2][DI], z[DI];
   int nb;
 
-  lkeys_set(Rx[1], p->x);
-  lkeys_set(Ry[1], p->y);
+  lkeys_set(Rx[1], p->x); lkeys_set(Ry[1], p->y);
   lkeys_p_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
   for (int i = lkeys_bits(q) - 2; i > 0; --i) {
     nb = !lkeys_chk(q, i);
-    lkeys_p_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
-    lkeys_p_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+    lkeys_p_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
+    lkeys_p_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
   }
   nb = !lkeys_chk(q, 0);
   lkeys_p_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
   // Find final 1/Z value.
   lkeys_m_sub(z, Rx[1], Rx[0], curve_p);
-  lkeys_m_mul(z, z, Ry[1-nb]);
+  lkeys_m_mul(z, z, Ry[1 - nb]);
   lkeys_m_mul(z, z, p->x);
   lkeys_m_inv(z, z, curve_p);
   lkeys_m_mul(z, z, p->y);
-  lkeys_m_mul(z, z, Rx[1-nb]);
+  lkeys_m_mul(z, z, Rx[1 - nb]);
 
   // End 1/Z calculation
   lkeys_p_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
   lkeys_p_appz(Rx[0], Ry[0], z);
-  lkeys_set(r->x, Rx[0]);
-  lkeys_set(r->y, Ry[0]);
+  lkeys_set(r->x, Rx[0]); lkeys_set(r->y, Ry[0]);
 }
 
 // Public functions
@@ -578,10 +566,8 @@ int lkeys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) 
   lkeys_m_mmul(u2, r, z, curve_n);
 
   // Calculate sum = G + Q.
-  lkeys_set(sum.x, public.x);
-  lkeys_set(sum.y, public.y);
-  lkeys_set(tx, curve_g.x);
-  lkeys_set(ty, curve_g.y);
+  lkeys_set(sum.x, public.x); lkeys_set(sum.y, public.y);
+  lkeys_set(tx, curve_g.x); lkeys_set(ty, curve_g.y);
   lkeys_m_sub(z, sum.x, tx, curve_p);
   lkeys_p_add(tx, ty, sum.x, sum.y);
   lkeys_m_inv(z, z, curve_p);
@@ -601,8 +587,7 @@ int lkeys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) 
     int index = (!!lkeys_chk(u1, i)) | ((!!lkeys_chk(u2, i)) << 1);
     pt *point = points[index];
     if (point) {
-      lkeys_set(tx, point->x);
-      lkeys_set(ty, point->y);
+      lkeys_set(tx, point->x); lkeys_set(ty, point->y);
       lkeys_p_appz(tx, ty, z);
       lkeys_m_sub(tz, rx, tx, curve_p);
       lkeys_p_add(tx, ty, rx, ry);

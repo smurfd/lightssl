@@ -294,9 +294,7 @@ static void lciphers_shiftrow(u08 state[4][NB], ui i, ui n) {
 //
 // 5.3.x
 static void lciphers_invshiftrows(u08 state[4][NB]) { // See Sec. 5.3.1
-  lciphers_shiftrow(state, 1, NB - 1);
-  lciphers_shiftrow(state, 2, NB - 2);
-  lciphers_shiftrow(state, 3, NB - 3);
+  for (int i = 1; i <= 3; i++) {lciphers_shiftrow(state, i, NB - i);}
 }
 
 //
@@ -352,9 +350,7 @@ static void lciphers_subbytes(u08 state[4][NB]) { // See Sec. 5.1.1
 //
 //
 static void lciphers_shiftrows(u08 state[4][NB]) { // See Sec. 5.1.2
-  lciphers_shiftrow(state, 1, 1);
-  lciphers_shiftrow(state, 2, 2);
-  lciphers_shiftrow(state, 3, 3);
+  for (int i = 1; i <= 3; i++) {lciphers_shiftrow(state, i, i);}
 }
 
 //
@@ -394,8 +390,7 @@ static void lciphers_rcon(u08 *wrd, u08 a) {
   u08 c = 1;
 
   for (int i = 0; i < a - 1; i++) {c = (c << 1) ^ (((c >> 7) & 1) * 0x1b);}
-  wrd[0] = c;
-  wrd[1] = wrd[2] = wrd[3] = 0;
+  wrd[0] = c; wrd[1] = wrd[2] = wrd[3] = 0;
 }
 
 //

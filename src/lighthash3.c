@@ -87,9 +87,7 @@ static void theta(u64 (*a)[5][5]) {
     }
   }
   for (int x = 0; x < 5; x++) {
-    for (int y = 0; y < 5; y++) {
-      (*a)[x][y] ^= d[x];
-    }
+    for (int y = 0; y < 5; y++) {(*a)[x][y] ^= d[x];}
   }
 }
 
@@ -128,9 +126,7 @@ static void pi(u64 (*a)[5][5]) {
 
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int x = 0; x < 5; x++) {
-    for (int y = 0; y < 5; y++) {
-      (*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];
-    }
+    for (int y = 0; y < 5; y++) {(*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];}
   }
 }
 
@@ -174,9 +170,7 @@ static u08 rc(u64 t) {
   for (u64 i = 1; i <= m; i++) {
     r0 = 0;
     r0 ^= MOD(r1, 2);
-    r1 ^= MOD(r1, 2) << 4;
-    r1 ^= MOD(r1, 2) << 3;
-    r1 ^= MOD(r1, 2) << 2;
+    for (int j = 4; j >= 2; j--) {r1 ^= MOD(r1, 2) << j;}
     r1 /= 2;
     r1 ^= r0 << 7;
   }
@@ -194,7 +188,7 @@ static u08 rc(u64 t) {
 static void iota(u64 (*A)[5][5], u64 ir) {
   u64 r = 0;
 
-  for (u64 j = 0; j <= 6; j++) {r += ROL64(rc(j + 7 * ir), (int)pow(2, j) -1);}
+  for (u64 i = 0; i <= 6; i++) {r += ROL64(rc(i + 7 * ir), (int)pow(2, i) - 1);}
   (*A)[0][0] ^= r;
 }
 
@@ -209,7 +203,7 @@ static void keccak_p(u08 *sm, u08 (*s)[200]) {
 
   str2state(sm, &a);
   // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-  for (int ir = 0; ir <= 23; ir++) {theta(&a);rho(&a);pi(&a);chi(&a);iota(&a,ir);}
+  for (int i = 0; i <= 23; i++) {theta(&a);rho(&a);pi(&a);chi(&a);iota(&a,i);}
   state2str(&a, (*s));
 }
 
