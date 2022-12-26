@@ -271,26 +271,4 @@ int lhash_hash(cc *ta, int l, u64 r, int n, int eb, cuc *k, int kl, cc *ra, int 
     err = lhash_sha_result(&sha, msg_dig); if (err != SHA_OK) {return err;}
   }
   return lhash_sha_match_to_str(msg_dig, ra, hs, NULL);
-/*
-  if (k) {err = lhash_hmac_reset(&hmac, k, kl);}
-  else {err = lhash_sha_reset(&sha);}
-  if (err != SHA_OK) {return err;}
-
-  for (u64 i = 0; i < r; ++i) {
-    if (k) {err = lhash_hmac_input(&hmac, (cu8 *)ta, l);}
-    else {err = lhash_sha_input(&sha, (cu8 *)ta, l);}
-    if (err != SHA_OK) {return err;}
-  }
-
-  if (n > 0) {
-    if (k) {err = lhash_hmac_final(&hmac, (u08)eb, n);}
-    else {err = lhash_sha_final(&sha, (u08)eb, n);}
-    if (err != SHA_OK) {return err;}
-  }
-
-  if (k) {err = lhash_hmac_result(&hmac, msg_dig);}
-  else {err = lhash_sha_result(&sha, msg_dig);}
-  if (err != SHA_OK) {return err;}
-  return lhash_sha_match_to_str(msg_dig, ra, hs, NULL);
-*/
 }
