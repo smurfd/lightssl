@@ -71,8 +71,7 @@ static ui lkeys_bits(u64 *a) {
 // Compare a and b
 static int lkeys_cmp(const u64 *a, const u64 *b) {
   for (int i = DI-1; i >= 0; --i) {
-    if (a[i] > b[i]) {return 1;}
-    else if (a[i] < b[i]) {return -1;}
+    if (a[i] > b[i]) {return 1;} else if (a[i] < b[i]) {return -1;}
   }
   return 0;
 }

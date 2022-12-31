@@ -251,3 +251,6 @@ void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
     if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
 }
+
+// What im looking for:
+// https://github.com/gh2o/tls_mini
