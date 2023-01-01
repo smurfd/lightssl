@@ -254,3 +254,20 @@ void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
 
 // What im looking for:
 // https://github.com/gh2o/tls_mini
+
+void lcrypto_asn1_handle(u08 d[], u64 l) {
+  //while(d) {
+    u08 clas = d[0] >> 6;
+    u08 cons = d[0] >> 5 & 0x1;
+    u08 tag = d[0] & 0x1F;
+    u08 len = d[1];
+    printf("asn1: %d %d %d %d, %d %d\n", clas, cons, tag, len, len & 0x7F, len & 0x80);
+    if (len & 0x80) {
+      u08 llen = len & 0x7F;
+      u08 llb = 2 + llen;
+      char lb[10] = {0};
+      for (int i = 2; i < llb; i++) {lb[i-2] = d[i]; printf("%d\n", d[i]);}
+      printf("atoi: %d\n", atoi(lb));
+    }
+  //}
+}
