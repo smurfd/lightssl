@@ -216,11 +216,11 @@ u64 lcrypto_handle_cert(char *cert, char d[LEN]) {
   return data;
 }
 
-static u32 oct(int i, int inl, cuc d[257]) {
+static u32 lcrypto_oct(int i, int inl, cuc d[257]) {
   if (i < inl) {return d[i];} else {return 0;}
 }
 
-static u32 sex(cc d[257], char c[257], int i) {
+static u32 lcrypto_sex(cc d[257], char c[257], int i) {
   if (d[i] == '=') {return 0 & i++;} else {return c[(int)d[i]];}
 }
 
@@ -230,7 +230,8 @@ void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]) {
 
   *ol = 4 * ((inl + 2) / 3);
   for (int i = 0, j = 0; i < inl;) {
-    a = oct(i++, inl, data); b = oct(i++, inl, data); c = oct(i++, inl, data);
+    a = lcrypto_oct(i++, inl, data); b = lcrypto_oct(i++, inl, data);
+    c = lcrypto_oct(i++, inl, data);
     tri = (a << 0x10) + (b << 0x08) + c;
     for (int k = 3; k >=0; k--) {ed[j++] = enc[(tri >> k * 6) & 0x3F];}
   }
@@ -245,8 +246,8 @@ void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]) {
   for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (*ol)--;}
   for (int i = 0; i < 64; i++) dec[(u08)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
-    a = sex(data, dec, i++); b = sex(data, dec, i++);
-    c = sex(data, dec, i++); d = sex(data, dec, i++);
+    a = lcrypto_sex(data, dec, i++); b = lcrypto_sex(data, dec, i++);
+    c = lcrypto_sex(data, dec, i++); d = lcrypto_sex(data, dec, i++);
     tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
     if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
@@ -261,13 +262,18 @@ void lcrypto_part_data(u08 d[], int pos, u08 d1[], u08 d2[]) {
   while (d[j] != '\0') {d1[j - pos] = d[j]; j++;}
 }
 
+static void lcrypto_asn1node(u08 clas, u08 cons, u08 tag, u08 raw[], u08 node[]) {
+
+}
+
 void lcrypto_asn1_handle(u08 d[], u64 l) {
-  //while(d) {
-    u08 clas = d[0] >> 6;
-    u08 cons = d[0] >> 5 & 0x1;
-    u08 tag = d[0] & 0x1F;
-    u08 len = d[1];
-    u08 llen = 0;
+  u08 head[1024], raw[1024], node[1024];
+  int i = 0;
+
+  while(d[i] != '\0') {
+    u08 llen = 0, clas = d[0] >> 6, cons = d[0] >> 5 & 0x1;
+    u08 tag = d[0] & 0x1F, len = d[1];
+
     printf("asn1: %d %d %d %d, %d %d\n", clas, cons, tag, len, len & 0x7F, len & 0x80);
     if (len & 0x80) {
       llen = len & 0x7F;
@@ -277,9 +283,9 @@ void lcrypto_asn1_handle(u08 d[], u64 l) {
       printf("atoi: %d\n", atoi(lb));
       len = atoi(lb);
     }
-    u08 head[1024];
-    u08 raw[1024];
     lcrypto_part_data(d, 2 + llen, head, d);
     lcrypto_part_data(d, len, raw, d);
-  //}
+    lcrypto_asn1node(clas, cons, tag, head/*+ raw*/, node);
+    i++;
+  }
 }
