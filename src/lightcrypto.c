@@ -135,7 +135,7 @@ int lcrypto_listen(const int s, sock *cli) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
     *ns = c;
-    if (pthread_create(&thrd, NULL, lcrypto_handler, (void*)ns) < 0) {return -1;}
+    if (pthread_create(&thrd, NULL, lcrypto_handler, (void*)ns) < 0){return -1;}
     pthread_join(thrd, NULL);
   }
   return c;
@@ -262,7 +262,7 @@ void lcrypto_part_data(u08 d[], int pos, u08 d1[], u08 d2[]) {
   while (d[j] != '\0') {d1[j - pos] = d[j]; j++;}
 }
 
-static void lcrypto_asn1node(u08 clas, u08 cons, u08 tag, u08 raw[], u08 node[]) {
+static void lcrypto_asn1node(u08 clas, u08 cons, u08 tag, u08 raw[], u08 no[]) {
 
 }
 
@@ -279,7 +279,6 @@ void lcrypto_asn1_handle(u08 d[], u64 l) {
     u08 llen = 0, clas = d[0] >> 6, cons = d[0] >> 5 & 0x1;
     u08 tag = d[0] & 0x1F, len = d[1];
 
-    printf("asn1: %d %d %d %d, %d %d\n", clas, cons, tag, len, len & 0x7F, len & 0x80);
     if (len & 0x80) {
       llen = len & 0x7F;
       u08 llb = 2 + llen;
