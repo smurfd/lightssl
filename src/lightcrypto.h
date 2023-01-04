@@ -36,7 +36,7 @@ u64 lcrypto_handle_cert(char *cert, char d[LEN]);
 void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
 
-void lcrypto_asn1_handle(u08 d[], u64 l);
+void lcrypto_asn1_handle(u08 d[], u64 l, bool dec);
 // Keep static functions
 // u64 lightcrypto_rand();
 // int lightcrypto_getblock();

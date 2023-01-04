@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   assert(strcmp(s1, s0) == 0);
   lcrypto_decode64((char*)data, strlen((char*)data), &d, s4);
 
-  lcrypto_asn1_handle((u08*)data, dat);
+  lcrypto_asn1_handle((u08*)data, dat, false);
   printf("OK\n");
   return 0;
 }

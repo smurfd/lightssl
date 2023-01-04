@@ -271,7 +271,7 @@ static void lcrypto_headraw(u08 head[], u08 raw[], u64 hl, u64 rl, u08 hr[]) {
   for (u64 i = 0; i < rl; i++) hr[i + hl] = raw[i];
 }
 
-void lcrypto_asn1_handle(u08 d[], u64 l) {
+void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
   u08 head[1024], raw[1024], node[1024], hr[1024];
   int i = 0;
 
@@ -281,17 +281,19 @@ void lcrypto_asn1_handle(u08 d[], u64 l) {
 
     if (len & 0x80) {
       llen = len & 0x7F;
-      u08 llb = 2 + llen;
+      u08 llb = llen + 2;
       char lb[1024] = {0};
-      for (int i = 2; i < llb; i++) {lb[i-2] = d[i]; printf("%d\n", d[i]);}
+      for (int i = 2; i < llb; i++) {lb[i - 2] = d[i]; printf("%d\n", d[i]);}
       printf("atoi: %d\n", atoi(lb));
       len = atoi(lb);
     }
-    lcrypto_part_data(d, 2 + llen, head, d);
+    lcrypto_part_data(d, llen + 2, head, d);
     lcrypto_part_data(d, len, raw, d);
     u64 hl = sizeof(head) / sizeof(u08), rl = sizeof(raw) / sizeof(u08);
     lcrypto_headraw(head, raw, hl, rl, hr);
     lcrypto_asn1node(clas, cons, tag, hr, node);
+    if (cons) {lcrypto_asn1node(clas, cons, tag, hr, node);}
+    else if (clas != 0x0 && dec) {}
     i++;
   }
 }
