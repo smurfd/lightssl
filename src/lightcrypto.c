@@ -292,8 +292,9 @@ void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
     u64 hl = sizeof(head) / sizeof(u08), rl = sizeof(raw) / sizeof(u08);
     lcrypto_headraw(head, raw, hl, rl, hr);
     lcrypto_asn1node(clas, cons, tag, hr, node);
-    if (cons) {lcrypto_asn1node(clas, cons, tag, hr, node);}
-    else if (clas != 0x0 && dec) {}
+    if (cons) {/*lcrypto_asn1_handle(raw, rl, true);*/}
+    else if (clas != 0x0 && dec) {/*lcrypto_asn1_decoder(class, tag, raw);*/}
+    else {/*lcrypto_asn1node();*/}
     i++;
   }
 }
