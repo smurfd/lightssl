@@ -266,6 +266,27 @@ static void lcrypto_asn1node(u08 clas, u08 cons, u08 tag, u08 raw[], u08 no[]) {
 
 }
 
+static int lcrypto_value(int pos, u08 raw[]) {
+  if (pos == 1) {if (raw[0] == 0) return 0; else return 1;}
+  else if (pos == 2) {return atoi((char*)raw);}
+  else if (pos == 3) {}
+  else if (pos == 4) {}
+  else if (pos == 5) {}
+  else if (pos == 6) {}
+  else if (pos == 12) {}
+  else if (pos == 18) {}
+  else if (pos == 19) {}
+  else if (pos == 20) {}
+  else if (pos == 21) {}
+  else if (pos == 22) {}
+  else if (pos == 23) {}
+  else if (pos == 24) {}
+  else if (pos == 28) {}
+  else {}
+
+  return 0;
+}
+
 static void lcrypto_headraw(u08 head[], u08 raw[], u64 hl, u64 rl, u08 hr[]) {
   for (u64 i = 0; i < hl; i++) hr[i] = head[i];
   for (u64 i = 0; i < rl; i++) hr[i + hl] = raw[i];
