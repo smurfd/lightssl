@@ -266,25 +266,37 @@ static void lcrypto_asn1node(u08 clas, u08 cons, u08 tag, u08 raw[], u08 no[]) {
 
 }
 
-static int lcrypto_value(int pos, u08 raw[]) {
-  if (pos == 1) {if (raw[0] == 0) return 0; else return 1;}
-  else if (pos == 2) {return atoi((char*)raw);}
-  else if (pos == 3) {}
-  else if (pos == 4) {}
-  else if (pos == 5) {}
-  else if (pos == 6) {}
-  else if (pos == 12) {}
-  else if (pos == 18) {}
-  else if (pos == 19) {}
-  else if (pos == 20) {}
-  else if (pos == 21) {}
-  else if (pos == 22) {}
-  else if (pos == 23) {}
-  else if (pos == 24) {}
-  else if (pos == 28) {}
+static u08* lcrypto_asn1bitstr(u08 bits[]) {
+  return (u08*)0;
+}
+
+static u08* lcrypto_asn1parseoid(u08 bits[]) {
+  return (u08*)0;
+}
+
+static u08* lcrypto_asn1parsetime(u08 bits[]) {
+  return (u08*)0;
+}
+
+static void *lcrypto_value(int pos, u08 raw[]) {
+  if (pos == 1) {if (raw[0] == 0) return (void*)0; else return (void*)1;}
+  else if (pos == 2) {return (void*)atoi((char*)raw);}
+  else if (pos == 3) {return lcrypto_asn1bitstr(raw);}
+  else if (pos == 4) {return raw;}
+  else if (pos == 5) {return (void*)NULL;}
+  else if (pos == 6) {return lcrypto_asn1parseoid(raw);}
+  else if (pos == 12) {return (char*)raw;}
+  else if (pos == 18) {return (char*)raw;}
+  else if (pos == 19) {return (char*)raw;}
+  else if (pos == 20) {return (char*)raw;}
+  else if (pos == 21) {return (char*)raw;}
+  else if (pos == 22) {return (char*)raw;}
+  else if (pos == 23) {return lcrypto_asn1parsetime(raw);}
+  else if (pos == 24) {return lcrypto_asn1parsetime(raw);}
+  else if (pos == 28) {return (char*)raw;}
   else {}
 
-  return 0;
+  return (void*)0;
 }
 
 static void lcrypto_headraw(u08 head[], u08 raw[], u64 hl, u64 rl, u08 hr[]) {
