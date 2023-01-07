@@ -270,50 +270,51 @@ static void lcrypto_asn1bitstr(u08 bits[1024], u64 rl, u08 ret[1024]) {
   for (u64 i = 1; i < rl; i++) {ret[i - 1] = bits[i];}
 }
 
-static u08* lcrypto_asn1parseoid(u08 bits[]) {
-  return (u08*)0;
+static void lcrypto_asn1parseoid(u08 bits[], char ret[]) {
+  int i = 0, si = 0, subs[1024];
+
+  while (bits[i] != '\0') {
+    int cur = 0; cur << 7 | (bits[i] & 0x7F);
+    if (!(bits[i] & 0x80)) {subs[si] = cur; si++;}
+    i++;
+  }
+  int x = 2, y = subs[0] - 80;
+  while (y < 0) {x = x - 1; y = y + 40;}
+  subs[0] = x; subs[1] = y;
+  char s[1024][1024];
+  for (i = 0; i < si; i++) {sprintf(s[i], "%d",subs[i]);}
 }
 
 // from 390808010001Z to 2039-08-08 01:00:01
 static void lcrypto_asn1parsetime(u08 raw[], char ret[19]) {
-  ret[0] = '2';
-  ret[1] = '0';
-  ret[2] = raw[0];
-  ret[3] = raw[1];
-  ret[4] = '-';
-  ret[5] = raw[2];
-  ret[6] = raw[3];
-  ret[7] = '-';
-  ret[8] = raw[4];
-  ret[9] = raw[5];
-  ret[10] = ' ';
-  ret[11] = raw[6];
-  ret[12] = raw[7];
-  ret[13] = ':';
-  ret[14] = raw[8];
-  ret[15] = raw[9];
-  ret[16] = ':';
-  ret[17] = raw[10];
-  ret[18] = raw[11];
+  ret[0] = '2'; ret[1] = '0';
+  ret[2] = raw[0]; ret[3] = raw[1];
+  ret[4] = '-'; ret[5] = raw[2]; ret[6] = raw[3];
+  ret[7] = '-'; ret[8] = raw[4]; ret[9] = raw[5];
+  ret[10] = ' '; ret[11] = raw[6]; ret[12] = raw[7];
+  ret[13] = ':'; ret[14] = raw[8]; ret[15] = raw[9];
+  ret[16] = ':'; ret[17] = raw[10]; ret[18] = raw[11];
 }
 
 // make ret to union!?
+// segfaults
 static void lcrypto_value(int pos, u08 raw[1024], u64 rl, void* ret) {
+  printf("pos=%d\n", pos);
   if (pos == 1) {if (raw[0] == 0) {memcpy(ret, (void*)0, 1);} else {memcpy(ret, (void*)1, 1);}}
-  else if (pos == 2) {ret = (void*)atoi((char*)raw);}
+  else if (pos == 2) {ret = atoi((char*)raw);}
   else if (pos == 3) {u08 r[1024];lcrypto_asn1bitstr(raw, rl, r); memcpy(ret, r, rl);}
   else if (pos == 4) {memcpy(ret, raw, rl);}
   else if (pos == 5) {ret = NULL;}
-  else if (pos == 6) {memcpy(ret, lcrypto_asn1parseoid(raw), 10);}
-  else if (pos == 12) {memcpy(ret, (char*)raw, strlen((char*)raw));}
-  else if (pos == 18) {memcpy(ret, (char*)raw, strlen((char*)raw));}
-  else if (pos == 19) {memcpy(ret, (char*)raw, strlen((char*)raw));}
-  else if (pos == 20) {memcpy(ret, (char*)raw, strlen((char*)raw));}
-  else if (pos == 21) {memcpy(ret, (char*)raw, strlen((char*)raw));}
-  else if (pos == 22) {memcpy(ret, (char*)raw, strlen((char*)raw));}
-  else if (pos == 23) {char str[20]; lcrypto_asn1parsetime(raw, str); memcpy(ret, str, strlen(str));}
-  else if (pos == 24) {char str[20]; lcrypto_asn1parsetime(raw, str); memcpy(ret, str, strlen(str));}
-  else if (pos == 28) {memcpy(ret, (char*)raw, strlen((char*)raw));}
+  else if (pos == 6) {lcrypto_asn1parseoid(raw, ret);}
+  else if (pos == 12) {memcpy(ret, (char*)raw, 1);}
+  else if (pos == 18) {memcpy(ret, (char*)raw, 1);}
+  else if (pos == 19) {memcpy(ret, (char*)raw, 1);}
+  else if (pos == 20) {memcpy(ret, (char*)raw, 1);}
+  else if (pos == 21) {memcpy(ret, (char*)raw, 1);}
+  else if (pos == 22) {memcpy(ret, (char*)raw, 4);}
+  else if (pos == 23) {char str[20]; lcrypto_asn1parsetime(raw, str); memcpy(ret, str, 1);}
+  else if (pos == 24) {char str[20]; lcrypto_asn1parsetime(raw, str); memcpy(ret, str, 1);}
+  else if (pos == 28) {memcpy(ret, (char*)raw, 1);}
   else {}
 }
 
@@ -345,7 +346,7 @@ void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
     lcrypto_asn1node(clas, cons, tag, hr, node);
     if (cons) {/*lcrypto_asn1_handle(raw, rl, true);*/}
     else if (clas != 0x0 && dec) {/*lcrypto_asn1_decoder(class, tag, raw);*/}
-    else {/*lcrypto_value(tag, raw, rl, node);*/}
+    else {lcrypto_value(tag, raw, rl, node);}
     i++;
   }
 }
