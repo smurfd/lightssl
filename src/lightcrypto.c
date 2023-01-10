@@ -274,7 +274,7 @@ static void lcrypto_asn1parseoid(u08 bits[], char ret[]) {
   int i = 0, si = 0, subs[1024];
 
   while (bits[i] != '\0') {
-    int cur = 0; cur << 7 | (bits[i] & 0x7F);
+    int cur = 0; cur = (cur << 7) | (bits[i] & 0x7F);
     if (!(bits[i] & 0x80)) {subs[si] = cur; si++;}
     i++;
   }
@@ -297,7 +297,6 @@ static void lcrypto_asn1parsetime(u08 raw[], char ret[19]) {
 }
 
 // make ret to union!?
-// segfaults
 static void lcrypto_value(int pos, u08 raw[1024], u64 rl, void* ret) {
   printf("pos=%d\n", pos);
   if (pos == 1) {if (raw[0] == 0) {memcpy(ret, (void*)0, 1);} else {memcpy(ret, (void*)1, 1);}}
@@ -323,18 +322,22 @@ static void lcrypto_headraw(u08 head[], u08 raw[], u64 hl, u64 rl, u08 hr[]) {
   for (u64 i = 0; i < rl; i++) hr[i + hl] = raw[i];
 }
 
-void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
-  u08 head[1024], raw[1024], node[1024], hr[1024];
-  int i = 0;
+static void lcrypto_asn1_decoder(u08 clas, u08 tag, u08 raw[]){
 
-  while(d[i] != '\0') {
+}
+
+void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
+  u08 head[1025] = {0}, raw[1025] = {0}, node[1025] = {0}, hr[1025] = {0};
+  int co = 0;
+
+  while(d[co] != '\0') {
     u08 llen = 0, clas = d[0] >> 6, cons = d[0] >> 5 & 0x1;
     u08 tag = d[0] & 0x1F, len = d[1];
 
     if (len & 0x80) {
       llen = len & 0x7F;
       u08 llb = llen + 2;
-      char lb[1024] = {0};
+      char lb[1025] = {0};
       for (int i = 2; i < llb; i++) {lb[i - 2] = d[i]; printf("%d\n", d[i]);}
       printf("atoi: %d\n", atoi(lb));
       len = atoi(lb);
@@ -344,9 +347,10 @@ void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
     u64 hl = sizeof(head) / sizeof(u08), rl = sizeof(raw) / sizeof(u08);
     lcrypto_headraw(head, raw, hl, rl, hr);
     lcrypto_asn1node(clas, cons, tag, hr, node);
-    if (cons) {/*lcrypto_asn1_handle(raw, rl, true);*/}
-    else if (clas != 0x0 && dec) {/*lcrypto_asn1_decoder(class, tag, raw);*/}
+    printf("%d %d %d %d : %lu, %llu : %d\n", raw[0], raw[1], raw[2], raw[3], sizeof(raw), rl, cons);
+    if (cons) {printf("decoder recursive\n");}//lcrypto_asn1_handle(raw, rl, true);}
+    else if (clas != 0x0 && dec) {lcrypto_asn1_decoder(clas, tag, raw);}
     else {lcrypto_value(tag, raw, rl, node);}
-    i++;
+    co++;
   }
 }
