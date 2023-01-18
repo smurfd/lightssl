@@ -300,7 +300,7 @@ static void lcrypto_asn1parsetime(u08 raw[], char ret[19]) {
 static void lcrypto_value(int pos, u08 raw[1024], u64 rl, void* ret) {
   printf("pos=%d\n", pos);
   if (pos == 1) {if (raw[0] == 0) {memcpy(ret, (void*)0, 1);} else {memcpy(ret, (void*)1, 1);}}
-  else if (pos == 2) {ret = atoi((char*)raw);}
+  else if (pos == 2) {int r = atoi((char*)raw); ret = &r;}
   else if (pos == 3) {u08 r[1024];lcrypto_asn1bitstr(raw, rl, r); memcpy(ret, r, rl);}
   else if (pos == 4) {memcpy(ret, raw, rl);}
   else if (pos == 5) {ret = NULL;}
@@ -348,7 +348,7 @@ void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
     lcrypto_headraw(head, raw, hl, rl, hr);
     lcrypto_asn1node(clas, cons, tag, hr, node);
     printf("%d %d %d %d : %lu, %llu : %d\n", raw[0], raw[1], raw[2], raw[3], sizeof(raw), rl, cons);
-    if (cons) {printf("decoder recursive\n");}//lcrypto_asn1_handle(raw, rl, true);}
+    if (cons) {printf("decoder recursive\n");/*lcrypto_asn1_handle(raw, rl, true);*/}
     else if (clas != 0x0 && dec) {lcrypto_asn1_decoder(clas, tag, raw);}
     else {lcrypto_value(tag, raw, rl, node);}
     co++;
