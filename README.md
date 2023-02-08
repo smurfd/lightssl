@@ -21,10 +21,11 @@ Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 ### Compile lightssl
 
 ```bash
-CC=clang meson build
+rm -rf build
+cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_C_COMPILER=clang
 sh ./src/example/gen_cert.sh
-CC=clang ninja -C build
-CC=clang ninja -C build test -v -d stats -d explain
+make -Cbuild
+make -Cbuild test
 ```
 `./build.sh` has those parts in it
 

@@ -14,12 +14,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get -y install clang meson git ninja-build openssl
+      run: sudo apt-get update && sudo apt-get -y install clang cmake make git openssl
     - name: Build
-      run: CC=clang meson build
+      run: cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_C_COMPILER=clang
     - name: Generate cert
       run: sh src/example/gen_cert.sh
     - name: Compile
-      run: CC=clang ninja -C build
+      run: make -Cbuild
     - name: Test
-      run: CC=clang ninja -C build test -v -d stats -d explain
+      run: make -Cbuild test

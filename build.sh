@@ -1,5 +1,5 @@
 rm -rf build
-CC=clang meson setup build
+cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_C_COMPILER=clang
 sh ./src/example/gen_cert.sh
-CC=clang ninja -Cbuild
-CC=clang ninja -Cbuild test -v -d stats -d explain
+make -Cbuild
+make -Cbuild test
