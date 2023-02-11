@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   u08 s2[] = "smurfd and more stuff", s3[257], s4[LEN];
   char data[LEN];
   int d = 0;
-  u64 dat;
+  u64 dat = 0;
 
   if (argc != 2) dat = lcrypto_handle_cert("ca.key", data);
   else lcrypto_handle_cert(argv[1], data);

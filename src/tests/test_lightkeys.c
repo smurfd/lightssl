@@ -18,6 +18,7 @@ int main() {
   usleep(1); assert(lkeys_sign(privkey, h, sig));
   usleep(1); assert(lkeys_vrfy(pubkey, h, sig));
   usleep(1); assert(!lkeys_vrfy(privkey, h, sig)); // Assume failure
+  if (*sec || *sig || *privkey || *pubkey || *h) { } // clear no use warn
   printf("OK\n");
   return 0;
 }
