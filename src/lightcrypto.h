@@ -37,6 +37,8 @@ void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
 
 void lcrypto_asn1_handle(u08 d[], u64 l, bool dec);
+u32 utf8decode(u32 c);
+u32 utf8encode(u32 cp);
 // Keep static functions
 // u64 lightcrypto_rand();
 // int lightcrypto_getblock();

@@ -159,6 +159,35 @@ int lcrypto_keys() {
   return c == e;
 }
 
+// https://stackoverflow.com/questions/66715611/check-for-valid-utf-8-encoding-in-c/66723102#66723102
+// UTF8 encode/decode
+
+// from UTF-8 encoding to Unicode Codepoint
+u32 utf8decode(u32 c) {
+  u32 mask;
+  u64 n[] = {0x00EFBFBF, 0x000F0000, 0x003F0000, 0x07000000, 0x00003F00,
+    0x0000003F};
+
+  if (c > 0x7F) {
+    mask = (c <= n[0]) ? n[1] : n[2];
+    c = ((c & n[3]) >> 6) | ((c & mask ) >> 4) | ((c & n[4]) >> 2) | (c & n[5]);
+  }
+  return c;
+}
+
+// From Unicode Codepoint to UTF-8 encoding
+u32 utf8encode(u32 cp) {
+  u32 c = cp;
+  u64 n[] = {0x000003F, 0x0000FC0, 0x003F000, 0x01C0000, 0x0000800, 0x0000C080,
+    0x0010000, 0x00E08080, 0xF0808080};
+
+  if (cp > 0x7F) {
+    c = (cp & n[0]) | (cp & n[1]) << 2 | (cp & n[2]) << 4 | (cp & n[3]) << 6;
+    if (cp < n[4]) c |= n[5]; else if (cp < n[6]) c |= n[7]; else c |= n[8];
+  }
+  return c;
+}
+
 // ASN.1
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
@@ -352,7 +381,7 @@ void lcrypto_asn1_handle(u08 d[], u64 l, bool dec) {
     lcrypto_headraw(head, raw, hl, rl, hr);
     lcrypto_asn1node(clas, cons, tag, hr, node);
     printf("%d %d %d %d : %lu, %llu : %d %d\n", raw[0], raw[1], raw[2], raw[3], sizeof(raw), rl, cons, dec);
-    if (cons && dec == false) {printf("X\n");printf("decoder recursive\n"); /*lcrypto_asn1_handle(raw, rl, true);*/}
+    if (cons && dec == false) {printf("X\n");printf("decoder recursive\n"); /*lcrypto_asn1_handle(raw, rl, false);*/}
     else if (clas != 0x0 && dec) {printf("Y\n");lcrypto_asn1_decoder(clas, tag, raw);}
     else {printf("Z\n");lcrypto_value(tag, raw, rl, node);}
     co++;
