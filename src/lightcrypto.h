@@ -3,6 +3,7 @@
 #ifndef LIGHTCRYPTO_H
 #define LIGHTCRYPTO_H 1
 #include <stdbool.h>
+#include <inttypes.h>
 #include "lightdefs.h"
 
 typedef struct keys key;
@@ -39,6 +40,65 @@ void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
 void lcrypto_asn1_handle(u08 d[], u64 l, bool dec);
 u32 utf8decode(u32 c);
 u32 utf8encode(u32 cp);
+
+typedef struct asn_tree asn_tree;
+
+struct asn_tree {
+  uint8_t type;
+  uint32_t len;
+  const uint8_t *data;
+
+  asn_tree *parent;
+  asn_tree *child;
+  asn_tree *next;
+  asn_tree *prev;
+};
+
+/** Header byte of the ASN.1 type INTEGER */
+#define ASN1_TYPE_INTEGER 0x02
+/** Header byte of the ASN.1 type BIT STRING */
+#define ASN1_TYPE_BIT_STRING 0x03
+/** Header byte of the ASN.1 type OCTET STRING */
+#define ASN1_TYPE_OCTET_STRING 0x04
+/** Header byte of the ASN.1 type NULL */
+#define ASN1_TYPE_NULL 0x05
+/** Header byte of the ASN.1 type OBJECT IDENTIFIER */
+#define ASN1_TYPE_OBJECT_IDENTIFIER 0x06
+/** Header byte of the ASN.1 type SEQUENCE */
+#define ASN1_TYPE_SEQUENCE 0x30
+/** Header byte of the ASN.1 type SET */
+#define ASN1_TYPE_SET 0x31
+/** Header byte of the ASN.1 type UTF8String */
+#define ASN1_TYPE_UTF8_STRING 0x12
+/** Header byte of the ASN.1 type PrintableString */
+#define ASN1_TYPE_PRINTABLE_STRING 0x19
+/** Header byte of the ASN.1 type T61String */
+#define ASN1_TYPE_T61_STRING 0x20
+/** Header byte of the ASN.1 type IA5String */
+#define ASN1_TYPE_IA5_STRING 0x22
+/** Header byte of the ASN.1 type UTCTime */
+#define ASN1_TYPE_UTCTIME 0x23
+/** Header byte of the ASN.1 type GeneralizedTime */
+#define ASN1_TYPE_GENERALIZEDTIME 0x24
+
+void printhex(const uint8_t *d, unsigned int len);
+void printasn(const asn_tree *asn, int depth);
+int dump_and_parse(uint8_t *cmsd, uint32_t fs);
+uint32_t get_tlv_len(const uint8_t *tlv, uint32_t tlvlen, uint32_t *tlvoff);
+uint32_t get_data_len(const uint8_t *data, uint32_t datalen);
+uint32_t get_len_enc_len(uint32_t datalen);
+uint32_t get_der_enc_len(asn_tree *asn);
+uint32_t get_der_enc_len_rec(asn_tree *asn);
+uint32_t get_data_len_rec(asn_tree *asn);
+void tree_init(asn_tree *asn);
+int8_t tree_add(asn_tree *asn, asn_tree *child);
+int32_t enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
+int32_t dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
+int32_t der_objcnt(const uint8_t *der, uint32_t derlen);
+int32_t der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out, asn_tree *outobj, unsigned int outobjcnt);
+int32_t der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
+int32_t der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen);
+
 // Keep static functions
 // u64 lightcrypto_rand();
 // int lightcrypto_getblock();

@@ -22,3 +22,5 @@ openssl req -x509 -sha256 -days 3650 -newkey rsa:4096 \
   -config build/ca.cnf -keyout build/ca.key -out build/ca.crt &> /dev/null
 
 openssl x509 -in build/ca.crt -text -noout &> /dev/null
+
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > build/ca.csm
