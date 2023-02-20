@@ -84,8 +84,7 @@ struct asn_tree {
 void printhex(const uint8_t *d, unsigned int len);
 void printasn(const asn_tree *asn, int depth);
 int dump_and_parse(uint8_t *cmsd, uint32_t fs);
-uint32_t get_tlv_len(const uint8_t *tlv, uint32_t tlvlen, uint32_t *tlvoff);
-uint32_t get_data_len(const uint8_t *data, uint32_t datalen);
+uint32_t get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
 uint32_t get_len_enc_len(uint32_t datalen);
 uint32_t get_der_enc_len(asn_tree *asn);
 uint32_t get_der_enc_len_rec(asn_tree *asn);
