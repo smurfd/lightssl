@@ -33,6 +33,7 @@ void lcrypto_transferkey(int s, bool snd, head *h, key *k);
 void lcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
 
 u64 lcrypto_handle_cert(char *cert, char d[LEN]);
+u64 lcrypto_handle_asn(char *cert);
 
 void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
@@ -81,22 +82,22 @@ struct asn_tree {
 /** Header byte of the ASN.1 type GeneralizedTime */
 #define ASN1_TYPE_GENERALIZEDTIME 0x24
 
-void printhex(const uint8_t *d, unsigned int len);
-void printasn(const asn_tree *asn, int depth);
-int dump_and_parse(uint8_t *cmsd, uint32_t fs);
-uint32_t get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
-uint32_t get_len_enc_len(uint32_t datalen);
-uint32_t get_der_enc_len(asn_tree *asn);
-uint32_t get_der_enc_len_rec(asn_tree *asn);
-uint32_t get_data_len_rec(asn_tree *asn);
-void tree_init(asn_tree *asn);
-int8_t tree_add(asn_tree *asn, asn_tree *child);
-int32_t enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
-int32_t dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
-int32_t der_objcnt(const uint8_t *der, uint32_t derlen);
-int32_t der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out, asn_tree *outobj, unsigned int outobjcnt);
-int32_t der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
-int32_t der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen);
+void lasn_printhex(const uint8_t *d, uint32_t len);
+void lasn_printasn(const asn_tree *asn, int depth);
+void lasn_tree_init(asn_tree *asn);
+int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs);
+uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
+uint32_t lasn_get_len_enc_len(uint32_t datalen);
+uint32_t lasn_get_der_enc_len(asn_tree *asn);
+uint32_t lasn_get_der_enc_len_rec(asn_tree *asn);
+uint32_t lasn_get_data_len_rec(asn_tree *asn);
+int8_t lasn_tree_add(asn_tree *asn, asn_tree *child);
+int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
+int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
+int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen);
+int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out, asn_tree *outobj, uint32_t outobjcnt);
+int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
+int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen);
 
 // Keep static functions
 // u64 lightcrypto_rand();

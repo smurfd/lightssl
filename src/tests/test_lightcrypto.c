@@ -23,19 +23,7 @@ int main(int argc, char **argv) {
   assert(strcmp(s1, s0) == 0);
   lcrypto_decode64((char*)data, strlen((char*)data), &d, s4);
 
-  FILE *f = fopen("ca.csm", "r");
-  uint32_t fs = 0, fpos = 0;
-
-  if (f == NULL) {printf("file err\n"); exit(0);}
-  while (EOF != fgetc(f)) ++fs;
-  rewind(f);
-  uint8_t *cmsd = malloc(fs);
-  if (cmsd == NULL) {printf("malloc err\n"); exit(0);}
-  int fr = fgetc(f);
-  while (fr != EOF && fpos < fs) {cmsd[fpos++] = (uint8_t)fr; fr = fgetc(f);}
-  fclose(f);
-  dump_and_parse(cmsd, fs);
-
+  lcrypto_handle_asn("ca.csm");
   printf("OK\n");
   return 0;
 }
