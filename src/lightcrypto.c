@@ -366,7 +366,7 @@ uint32_t lasn_get_data_len_rec(asn_tree *asn) {
     uint32_t len = 0;
 
     while(child != NULL) {
-      len += lasn_get_der_enc_len_rec(child);child = child->next;
+      len += lasn_get_der_enc_len_rec(child); child = child->next;
     }
     return len;
   } else {return asn->len;} // Not a constructed type
@@ -410,10 +410,7 @@ int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec) {
   if (((enc[0] == 0) && enclen > 5) || ((enc[0] != 0) && enclen > 4)) return -1;
   if (enc[0] & 0x80) return -1;
   *dec = 0;
-  while (enclen > 0) {
-    *dec *= 256; *dec += *enc;
-    ++enc; --enclen;
-  }
+  while (enclen > 0) {*dec *= 256; *dec += *enc; ++enc; --enclen;}
   return 0;
 }
 
@@ -448,10 +445,10 @@ int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out,
   uint32_t children_len = 0, derdat_len = derenc_len - deroff;
   const uint8_t *derdat = (der + deroff);
 
+  lasn_tree_init(out);
   if (der == NULL || out == NULL || derlen == 0) return -1;
   if (derenc_len == 0xFFFFFFFF) return -2;
   if (derlen < derenc_len) return -3;
-  lasn_tree_init(out);
   out->type = *der;
   out->len = derdat_len;
   out->data = derdat;
@@ -519,7 +516,7 @@ int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen) {
   } else { // A Primitive type, copy data
     if (asn->len > 0) {
       if (asn->len <= enclen) {memcpy(enc, asn->data, asn->len);}
-      else return -1;
+      else {return -1;}
     }
   }
   return (int32_t)lenneed;
@@ -527,80 +524,74 @@ int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen) {
 
 int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt(cmsd, fs);
-  if (objcnt < 0) {printf("elemnt calc err\n"); free(cmsd); return 1;}
+
+  if (objcnt < 0) {printf("ERR: Objects\n"); free(cmsd); return 1;}
   asn_tree *asnobj = (asn_tree*)malloc(sizeof(asn_tree) * objcnt);
-  if (asnobj == NULL) {printf("asn malloc err\n"); free(cmsd); return 1;}
+  if (asnobj == NULL) {printf("ERR: Malloc\n"); free(cmsd); return 1;}
   asn_tree cms;
   if (lasn_der_dec(cmsd, fs, &cms, asnobj, objcnt) < 0) {
-    printf("cant parse data\n");free(cmsd); return 1;
+    printf("ERR: Parse\n");free(cmsd); return 1;
   }
   lasn_print(&cms, 0);
   printf("----- parse begin ----\n");
   if (cms.type != ASN1_TYPE_SEQUENCE) {
-    printf("outr type != SEQUENCE, %x\n", cms.type); return 1;
+    printf("ERR: Sequence, %x\n", cms.type); return 1;
   }
   asn_tree *ct = cms.child;
   if (ct == NULL || ct->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
-    printf("no contenttype avail\n");
-    return 1;
+    printf("ERR: ContentType\n"); return 1;
   }
   printf("Content type: ");
-  if (memcmp(ct->data, (uint8_t[]){0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01,
-      0x07, 0x06, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06},
-      ct->len) != 0) {
-    printf("no contenttype of type encrypteddata avail\n"); return 1;
+  if (memcmp(ct->data, AS1, ct->len) != 0) {
+    printf("ERR: CT EncryptedData\n"); return 1;
   }
   printf("encryptedData\n");
   asn_tree *encd = ct->next->child;
   if (encd == NULL || encd->type != ASN1_TYPE_SEQUENCE) {
-    printf("no encrypted data avail\n"); return 1;
+    printf("ERR: CT EncryptedData\n"); return 1;
   }
   asn_tree *cmsv = encd->child;
   if (cmsv == NULL || cmsv->type != ASN1_TYPE_INTEGER || cmsv->len != 1) {
-    printf("no cms Version avail\n"); return 1;
+    printf("ERR: CSMVersion\n"); return 1;
   }
   uint8_t v = cmsv->data[0];
   printf("cms version: %d\n", v);
   asn_tree *encci = cmsv->next;
   if (encci == NULL || encci->type != ASN1_TYPE_SEQUENCE) {
-    printf("no encrypted content info avai\n"); return 1;
+    printf("ERR: EncryptedContent\n"); return 1;
   }
   asn_tree *enccict = encci->child;
   if (enccict == NULL || enccict->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
-    printf("no contenttype of encryptedcontentinfo avail\n"); return 1;
+    printf("ERR: CT EncryptedContent\n"); return 1;
   }
-  if (enccict->len != 9 || memcmp(enccict->data, (uint8_t[]){0x2a, 0x86, 0x48,
-      0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01}, enccict->len) != 0) {
-    printf("no contenttype of EncrytptedContentInfo of type pkcs#7 avail\n");
-    return 1;
+  if (enccict->len != 9 || memcmp(enccict->data, AS2, enccict->len) != 0) {
+    printf("ERR: CT EncryptedContent PKCS#7\n"); return 1;
   }
-  printf("contenttype of encryptedcontentinfo: pkcs#7\n");
+  printf("contenttype of encryptedcontentinfo: PKCS#7\n");
   asn_tree *ctencalg = enccict->next;
-  if (ctencalg == NULL) {printf("no contentencryption algo avail\n"); return 1;}
+  if (ctencalg == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
   if (ctencalg->type == ASN1_TYPE_SEQUENCE) {
     asn_tree *encalgi = ctencalg->child;
     if (encalgi == NULL || encalgi->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
-      printf("no encrypt algo identifier avail\n"); return 1;
+      printf("ERR: EncryptionAlgoIdentifier\n"); return 1;
     }
-    if (memcmp(encalgi->data, (uint8_t[]){0x60, 0x86, 0x48, 0x01, 0x65, 0x03,
-        0x04, 0x01, 0x02}, encalgi->len) == 0) {
+    if (memcmp(encalgi->data, AS3, encalgi->len) == 0) {
       printf("content encrypt algo: AES-128-CBC\n");
       asn_tree *aesiv = encalgi->next;
       if (aesiv == NULL || aesiv->type != ASN1_TYPE_OCTET_STRING) {
-        printf("no aes iv avail\n"); return 1;
+        printf("ERR: AES IV\n"); return 1;
       }
       printf("AES IV:\n");
       lasn_printhex(aesiv->data, aesiv->len);
     } else {printf("unknown encryption algo\n");}
     asn_tree *encct = ctencalg->next;
     if (encct == NULL || encct->type != 0x80) {
-      printf("no encr content avail\n"); return 1;
+      printf("No encrypted content\n"); return 1;
     }
     printf("Encrypted content:\n");
     lasn_printhex(encct->data, encct->len);
   }
-  asn_tree *unpattr = encci->next;
-  if (unpattr != NULL) printf("unprot attributes avail\n");
+  if (encci->next != NULL) printf("unprot attributes avail\n");
   else printf("no unprot attributes avail\n");
   free(asnobj); free(cmsd);
   return 0;
