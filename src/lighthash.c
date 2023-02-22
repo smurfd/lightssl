@@ -96,7 +96,7 @@ static void lhash_sha_finalize(ctxs *c, u08 pad_byte) {
 
 //
 // SHA Error check
-static int lhash_sha_error(ctxs *c, cu8 *msg_arr, u32 length, int b) {
+static int lhash_sha_error(ctxs *c, cuc *msg_arr, u32 length, int b) {
   if (!c) return SHA_NULL;
   if (!length) return SHA_OK;
   if (!msg_arr && b == 0) return SHA_NULL;
@@ -120,7 +120,7 @@ int lhash_sha_reset(ctxs *c) {
 
 //
 // SHA Input
-int lhash_sha_input(ctxs *c, cu8 *msg_arr, u32 length) {
+int lhash_sha_input(ctxs *c, cuc *msg_arr, u32 length) {
   lhash_sha_error(c, msg_arr, length, 0);
   while (length--) {
     c->mb[c->msg_blk_i++] = *msg_arr;
@@ -134,7 +134,7 @@ int lhash_sha_input(ctxs *c, cu8 *msg_arr, u32 length) {
 //
 // SHA Add final bits
 int lhash_sha_final(ctxs *c, u08 msg_bit, u32 length) {
-  lhash_sha_error(c, (cu8 *)0, length, 1);
+  lhash_sha_error(c, (cuc *)0, length, 1);
   SHA_ADDL(c, length);
   lhash_sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
   return c->corrupt;
@@ -192,7 +192,7 @@ static int lhash_hmac_error(ctxh *c) {
 //
 // HMAC initialize Context
 int lhash_hmac_reset(ctxh *c, cuc *key, int key_len) {
-  b08 k_ipad[SHA_BLK_SZ], tmp[SHA_HSH_SZ], blocksize, hashsize, ret;
+  u08 k_ipad[SHA_BLK_SZ], tmp[SHA_HSH_SZ], blocksize, hashsize, ret;
 
   if (!c) return SHA_NULL;
   c->compute = 0;
@@ -257,14 +257,14 @@ int lhash_hash(cc *ta, int l, u64 r, int n, int eb, cuc *k, int kl, cc *ra, int 
 
   if (k) {
     err = lhash_hmac_reset(&hmac, k, kl); if (err != SHA_OK) {return err;}
-    for (u64 i = 0; i < r; ++i) {err = lhash_hmac_input(&hmac, (cu8 *)ta, l);
+    for (u64 i = 0; i < r; ++i) {err = lhash_hmac_input(&hmac, (cuc *)ta, l);
       if (err != SHA_OK) {return err;}}
     if (n > 0) {err = lhash_hmac_final(&hmac, (u08)eb, n);
       if (err != SHA_OK) {return err;}}
     err = lhash_hmac_result(&hmac, msg_dig); if (err != SHA_OK) {return err;}
   } else {
     err = lhash_sha_reset(&sha); if (err != SHA_OK) {return err;}
-    for (u64 i = 0; i < r; ++i) {err = lhash_sha_input(&sha, (cu8 *)ta, l);
+    for (u64 i = 0; i < r; ++i) {err = lhash_sha_input(&sha, (cuc *)ta, l);
       if (err != SHA_OK) {return err;}}
     if (n > 0) {err = lhash_sha_final(&sha, (u08)eb, n);
       if (err != SHA_OK) {return err;}}

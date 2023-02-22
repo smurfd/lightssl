@@ -36,7 +36,7 @@ typedef struct ctxh {
 
 // SHA Hashing (keeping the static ones as commented to get a overview)
 int lhash_sha_reset(ctxs *c);
-int lhash_sha_input(ctxs *c, cu8 *bytes, u32 bytecount);
+int lhash_sha_input(ctxs *c, cuc *bytes, u32 bytecount);
 int lhash_sha_final(ctxs *, u08 bits, u32 bit_count);
 int lhash_sha_result(ctxs *c, u08 msg_dig[SHA_HSH_SZ]);
 int lhash_sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s);

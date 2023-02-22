@@ -4,12 +4,9 @@
 #include <stdint.h>
 
 // Only defines here, no typedefs
-#define i08 int8_t
 #define u08 uint8_t
 #define u32 uint32_t
 #define cc const char
-#define b08 uint8_t //unsigned char
-#define cu8 const uint8_t
 #define u128 unsigned __int128
 #define cuc const uint8_t //unsigned char
 #define u64 uint64_t //long long unsigned int
@@ -55,7 +52,7 @@
 #define NB4 NB * 4
 #define NK4 NK * 4
 #define NBR1 NB * (NR + 1)
-#define BBL 4 * NB * sizeof(b08)
+#define BBL 4 * NB * sizeof(u08)
 
 // Lightcrypto
 #define BLOCK 1024
