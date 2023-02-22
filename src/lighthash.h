@@ -36,15 +36,15 @@ typedef struct ctxh {
 
 // SHA Hashing (keeping the static ones as commented to get a overview)
 int lhash_sha_reset(ctxs *c);
-int lhash_sha_input(ctxs *c, cu8 *bytes, ui bytecount);
-int lhash_sha_final(ctxs *, u08 bits, ui bit_count);
+int lhash_sha_input(ctxs *c, cu8 *bytes, u32 bytecount);
+int lhash_sha_final(ctxs *, u08 bits, u32 bit_count);
 int lhash_sha_result(ctxs *c, u08 msg_dig[SHA_HSH_SZ]);
 int lhash_sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s);
 
 // HMAC Keyed-Hashing for Message Authentication, RFC 2104
 int lhash_hmac_reset(ctxh *c, cuc *key, int key_len);
 int lhash_hmac_input(ctxh *c, cuc *text,int text_len);
-int lhash_hmac_final(ctxh *c, u08 bits, ui bit_count);
+int lhash_hmac_final(ctxh *c, u08 bits, u32 bit_count);
 int lhash_hmac_result(ctxh *c, u08 digest[SHA_HSH_SZ]);
 
 int lhash_hash(cc *ta, int l, u64 r, int n, int eb, cuc *k, int kl, cc *ra, int hs);

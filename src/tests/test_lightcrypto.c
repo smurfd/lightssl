@@ -16,14 +16,15 @@ int main(int argc, char **argv) {
   char data[LEN];
   int d = 0;
 
-  if (argc != 2) lcrypto_handle_cert("ca.key", data);
+  if (argc < 2) lcrypto_handle_cert("ca.key", data);
   else lcrypto_handle_cert(argv[1], data);
   lcrypto_decode64(s0, strlen(s0), &d, s3);
   lcrypto_encode64(s2, strlen("smurfd and more stuff"), &d, s1);
   assert(strcmp(s1, s0) == 0);
   lcrypto_decode64((char*)data, strlen((char*)data), &d, s4);
 
-  lcrypto_handle_asn("ca.csm");
+  if (argc < 3) lcrypto_handle_asn("ca.csm");
+  else lcrypto_handle_asn(argv[2]);
   printf("OK\n");
   return 0;
 }

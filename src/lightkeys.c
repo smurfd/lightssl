@@ -37,13 +37,13 @@ static int lkeys_zero(const u64 *a) {
 
 //
 // Check if bit a or b is set, if so return diff from zero
-static u64 lkeys_chk(const u64 *a, const ui b) {
+static u64 lkeys_chk(const u64 *a, const u32 b) {
   return (a[b / 64] & ((u64)1 << (MOD(b, 64))));
 }
 
 //
 // Count 64bit in a
-static ui lkeys_count(const u64 *a) {
+static u32 lkeys_count(const u64 *a) {
   int i;
 
   for (i = DI - 1; i >= 0 && a[i] == 0; --i) {}
@@ -58,8 +58,8 @@ static void lkeys_set(u64 *a, const u64 *b) {
 
 //
 // Check number of bits needed for a
-static ui lkeys_bits(u64 *a) {
-  ui i, nd = lkeys_count(a); u64 d;
+static u32 lkeys_bits(u64 *a) {
+  u32 i, nd = lkeys_count(a); u64 d;
 
   if (nd == 0) return 0;
   nd--; d = a[nd];
@@ -78,7 +78,7 @@ static int lkeys_cmp(const u64 *a, const u64 *b) {
 
 //
 // Left shift
-static u64 lkeys_ls(u64 *a, const u64 *b, const ui c) {
+static u64 lkeys_ls(u64 *a, const u64 *b, const u32 c) {
   u64 ovr = 0;
 
   for (u08 i = 0; i < DI; ++i) {
@@ -133,7 +133,7 @@ static void lkeys_mul(u64 *a, const u64 *b, const u64 *c) {
   u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
   for (u08 k = 0; k < di22; ++k) {
-    ui min = (k < DI ? 0 : (k + 1) - DI);
+    u32 min = (k < DI ? 0 : (k + 1) - DI);
     for (u08 j = min; j <= k && j < DI; ++j) {
       u128 p = (u128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
@@ -149,7 +149,7 @@ static void lkeys_sqr(u64 *a, const u64 *b) {
   u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
   for (u08 k = 0; k < di22; ++k) {
-    ui min = (k < DI ? 0 : (k + 1) - DI);
+    u32 min = (k < DI ? 0 : (k + 1) - DI);
     for (u08 j = min; j <= k && j <= k - j; ++j) {
       u128 p = (u128)b[j] * b[k - j]; // product
       if (j < k - j) {r2 += p >> 127; p *= 2;}
@@ -235,7 +235,7 @@ static void lkeys_m_sqrt(u64 a[DI]) {
   u64 p1[DI] = {1}, r[DI] = {1};
 
   lkeys_add(p1, curve_p, p1);
-  for (ui i = lkeys_bits(p1) - 1; i > 1; --i) {
+  for (u32 i = lkeys_bits(p1) - 1; i > 1; --i) {
     lkeys_m_sqr(r, r);
     if (lkeys_chk(p1, i)) {lkeys_m_mul(r, r, a);}
   }
@@ -246,7 +246,7 @@ static void lkeys_m_sqrt(u64 a[DI]) {
 //
 static void lkeys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   u64 p[DI2], mm[DI2];
-  ui ds, bs, pb, mb = lkeys_bits(m);
+  u32 ds, bs, pb, mb = lkeys_bits(m);
 
   lkeys_mul(p, b, c);
   pb = lkeys_bits(p + DI);
@@ -574,7 +574,7 @@ int lkeys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) 
 
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
-  ui nb = (lkeys_bits(u1) > lkeys_bits(u2) ? lkeys_bits(u1) : lkeys_bits(u2));
+  u32 nb = (lkeys_bits(u1) > lkeys_bits(u2) ? lkeys_bits(u1) : lkeys_bits(u2));
   pt *point = points[(!!lkeys_chk(u1, nb - 1)) | ((!!lkeys_chk(u2, nb - 1)) << 1)];
 
   lkeys_set(rx, point->x);

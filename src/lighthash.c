@@ -96,7 +96,7 @@ static void lhash_sha_finalize(ctxs *c, u08 pad_byte) {
 
 //
 // SHA Error check
-static int lhash_sha_error(ctxs *c, cu8 *msg_arr, ui length, int b) {
+static int lhash_sha_error(ctxs *c, cu8 *msg_arr, u32 length, int b) {
   if (!c) return SHA_NULL;
   if (!length) return SHA_OK;
   if (!msg_arr && b == 0) return SHA_NULL;
@@ -120,7 +120,7 @@ int lhash_sha_reset(ctxs *c) {
 
 //
 // SHA Input
-int lhash_sha_input(ctxs *c, cu8 *msg_arr, ui length) {
+int lhash_sha_input(ctxs *c, cu8 *msg_arr, u32 length) {
   lhash_sha_error(c, msg_arr, length, 0);
   while (length--) {
     c->mb[c->msg_blk_i++] = *msg_arr;
@@ -133,7 +133,7 @@ int lhash_sha_input(ctxs *c, cu8 *msg_arr, ui length) {
 
 //
 // SHA Add final bits
-int lhash_sha_final(ctxs *c, u08 msg_bit, ui length) {
+int lhash_sha_final(ctxs *c, u08 msg_bit, u32 length) {
   lhash_sha_error(c, (cu8 *)0, length, 1);
   SHA_ADDL(c, length);
   lhash_sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
@@ -231,7 +231,7 @@ int lhash_hmac_input(ctxh *c, cuc *text, int text_len) {
 
 //
 // HMAC Add final bits
-int lhash_hmac_final(ctxh *c, u08 bits, ui bit_count) {
+int lhash_hmac_final(ctxh *c, u08 bits, u32 bit_count) {
   lhash_hmac_error(c);
   return c->corrupt = lhash_sha_final(&c->sha, bits, bit_count);
 }

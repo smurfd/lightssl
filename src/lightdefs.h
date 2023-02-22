@@ -8,7 +8,6 @@
 #define u08 uint8_t
 #define u32 uint32_t
 #define cc const char
-#define ui unsigned int
 #define b08 unsigned char
 #define cu8 const uint8_t
 #define u128 unsigned __int128

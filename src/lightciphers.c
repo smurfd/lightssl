@@ -263,10 +263,10 @@ static void arr_from_state(u08 s[NB4], u08 in[4][NB]) {
 
 //
 //
-static void lciphers_shiftrow(u08 state[4][NB], ui i, ui n) {
+static void lciphers_shiftrow(u08 state[4][NB], u32 i, u32 n) {
   u08 tmp[NB];
 
-  for (ui j = 0; j < NB; j++) {tmp[j] = state[i][(j + n) % NB];}
+  for (u32 j = 0; j < NB; j++) {tmp[j] = state[i][(j + n) % NB];}
   memcpy(state[i], tmp, NB * sizeof(u08));
 }
 
@@ -392,8 +392,8 @@ static void lciphers_keyexpansion(u08 key[NK * 2], u08 w[NB * NR]) {
 
 //
 //
-static void lciphers_xor(const u08 *a, const u08 *b, u08 *c, ui len) {
-  for (ui i = 0; i < len; i++) {c[i] = a[i] ^ b[i];}
+static void lciphers_xor(const u08 *a, const u08 *b, u08 *c, u32 len) {
+  for (u32 i = 0; i < len; i++) {c[i] = a[i] ^ b[i];}
 }
 
 //
@@ -403,7 +403,7 @@ static void lciphers_encryptblock(u08 in[BBL], u08 out[BBL], u08 *rk) {
 
   state_from_arr(state, in);
   lciphers_addroundkey(state, rk);
-  for (ui round = 1; round <= NR - 1; round++) {
+  for (u32 round = 1; round <= NR - 1; round++) {
     lciphers_subbytes(state);
     lciphers_shiftrows(state);
     lciphers_mixcolumns(state);
@@ -422,7 +422,7 @@ static void lciphers_decryptblock(u08 in[BBL], u08 out[BBL], u08 *rk) {
 
   state_from_arr(state, in);
   lciphers_addroundkey(state, rk + NR * 4 * NB);
-  for (ui round = NR - 1; round >= 1; round--) {
+  for (u32 round = NR - 1; round >= 1; round--) {
     lciphers_invsubbytes(state);
     lciphers_invshiftrows(state);
     lciphers_addroundkey(state, rk + round * 4 * NB);
@@ -437,19 +437,19 @@ static void lciphers_decryptblock(u08 in[BBL], u08 out[BBL], u08 *rk) {
 //
 // l = inlength, k = key, o = out
 // https://medium.com/asecuritysite-when-bob-met-alice/a-bluffers-guide-to-aes-modes-ecb-cbc-cfb-and-all-that-jazz-4180f1882e16
-void lciphers_encrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc) {
+void lciphers_encrypt(u08 in[], u32 l, u08 k[], u08 *iv, u08 o[], bool cbc) {
   u08 block[BBL]={0}, encryptedblock[BBL]={0}, roundkeys[4*NB*(NR+1)]={0};
 
   lciphers_keyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
   if (cbc) { // CBC
-    for (ui i = 0; i < l; i += BBL) {
+    for (u32 i = 0; i < l; i += BBL) {
       lciphers_xor(block, (in + i), block, BBL);
       lciphers_encryptblock(block, (o + i), roundkeys);
       memcpy(block, (o + i), BBL);
     }
   } else { // CFB
-    for (ui i = 0; i < l; i += BBL) {
+    for (u32 i = 0; i < l; i += BBL) {
       lciphers_encryptblock(block, encryptedblock, roundkeys);
       lciphers_xor((in + i), encryptedblock, (o + i), BBL);
       memcpy(block, (o + i), BBL);
@@ -459,19 +459,19 @@ void lciphers_encrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc) {
 
 //
 // l = inlength, k = key, o = out
-void lciphers_decrypt(u08 in[], ui l, u08 k[], u08 *iv, u08 o[], bool cbc) {
+void lciphers_decrypt(u08 in[], u32 l, u08 k[], u08 *iv, u08 o[], bool cbc) {
   u08 block[NB*NR]={0}, encryptedblock[NB*NR]={0}, roundkeys[4*NB*(NR+1)]={0};
 
   lciphers_keyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
   if (cbc) { // CBC
-    for (ui i = 0; i < l; i += BBL) {
+    for (u32 i = 0; i < l; i += BBL) {
       lciphers_decryptblock((in + i), (o + i), roundkeys);
       lciphers_xor(block, (o + i), (o + i), BBL);
       memcpy(block, in + i, BBL);
     }
   } else { // CFB
-    for (ui i = 0; i < l; i += BBL) {
+    for (u32 i = 0; i < l; i += BBL) {
       lciphers_encryptblock(block, encryptedblock, roundkeys);
       lciphers_xor(in + i, encryptedblock, o + i, BBL);
       memcpy(block, in + i, BBL);
