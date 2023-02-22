@@ -8,11 +8,11 @@
 #define u08 uint8_t
 #define u32 uint32_t
 #define cc const char
-#define b08 unsigned char
+#define b08 uint8_t //unsigned char
 #define cu8 const uint8_t
 #define u128 unsigned __int128
-#define cuc const unsigned char
-#define u64 long long unsigned int
+#define cuc const uint8_t //unsigned char
+#define u64 uint64_t //long long unsigned int
 
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
