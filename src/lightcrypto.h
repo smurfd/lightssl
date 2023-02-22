@@ -11,8 +11,8 @@ typedef struct header head;
 typedef struct sockaddr sock;
 typedef struct sockaddr_in sock_in;
 
-struct header {u64 len, ver, g, p;};
-struct keys {u64 publ, priv, shar;};
+struct header {uint64_t len, ver, g, p;};
+struct keys {uint64_t publ, priv, shar;};
 #define LEN 4096
 static char enc[] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
@@ -25,24 +25,25 @@ static uint8_t AS1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
 static uint8_t AS2[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
 static uint8_t AS3[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
 
-key lcrypto_genkeys(u64 g, u64 p);
+key lcrypto_genkeys(uint64_t g, uint64_t p);
 int lcrypto_keys();
 int lcrypto_init(cc *host, cc *port, bool b);
 int lcrypto_listen(int s, sock *cli);
 
 void lcrypto_end(int s);
-void lcrypto_crypt(u64 data, key k, u64 *enc);
-void lcrypto_genshare(key *k1, key *k2, u64 p, bool srv);
+void lcrypto_crypt(uint64_t data, key k, uint64_t *enc);
+void lcrypto_genshare(key *k1, key *k2, uint64_t p, bool srv);
 void lcrypto_transferkey(int s, bool snd, head *h, key *k);
-void lcrypto_transferdata(const int s, void* data, head *h, bool snd, u64 len);
+void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
+  uint64_t len);
 
-u64 lcrypto_handle_cert(char *cert, char d[LEN]);
-u64 lcrypto_handle_asn(char *cert);
+uint64_t lcrypto_handle_cert(char *cert, char d[LEN]);
+uint64_t lcrypto_handle_asn(char *cert);
 
 void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
-void lcrypto_decode64(cc *data, int inl, int *ol, u08 dd[*ol]);
-u32 utf8decode(u32 c);
-u32 utf8encode(u32 cp);
+void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
+uint32_t utf8decode(uint32_t c);
+uint32_t utf8encode(uint32_t cp);
 
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
@@ -101,7 +102,7 @@ int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
 int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen);
 
 // Keep static functions
-// u64 lightcrypto_rand();
+// uint64_t lightcrypto_rand();
 // int lightcrypto_getblock();
 // void *lightcrypto_handler(void *sdesc);
 // void lightcrypto_recvkey(int s, head *h, key *k);

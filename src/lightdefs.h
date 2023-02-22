@@ -4,20 +4,18 @@
 #include <stdint.h>
 
 // Only defines here, no typedefs
-#define u08 uint8_t
-#define u32 uint32_t
 #define cc const char
 #define u128 unsigned __int128
-#define cuc const uint8_t //unsigned char
-#define u64 uint64_t //long long unsigned int
+#define cuc const uint8_t
 
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 
 // SSL
 #define RAND() (rand() & 0x7FFFFFFFFFFFFFFF)
-#define RAND64() ((u64)(RAND()) << 48) ^ ((u64)(RAND()) << 35) ^ \
-  ((u64)(RAND()) << 22) ^ ((u64)(RAND()) << 9) ^ ((u64)(RAND()) >> 4)
+#define RAND64() ((uint64_t)(RAND()) << 48) ^ ((uint64_t)(RAND()) << 35) ^ \
+  ((uint64_t)(RAND()) << 22) ^ ((uint64_t)(RAND()) << 9) ^ \
+  ((uint64_t)(RAND()) >> 4)
 
 // TLS
 #define TLSCIPHER 222
@@ -31,8 +29,9 @@
 #define SHA_PARI(x, y, z)  ((x) ^  (y) ^ (z))
 
 // Define the SHA shift, rotate left and rotate right macros
-#define SHA_SHRI(b, w)  (((u64)(w)) >> (b))
-#define SHA_ROTR(b, w) ((((u64)(w)) >> (b)) | (((u64)(w)) << (64 - (b))))
+#define SHA_SHRI(b, w)  (((uint64_t)(w)) >> (b))
+#define SHA_ROTR(b, w) ((((uint64_t)(w)) >> (b)) | (((uint64_t)(w)) << \
+  (64 - (b))))
 
 // Define the SHA SIGMA and sigma macros
 #define SHA_S0(w) (SHA_ROTR(28, w) ^ SHA_ROTR(34, w) ^ SHA_ROTR(39, w))
@@ -52,7 +51,7 @@
 #define NB4 NB * 4
 #define NK4 NK * 4
 #define NBR1 NB * (NR + 1)
-#define BBL 4 * NB * sizeof(u08)
+#define BBL 4 * NB * sizeof(uint8_t)
 
 // Lightcrypto
 #define BLOCK 1024
@@ -83,13 +82,13 @@
 #define DI2 (DI * 2)
 #define EVEN(p) (!(p[0] & 1))
 
-typedef struct pt {u64 x[DI], y[DI];} pt;
-typedef struct {u64 a, b, c, d;} prng_t;
+typedef struct pt {uint64_t x[DI], y[DI];} pt;
+typedef struct {uint64_t a, b, c, d;} prng_t;
 
-static u64 curve_p[DI] = {
+static uint64_t curve_p[DI] = {
   0x00000000ffffffff, 0xffffffff00000000, 0xfffffffffffffffe,
   0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff};
-static u64 curve_b[DI] = {
+static uint64_t curve_b[DI] = {
   0x2a85c8edd3ec2aef, 0xc656398d8a2ed19d, 0x0314088f5013875a,
   0x181d9c6efe814112, 0x988e056be3f82d19, 0xb3312fa7e23ee7e4};
 static pt curve_g      = {{
@@ -97,7 +96,7 @@ static pt curve_g      = {{
   0x6e1d3b628ba79b98, 0x8eb1c71ef320ad74, 0xaa87ca22be8b0537},
   {0x7a431d7c90ea0e5f, 0x0a60b1ce1d7e819d, 0xe9da3113b5f0b8c0,
   0xf8f41dbd289a147c, 0x5d9e98bf9292dc29, 0x3617de4a96262c6f}};
-static u64 curve_n[DI] = {
+static uint64_t curve_n[DI] = {
   0xecec196accc52973, 0x581a0db248b0a77a, 0xc7634d81f4372ddf,
   0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff};
 static prng_t prng_ctx;

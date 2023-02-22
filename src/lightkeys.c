@@ -26,24 +26,24 @@
 
 //
 // Clear a
-static void lkeys_clear(u64 *a) {for (u08 i = 0; i < DI; ++i) {a[i] = 0;}}
+static void lkeys_clear(uint64_t *a) {for (uint8_t i = 0; i < DI; ++i) {a[i] = 0;}}
 
 //
 // Check if a is zero, return 1, if not return 0
-static int lkeys_zero(const u64 *a) {
-  for (u08 i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
+static int lkeys_zero(const uint64_t *a) {
+  for (uint8_t i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
   return 1;
 }
 
 //
 // Check if bit a or b is set, if so return diff from zero
-static u64 lkeys_chk(const u64 *a, const u32 b) {
-  return (a[b / 64] & ((u64)1 << (MOD(b, 64))));
+static uint64_t lkeys_chk(const uint64_t *a, const uint32_t b) {
+  return (a[b / 64] & ((uint64_t)1 << (MOD(b, 64))));
 }
 
 //
 // Count 64bit in a
-static u32 lkeys_count(const u64 *a) {
+static uint32_t lkeys_count(const uint64_t *a) {
   int i;
 
   for (i = DI - 1; i >= 0 && a[i] == 0; --i) {}
@@ -52,14 +52,14 @@ static u32 lkeys_count(const u64 *a) {
 
 //
 // Set a from b
-static void lkeys_set(u64 *a, const u64 *b) {
-  for (u08 i = 0; i < DI; ++i) {a[i] = b[i];}
+static void lkeys_set(uint64_t *a, const uint64_t *b) {
+  for (uint8_t i = 0; i < DI; ++i) {a[i] = b[i];}
 }
 
 //
 // Check number of bits needed for a
-static u32 lkeys_bits(u64 *a) {
-  u32 i, nd = lkeys_count(a); u64 d;
+static uint32_t lkeys_bits(uint64_t *a) {
+  uint32_t i, nd = lkeys_count(a); uint64_t d;
 
   if (nd == 0) return 0;
   nd--; d = a[nd];
@@ -69,7 +69,7 @@ static u32 lkeys_bits(u64 *a) {
 
 //
 // Compare a and b
-static int lkeys_cmp(const u64 *a, const u64 *b) {
+static int lkeys_cmp(const uint64_t *a, const uint64_t *b) {
   for (int i = DI-1; i >= 0; --i) {
     if (a[i] > b[i]) {return 1;} else if (a[i] < b[i]) {return -1;}
   }
@@ -78,11 +78,11 @@ static int lkeys_cmp(const u64 *a, const u64 *b) {
 
 //
 // Left shift
-static u64 lkeys_ls(u64 *a, const u64 *b, const u32 c) {
-  u64 ovr = 0;
+static uint64_t lkeys_ls(uint64_t *a, const uint64_t *b, const uint32_t c) {
+  uint64_t ovr = 0;
 
-  for (u08 i = 0; i < DI; ++i) {
-    u64 t = b[i]; a[i] = (t << c) | ovr;
+  for (uint8_t i = 0; i < DI; ++i) {
+    uint64_t t = b[i]; a[i] = (t << c) | ovr;
     ovr = t >> (64 - c);
   }
   return ovr;
@@ -90,20 +90,20 @@ static u64 lkeys_ls(u64 *a, const u64 *b, const u32 c) {
 
 //
 // Right shift by 1
-static void lkeys_rs1(u64 *a) {
-  u64 *e = a, ovr = 0;
+static void lkeys_rs1(uint64_t *a) {
+  uint64_t *e = a, ovr = 0;
 
   a += DI;
-  while (a-- > e) {u64 t = *a; *a = (t >> 1) | ovr; ovr = t << 63;}
+  while (a-- > e) {uint64_t t = *a; *a = (t >> 1) | ovr; ovr = t << 63;}
 }
 
 //
 // Adds b and c
-static u64 lkeys_add(u64 *a, const u64 *b, const u64 *c) {
-  u64 ovr = 0;
+static uint64_t lkeys_add(uint64_t *a, const uint64_t *b, const uint64_t *c) {
+  uint64_t ovr = 0;
 
-  for (u08 i = 0; i < DI; ++i) {
-    u64 s = b[i] + c[i] + ovr;
+  for (uint8_t i = 0; i < DI; ++i) {
+    uint64_t s = b[i] + c[i] + ovr;
     if (s != b[i]) {ovr = (s < b[i]);} a[i] = s;
   }
   return ovr;
@@ -111,11 +111,11 @@ static u64 lkeys_add(u64 *a, const u64 *b, const u64 *c) {
 
 //
 // Sub b and c
-static u64 lkeys_sub(u64 *a, const u64 *b, const u64 *c) {
-  u64 ovr = 0;
+static uint64_t lkeys_sub(uint64_t *a, const uint64_t *b, const uint64_t *c) {
+  uint64_t ovr = 0;
 
-  for (u08 i = 0; i < DI; ++i) {
-    u64 d = b[i] - c[i] - ovr;
+  for (uint8_t i = 0; i < DI; ++i) {
+    uint64_t d = b[i] - c[i] - ovr;
     if (d != b[i]) {ovr = (d > b[i]);} a[i] = d;
   }
   return ovr;
@@ -123,56 +123,56 @@ static u64 lkeys_sub(u64 *a, const u64 *b, const u64 *c) {
 
 //
 //
-static void akrr(u64 **a, u64 k, u128 *r, u64 *r2) {
-  (*a)[k] = (u64)(*r); (*r) = ((*r) >> 64) | (((u128)(*r2)) << 64); (*r2) = 0;
+static void akrr(uint64_t **a, uint64_t k, u128 *r, uint64_t *r2) {
+  (*a)[k] = (uint64_t)(*r); (*r) = ((*r) >> 64) | (((u128)(*r2)) << 64); (*r2) = 0;
 }
 
 //
 // Multiply
-static void lkeys_mul(u64 *a, const u64 *b, const u64 *c) {
-  u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
+static void lkeys_mul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
+  u128 r = 0; uint64_t r2 = 0, di22 = DI * 2 - 1;
 
-  for (u08 k = 0; k < di22; ++k) {
-    u32 min = (k < DI ? 0 : (k + 1) - DI);
-    for (u08 j = min; j <= k && j < DI; ++j) {
+  for (uint8_t k = 0; k < di22; ++k) {
+    uint32_t min = (k < DI ? 0 : (k + 1) - DI);
+    for (uint8_t j = min; j <= k && j < DI; ++j) {
       u128 p = (u128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
     }
     akrr(&a, k, &r, &r2);
   }
-  a[di22] = (u64)r;
+  a[di22] = (uint64_t)r;
 }
 
 //
 // Square
-static void lkeys_sqr(u64 *a, const u64 *b) {
-  u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
+static void lkeys_sqr(uint64_t *a, const uint64_t *b) {
+  u128 r = 0; uint64_t r2 = 0, di22 = DI * 2 - 1;
 
-  for (u08 k = 0; k < di22; ++k) {
-    u32 min = (k < DI ? 0 : (k + 1) - DI);
-    for (u08 j = min; j <= k && j <= k - j; ++j) {
+  for (uint8_t k = 0; k < di22; ++k) {
+    uint32_t min = (k < DI ? 0 : (k + 1) - DI);
+    for (uint8_t j = min; j <= k && j <= k - j; ++j) {
       u128 p = (u128)b[j] * b[k - j]; // product
       if (j < k - j) {r2 += p >> 127; p *= 2;}
       r += p; r2 += (r < p);
     }
     akrr(&a, k, &r, &r2);
   }
-  a[di22] = (u64)r;
+  a[di22] = (uint64_t)r;
 }
 
 //
 //
-static void lkeys_o_mul(u64 *a, const u64 *b) {
-  u64 t[DI], ovr;
+static void lkeys_o_mul(uint64_t *a, const uint64_t *b) {
+  uint64_t t[DI], ovr;
 
   lkeys_set(a, b);
   ovr = lkeys_ls(t, b, 32);
   a[DI + 1] = ovr + lkeys_add(a + 1, a + 1, t);
   a[DI + 2] = lkeys_add(a + 2, a + 2, b);
   ovr += lkeys_sub(a, a, t);
-  u64 d = a[DI] - ovr;
+  uint64_t d = a[DI] - ovr;
   if (d > a[DI]) {
-    for (u08 i = 1+DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
+    for (uint8_t i = 1+DI; ; ++i) {--a[i]; if (a[i] != (uint64_t) - 1) {break;}}
   }
   a[DI] = d;
 }
@@ -181,30 +181,32 @@ static void lkeys_o_mul(u64 *a, const u64 *b) {
 
 //
 // Modulo add
-static void lkeys_m_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
-  u64 ovr = lkeys_add(a, b, c);
+static void lkeys_m_add(uint64_t *a, const uint64_t *b, const uint64_t *c,
+  const uint64_t *m) {
+  uint64_t ovr = lkeys_add(a, b, c);
 
   if (ovr || lkeys_cmp(a, m) >= 0) {lkeys_sub(a, a, m);}
 }
 
 //
 // Modulo sub
-static void lkeys_m_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
+static void lkeys_m_sub(uint64_t *a, const uint64_t *b, const uint64_t *c,
+  const uint64_t *m) {
   if (lkeys_sub(a, b, c)) {lkeys_add(a, a, m);}
 }
 
 //
 // Modulo mod
-static void lkeys_m_mod(u64 *a, u64 *b) {
-  u64 t[DI2];
+static void lkeys_m_mod(uint64_t *a, uint64_t *b) {
+  uint64_t t[DI2];
 
   while (!lkeys_zero(b + DI)) {
-    u64 ovr = 0;
+    uint64_t ovr = 0;
     lkeys_clear(t); lkeys_clear(t + DI);
     lkeys_o_mul(t, b + DI);
     lkeys_clear(b + DI);
-    for (u08 i = 0; i < DI + 3; ++i) {
-      u64 s = b[i] + t[i] + ovr;
+    for (uint8_t i = 0; i < DI + 3; ++i) {
+      uint64_t s = b[i] + t[i] + ovr;
       if (s != b[i]) {ovr = (s < b[i]);}
       b[i] = s;
     }
@@ -215,27 +217,27 @@ static void lkeys_m_mod(u64 *a, u64 *b) {
 
 //
 // Modulo multiply
-static void lkeys_m_mul(u64 *a, const u64 *b, const u64 *c) {
-  u64 p[DI2];
+static void lkeys_m_mul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
+  uint64_t p[DI2];
 
   lkeys_mul(p, b, c); lkeys_m_mod(a, p);
 }
 
 //
 // Modulo square
-static void lkeys_m_sqr(u64 *a, const u64 *b) {
-  u64 p[DI2];
+static void lkeys_m_sqr(uint64_t *a, const uint64_t *b) {
+  uint64_t p[DI2];
 
   lkeys_sqr(p, b); lkeys_m_mod(a, p);
 }
 
 //
 // Modulo square root
-static void lkeys_m_sqrt(u64 a[DI]) {
-  u64 p1[DI] = {1}, r[DI] = {1};
+static void lkeys_m_sqrt(uint64_t a[DI]) {
+  uint64_t p1[DI] = {1}, r[DI] = {1};
 
   lkeys_add(p1, curve_p, p1);
-  for (u32 i = lkeys_bits(p1) - 1; i > 1; --i) {
+  for (uint32_t i = lkeys_bits(p1) - 1; i > 1; --i) {
     lkeys_m_sqr(r, r);
     if (lkeys_chk(p1, i)) {lkeys_m_mul(r, r, a);}
   }
@@ -244,9 +246,9 @@ static void lkeys_m_sqrt(u64 a[DI]) {
 
 //
 //
-static void lkeys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
-  u64 p[DI2], mm[DI2];
-  u32 ds, bs, pb, mb = lkeys_bits(m);
+static void lkeys_m_mmul(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *m) {
+  uint64_t p[DI2], mm[DI2];
+  uint32_t ds, bs, pb, mb = lkeys_bits(m);
 
   lkeys_mul(p, b, c);
   pb = lkeys_bits(p + DI);
@@ -266,7 +268,7 @@ static void lkeys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
       if (lkeys_sub(p, p, mm)) {lkeys_sub(DI + p, DI + p, a);}
       lkeys_sub(DI + p, DI + p, DI + mm);
     }
-    u64 ovr = (mm[DI] & 0x01) << 63;
+    uint64_t ovr = (mm[DI] & 0x01) << 63;
     lkeys_rs1(DI + mm); lkeys_rs1(mm);
     mm[DI - 1] |= ovr;
     --pb;
@@ -282,8 +284,8 @@ static int lkeys_p_zero(pt *a) {return (lkeys_zero(a->x) && lkeys_zero(a->y));}
 
 //
 // Points double
-static void lkeys_p_double(u64 *a, u64 *b, u64 *c) {
-  u64 t4[DI], t5[DI];
+static void lkeys_p_double(uint64_t *a, uint64_t *b, uint64_t *c) {
+  uint64_t t4[DI], t5[DI];
 
   if (lkeys_zero(c)) {return;}
   lkeys_m_sqr(t4, b);
@@ -300,7 +302,7 @@ static void lkeys_p_double(u64 *a, u64 *b, u64 *c) {
   lkeys_m_add(c, a, a, curve_p);
   lkeys_m_add(a, a, c, curve_p);
   if (lkeys_chk(a, 0)) {
-    u64 ovr = lkeys_add(a, a, curve_p);
+    uint64_t ovr = lkeys_add(a, a, curve_p);
     lkeys_rs1(a);
     a[DI - 1] |= ovr << 63;
   } else {lkeys_rs1(a);}
@@ -317,8 +319,8 @@ static void lkeys_p_double(u64 *a, u64 *b, u64 *c) {
 
 //
 //
-static void lkeys_p_decom(pt *a, const u64 b[KB + 1]) {
-  u64 tr[DI] = {3};
+static void lkeys_p_decom(pt *a, const uint64_t b[KB + 1]) {
+  uint64_t tr[DI] = {3};
 
   lkeys_set(a->x, b + 1);
   lkeys_m_sqr(a->y, a->x);
@@ -331,8 +333,8 @@ static void lkeys_p_decom(pt *a, const u64 b[KB + 1]) {
 
 //
 // Modify (x1, y1) => (x1 * z^2, y1 * z^3)
-static void lkeys_p_appz(u64 *a, u64 *b, const u64 *z) {
-  u64 t[DI];
+static void lkeys_p_appz(uint64_t *a, uint64_t *b, const uint64_t *z) {
+  uint64_t t[DI];
 
   lkeys_m_sqr(t, z);
   lkeys_m_mul(a, a, t);
@@ -342,8 +344,9 @@ static void lkeys_p_appz(u64 *a, u64 *b, const u64 *z) {
 
 //
 // P = (x1, y1) => 2P, (x2, y2) => P'
-static void lkeys_p_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
-  u64 z[DI];
+static void lkeys_p_inidoub(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d,
+  uint64_t *p) {
+  uint64_t z[DI];
 
   lkeys_set(c, a); lkeys_set(d, b);
   lkeys_clear(z); z[0] = 1;
@@ -355,8 +358,8 @@ static void lkeys_p_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
 
 //
 // Points add
-static void lkeys_p_add(u64 *a, u64 *b, u64 *c, u64 *d) {
-  u64 t5[DI];
+static void lkeys_p_add(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
+  uint64_t t5[DI];
 
   lkeys_m_sub(t5, c, a, curve_p);
   lkeys_m_sqr(t5, t5);
@@ -377,9 +380,9 @@ static void lkeys_p_add(u64 *a, u64 *b, u64 *c, u64 *d) {
 
 //
 // Points add
-static void lkeys_p_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
+static void lkeys_p_addc(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
   // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
-  u64 t5[DI], t6[DI], t7[DI];
+  uint64_t t5[DI], t6[DI], t7[DI];
 
   lkeys_m_sub(t5, c, a, curve_p);
   lkeys_m_sqr(t5, t5);
@@ -408,8 +411,8 @@ static void lkeys_p_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
 
 //
 // Modulo inversion
-static void lkeys_m_inv(u64 *r, u64 *p, u64 *m) {
-  u64 a[DI], b[DI], u[DI], v[DI], car;
+static void lkeys_m_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
+  uint64_t a[DI], b[DI], u[DI], v[DI], car;
   int cmpResult;
 
   if(lkeys_zero(p)) {lkeys_clear(r); return;}
@@ -442,8 +445,8 @@ static void lkeys_m_inv(u64 *r, u64 *p, u64 *m) {
 
 //
 // Point multiplication
-static void lkeys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
-  u64 Rx[2][DI], Ry[2][DI], z[DI];
+static void lkeys_p_mul(pt *r, pt *p, uint64_t *q, uint64_t *s) {
+  uint64_t Rx[2][DI], Ry[2][DI], z[DI];
   int nb;
 
   lkeys_set(Rx[1], p->x); lkeys_set(Ry[1], p->y);
@@ -473,12 +476,13 @@ static void lkeys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
 
 //
 // Random rotate
-static u64 lkeys_rnd_rotate(u64 x, u64 k) {return (x << k) | (x >> (32 - k));}
+static uint64_t lkeys_rnd_rotate(uint64_t x, uint64_t k) {
+  return (x << k) | (x >> (32 - k));}
 
 //
 // Random next
-u64 lkeys_rnd_next(void) {
-  u64 e = prng_ctx.a - lkeys_rnd_rotate(prng_ctx.b, 27);
+uint64_t lkeys_rnd_next(void) {
+  uint64_t e = prng_ctx.a - lkeys_rnd_rotate(prng_ctx.b, 27);
 
   prng_ctx.a = prng_ctx.b ^ lkeys_rnd_rotate(prng_ctx.c, 17);
   prng_ctx.b = prng_ctx.c + prng_ctx.d;
@@ -488,15 +492,15 @@ u64 lkeys_rnd_next(void) {
 
 //
 // Random init
-void lkeys_rnd_init(u64 seed) {
+void lkeys_rnd_init(uint64_t seed) {
   prng_ctx.a = 0xea7f00d1; prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
-  for (u64 i = 0; i < 31; ++i) {(void)lkeys_rnd_next();}
+  for (uint64_t i = 0; i < 31; ++i) {(void)lkeys_rnd_next();}
 }
 
 //
 // Make public key
-int lkeys_make_keys(u64 publ[KB + 1], u64 priv[KB]) {
-  u64 private[DI], x = 1; // range [1, n-1]
+int lkeys_make_keys(uint64_t publ[KB + 1], uint64_t priv[KB]) {
+  uint64_t private[DI], x = 1; // range [1, n-1]
   pt public;
 
   while(x) {
@@ -513,9 +517,10 @@ int lkeys_make_keys(u64 publ[KB + 1], u64 priv[KB]) {
 
 //
 // create a secret from the public and private key
-int lkeys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
+int lkeys_shar_secr(const uint64_t publ[KB + 1], const uint64_t priv[KB],
+  uint64_t secr[KB]) {
   pt public, product;
-  u64 private[DI], random[DI];
+  uint64_t private[DI], random[DI];
 
   lkeys_p_decom(&public, publ);
   lkeys_set(private, priv);
@@ -526,8 +531,9 @@ int lkeys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
 
 //
 // Create signature
-int lkeys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]) {
-  u64 k[DI], tmp[DI], s[DI], x = 1;
+int lkeys_sign(const uint64_t priv[KB], const uint64_t hash[KB],
+  uint64_t sign[KB2]) {
+  uint64_t k[DI], tmp[DI], s[DI], x = 1;
   pt p;
 
   while (x) {
@@ -550,8 +556,10 @@ int lkeys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]) {
 
 //
 // Verify signature
-int lkeys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
-  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
+int lkeys_vrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB],
+  const uint64_t sign[KB2]) {
+  uint64_t tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI];
+  uint64_t ry[DI];
   pt public, sum;
 
   lkeys_p_decom(&public, publ);
@@ -574,7 +582,7 @@ int lkeys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) 
 
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
-  u32 nb = (lkeys_bits(u1) > lkeys_bits(u2) ? lkeys_bits(u1) : lkeys_bits(u2));
+  uint32_t nb = (lkeys_bits(u1) > lkeys_bits(u2) ? lkeys_bits(u1) : lkeys_bits(u2));
   pt *point = points[(!!lkeys_chk(u1, nb - 1)) | ((!!lkeys_chk(u2, nb - 1)) << 1)];
 
   lkeys_set(rx, point->x);

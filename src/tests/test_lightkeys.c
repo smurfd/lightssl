@@ -8,9 +8,9 @@
 #include "../lightkeys.h"
 
 int main() {
-  u64 sig[KB * 2], h[KB * 2], pubkey[KB + 1], privkey[KB], sec[KB];
+  uint64_t sig[KB * 2], h[KB * 2], pubkey[KB + 1], privkey[KB], sec[KB];
 
-  lkeys_rnd_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
+  lkeys_rnd_init((uint64_t)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
   for (int i = 0; i < KB; ++i) {usleep(10); h[i] = lkeys_rnd_next();}
 
   usleep(1); assert(lkeys_make_keys(pubkey, privkey));

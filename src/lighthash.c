@@ -8,11 +8,11 @@
 #include "lightdefs.h"
 
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
-const u64 h0[] = {
+const uint64_t h0[] = {
   0x6A09E667F3BCC908, 0xBB67AE8584CAA73B, 0x3C6EF372FE94F82B,
   0xA54FF53A5F1D36F1, 0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
   0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179};
-const u64 k0[80] = {
+const uint64_t k0[80] = {
   0x428A2F98D728AE22, 0x7137449123EF65CD, 0xB5C0FBCFEC4D3B2F,
   0xE9B5DBA58189DBBC, 0x3956C25BF348B538, 0x59F111F1B605D019,
   0x923F82A4AF194F9B, 0xAB1C5ED5DA6D8118, 0xD807AA98A3030242,
@@ -40,19 +40,20 @@ const u64 k0[80] = {
   0x28DB77F523047D84, 0x32CAAB7B40C72493, 0x3C9EBE0A15C9BEBC,
   0x431D67C49C100D4C, 0x4CC5D4BECB3E42B6, 0x597F299CFC657E2A,
   0x5FCB6FAB3AD6FAEC, 0x6C44198C4A475817};
-const u08 hexdigits[] = "0123456789ABCDEF";
-const u08 masks[8]    = {0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE};
-const u08 markbit[8]  = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+const uint8_t hexdigits[] = "0123456789ABCDEF";
+const uint8_t masks[8]    = {0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE};
+const uint8_t markbit[8]  = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
 //
 // SHA Process message block
 static void lhash_sha_proc_msgblk(ctxs *c) {
-  u64 A[8], W[80], t1, t2, t3 = 0;
+  uint64_t A[8], W[80], t1, t2, t3 = 0;
   int t, t8;
 
   // Initialize the first 16 words in the array W
   for (t = t8 = 0; t < 16; t++, t8 += 8) {
-    for (int i = 0; i < 8; i++) t3 |= ((u64)(c->mb[t8 + i]) << (56 - (i * 8)));
+    for (int i = 0; i < 8; i++) t3 |= ((uint64_t)(c->mb[t8 + i]) <<
+      (56 - (i * 8)));
     W[t] = t3; t3 = 0;
   }
   for (t = 16; t < 80; t++) {
@@ -72,21 +73,23 @@ static void lhash_sha_proc_msgblk(ctxs *c) {
 
 //
 // SHA Pad message if needed. Process it. Cont pad 2nd block if needed.
-static void lhash_sha_pad_msg(ctxs *c, u08 pad_byte) {
+static void lhash_sha_pad_msg(ctxs *c, uint8_t pad_byte) {
   if (c->msg_blk_i >= (SHA_BLK_SZ - 16)) {
     c->mb[c->msg_blk_i++] = pad_byte;
     while (c->msg_blk_i < SHA_BLK_SZ) c->mb[c->msg_blk_i++] = 0;
     lhash_sha_proc_msgblk(c);
   } else c->mb[c->msg_blk_i++] = pad_byte;
   while (c->msg_blk_i < (SHA_BLK_SZ - 16)) {c->mb[c->msg_blk_i++] = 0;}
-  for (int i = 0; i < 8; i++) c->mb[112 + i] = (u08)(c->len_hi >> (56 - (i*8)));
-  for (int i = 0; i < 8; i++) c->mb[120 + i] = (u08)(c->len_lo >> (56 - (i*8)));
+  for (int i = 0; i < 8; i++) c->mb[112 + i] =
+    (uint8_t)(c->len_hi >> (56 - (i*8)));
+  for (int i = 0; i < 8; i++) c->mb[120 + i] =
+    (uint8_t)(c->len_lo >> (56 - (i*8)));
   lhash_sha_proc_msgblk(c);
 }
 
 //
 // SHA Finalize
-static void lhash_sha_finalize(ctxs *c, u08 pad_byte) {
+static void lhash_sha_finalize(ctxs *c, uint8_t pad_byte) {
   lhash_sha_pad_msg(c, pad_byte);
   // Clear message
   for (int_least16_t i = 0; i < SHA_BLK_SZ; ++i) {c->mb[i] = 0;}
@@ -96,7 +99,7 @@ static void lhash_sha_finalize(ctxs *c, u08 pad_byte) {
 
 //
 // SHA Error check
-static int lhash_sha_error(ctxs *c, cuc *msg_arr, u32 length, int b) {
+static int lhash_sha_error(ctxs *c, cuc *msg_arr, uint32_t length, int b) {
   if (!c) return SHA_NULL;
   if (!length) return SHA_OK;
   if (!msg_arr && b == 0) return SHA_NULL;
@@ -120,7 +123,7 @@ int lhash_sha_reset(ctxs *c) {
 
 //
 // SHA Input
-int lhash_sha_input(ctxs *c, cuc *msg_arr, u32 length) {
+int lhash_sha_input(ctxs *c, cuc *msg_arr, uint32_t length) {
   lhash_sha_error(c, msg_arr, length, 0);
   while (length--) {
     c->mb[c->msg_blk_i++] = *msg_arr;
@@ -133,20 +136,20 @@ int lhash_sha_input(ctxs *c, cuc *msg_arr, u32 length) {
 
 //
 // SHA Add final bits
-int lhash_sha_final(ctxs *c, u08 msg_bit, u32 length) {
+int lhash_sha_final(ctxs *c, uint8_t msg_bit, uint32_t length) {
   lhash_sha_error(c, (cuc *)0, length, 1);
   SHA_ADDL(c, length);
-  lhash_sha_finalize(c, (u08)((msg_bit & masks[length]) | markbit[length]));
+  lhash_sha_finalize(c, (uint8_t)((msg_bit & masks[length]) | markbit[length]));
   return c->corrupt;
 }
 
 //
 // SHA Get digest
-int lhash_sha_result(ctxs *c, u08 msg_dig[SHA_HSH_SZ]) {
+int lhash_sha_result(ctxs *c, uint8_t msg_dig[SHA_HSH_SZ]) {
   lhash_sha_error(c, msg_dig, 0, 2);
   if (!c->compute) lhash_sha_finalize(c, 0x80);
   for (int i = 0; i < SHA_HSH_SZ; ++i) {
-    msg_dig[i] = (u08)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
+    msg_dig[i] = (uint8_t)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
   }
   return SHA_OK;
 }
@@ -167,14 +170,14 @@ int lhash_sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
 //
 // Create a SHA hash from string
 void lhash_hash_new(cc *in, char* s) {
-  u08 msg_dig[SHA_HSH_SZ], inn[strlen(in)];
+  uint8_t msg_dig[SHA_HSH_SZ], inn[strlen(in)];
   ctxs sha;
 
   // Convert char* to uint8_t*
-  for (u64 i = 0; i < strlen(in); i++) {inn[i] = (u08)in[i];}
+  for (uint64_t i = 0; i < strlen(in); i++) {inn[i] = (uint8_t)in[i];}
   lhash_sha_reset(&sha);
   lhash_sha_input(&sha, inn, strlen(in));
-  lhash_sha_final(&sha, (u08)0, 0);
+  lhash_sha_final(&sha, (uint8_t)0, 0);
   lhash_sha_result(&sha, msg_dig);
   // Convert uint8_t* to char*
   lhash_sha_match_to_str(msg_dig, s, 64, s);
@@ -192,7 +195,7 @@ static int lhash_hmac_error(ctxh *c) {
 //
 // HMAC initialize Context
 int lhash_hmac_reset(ctxh *c, cuc *key, int key_len) {
-  u08 k_ipad[SHA_BLK_SZ], tmp[SHA_HSH_SZ], blocksize, hashsize, ret;
+  uint8_t k_ipad[SHA_BLK_SZ], tmp[SHA_HSH_SZ], blocksize, hashsize, ret;
 
   if (!c) return SHA_NULL;
   c->compute = 0;
@@ -231,14 +234,14 @@ int lhash_hmac_input(ctxh *c, cuc *text, int text_len) {
 
 //
 // HMAC Add final bits
-int lhash_hmac_final(ctxh *c, u08 bits, u32 bit_count) {
+int lhash_hmac_final(ctxh *c, uint8_t bits, uint32_t bit_count) {
   lhash_hmac_error(c);
   return c->corrupt = lhash_sha_final(&c->sha, bits, bit_count);
 }
 
 //
 // HMAC Get digest
-int lhash_hmac_result(ctxh *c, u08 *digest) {
+int lhash_hmac_result(ctxh *c, uint8_t *digest) {
   // Finish up 1st pass. Perform outer SHA, init context for 2nd pass.
   // Start with outer pad, then results of 1st hash. Finish up 2nd pass
   lhash_hmac_error(c);
@@ -251,22 +254,23 @@ int lhash_hmac_result(ctxh *c, u08 *digest) {
 
 //
 // HMAC & SHA Test suite runner
-int lhash_hash(cc *ta, int l, u64 r, int n, int eb, cuc *k, int kl, cc *ra, int hs) {
-  u08 msg_dig[SHA_HSH_SZ], err;
+int lhash_hash(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,
+  int hs) {
+  uint8_t msg_dig[SHA_HSH_SZ], err;
   ctxh hmac; ctxs sha;
 
   if (k) {
     err = lhash_hmac_reset(&hmac, k, kl); if (err != SHA_OK) {return err;}
-    for (u64 i = 0; i < r; ++i) {err = lhash_hmac_input(&hmac, (cuc *)ta, l);
+    for (uint64_t i = 0; i < r; ++i) {err = lhash_hmac_input(&hmac, (cuc *)ta, l);
       if (err != SHA_OK) {return err;}}
-    if (n > 0) {err = lhash_hmac_final(&hmac, (u08)eb, n);
+    if (n > 0) {err = lhash_hmac_final(&hmac, (uint8_t)eb, n);
       if (err != SHA_OK) {return err;}}
     err = lhash_hmac_result(&hmac, msg_dig); if (err != SHA_OK) {return err;}
   } else {
     err = lhash_sha_reset(&sha); if (err != SHA_OK) {return err;}
-    for (u64 i = 0; i < r; ++i) {err = lhash_sha_input(&sha, (cuc *)ta, l);
+    for (uint64_t i = 0; i < r; ++i) {err = lhash_sha_input(&sha, (cuc *)ta, l);
       if (err != SHA_OK) {return err;}}
-    if (n > 0) {err = lhash_sha_final(&sha, (u08)eb, n);
+    if (n > 0) {err = lhash_sha_final(&sha, (uint8_t)eb, n);
       if (err != SHA_OK) {return err;}}
     err = lhash_sha_result(&sha, msg_dig); if (err != SHA_OK) {return err;}
   }

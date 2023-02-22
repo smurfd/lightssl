@@ -11,9 +11,8 @@
 #include "../lightcrypto.h"
 
 int main(int argc, char **argv) {
-  char s0[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm", s1[257];
-  u08 s2[] = "smurfd and more stuff", s3[257], s4[LEN];
-  char data[LEN];
+  char s0[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm", s1[257], data[LEN];
+  uint8_t s2[] = "smurfd and more stuff", s3[257], s4[LEN];
   int d = 0;
 
   if (argc < 2) lcrypto_handle_cert("ca.key", data);
