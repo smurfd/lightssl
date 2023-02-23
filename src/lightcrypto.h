@@ -39,6 +39,7 @@ void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
 
 uint64_t lcrypto_handle_cert(char *cert, char d[LEN]);
 uint64_t lcrypto_handle_asn(char *cert);
+uint64_t lcrypto_handle_asn_arr(char *cert);
 
 void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
@@ -48,12 +49,18 @@ uint32_t utf8encode(uint32_t cp);
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
 typedef struct asn_tree asn_tree;
-
+typedef struct asn_arr *asn_arr;
 struct asn_tree {
   uint8_t type;
   uint32_t len;
   const uint8_t *data;
   asn_tree *parent, *child, *next, *prev;
+};
+
+struct asn_arr {
+  uint8_t type;
+  uint32_t len;
+  const uint8_t *data;
 };
 
 // Header byte of the ASN.1 type INTEGER

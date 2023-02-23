@@ -230,10 +230,11 @@ static uint64_t lcrypto_read_cert(char *fn, char c[], bool iscms) {
     uint32_t fs = 0, fpos = 0;
     while (EOF != fgetc(ptr)) ++fs;
     rewind(ptr);
-    //uint8_t *cmsd = malloc(fs);
-    //if (cmsd == NULL) {printf("malloc err\n"); exit(0);}
+
     int fr = fgetc(ptr);
     while (fr != EOF && fpos < fs) {c[fpos++] = (uint8_t)fr; fr = fgetc(ptr);}
+    printf("fr %d %d %d\n", fr, fs, len);
+    len = fs;
   } else while (c[len - 1] != EOF) {c[len++] = fgetc(ptr);}
   fclose(ptr);
   return len;
@@ -242,12 +243,6 @@ static uint64_t lcrypto_read_cert(char *fn, char c[], bool iscms) {
 static void lcrypto_print_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
   printf("Data: %s\n", d); printf("Footer: %s\n", f);
-}
-
-uint64_t lcrypto_handle_asn(char *cert) {
-  char c[2048];
-
-  return lcrypto_read_cert(cert, c, 1);
 }
 
 uint64_t lcrypto_handle_cert(char *cert, char d[LEN]) {
@@ -327,6 +322,15 @@ void lasn_print(const asn_tree *asn, int depth) {
   if (asn->next != NULL) lasn_print(asn->next, depth);
 }
 
+void lasn_print_arr(const asn_arr *asn, int depth) {
+  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, (*asn)->type, (*asn)->len);
+  if ((*asn)-1 == NULL) {
+    printf("Value:\n");
+    lasn_printhex((*asn)->data, (*asn)->len);
+  } else {lasn_print_arr(&(*asn)-1, depth + 1);}
+  if ((*asn)+1 != NULL) lasn_print_arr(&(*asn)+1, depth);
+}
+
 uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
   uint32_t a, b = 0, ret; // t = type, 1 = tlv, 0 = data
 
@@ -354,9 +358,20 @@ uint32_t lasn_get_der_enc_len(asn_tree *asn) {
   return (1 + asn->len + lasn_get_len_enc_len(asn->len));
 }
 
+uint32_t lasn_get_der_enc_len_arr(asn_arr *asn) {
+  return (1 + (*asn)->len + lasn_get_len_enc_len((*asn)->len));
+}
+
 uint32_t lasn_get_der_enc_len_rec(asn_tree *asn) {
   if (asn == NULL) return 0xFFFFFFFF;
   uint32_t len = lasn_get_der_enc_len_rec(asn);
+  if (len == 0xFFFFFFFF) return 0xFFFFFFFF;
+  return (1 + lasn_get_len_enc_len(len) + len);
+}
+
+uint32_t lasn_get_der_enc_len_rec_arr(asn_arr *asn) {
+  if (asn == NULL) return 0xFFFFFFFF;
+  uint32_t len = lasn_get_der_enc_len_rec_arr(asn);
   if (len == 0xFFFFFFFF) return 0xFFFFFFFF;
   return (1 + lasn_get_len_enc_len(len) + len);
 }
@@ -374,10 +389,27 @@ uint32_t lasn_get_data_len_rec(asn_tree *asn) {
   } else {return asn->len;} // Not a constructed type
 }
 
+uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
+  if (asn == NULL) return 0xFFFFFFFF;
+  if (((*asn)->type & 0x20) != 0) { // A constructed type
+    asn_arr *child = &(*asn)-1;
+    uint32_t len = 0;
+
+    while(child != NULL) {
+      len += lasn_get_der_enc_len_rec_arr(child); child = &(*child)+1;
+    }
+    return len;
+  } else {return (*asn)->len;} // Not a constructed type
+}
+
 void lasn_tree_init(asn_tree *asn) {
   asn->type = 0; asn->len = 0;
   asn->data = NULL; asn->prev = NULL;
   asn->next = NULL; asn->child = NULL; asn->parent = NULL;
+}
+
+void lasn_tree_init_arr(asn_arr *asn) {
+  (*asn)->type = 0; (*asn)->len = 0; (*asn)->data = NULL;
 }
 
 int8_t lasn_tree_add(asn_tree *asn, asn_tree *child) {
@@ -389,6 +421,19 @@ int8_t lasn_tree_add(asn_tree *asn, asn_tree *child) {
     lchild->next = child;
     child->prev = lchild;
     child->parent = asn;
+    return 0;
+  }
+}
+
+int8_t lasn_tree_add_arr(asn_arr *asn, asn_arr *child) {
+  if (asn == NULL || child == NULL) return -1;
+  if ((*asn-1) == NULL) {memcpy((*asn-1), child, sizeof(struct asn_arr)); memcpy(&(*child)[0], asn, sizeof (struct asn_arr)); return 0;}
+  else {
+    asn_arr  *lchild = &(*asn)-1;
+    while ((*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
+    memcpy(&(*lchild), child, sizeof(struct asn_arr));
+    memcpy(&(*child)-1, &lchild, sizeof(struct asn_arr));
+    memcpy(&(*child)[0], asn, sizeof(struct asn_arr));
     return 0;
   }
 }
@@ -486,6 +531,51 @@ int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out,
   return 1;
 }
 
+int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr *out,
+    asn_arr *outobj, uint32_t outobjcnt) {
+  uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
+  uint32_t children_len = 0, derdat_len = derenc_len - deroff;
+  const uint8_t *derdat = (der + deroff);
+
+  lasn_tree_init_arr(out);
+  if (der == NULL || out == NULL || derlen == 0) return -1;
+  if (derenc_len == 0xFFFFFFFF) return -2;
+  if (derlen < derenc_len) return -3;
+  (*out)->type = *der;
+  (*out)->len = derdat_len;
+  (*out)->data = derdat;
+  if ((*der & 0x20) != 0) {
+    if (outobj == NULL || outobjcnt <= 0) return -1;
+    while (children_len < derdat_len) {
+      const uint8_t *child = (der + deroff);
+      uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
+      uint32_t child_len = lasn_get_len(child, child_maxlen, &child_datoff, 1);
+      int32_t child_obj = lasn_der_objcnt(child, child_len);
+
+      if (child_len == 0xFFFFFFFF) return -4;
+      if ((child_len + children_len) > derdat_len) return -5;
+      if (child_obj < 0 || child_obj > (int)outobjcnt) return -6;
+      asn_arr *child_o = outobj;
+      outobj++; --outobjcnt;
+      if (lasn_der_dec_arr(child, child_len, child_o, outobj, outobjcnt) < 0)
+        return -7;
+      outobj += (child_obj - 1);
+      outobjcnt -= (child_obj - 1);
+      memcpy(&(*child_o)-1, out, sizeof(struct asn_arr));
+      if ((*out)-1 == NULL) {memcpy((*out)-1, child_o, sizeof(struct asn_arr));}
+      else {
+        asn_arr *lchild = &(*out)-1;
+        while ((*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
+        memcpy((*lchild)+1, child_o, sizeof(struct asn_arr));
+        memcpy(((*lchild)+1)-1, lchild, sizeof(struct asn_arr));
+      }
+      children_len += child_len;
+      deroff += child_len;
+    }
+  }
+  return 1;
+}
+
 int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen) {
   uint32_t lenneed = lasn_get_len_enc_len(len);
 
@@ -524,14 +614,39 @@ int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen) {
   return (int32_t)lenneed;
 }
 
+int32_t lasn_der_enc_arr(asn_arr *asn, uint8_t *enc, uint32_t enclen) {
+  uint32_t lenneed = lasn_get_der_enc_len_rec_arr(asn);
+  uint32_t datlen = lasn_get_data_len_rec_arr(asn);
+
+  if (asn == NULL || lenneed > enclen || datlen == 0xFFFFFFFF) return -1;
+  *enc = (*asn)->type; enc++; enclen--;
+  int32_t len_enc_len = lasn_der_enc_len(datlen, enc, enclen);
+  if (len_enc_len < 0) return -1;
+  enc += len_enc_len; enclen -= len_enc_len;
+  if (((*asn)->type & 0x20) != 0) { // A Constructed type
+    asn_arr *child = &(*asn)-1;
+    while (child != NULL) {
+      int32_t child_enclen = lasn_der_enc_arr(child, enc, enclen);
+      if (child_enclen < 0) return -1;
+      enc += child_enclen; enclen -= child_enclen;
+    }
+  } else { // A Primitive type, copy data
+    if ((*asn)->len > 0) {
+      if ((*asn)->len <= enclen) {memcpy(enc, (*asn)->data, (*asn)->len);}
+      else {return -1;}
+    }
+  }
+  return (int32_t)lenneed;
+}
+
 int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
-  int32_t objcnt = lasn_der_objcnt(cmsd, fs);
+  int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
 
   if (objcnt < 0) {printf("ERR: Objects\n"); free(cmsd); return 1;}
   asn_tree *asnobj = (asn_tree*)malloc(sizeof(asn_tree) * objcnt);
   if (asnobj == NULL) {printf("ERR: Malloc\n"); free(cmsd); return 1;}
   asn_tree cms;
-  if (lasn_der_dec(cmsd, fs, &cms, asnobj, objcnt) < 0) {
+  if (lasn_der_dec((uint8_t*)cmsd, fs, &cms, asnobj, objcnt) < 0) {
     printf("ERR: Parse\n");free(cmsd); return 1;
   }
   lasn_print(&cms, 0);
@@ -595,6 +710,101 @@ int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   }
   if (encci->next != NULL) printf("unprot attributes avail\n");
   else printf("no unprot attributes avail\n");
-  free(asnobj); free(cmsd);
+  //free(asnobj); free(cmsd);
   return 0;
+}
+
+int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
+  int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
+
+  if (objcnt < 0) {printf("ERR: Objects\n"); /*free(cmsd);*/ return 1;}
+  asn_arr asnobj[objcnt*sizeof(asn_arr)];// = (asn_arr*)malloc(sizeof(asn_arr) * objcnt);
+  //if (asnobj == NULL) {printf("ERR: Malloc\n"); free(cmsd); return 1;}
+  asn_arr cms;
+/*  if (lasn_der_dec_arr(cmsd, fs, &cms, asnobj, objcnt) < 0) {
+    printf("ERR: Parse\n");free(cmsd); return 1;
+  }
+  lasn_print_arr(&cms, 0);
+  printf("----- parse begin ----\n");
+  if ((*cms).type != ASN1_TYPE_SEQUENCE) {
+    printf("ERR: Sequence, %x\n", (*cms).type); return 1;
+  }
+  asn_arr *ct = &(cms)-1;
+  if (ct == NULL || (*ct)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+    printf("ERR: ContentType\n"); return 1;
+  }
+  
+  printf("Content type: ");
+  if (memcmp((*ct)->data, AS1, (*ct)->len) != 0) {
+    printf("ERR: CT EncryptedData\n"); return 1;
+  }
+  printf("encryptedData\n");
+  asn_arr *encd = (((*ct)+1)-1);
+  if (encd == NULL || (*encd)->type != ASN1_TYPE_SEQUENCE) {
+    printf("ERR: CT EncryptedData\n"); return 1;
+  }
+  asn_arr *cmsv = (*encd)-1;
+  if (cmsv == NULL || (*cmsv)->type != ASN1_TYPE_INTEGER || (*cmsv)->len != 1) {
+    printf("ERR: CSMVersion\n"); return 1;
+  }
+  uint8_t v = (*cmsv)->data[0];
+  printf("cms version: %d\n", v);
+  asn_arr *encci = (*cmsv)-1;
+  if (encci == NULL || (*encci)->type != ASN1_TYPE_SEQUENCE) {
+    printf("ERR: EncryptedContent\n"); return 1;
+  }
+  asn_arr *enccict = (*encci)-1;
+  if (enccict == NULL || (*enccict)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+    printf("ERR: CT EncryptedContent\n"); return 1;
+  }
+  if ((*enccict)->len != 9 || memcmp((*enccict)->data, AS2, (*enccict)->len) != 0) {
+    printf("ERR: CT EncryptedContent PKCS#7\n"); return 1;
+  }
+  printf("contenttype of encryptedcontentinfo: PKCS#7\n");
+  asn_arr *ctencalg = (*enccict)+1;
+  if (ctencalg == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
+  if ((*ctencalg)->type == ASN1_TYPE_SEQUENCE) {
+    asn_arr *encalgi = (*ctencalg)-1;
+    if (encalgi == NULL || (*encalgi)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+      printf("ERR: EncryptionAlgoIdentifier\n"); return 1;
+    }
+    if (memcmp((*encalgi)->data, AS3, (*encalgi)->len) == 0) {
+      printf("content encrypt algo: AES-128-CBC\n");
+      asn_arr *aesiv = (*encalgi)+1;
+      if (aesiv == NULL || (*aesiv)->type != ASN1_TYPE_OCTET_STRING) {
+        printf("ERR: AES IV\n"); return 1;
+      }
+      printf("AES IV:\n");
+      lasn_printhex((*aesiv)->data, (*aesiv)->len);
+    } else {printf("unknown encryption algo\n");}
+    asn_arr *encct = (*ctencalg)+1;
+    if (encct == NULL || (*encct)->type != 0x80) {
+      printf("No encrypted content\n"); return 1;
+    }
+    printf("Encrypted content:\n");
+    lasn_printhex((*encct)->data, (*encct)->len);
+  }
+  if ((*encci)+1 != NULL) printf("unprot attributes avail\n");
+  else printf("no unprot attributes avail\n");
+*/
+  //free(asnobj); free(cmsd);
+  return 0;
+}
+
+uint64_t lcrypto_handle_asn(char *cert) {
+  char c[2*4096];
+
+  uint32_t fs = lcrypto_read_cert(cert, c, 1);
+  printf("fs %d\n", fs);
+  lasn_dump_and_parse(c, fs);
+  return 1;
+}
+
+uint64_t lcrypto_handle_asn_arr(char *cert) {
+  char c[2*4096];
+
+  uint32_t fs = lcrypto_read_cert(cert, c, 1);
+  printf("fs %d\n", fs);
+  lasn_dump_and_parse_arr(c, fs);
+  return 1;
 }

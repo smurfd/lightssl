@@ -24,6 +24,9 @@ int main(int argc, char **argv) {
 
   if (argc < 3) lcrypto_handle_asn("ca.csm");
   else lcrypto_handle_asn(argv[2]);
+  printf("----------------- arr -------------\n");
+  if (argc < 3) lcrypto_handle_asn_arr("ca.csm");
+  else lcrypto_handle_asn_arr(argv[2]);
   printf("OK\n");
   return 0;
 }
