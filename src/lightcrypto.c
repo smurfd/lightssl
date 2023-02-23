@@ -733,7 +733,7 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   if (ct == NULL || (*ct)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: ContentType\n"); return 1;
   }
-  
+
   printf("Content type: ");
   if (memcmp((*ct)->data, AS1, (*ct)->len) != 0) {
     printf("ERR: CT EncryptedData\n"); return 1;
