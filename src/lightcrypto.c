@@ -233,7 +233,7 @@ static uint64_t lcrypto_read_cert(char *fn, char c[], bool iscms) {
 
     int fr = fgetc(ptr);
     while (fr != EOF && fpos < fs) {c[fpos++] = (uint8_t)fr; fr = fgetc(ptr);}
-    printf("fr %d %d %d\n", fr, fs, len);
+    printf("fr %d %d %llu\n", fr, fs, len);
     len = fs;
   } else while (c[len - 1] != EOF) {c[len++] = fgetc(ptr);}
   fclose(ptr);
@@ -324,11 +324,11 @@ void lasn_print(const asn_tree *asn, int depth) {
 
 void lasn_print_arr(const asn_arr *asn, int depth) {
   printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, (*asn)->type, (*asn)->len);
-  if ((*asn)-1 == NULL) {
+  if ((asn-1) == NULL) {
     printf("Value:\n");
     lasn_printhex((*asn)->data, (*asn)->len);
-  } else {lasn_print_arr(&(*asn)-1, depth + 1);}
-  if ((*asn)+1 != NULL) lasn_print_arr(&(*asn)+1, depth);
+  } //else {printf("print arr\n"); lasn_print_arr((asn-1), depth + 1);printf("rra tnirp\n");}
+  if (&(*asn)+1 != NULL) lasn_print_arr(&(*asn)+1, depth);
 }
 
 uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
@@ -409,6 +409,7 @@ void lasn_tree_init(asn_tree *asn) {
 }
 
 void lasn_tree_init_arr(asn_arr *asn) {
+  (*asn) = malloc(sizeof(asn));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->data = NULL;
 }
 
@@ -541,33 +542,45 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr *out,
   if (der == NULL || out == NULL || derlen == 0) return -1;
   if (derenc_len == 0xFFFFFFFF) return -2;
   if (derlen < derenc_len) return -3;
+  printf("befr out\n");
+
   (*out)->type = *der;
   (*out)->len = derdat_len;
   (*out)->data = derdat;
+  printf("aftr out\n");
   if ((*der & 0x20) != 0) {
     if (outobj == NULL || outobjcnt <= 0) return -1;
     while (children_len < derdat_len) {
+      printf("loop\n");
       const uint8_t *child = (der + deroff);
       uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
       uint32_t child_len = lasn_get_len(child, child_maxlen, &child_datoff, 1);
       int32_t child_obj = lasn_der_objcnt(child, child_len);
-
+      printf("loop1\n");
       if (child_len == 0xFFFFFFFF) return -4;
       if ((child_len + children_len) > derdat_len) return -5;
       if (child_obj < 0 || child_obj > (int)outobjcnt) return -6;
       asn_arr *child_o = outobj;
       outobj++; --outobjcnt;
+      printf("loop2\n");
       if (lasn_der_dec_arr(child, child_len, child_o, outobj, outobjcnt) < 0)
         return -7;
       outobj += (child_obj - 1);
       outobjcnt -= (child_obj - 1);
       memcpy(&(*child_o)-1, out, sizeof(struct asn_arr));
+      printf("loop3\n");
       if ((*out)-1 == NULL) {memcpy((*out)-1, child_o, sizeof(struct asn_arr));}
       else {
-        asn_arr *lchild = &(*out)-1;
-        while ((*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
-        memcpy((*lchild)+1, child_o, sizeof(struct asn_arr));
-        memcpy(((*lchild)+1)-1, lchild, sizeof(struct asn_arr));
+        printf("loop3.1\n");
+
+        asn_arr *lchild = (&(*out)-1);
+        printf("loop3.2\n");
+        //while (lchild+2 != NULL) {lchild++;}//memcpy(lchild, lchild+1, sizeof(struct asn_arr));}//(*lchild) = (*lchild+1);}
+        printf("loop3.3\n");
+        memcpy(&(*lchild)+1, child_o, sizeof(struct asn_arr));
+        printf("loop3.4\n");
+        memcpy(&(*lchild)+1, lchild, sizeof(struct asn_arr));
+        printf("loop3.5\n");
       }
       children_len += child_len;
       deroff += child_len;
@@ -717,20 +730,22 @@ int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
 
-  if (objcnt < 0) {printf("ERR: Objects\n"); /*free(cmsd);*/ return 1;}
-  asn_arr asnobj[objcnt*sizeof(asn_arr)];// = (asn_arr*)malloc(sizeof(asn_arr) * objcnt);
-  //if (asnobj == NULL) {printf("ERR: Malloc\n"); free(cmsd); return 1;}
-  asn_arr cms;
-/*  if (lasn_der_dec_arr(cmsd, fs, &cms, asnobj, objcnt) < 0) {
-    printf("ERR: Parse\n");free(cmsd); return 1;
+  if (objcnt < 0) {printf("ERR: Objects\n"); return 1;}
+  asn_arr asnobj[objcnt*sizeof(asn_arr)];
+  asn_arr cms[objcnt*sizeof(asn_arr)+1];
+
+  if (lasn_der_dec_arr(cmsd, fs, cms, asnobj, objcnt) < 0) {
+    printf("ERR: Parse\n");return 1;
   }
-  lasn_print_arr(&cms, 0);
+  printf("xxx\n");
+  //lasn_print_arr(cms, 0);
   printf("----- parse begin ----\n");
-  if ((*cms).type != ASN1_TYPE_SEQUENCE) {
-    printf("ERR: Sequence, %x\n", (*cms).type); return 1;
+  /*if ((*cms)->type != ASN1_TYPE_SEQUENCE) {
+    printf("ERR: Sequence, %x\n", (*cms)->type); return 1;
   }
-  asn_arr *ct = &(cms)-1;
-  if (ct == NULL || (*ct)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+  asn_arr ct[objcnt*sizeof(asn_arr)+1];
+  (*ct) = *(&(*cms)-1);
+  if ((*ct) == NULL || (*ct)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: ContentType\n"); return 1;
   }
 
@@ -788,6 +803,7 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   else printf("no unprot attributes avail\n");
 */
   //free(asnobj); free(cmsd);
+  //free(cms);
   return 0;
 }
 
@@ -796,7 +812,7 @@ uint64_t lcrypto_handle_asn(char *cert) {
 
   uint32_t fs = lcrypto_read_cert(cert, c, 1);
   printf("fs %d\n", fs);
-  lasn_dump_and_parse(c, fs);
+  lasn_dump_and_parse((uint8_t*)c, fs);
   return 1;
 }
 
@@ -805,6 +821,6 @@ uint64_t lcrypto_handle_asn_arr(char *cert) {
 
   uint32_t fs = lcrypto_read_cert(cert, c, 1);
   printf("fs %d\n", fs);
-  lasn_dump_and_parse_arr(c, fs);
+  lasn_dump_and_parse_arr((uint8_t*)c, fs);
   return 1;
 }
