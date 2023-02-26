@@ -323,10 +323,10 @@ void lasn_print(const asn_tree *asn, int depth) {
 }
 
 void lasn_print_arr(const asn_arr *asn, int depth) {
-  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, (*asn)->type, (*asn)->len);
+  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, (*asn).type, (*asn).len);
   if ((asn-1) == NULL) {
     printf("Value:\n");
-    lasn_printhex((*asn)->data, (*asn)->len);
+    lasn_printhex((*asn).data, (*asn).len);
   } //else {printf("print arr\n"); lasn_print_arr((asn-1), depth + 1);printf("rra tnirp\n");}
   if (&(*asn)+1 != NULL) lasn_print_arr(&(*asn)+1, depth);
 }
@@ -359,7 +359,7 @@ uint32_t lasn_get_der_enc_len(asn_tree *asn) {
 }
 
 uint32_t lasn_get_der_enc_len_arr(asn_arr *asn) {
-  return (1 + (*asn)->len + lasn_get_len_enc_len((*asn)->len));
+  return (1 + (*asn).len + lasn_get_len_enc_len((*asn).len));
 }
 
 uint32_t lasn_get_der_enc_len_rec(asn_tree *asn) {
@@ -391,7 +391,7 @@ uint32_t lasn_get_data_len_rec(asn_tree *asn) {
 
 uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
   if (asn == NULL) return 0xFFFFFFFF;
-  if (((*asn)->type & 0x20) != 0) { // A constructed type
+  if (((*asn).type & 0x20) != 0) { // A constructed type
     asn_arr *child = &(*asn)-1;
     uint32_t len = 0;
 
@@ -399,7 +399,7 @@ uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
       len += lasn_get_der_enc_len_rec_arr(child); child = &(*child)+1;
     }
     return len;
-  } else {return (*asn)->len;} // Not a constructed type
+  } else {return (*asn).len;} // Not a constructed type
 }
 
 void lasn_tree_init(asn_tree *asn) {
@@ -408,9 +408,9 @@ void lasn_tree_init(asn_tree *asn) {
   asn->next = NULL; asn->child = NULL; asn->parent = NULL;
 }
 
-void lasn_tree_init_arr(asn_arr *asn) {
+void lasn_tree_init_arr(asn_arr **asn) {
   (*asn) = malloc(sizeof(asn));
-  (*asn)->type = 0; (*asn)->len = 0; (*asn)->data = NULL;
+  (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
 
 int8_t lasn_tree_add(asn_tree *asn, asn_tree *child) {
@@ -426,12 +426,12 @@ int8_t lasn_tree_add(asn_tree *asn, asn_tree *child) {
   }
 }
 
-int8_t lasn_tree_add_arr(asn_arr *asn, asn_arr *child) {
+int8_t lasn_tree_add_arr(asn_arr **asn, asn_arr **child) {
   if (asn == NULL || child == NULL) return -1;
   if ((*asn-1) == NULL) {memcpy((*asn-1), child, sizeof(struct asn_arr)); memcpy(&(*child)[0], asn, sizeof (struct asn_arr)); return 0;}
   else {
-    asn_arr  *lchild = &(*asn)-1;
-    while ((*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
+    asn_arr *lchild = *(&(*asn)-1);
+    while (&(*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
     memcpy(&(*lchild), child, sizeof(struct asn_arr));
     memcpy(&(*child)-1, &lchild, sizeof(struct asn_arr));
     memcpy(&(*child)[0], asn, sizeof(struct asn_arr));
@@ -507,6 +507,7 @@ int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out,
       uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
       uint32_t child_len = lasn_get_len(child, child_maxlen, &child_datoff, 1);
       int32_t child_obj = lasn_der_objcnt(child, child_len);
+      printf("loop1 %d %d %d :: %d %d\n", child_len, child_obj, out->len, children_len, derdat_len);
 
       if (child_len == 0xFFFFFFFF) return -4;
       if ((child_len + children_len) > derdat_len) return -5;
@@ -532,8 +533,8 @@ int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out,
   return 1;
 }
 
-int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr *out,
-    asn_arr *outobj, uint32_t outobjcnt) {
+int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
+    asn_arr **outobj, uint32_t outobjcnt) {
   uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
   uint32_t children_len = 0, derdat_len = derenc_len - deroff;
   const uint8_t *derdat = (der + deroff);
@@ -542,46 +543,55 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr *out,
   if (der == NULL || out == NULL || derlen == 0) return -1;
   if (derenc_len == 0xFFFFFFFF) return -2;
   if (derlen < derenc_len) return -3;
-  printf("befr out\n");
+  printf("befr out %d\n", (*out)->len);
 
   (*out)->type = *der;
   (*out)->len = derdat_len;
   (*out)->data = derdat;
+  (*out)->pos++;
   printf("aftr out\n");
+
   if ((*der & 0x20) != 0) {
     if (outobj == NULL || outobjcnt <= 0) return -1;
+
     while (children_len < derdat_len) {
       printf("loop\n");
       const uint8_t *child = (der + deroff);
       uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
       uint32_t child_len = lasn_get_len(child, child_maxlen, &child_datoff, 1);
       int32_t child_obj = lasn_der_objcnt(child, child_len);
-      printf("loop1\n");
+      printf("loop1 %d %d %d :: %d %d\n", child_len, child_obj, (*out)->len, children_len, derdat_len);
       if (child_len == 0xFFFFFFFF) return -4;
       if ((child_len + children_len) > derdat_len) return -5;
       if (child_obj < 0 || child_obj > (int)outobjcnt) return -6;
-      asn_arr *child_o = outobj;
+
+      asn_arr *child_o = *outobj;
       outobj++; --outobjcnt;
       printf("loop2\n");
-      if (lasn_der_dec_arr(child, child_len, child_o, outobj, outobjcnt) < 0)
+      if (lasn_der_dec_arr(child, child_len, &child_o, outobj, outobjcnt) < 0)
         return -7;
       outobj += (child_obj - 1);
       outobjcnt -= (child_obj - 1);
-      memcpy(&(*child_o)-1, out, sizeof(struct asn_arr));
+      /*memcpy(&(*child_o)-1, out, sizeof(struct asn_arr));
       printf("loop3\n");
       if ((*out)-1 == NULL) {memcpy((*out)-1, child_o, sizeof(struct asn_arr));}
       else {
         printf("loop3.1\n");
 
-        asn_arr *lchild = (&(*out)-1);
+        asn_arr *lchild = *(&(*out)-1);
         printf("loop3.2\n");
         //while (lchild+2 != NULL) {lchild++;}//memcpy(lchild, lchild+1, sizeof(struct asn_arr));}//(*lchild) = (*lchild+1);}
+        while (lchild+1 != NULL) {lchild++;}
         printf("loop3.3\n");
-        memcpy(&(*lchild)+1, child_o, sizeof(struct asn_arr));
+        lchild = child_o;
+        //memcpy(&(*lchild), &child_o, sizeof(struct asn_arr));
         printf("loop3.4\n");
-        memcpy(&(*lchild)+1, lchild, sizeof(struct asn_arr));
+
+        //(lchild+1) = lchild;
+        //memcpy(&(*lchild)+1, lchild, sizeof(struct asn_arr));
         printf("loop3.5\n");
       }
+      */
       children_len += child_len;
       deroff += child_len;
     }
@@ -627,9 +637,9 @@ int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen) {
   return (int32_t)lenneed;
 }
 
-int32_t lasn_der_enc_arr(asn_arr *asn, uint8_t *enc, uint32_t enclen) {
-  uint32_t lenneed = lasn_get_der_enc_len_rec_arr(asn);
-  uint32_t datlen = lasn_get_data_len_rec_arr(asn);
+int32_t lasn_der_enc_arr(asn_arr **asn, uint8_t *enc, uint32_t enclen) {
+  uint32_t lenneed = lasn_get_der_enc_len_rec_arr(*asn);
+  uint32_t datlen = lasn_get_data_len_rec_arr(*asn);
 
   if (asn == NULL || lenneed > enclen || datlen == 0xFFFFFFFF) return -1;
   *enc = (*asn)->type; enc++; enclen--;
@@ -637,9 +647,9 @@ int32_t lasn_der_enc_arr(asn_arr *asn, uint8_t *enc, uint32_t enclen) {
   if (len_enc_len < 0) return -1;
   enc += len_enc_len; enclen -= len_enc_len;
   if (((*asn)->type & 0x20) != 0) { // A Constructed type
-    asn_arr *child = &(*asn)-1;
+    asn_arr *child = *(&(*asn)-1);
     while (child != NULL) {
-      int32_t child_enclen = lasn_der_enc_arr(child, enc, enclen);
+      int32_t child_enclen = lasn_der_enc_arr(&child, enc, enclen);
       if (child_enclen < 0) return -1;
       enc += child_enclen; enclen -= child_enclen;
     }
@@ -654,7 +664,7 @@ int32_t lasn_der_enc_arr(asn_arr *asn, uint8_t *enc, uint32_t enclen) {
 
 int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
-
+  printf("objcnt %d\n", objcnt);
   if (objcnt < 0) {printf("ERR: Objects\n"); free(cmsd); return 1;}
   asn_tree *asnobj = (asn_tree*)malloc(sizeof(asn_tree) * objcnt);
   if (asnobj == NULL) {printf("ERR: Malloc\n"); free(cmsd); return 1;}
@@ -729,6 +739,7 @@ int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 
 int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
+  printf("objcnt %d\n", objcnt);
 
   if (objcnt < 0) {printf("ERR: Objects\n"); return 1;}
   asn_arr asnobj[objcnt*sizeof(asn_arr)];
@@ -737,9 +748,11 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   if (lasn_der_dec_arr(cmsd, fs, cms, asnobj, objcnt) < 0) {
     printf("ERR: Parse\n");return 1;
   }
+
   printf("xxx\n");
   //lasn_print_arr(cms, 0);
   printf("----- parse begin ----\n");
+  //exit(0);
   /*if ((*cms)->type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: Sequence, %x\n", (*cms)->type); return 1;
   }

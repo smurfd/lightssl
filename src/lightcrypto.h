@@ -49,7 +49,7 @@ uint32_t utf8encode(uint32_t cp);
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
 typedef struct asn_tree asn_tree;
-typedef struct asn_arr *asn_arr;
+typedef struct asn_arr asn_arr;
 struct asn_tree {
   uint8_t type;
   uint32_t len;
@@ -58,7 +58,7 @@ struct asn_tree {
 };
 
 struct asn_arr {
-  uint8_t type;
+  uint8_t type, pos;
   uint32_t len;
   const uint8_t *data;
 };
