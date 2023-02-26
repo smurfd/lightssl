@@ -323,12 +323,23 @@ void lasn_print(const asn_tree *asn, int depth) {
 }
 
 void lasn_print_arr(const asn_arr *asn, int depth) {
-  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, (*asn).type, (*asn).len);
-  if ((asn-1) == NULL) {
-    printf("Value:\n");
-    lasn_printhex((*asn).data, (*asn).len);
-  } //else {printf("print arr\n"); lasn_print_arr((asn-1), depth + 1);printf("rra tnirp\n");}
-  if (&(*asn)+1 != NULL) lasn_print_arr(&(*asn)+1, depth);
+  int i = 0;
+  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, asn->type, asn->len);
+  printf(":: %d %d\n", asn[i].type, asn[i].pos);
+  while (asn[i].type != 0) {
+    printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, asn[i].type, asn[i].len);
+    if (asn[i].pos == 0) {printf("Value:\n");lasn_printhex(asn[i].data, asn[i].len);}
+    i++;
+  }
+  //for (int i = 0; i < 30; ++i) {
+  //  if (asn[i].type == 0) break;
+  //  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, asn[i].type, asn[i].len);
+  //}
+  //if (&(*asn)-1 == NULL) {
+  //  printf("Value:\n");
+  //  lasn_printhex((*asn).data, (*asn).len);
+  //} else {lasn_print_arr(&(*asn)-1, depth + 1);}
+  //if (&(*asn)+1 != NULL) lasn_print_arr(&(*asn)+1, depth);
 }
 
 uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
@@ -548,7 +559,8 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
   (*out)->type = *der;
   (*out)->len = derdat_len;
   (*out)->data = derdat;
-  (*out)->pos++;
+
+  printf("befr out %d\n", (*out)->len);
   printf("aftr out\n");
 
   if ((*der & 0x20) != 0) {
@@ -594,6 +606,7 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
       */
       children_len += child_len;
       deroff += child_len;
+      (*out)->pos = children_len;
     }
   }
   return 1;
@@ -742,81 +755,90 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   printf("objcnt %d\n", objcnt);
 
   if (objcnt < 0) {printf("ERR: Objects\n"); return 1;}
-  asn_arr asnobj[objcnt*sizeof(asn_arr)];
-  asn_arr cms[objcnt*sizeof(asn_arr)+1];
+  asn_arr *asnobj[] = {0};
+  asn_arr *cms[] = {0};
 
   if (lasn_der_dec_arr(cmsd, fs, cms, asnobj, objcnt) < 0) {
     printf("ERR: Parse\n");return 1;
   }
 
-  printf("xxx\n");
-  //lasn_print_arr(cms, 0);
+  printf("xxx %d\n", (*cms)->len);
+  lasn_print_arr((*cms), 0);
   printf("----- parse begin ----\n");
-  //exit(0);
-  /*if ((*cms)->type != ASN1_TYPE_SEQUENCE) {
+
+  if ((*cms)->type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: Sequence, %x\n", (*cms)->type); return 1;
   }
-  asn_arr ct[objcnt*sizeof(asn_arr)+1];
-  (*ct) = *(&(*cms)-1);
-  if ((*ct) == NULL || (*ct)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+
+  asn_arr *ct[]={0};
+  (*ct) = (*cms);
+  if ((*ct) == NULL || (*ct)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: ContentType\n"); return 1;
   }
 
   printf("Content type: ");
-  if (memcmp((*ct)->data, AS1, (*ct)->len) != 0) {
+  if (memcmp((*ct)[1].data, AS1, (*ct)[1].len) != 0) {
     printf("ERR: CT EncryptedData\n"); return 1;
   }
   printf("encryptedData\n");
-  asn_arr *encd = (((*ct)+1)-1);
-  if (encd == NULL || (*encd)->type != ASN1_TYPE_SEQUENCE) {
+  asn_arr *encd[]={0};
+  (*encd) = &(*ct)[2];
+
+  if ((*encd) == NULL || (*encd)[1].type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: CT EncryptedData\n"); return 1;
   }
-  asn_arr *cmsv = (*encd)-1;
-  if (cmsv == NULL || (*cmsv)->type != ASN1_TYPE_INTEGER || (*cmsv)->len != 1) {
+  asn_arr *cmsv[] = {0};
+  (*cmsv) = &(*encd)[1];
+  if ((*cmsv) == NULL || (*cmsv)[1].type != ASN1_TYPE_INTEGER || (*cmsv)[1].len != 1) {
     printf("ERR: CSMVersion\n"); return 1;
   }
-  uint8_t v = (*cmsv)->data[0];
+  uint8_t v = (*cmsv)[1].data[0];
   printf("cms version: %d\n", v);
-  asn_arr *encci = (*cmsv)-1;
-  if (encci == NULL || (*encci)->type != ASN1_TYPE_SEQUENCE) {
+
+  asn_arr *encci[] = {0};
+  (*encci) = &(*cmsv)[1];
+  if ((*encci) == NULL || (*encci)[1].type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: EncryptedContent\n"); return 1;
   }
-  asn_arr *enccict = (*encci)-1;
-  if (enccict == NULL || (*enccict)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+  asn_arr *enccict[] = {0};
+  (*enccict) = &(*encci)[1];
+  if ((*enccict) == NULL || (*enccict)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: CT EncryptedContent\n"); return 1;
   }
-  if ((*enccict)->len != 9 || memcmp((*enccict)->data, AS2, (*enccict)->len) != 0) {
+  if ((*enccict)[1].len != 9 || memcmp((*enccict)[1].data, AS2, (*enccict)[1].len) != 0) {
     printf("ERR: CT EncryptedContent PKCS#7\n"); return 1;
   }
   printf("contenttype of encryptedcontentinfo: PKCS#7\n");
-  asn_arr *ctencalg = (*enccict)+1;
-  if (ctencalg == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
-  if ((*ctencalg)->type == ASN1_TYPE_SEQUENCE) {
-    asn_arr *encalgi = (*ctencalg)-1;
-    if (encalgi == NULL || (*encalgi)->type != ASN1_TYPE_OBJECT_IDENTIFIER) {
+  asn_arr *ctencalg[] = {0};
+  (*ctencalg) = &(*enccict)[1];
+  if ((*ctencalg) == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
+  if ((*ctencalg)[1].type == ASN1_TYPE_SEQUENCE) {
+    asn_arr *encalgi[] = {0};
+    (*encalgi) = &(*ctencalg)[1];
+    if ((*encalgi) == NULL || (*encalgi)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
       printf("ERR: EncryptionAlgoIdentifier\n"); return 1;
     }
-    if (memcmp((*encalgi)->data, AS3, (*encalgi)->len) == 0) {
+    if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0) {
       printf("content encrypt algo: AES-128-CBC\n");
-      asn_arr *aesiv = (*encalgi)+1;
-      if (aesiv == NULL || (*aesiv)->type != ASN1_TYPE_OCTET_STRING) {
+      asn_arr *aesiv[] = {0};
+      (*aesiv) = &(*encalgi)[1];
+      if ((*aesiv) == NULL || (*aesiv)[1].type != ASN1_TYPE_OCTET_STRING) {
         printf("ERR: AES IV\n"); return 1;
       }
       printf("AES IV:\n");
-      lasn_printhex((*aesiv)->data, (*aesiv)->len);
+      lasn_printhex((*aesiv)[1].data, (*aesiv)[1].len);
     } else {printf("unknown encryption algo\n");}
-    asn_arr *encct = (*ctencalg)+1;
-    if (encct == NULL || (*encct)->type != 0x80) {
+    asn_arr *encct[] = {0};
+    (*encct) = &(*ctencalg)[3];
+    if ((*encct) == NULL || (*encct)[1].type != 0x80) {
       printf("No encrypted content\n"); return 1;
     }
     printf("Encrypted content:\n");
-    lasn_printhex((*encct)->data, (*encct)->len);
+    lasn_printhex((*encct)[1].data, (*encct)[1].len);
   }
-  if ((*encci)+1 != NULL) printf("unprot attributes avail\n");
+  // this if statement doesnt work yet
+  if ((*encci) != NULL) printf("unprot attributes avail\n");
   else printf("no unprot attributes avail\n");
-*/
-  //free(asnobj); free(cmsd);
-  //free(cms);
   return 0;
 }
 
