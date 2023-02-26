@@ -47,14 +47,7 @@ uint32_t utf8encode(uint32_t cp);
 
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-typedef struct asn_tree asn_tree;
 typedef struct asn_arr asn_arr;
-struct asn_tree {
-  uint8_t type;
-  uint32_t len;
-  const uint8_t *data;
-  asn_tree *parent, *child, *next, *prev;
-};
 
 struct asn_arr {
   uint8_t type, pos;
@@ -90,22 +83,12 @@ struct asn_arr {
 #define ASN1_TYPE_GENERALIZEDTIME 0x24
 
 void lasn_printhex(const uint8_t *d, uint32_t len);
-void lasn_printasn(const asn_tree *asn, int depth);
-void lasn_tree_init(asn_tree *asn);
-//int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs);
 uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
 uint32_t lasn_get_len_enc_len(uint32_t datalen);
-uint32_t lasn_get_der_enc_len(asn_tree *asn);
-uint32_t lasn_get_der_enc_len_rec(asn_tree *asn);
-uint32_t lasn_get_data_len_rec(asn_tree *asn);
-int8_t lasn_tree_add(asn_tree *asn, asn_tree *child);
 int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
 int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
 int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen);
-int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_tree *out,
-  asn_tree *outobj, uint32_t outobjcnt);
 int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
-int32_t lasn_der_enc(asn_tree *asn, uint8_t *enc, uint32_t enclen);
 
 // Keep static functions
 // uint64_t lightcrypto_rand();
