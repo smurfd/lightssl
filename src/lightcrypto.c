@@ -752,25 +752,20 @@ int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 
 int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
-  printf("objcnt %d\n", objcnt);
+  asn_arr *ct[] = {0}, *asnobj[] = {0}, *cms[] = {0}, *encd[] = {0};
+  asn_arr *encci[] = {0}, *cmsv[] = {0}, *enccict[] = {0}, *aesiv[] = {0};
+  asn_arr *ctencalg[] = {0}, *encalgi[] = {0}, *encct[] = {0};
 
   if (objcnt < 0) {printf("ERR: Objects\n"); return 1;}
-  asn_arr *asnobj[] = {0};
-  asn_arr *cms[] = {0};
-
   if (lasn_der_dec_arr(cmsd, fs, cms, asnobj, objcnt) < 0) {
     printf("ERR: Parse\n");return 1;
   }
-
-  printf("xxx %d\n", (*cms)->len);
   lasn_print_arr((*cms), 0);
   printf("----- parse begin ----\n");
 
   if ((*cms)->type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: Sequence, %x\n", (*cms)->type); return 1;
   }
-
-  asn_arr *ct[]={0};
   (*ct) = (*cms);
   if ((*ct) == NULL || (*ct)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: ContentType\n"); return 1;
@@ -781,26 +776,20 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
     printf("ERR: CT EncryptedData\n"); return 1;
   }
   printf("encryptedData\n");
-  asn_arr *encd[]={0};
   (*encd) = &(*ct)[2];
-
   if ((*encd) == NULL || (*encd)[1].type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: CT EncryptedData\n"); return 1;
   }
-  asn_arr *cmsv[] = {0};
   (*cmsv) = &(*encd)[1];
   if ((*cmsv) == NULL || (*cmsv)[1].type != ASN1_TYPE_INTEGER || (*cmsv)[1].len != 1) {
     printf("ERR: CSMVersion\n"); return 1;
   }
   uint8_t v = (*cmsv)[1].data[0];
   printf("cms version: %d\n", v);
-
-  asn_arr *encci[] = {0};
   (*encci) = &(*cmsv)[1];
   if ((*encci) == NULL || (*encci)[1].type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: EncryptedContent\n"); return 1;
   }
-  asn_arr *enccict[] = {0};
   (*enccict) = &(*encci)[1];
   if ((*enccict) == NULL || (*enccict)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: CT EncryptedContent\n"); return 1;
@@ -809,18 +798,15 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
     printf("ERR: CT EncryptedContent PKCS#7\n"); return 1;
   }
   printf("contenttype of encryptedcontentinfo: PKCS#7\n");
-  asn_arr *ctencalg[] = {0};
   (*ctencalg) = &(*enccict)[1];
   if ((*ctencalg) == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
   if ((*ctencalg)[1].type == ASN1_TYPE_SEQUENCE) {
-    asn_arr *encalgi[] = {0};
     (*encalgi) = &(*ctencalg)[1];
     if ((*encalgi) == NULL || (*encalgi)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
       printf("ERR: EncryptionAlgoIdentifier\n"); return 1;
     }
     if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0) {
       printf("content encrypt algo: AES-128-CBC\n");
-      asn_arr *aesiv[] = {0};
       (*aesiv) = &(*encalgi)[1];
       if ((*aesiv) == NULL || (*aesiv)[1].type != ASN1_TYPE_OCTET_STRING) {
         printf("ERR: AES IV\n"); return 1;
@@ -828,7 +814,6 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
       printf("AES IV:\n");
       lasn_printhex((*aesiv)[1].data, (*aesiv)[1].len);
     } else {printf("unknown encryption algo\n");}
-    asn_arr *encct[] = {0};
     (*encct) = &(*ctencalg)[3];
     if ((*encct) == NULL || (*encct)[1].type != 0x80) {
       printf("No encrypted content\n"); return 1;
