@@ -38,7 +38,6 @@ void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
   uint64_t len);
 
 uint64_t lcrypto_handle_cert(char *cert, char d[LEN]);
-uint64_t lcrypto_handle_asn(char *cert);
 uint64_t lcrypto_handle_asn_arr(char *cert);
 
 void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
@@ -93,7 +92,7 @@ struct asn_arr {
 void lasn_printhex(const uint8_t *d, uint32_t len);
 void lasn_printasn(const asn_tree *asn, int depth);
 void lasn_tree_init(asn_tree *asn);
-int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs);
+//int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs);
 uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
 uint32_t lasn_get_len_enc_len(uint32_t datalen);
 uint32_t lasn_get_der_enc_len(asn_tree *asn);
