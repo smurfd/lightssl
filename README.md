@@ -15,7 +15,7 @@ Do SSL really need to be so hard?
 
 Ciphers: AES<br>
 Keys: ECDSA<br>
-Crypto: TODO: ASN1<br>
+Crypto: ASN1<br>
 Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 
 ### Compile lightssl
