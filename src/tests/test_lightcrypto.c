@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
   assert(strcmp(s1, s0) == 0);
   lcrypto_decode64((char*)data, strlen((char*)data), &d, s4);
 
-  if (argc < 3) lcrypto_handle_asn_arr("ca.csm");
-  else lcrypto_handle_asn_arr(argv[2]);
+  if (argc < 3) lcrypto_handle_asn("ca.csm");
+  else lcrypto_handle_asn(argv[2]);
   printf("OK\n");
   return 0;
 }

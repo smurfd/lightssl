@@ -38,7 +38,7 @@ void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
   uint64_t len);
 
 uint64_t lcrypto_handle_cert(char *cert, char d[LEN]);
-uint64_t lcrypto_handle_asn_arr(char *cert);
+uint64_t lcrypto_handle_asn(char *cert);
 
 void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
