@@ -55,19 +55,19 @@ struct asn_arr {
 
 typedef struct asn_arr asn_arr;
 
-#define ASN1_TYPE_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
-#define ASN1_TYPE_BIT_STRING 0x03 // Header byte of the ASN.1 type BIT STRING
-#define ASN1_TYPE_OCTET_STRING 0x04 // Header byte of the ASN.1 type OCTET STRING
-#define ASN1_TYPE_NULL 0x05 // Header byte of the ASN.1 type NULL
-#define ASN1_TYPE_OBJECT_IDENTIFIER 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
-#define ASN1_TYPE_SEQUENCE 0x30 // Header byte of the ASN.1 type SEQUENCE
-#define ASN1_TYPE_SET 0x31 // Header byte of the ASN.1 type SET
-#define ASN1_TYPE_UTF8_STRING 0x12 // Header byte of the ASN.1 type UTF8String
-#define ASN1_TYPE_PRINTABLE_STRING 0x19 // Header byte of the ASN.1 type PrintableString
-#define ASN1_TYPE_T61_STRING 0x20 // Header byte of the ASN.1 type T61String
-#define ASN1_TYPE_IA5_STRING 0x22 // Header byte of the ASN.1 type IA5String
-#define ASN1_TYPE_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
-#define ASN1_TYPE_GENERALIZEDTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
+#define ASN1_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
+#define ASN1_BITSTRI 0x03 // Header byte of the ASN.1 type BIT STRING
+#define ASN1_OCTSTRI 0x04 // Header byte of the ASN.1 type OCTET STRING
+#define ASN1_NULL000 0x05 // Header byte of the ASN.1 type NULL
+#define ASN1_OBJIDEN 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
+#define ASN1_SEQUENC 0x30 // Header byte of the ASN.1 type SEQUENCE
+#define ASN1_SET0000 0x31 // Header byte of the ASN.1 type SET
+#define ASN1_UTF8STR 0x12 // Header byte of the ASN.1 type UTF8String
+#define ASN1_PRNTSTR 0x19 // Header byte of the ASN.1 type PrintableString
+#define ASN1_T61STRI 0x20 // Header byte of the ASN.1 type T61String
+#define ASN1_IA5STRI 0x22 // Header byte of the ASN.1 type IA5String
+#define ASN1_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
+#define ASN1_GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 
 // Keep static functions
 // uint64_t lightcrypto_rand();
