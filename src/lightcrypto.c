@@ -338,76 +338,9 @@ static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, b
   return ret;
 }
 
-static uint32_t lasn_get_len_enc_len(uint32_t datalen) {
-  uint32_t len = 1, len1 = datalen;
-
-  while(len1 > 0) {len1 = len >> 8; ++len;}
-  return len;
-}
-
-static uint32_t lasn_get_der_enc_len_arr(asn_arr *asn) {
-  return (1 + (*asn).len + lasn_get_len_enc_len((*asn).len));
-}
-
-static uint32_t lasn_get_der_enc_len_rec_arr(asn_arr *asn) {
-  if (asn == NULL) return 0xFFFFFFFF;
-  uint32_t len = lasn_get_der_enc_len_rec_arr(asn);
-  if (len == 0xFFFFFFFF) return 0xFFFFFFFF;
-  return (1 + lasn_get_len_enc_len(len) + len);
-}
-
-static uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
-  if (asn == NULL) return 0xFFFFFFFF;
-  if (((*asn).type & 0x20) != 0) { // A constructed type
-    asn_arr *child = &(*asn)-1;
-    uint32_t len = 0;
-
-    while(child != NULL) {
-      len += lasn_get_der_enc_len_rec_arr(child); child = &(*child)+1;
-    }
-    return len;
-  } else {return (*asn).len;} // Not a constructed type
-}
-
 static void lasn_tree_init_arr(asn_arr **asn) {
   (*asn) = malloc(sizeof(struct asn_arr));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
-}
-
-static int8_t lasn_tree_add_arr(asn_arr **asn, asn_arr **child) {
-  if (asn == NULL || child == NULL) return -1;
-  if ((*asn-1) == NULL) {memcpy((*asn-1), child, sizeof(struct asn_arr)); memcpy(&(*child)[0], asn, sizeof (struct asn_arr)); return 0;}
-  else {
-    asn_arr *lchild = *(&(*asn)-1);
-    while (&(*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
-    memcpy(&(*lchild), child, sizeof(struct asn_arr));
-    memcpy(&(*child)-1, &lchild, sizeof(struct asn_arr));
-    memcpy(&(*child)[0], asn, sizeof(struct asn_arr));
-    return 0;
-  }
-}
-
-static int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen) {
-  uint8_t revenc[5], encbytes = 0, padneed = 0, byteneed;
-
-  if (enc == NULL || enclen == 0) return -1;
-  if (val == 0) {enc[0] = 0; return 1;}
-  while (val > 0) {revenc[encbytes] = val % 256; val = val / 256; ++encbytes;}
-  byteneed = encbytes;
-  if (revenc[encbytes - 1] > 0x7F) {padneed = 1; ++byteneed;}
-  if (byteneed > enclen) return -2;
-  if (padneed != 0) {enc[0] = 0x00; enc++;}
-  for (uint8_t i = 0; i < encbytes; ++i) {enc[i] = revenc[encbytes - i - 1];}
-  return byteneed;
-}
-
-static int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec) {
-  if (enc == NULL || enclen == 0) return -1;
-  if (((enc[0] == 0) && enclen > 5) || ((enc[0] != 0) && enclen > 4)) return -1;
-  if (enc[0] & 0x80) return -1;
-  *dec = 0;
-  while (enclen > 0) {*dec *= 256; *dec += *enc; ++enc; --enclen;}
-  return 0;
 }
 
 static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
@@ -472,44 +405,6 @@ static int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **o
     }
   }
   return 1;
-}
-
-static int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen) {
-  uint32_t lenneed = lasn_get_len_enc_len(len);
-
-  if (enc == 0 || enclen == 0 || lenneed > enclen) return -1;
-  if (lenneed == 1) {*enc = (uint8_t)len;}
-  else {
-    *enc = 0x80 + (lenneed - 1); // store nr len bytes
-    enc += (lenneed - 1); // store len
-    while (len > 0) {*enc = len % 256; len = len / 256; enc--;}
-  }
-  return (int32_t)lenneed;
-}
-
-static int32_t lasn_der_enc_arr(asn_arr **asn, uint8_t *enc, uint32_t enclen) {
-  uint32_t lenneed = lasn_get_der_enc_len_rec_arr(*asn);
-  uint32_t datlen = lasn_get_data_len_rec_arr(*asn);
-
-  if (asn == NULL || lenneed > enclen || datlen == 0xFFFFFFFF) return -1;
-  *enc = (*asn)->type; enc++; enclen--;
-  int32_t len_enc_len = lasn_der_enc_len(datlen, enc, enclen);
-  if (len_enc_len < 0) return -1;
-  enc += len_enc_len; enclen -= len_enc_len;
-  if (((*asn)->type & 0x20) != 0) { // A Constructed type
-    asn_arr *child = *(&(*asn)-1);
-    while (child != NULL) {
-      int32_t child_enclen = lasn_der_enc_arr(&child, enc, enclen);
-      if (child_enclen < 0) return -1;
-      enc += child_enclen; enclen -= child_enclen;
-    }
-  } else { // A Primitive type, copy data
-    if ((*asn)->len > 0) {
-      if ((*asn)->len <= enclen) {memcpy(enc, (*asn)->data, (*asn)->len);}
-      else {return -1;}
-    }
-  }
-  return (int32_t)lenneed;
 }
 
 static int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
@@ -591,3 +486,111 @@ uint64_t lcrypto_handle_asn_arr(char *cert) {
   lasn_dump_and_parse_arr((uint8_t*)c, lcrypto_read_cert(cert, c, 1));
   return 1;
 }
+
+// Save static functions that isnt used
+/*
+static uint32_t lasn_get_len_enc_len(uint32_t datalen) {
+  uint32_t len = 1, len1 = datalen;
+
+  while(len1 > 0) {len1 = len >> 8; ++len;}
+  return len;
+}
+
+static uint32_t lasn_get_der_enc_len_arr(asn_arr *asn) {
+  return (1 + (*asn).len + lasn_get_len_enc_len((*asn).len));
+}
+
+static int8_t lasn_tree_add_arr(asn_arr **asn, asn_arr **child) {
+  if (asn == NULL || child == NULL) return -1;
+  if ((*asn-1) == NULL) {memcpy((*asn-1), child, sizeof(struct asn_arr)); memcpy(&(*child)[0], asn, sizeof (struct asn_arr)); return 0;}
+  else {
+    asn_arr *lchild = *(&(*asn)-1);
+    while (&(*lchild)+1 != NULL) {lchild = &(*lchild)+1;}
+    memcpy(&(*lchild), child, sizeof(struct asn_arr));
+    memcpy(&(*child)-1, &lchild, sizeof(struct asn_arr));
+    memcpy(&(*child)[0], asn, sizeof(struct asn_arr));
+    return 0;
+  }
+}
+
+static int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen) {
+  uint8_t revenc[5], encbytes = 0, padneed = 0, byteneed;
+
+  if (enc == NULL || enclen == 0) return -1;
+  if (val == 0) {enc[0] = 0; return 1;}
+  while (val > 0) {revenc[encbytes] = val % 256; val = val / 256; ++encbytes;}
+  byteneed = encbytes;
+  if (revenc[encbytes - 1] > 0x7F) {padneed = 1; ++byteneed;}
+  if (byteneed > enclen) return -2;
+  if (padneed != 0) {enc[0] = 0x00; enc++;}
+  for (uint8_t i = 0; i < encbytes; ++i) {enc[i] = revenc[encbytes - i - 1];}
+  return byteneed;
+}
+
+static int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec) {
+  if (enc == NULL || enclen == 0) return -1;
+  if (((enc[0] == 0) && enclen > 5) || ((enc[0] != 0) && enclen > 4)) return -1;
+  if (enc[0] & 0x80) return -1;
+  *dec = 0;
+  while (enclen > 0) {*dec *= 256; *dec += *enc; ++enc; --enclen;}
+  return 0;
+}
+
+static uint32_t lasn_get_der_enc_len_rec_arr(asn_arr *asn) {
+  if (asn == NULL) return 0xFFFFFFFF;
+  uint32_t len = lasn_get_der_enc_len_rec_arr(asn);
+  if (len == 0xFFFFFFFF) return 0xFFFFFFFF;
+  return (1 + lasn_get_len_enc_len(len) + len);
+}
+
+static uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
+  if (asn == NULL) return 0xFFFFFFFF;
+  if (((*asn).type & 0x20) != 0) { // A constructed type
+    asn_arr *child = &(*asn)-1;
+    uint32_t len = 0;
+
+    while(child != NULL) {
+      len += lasn_get_der_enc_len_rec_arr(child); child = &(*child)+1;
+    }
+    return len;
+  } else {return (*asn).len;} // Not a constructed type
+}
+
+static int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen) {
+  uint32_t lenneed = lasn_get_len_enc_len(len);
+
+  if (enc == 0 || enclen == 0 || lenneed > enclen) return -1;
+  if (lenneed == 1) {*enc = (uint8_t)len;}
+  else {
+    *enc = 0x80 + (lenneed - 1); // store nr len bytes
+    enc += (lenneed - 1); // store len
+    while (len > 0) {*enc = len % 256; len = len / 256; enc--;}
+  }
+  return (int32_t)lenneed;
+}
+
+static int32_t lasn_der_enc_arr(asn_arr **asn, uint8_t *enc, uint32_t enclen) {
+  uint32_t lenneed = lasn_get_der_enc_len_rec_arr(*asn);
+  uint32_t datlen = lasn_get_data_len_rec_arr(*asn);
+
+  if (asn == NULL || lenneed > enclen || datlen == 0xFFFFFFFF) return -1;
+  *enc = (*asn)->type; enc++; enclen--;
+  int32_t len_enc_len = lasn_der_enc_len(datlen, enc, enclen);
+  if (len_enc_len < 0) return -1;
+  enc += len_enc_len; enclen -= len_enc_len;
+  if (((*asn)->type & 0x20) != 0) { // A Constructed type
+    asn_arr *child = *(&(*asn)-1);
+    while (child != NULL) {
+      int32_t child_enclen = lasn_der_enc_arr(&child, enc, enclen);
+      if (child_enclen < 0) return -1;
+      enc += child_enclen; enclen -= child_enclen;
+    }
+  } else { // A Primitive type, copy data
+    if ((*asn)->len > 0) {
+      if ((*asn)->len <= enclen) {memcpy(enc, (*asn)->data, (*asn)->len);}
+      else {return -1;}
+    }
+  }
+  return (int32_t)lenneed;
+}
+*/
