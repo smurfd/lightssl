@@ -299,10 +299,10 @@ void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
 
 // ------------
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-void lasn_printhex(const uint8_t *d, uint32_t len) {
+void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
   uint32_t c = 0, bc = 0;
 
-  printf("----- dump begin ----\n");
+  printf("%s\n----- dump begin ----\n", str);
   while(c < len) {
     printf("%02x ", d[c]);
     ++c; ++bc;
@@ -317,7 +317,7 @@ void lasn_print_arr(const asn_arr *asn, int depth) {
 
   while (asn[i].type != 0) {
     printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, asn[i].type, asn[i].len);
-    if (asn[i].pos == 0) {printf("Value:\n");lasn_printhex(asn[i].data, asn[i].len);}
+    if (asn[i].pos == 0) {lasn_printhex("Value:", asn[i].data, asn[i].len);}
     i++;
   }
 }
@@ -569,15 +569,13 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
       if ((*aesiv) == NULL || (*aesiv)[1].type != ASN1_TYPE_OCTET_STRING) {
         printf("ERR: AES IV\n"); return 1;
       }
-      printf("AES IV:\n");
-      lasn_printhex((*aesiv)[1].data, (*aesiv)[1].len);
+      lasn_printhex("AES IV:", (*aesiv)[1].data, (*aesiv)[1].len);
     } else {printf("unknown encryption algo\n");}
     (*encct) = &(*ctencalg)[3];
     if ((*encct) == NULL || (*encct)[1].type != 0x80) {
       printf("No encrypted content\n"); return 1;
     }
-    printf("Encrypted content:\n");
-    lasn_printhex((*encct)[1].data, (*encct)[1].len);
+    lasn_printhex("Encrypted content:", (*encct)[1].data, (*encct)[1].len);
   }
   // this if statement works now, but not 100% sure its correct
   if ((*encci)[2].pos != 0 && (*encci)[2].pos != (*encci)[2].len) {
