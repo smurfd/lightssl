@@ -340,25 +340,24 @@ static void lasn_init(asn **asn) {
 }
 
 static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
-  uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t children_len = 0, derdat_len = derenc_len - deroff;
+  uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
+  uint32_t childrenlen = 0, derdatlen = derenclen - deroff, childoff;
   int32_t objcnt = 1;
 
-  if (der == NULL || derlen == 0 || derenc_len == 0xFFFFFFFF) return -1;
-  if (derlen < derenc_len || derenc_len < deroff) return -1;
+  if (der == NULL || derlen == 0 || derenclen == 0xFFFFFFFF) return -1;
+  if (derlen < derenclen || derenclen < deroff) return -1;
   if ((*der & 0x20) != 0) {
-    while (children_len < derdat_len) {
+    while (childrenlen < derdatlen) {
       const uint8_t *child = (der + deroff);
-      uint32_t child_maxlen = derenc_len - deroff, childoff;
-      uint32_t child_len = lasn_get_len(child, child_maxlen, &childoff, 1);
+      uint32_t childlen = lasn_get_len(child, derenclen - deroff, &childoff, 1);
 
-      if (derenc_len < derdat_len || child_len == 0xFFFFFFFF) return -1;
-      if ((child_len + children_len) > derdat_len) return -1;
-      int32_t child_obj = lasn_der_objcnt(child, child_len);
-      objcnt += child_obj;
-      if (child_obj == -1 || UINT32_MAX - child_len < children_len) return -1;
-      children_len += child_len;
-      deroff += child_len;
+      if (derenclen < derdatlen || childlen == 0xFFFFFFFF) return -1;
+      if ((childlen + childrenlen) > derdatlen) return -1;
+      int32_t childobj = lasn_der_objcnt(child, childlen);
+      objcnt += childobj;
+      if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
+      childrenlen += childlen;
+      deroff += childlen;
     }
   }
   return objcnt;
@@ -366,37 +365,34 @@ static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
 
 static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
     asn **oobj, uint32_t oobjc) {
-  uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t children_len = 0, derdat_len = derenc_len - deroff;
+  uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
+  uint32_t childrenlen = 0, derdatl = derenclen - deroff;
   const uint8_t *derdat = (der + deroff);
 
   lasn_init(o);
   if (der == NULL || o == NULL || derlen == 0) return -1;
-  if (derenc_len == 0xFFFFFFFF) return -2;
-  if (derlen < derenc_len) return -3;
+  if (derenclen == 0xFFFFFFFF || derlen < derenclen) return -1;
   (*o)->type = *der;
-  (*o)->len = derdat_len;
+  (*o)->len = derdatl;
   (*o)->data = derdat;
   if ((*der & 0x20) != 0) {
     if (oobj == NULL || oobjc <= 0) return -1;
-
-    while (children_len < derdat_len) {
+    while (childrenlen < derdatl) {
       const uint8_t *child = (der + deroff);
-      uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
-      uint32_t childlen = lasn_get_len(child, child_maxlen, &child_datoff, 1);
-      int32_t child_obj = lasn_der_objcnt(child, childlen);
+      uint32_t childdatoff, childmaxlen = (derenclen - deroff);
+      uint32_t childlen = lasn_get_len(child, childmaxlen, &childdatoff, 1);
+      int32_t childobj = lasn_der_objcnt(child, childlen);
 
-      if (childlen == 0xFFFFFFFF) return -4;
-      if ((childlen + children_len) > derdat_len) return -5;
-      if (child_obj < 0 || child_obj > (int)oobjc) return -6;
+      if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
+      if (childobj < 0 || childobj > (int)oobjc) return -1;
       asn *childo = *oobj;
       oobj++; --oobjc;
-      if (lasn_der_dec(child, childlen, &childo, oobj, oobjc) < 0) return -7;
-      oobj += (child_obj - 1);
-      oobjc -= (child_obj - 1);
-      children_len += childlen;
+      if (lasn_der_dec(child, childlen, &childo, oobj, oobjc) < 0) return -1;
+      oobj += (childobj - 1);
+      oobjc -= (childobj - 1);
+      childrenlen += childlen;
       deroff += childlen;
-      (*o)->pos = children_len;
+      (*o)->pos = childrenlen;
     }
   }
   return 1;
@@ -436,7 +432,7 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
     return lasn_err("ContentType EncryptedContent");
   if ((*enccict)[1].len != 9 || memcmp((*enccict)[1].data, AS2, (*enccict)[1].len) != 0)
     return lasn_err("ContentType EncryptedContent PKCS#7");
-  printf("contenttype of encryptedcontentinfo: PKCS#7\n");
+  printf("ContentType EncryptedContent: PKCS#7\n");
   (*ctencalg) = &(*enccict)[1];
   if ((*ctencalg) == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
   if ((*ctencalg)[1].type == ASN1_SEQUENC) {
@@ -465,10 +461,9 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 }
 
 uint64_t lcrypto_handle_asn(char *cert) {
-  char c[2*4096];
+  char c[8192];
 
-  lasn_dump_and_parse((uint8_t*)c, lcrypto_read_cert(cert, c, 1));
-  return 1;
+  return lasn_dump_and_parse((uint8_t*)c, lcrypto_read_cert(cert, c, 1));
 }
 
 // Save static functions that isnt used

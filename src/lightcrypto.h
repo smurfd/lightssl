@@ -1,11 +1,13 @@
 //                                                                            //
 // Very simple handshake
+// asn1 - stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
 #ifndef LIGHTCRYPTO_H
 #define LIGHTCRYPTO_H 1
 #include <stdbool.h>
 #include <inttypes.h>
 #include "lightdefs.h"
 
+typedef struct asn asn;
 typedef struct keys key;
 typedef struct header head;
 typedef struct sockaddr sock;
@@ -13,6 +15,24 @@ typedef struct sockaddr_in sock_in;
 
 struct header {uint64_t len, ver, g, p;};
 struct keys {uint64_t publ, priv, shar;};
+struct asn {
+  uint8_t type, pos;
+  uint32_t len;
+  const uint8_t *data;
+};
+#define ASN1_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
+#define ASN1_BITSTRI 0x03 // Header byte of the ASN.1 type BIT STRING
+#define ASN1_OCTSTRI 0x04 // Header byte of the ASN.1 type OCTET STRING
+#define ASN1_NULL000 0x05 // Header byte of the ASN.1 type NULL
+#define ASN1_OBJIDEN 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
+#define ASN1_SEQUENC 0x30 // Header byte of the ASN.1 type SEQUENCE
+#define ASN1_SET0000 0x31 // Header byte of the ASN.1 type SET
+#define ASN1_UTF8STR 0x12 // Header byte of the ASN.1 type UTF8String
+#define ASN1_PRNTSTR 0x19 // Header byte of the ASN.1 type PrintableString
+#define ASN1_T61STRI 0x20 // Header byte of the ASN.1 type T61String
+#define ASN1_IA5STRI 0x22 // Header byte of the ASN.1 type IA5String
+#define ASN1_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
+#define ASN1_GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 #define LEN 4096
 static char enc[] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
@@ -36,38 +56,13 @@ void lcrypto_genshare(key *k1, key *k2, uint64_t p, bool srv);
 void lcrypto_transferkey(int s, bool snd, head *h, key *k);
 void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
   uint64_t len);
+void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
+void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 
 uint64_t lcrypto_handle_cert(char *cert, char d[LEN]);
 uint64_t lcrypto_handle_asn(char *cert);
-
-void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
-void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 uint32_t utf8decode(uint32_t c);
 uint32_t utf8encode(uint32_t cp);
-
-// asn1
-// stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-struct asn {
-  uint8_t type, pos;
-  uint32_t len;
-  const uint8_t *data;
-};
-
-typedef struct asn asn;
-
-#define ASN1_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
-#define ASN1_BITSTRI 0x03 // Header byte of the ASN.1 type BIT STRING
-#define ASN1_OCTSTRI 0x04 // Header byte of the ASN.1 type OCTET STRING
-#define ASN1_NULL000 0x05 // Header byte of the ASN.1 type NULL
-#define ASN1_OBJIDEN 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
-#define ASN1_SEQUENC 0x30 // Header byte of the ASN.1 type SEQUENCE
-#define ASN1_SET0000 0x31 // Header byte of the ASN.1 type SET
-#define ASN1_UTF8STR 0x12 // Header byte of the ASN.1 type UTF8String
-#define ASN1_PRNTSTR 0x19 // Header byte of the ASN.1 type PrintableString
-#define ASN1_T61STRI 0x20 // Header byte of the ASN.1 type T61String
-#define ASN1_IA5STRI 0x22 // Header byte of the ASN.1 type IA5String
-#define ASN1_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
-#define ASN1_GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 
 // Keep static functions
 // uint64_t lightcrypto_rand();
