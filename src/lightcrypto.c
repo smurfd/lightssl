@@ -364,40 +364,39 @@ static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   return objcnt;
 }
 
-static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_arr **out,
-    asn_arr **outobj, uint32_t outobjcnt) {
+static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn_arr **o,
+    asn_arr **oobj, uint32_t oobjc) {
   uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
   uint32_t children_len = 0, derdat_len = derenc_len - deroff;
   const uint8_t *derdat = (der + deroff);
 
-  lasn_init(out);
-  if (der == NULL || out == NULL || derlen == 0) return -1;
+  lasn_init(o);
+  if (der == NULL || o == NULL || derlen == 0) return -1;
   if (derenc_len == 0xFFFFFFFF) return -2;
   if (derlen < derenc_len) return -3;
-  (*out)->type = *der;
-  (*out)->len = derdat_len;
-  (*out)->data = derdat;
+  (*o)->type = *der;
+  (*o)->len = derdat_len;
+  (*o)->data = derdat;
   if ((*der & 0x20) != 0) {
-    if (outobj == NULL || outobjcnt <= 0) return -1;
+    if (oobj == NULL || oobjc <= 0) return -1;
 
     while (children_len < derdat_len) {
       const uint8_t *child = (der + deroff);
       uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
-      uint32_t child_len = lasn_get_len(child, child_maxlen, &child_datoff, 1);
-      int32_t child_obj = lasn_der_objcnt(child, child_len);
+      uint32_t childlen = lasn_get_len(child, child_maxlen, &child_datoff, 1);
+      int32_t child_obj = lasn_der_objcnt(child, childlen);
 
-      if (child_len == 0xFFFFFFFF) return -4;
-      if ((child_len + children_len) > derdat_len) return -5;
-      if (child_obj < 0 || child_obj > (int)outobjcnt) return -6;
-      asn_arr *child_o = *outobj;
-      outobj++; --outobjcnt;
-      if (lasn_der_dec(child, child_len, &child_o, outobj, outobjcnt) < 0)
-        return -7;
-      outobj += (child_obj - 1);
-      outobjcnt -= (child_obj - 1);
-      children_len += child_len;
-      deroff += child_len;
-      (*out)->pos = children_len;
+      if (childlen == 0xFFFFFFFF) return -4;
+      if ((childlen + children_len) > derdat_len) return -5;
+      if (child_obj < 0 || child_obj > (int)oobjc) return -6;
+      asn_arr *childo = *oobj;
+      oobj++; --oobjc;
+      if (lasn_der_dec(child, childlen, &childo, oobj, oobjc) < 0) return -7;
+      oobj += (child_obj - 1);
+      oobjc -= (child_obj - 1);
+      children_len += childlen;
+      deroff += childlen;
+      (*o)->pos = children_len;
     }
   }
   return 1;
