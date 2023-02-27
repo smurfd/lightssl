@@ -47,7 +47,6 @@ uint32_t utf8encode(uint32_t cp);
 
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-
 struct asn_arr {
   uint8_t type, pos;
   uint32_t len;

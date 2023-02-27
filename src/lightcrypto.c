@@ -299,7 +299,7 @@ void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
 
 // ------------
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
+static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
   uint32_t c = 0, bc = 0;
 
   printf("%s\n----- dump begin ----\n", str);
@@ -312,7 +312,7 @@ void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
   printf("\n----- dump end ----\n");
 }
 
-void lasn_print_arr(const asn_arr *asn, int depth) {
+static void lasn_print_arr(const asn_arr *asn, int depth) {
   int i = 0;
 
   while (asn[i].type != 0) {
@@ -322,7 +322,7 @@ void lasn_print_arr(const asn_arr *asn, int depth) {
   }
 }
 
-uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
+static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
   uint32_t a, b = 0, ret; // t = type, 1 = tlv, 0 = data
 
   if (len < 2) return 0xFFFFFFFF;
@@ -338,25 +338,25 @@ uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) 
   return ret;
 }
 
-uint32_t lasn_get_len_enc_len(uint32_t datalen) {
+static uint32_t lasn_get_len_enc_len(uint32_t datalen) {
   uint32_t len = 1, len1 = datalen;
 
   while(len1 > 0) {len1 = len >> 8; ++len;}
   return len;
 }
 
-uint32_t lasn_get_der_enc_len_arr(asn_arr *asn) {
+static uint32_t lasn_get_der_enc_len_arr(asn_arr *asn) {
   return (1 + (*asn).len + lasn_get_len_enc_len((*asn).len));
 }
 
-uint32_t lasn_get_der_enc_len_rec_arr(asn_arr *asn) {
+static uint32_t lasn_get_der_enc_len_rec_arr(asn_arr *asn) {
   if (asn == NULL) return 0xFFFFFFFF;
   uint32_t len = lasn_get_der_enc_len_rec_arr(asn);
   if (len == 0xFFFFFFFF) return 0xFFFFFFFF;
   return (1 + lasn_get_len_enc_len(len) + len);
 }
 
-uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
+static uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
   if (asn == NULL) return 0xFFFFFFFF;
   if (((*asn).type & 0x20) != 0) { // A constructed type
     asn_arr *child = &(*asn)-1;
@@ -369,12 +369,12 @@ uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
   } else {return (*asn).len;} // Not a constructed type
 }
 
-void lasn_tree_init_arr(asn_arr **asn) {
+static void lasn_tree_init_arr(asn_arr **asn) {
   (*asn) = malloc(sizeof(struct asn_arr));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
 
-int8_t lasn_tree_add_arr(asn_arr **asn, asn_arr **child) {
+static int8_t lasn_tree_add_arr(asn_arr **asn, asn_arr **child) {
   if (asn == NULL || child == NULL) return -1;
   if ((*asn-1) == NULL) {memcpy((*asn-1), child, sizeof(struct asn_arr)); memcpy(&(*child)[0], asn, sizeof (struct asn_arr)); return 0;}
   else {
@@ -387,7 +387,7 @@ int8_t lasn_tree_add_arr(asn_arr **asn, asn_arr **child) {
   }
 }
 
-int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen) {
+static int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen) {
   uint8_t revenc[5], encbytes = 0, padneed = 0, byteneed;
 
   if (enc == NULL || enclen == 0) return -1;
@@ -401,7 +401,7 @@ int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen) {
   return byteneed;
 }
 
-int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec) {
+static int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec) {
   if (enc == NULL || enclen == 0) return -1;
   if (((enc[0] == 0) && enclen > 5) || ((enc[0] != 0) && enclen > 4)) return -1;
   if (enc[0] & 0x80) return -1;
@@ -410,7 +410,7 @@ int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec) {
   return 0;
 }
 
-int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
+static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
   uint32_t children_len = 0, derdat_len = derenc_len - deroff;
   int32_t objcnt = 1;
@@ -435,7 +435,7 @@ int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   return objcnt;
 }
 
-int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
+static int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
     asn_arr **outobj, uint32_t outobjcnt) {
   uint32_t deroff, derenc_len = lasn_get_len(der, derlen, &deroff, 1);
   uint32_t children_len = 0, derdat_len = derenc_len - deroff;
@@ -474,7 +474,7 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
   return 1;
 }
 
-int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen) {
+static int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen) {
   uint32_t lenneed = lasn_get_len_enc_len(len);
 
   if (enc == 0 || enclen == 0 || lenneed > enclen) return -1;
@@ -487,7 +487,7 @@ int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen) {
   return (int32_t)lenneed;
 }
 
-int32_t lasn_der_enc_arr(asn_arr **asn, uint8_t *enc, uint32_t enclen) {
+static int32_t lasn_der_enc_arr(asn_arr **asn, uint8_t *enc, uint32_t enclen) {
   uint32_t lenneed = lasn_get_der_enc_len_rec_arr(*asn);
   uint32_t datlen = lasn_get_data_len_rec_arr(*asn);
 
@@ -512,7 +512,7 @@ int32_t lasn_der_enc_arr(asn_arr **asn, uint8_t *enc, uint32_t enclen) {
   return (int32_t)lenneed;
 }
 
-int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
+static int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
   asn_arr *ct[] = {0}, *asnobj[] = {0}, *cms[] = {0}, *encd[] = {0};
   asn_arr *encci[] = {0}, *cmsv[] = {0}, *enccict[] = {0}, *aesiv[] = {0};
