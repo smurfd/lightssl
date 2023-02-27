@@ -595,9 +595,10 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
     printf("Encrypted content:\n");
     lasn_printhex((*encct)[1].data, (*encct)[1].len);
   }
-  // this if statement doesnt work yet, should be NULL for test
-  if ((*encci) != NULL) printf("unprot attributes avail\n");
-  else printf("no unprot attributes avail\n");
+  // this if statement works now, but not 100% sure its correct
+  if ((*encci)[2].pos != 0 && (*encci)[2].pos != (*encci)[2].len) {
+    printf("unprot attributes avail\n");
+  } else printf("no unprot attributes avail\n");
   return 0;
 }
 
