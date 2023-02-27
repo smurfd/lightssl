@@ -233,7 +233,6 @@ static uint64_t lcrypto_read_cert(char *fn, char c[], bool iscms) {
 
     int fr = fgetc(ptr);
     while (fr != EOF && fpos < fs) {c[fpos++] = (uint8_t)fr; fr = fgetc(ptr);}
-    printf("fr %d %d %llu\n", fr, fs, len);
     len = fs;
   } else while (c[len - 1] != EOF) {c[len++] = fgetc(ptr);}
   fclose(ptr);
@@ -315,8 +314,7 @@ void lasn_printhex(const uint8_t *d, uint32_t len) {
 
 void lasn_print_arr(const asn_arr *asn, int depth) {
   int i = 0;
-  printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, asn->type, asn->len);
-  printf(":: %d %d\n", asn[i].type, asn[i].pos);
+
   while (asn[i].type != 0) {
     printf("d=%d, Tag: %02x, len=%"PRIu32"\n", depth, asn[i].type, asn[i].len);
     if (asn[i].pos == 0) {printf("Value:\n");lasn_printhex(asn[i].data, asn[i].len);}
@@ -447,33 +445,27 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
   if (der == NULL || out == NULL || derlen == 0) return -1;
   if (derenc_len == 0xFFFFFFFF) return -2;
   if (derlen < derenc_len) return -3;
-
   (*out)->type = *der;
   (*out)->len = derdat_len;
   (*out)->data = derdat;
-
   if ((*der & 0x20) != 0) {
     if (outobj == NULL || outobjcnt <= 0) return -1;
 
     while (children_len < derdat_len) {
-      printf("loop\n");
       const uint8_t *child = (der + deroff);
       uint32_t child_datoff, child_maxlen = (derenc_len - deroff);
       uint32_t child_len = lasn_get_len(child, child_maxlen, &child_datoff, 1);
       int32_t child_obj = lasn_der_objcnt(child, child_len);
-      printf("loop1 %d %d %d :: %d %d\n", child_len, child_obj, (*out)->len, children_len, derdat_len);
+
       if (child_len == 0xFFFFFFFF) return -4;
       if ((child_len + children_len) > derdat_len) return -5;
       if (child_obj < 0 || child_obj > (int)outobjcnt) return -6;
-
       asn_arr *child_o = *outobj;
       outobj++; --outobjcnt;
-      printf("loop2\n");
       if (lasn_der_dec_arr(child, child_len, &child_o, outobj, outobjcnt) < 0)
         return -7;
       outobj += (child_obj - 1);
       outobjcnt -= (child_obj - 1);
-
       children_len += child_len;
       deroff += child_len;
       (*out)->pos = children_len;
@@ -539,12 +531,10 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   if ((*ct) == NULL || (*ct)[1].type != ASN1_TYPE_OBJECT_IDENTIFIER) {
     printf("ERR: ContentType\n"); return 1;
   }
-
-  printf("Content type: ");
   if (memcmp((*ct)[1].data, AS1, (*ct)[1].len) != 0) {
     printf("ERR: CT EncryptedData\n"); return 1;
   }
-  printf("encryptedData\n");
+  printf("Content type: encryptedData\n");
   (*encd) = &(*ct)[2];
   if ((*encd) == NULL || (*encd)[1].type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: CT EncryptedData\n"); return 1;
@@ -553,8 +543,7 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   if ((*cmsv) == NULL || (*cmsv)[1].type != ASN1_TYPE_INTEGER || (*cmsv)[1].len != 1) {
     printf("ERR: CSMVersion\n"); return 1;
   }
-  uint8_t v = (*cmsv)[1].data[0];
-  printf("cms version: %d\n", v);
+  printf("cms version: %d\n", (*cmsv)[1].data[0]);
   (*encci) = &(*cmsv)[1];
   if ((*encci) == NULL || (*encci)[1].type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: EncryptedContent\n"); return 1;
