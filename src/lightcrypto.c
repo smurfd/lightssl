@@ -372,7 +372,7 @@ uint32_t lasn_get_data_len_rec_arr(asn_arr *asn) {
 }
 
 void lasn_tree_init_arr(asn_arr **asn) {
-  (*asn) = malloc(sizeof(asn));
+  (*asn) = malloc(sizeof(struct asn_arr));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
 
@@ -447,14 +447,10 @@ int32_t lasn_der_dec_arr(const uint8_t *der, uint32_t derlen, asn_arr **out,
   if (der == NULL || out == NULL || derlen == 0) return -1;
   if (derenc_len == 0xFFFFFFFF) return -2;
   if (derlen < derenc_len) return -3;
-  printf("befr out %d\n", (*out)->len);
 
   (*out)->type = *der;
   (*out)->len = derdat_len;
   (*out)->data = derdat;
-
-  printf("befr out %d\n", (*out)->len);
-  printf("aftr out\n");
 
   if ((*der & 0x20) != 0) {
     if (outobj == NULL || outobjcnt <= 0) return -1;
@@ -536,7 +532,6 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   }
   lasn_print_arr((*cms), 0);
   printf("----- parse begin ----\n");
-
   if ((*cms)->type != ASN1_TYPE_SEQUENCE) {
     printf("ERR: Sequence, %x\n", (*cms)->type); return 1;
   }
@@ -599,14 +594,13 @@ int lasn_dump_and_parse_arr(uint8_t *cmsd, uint32_t fs) {
   if ((*encci)[2].pos != 0 && (*encci)[2].pos != (*encci)[2].len) {
     printf("unprot attributes avail\n");
   } else printf("no unprot attributes avail\n");
+  free((*cms));
   return 0;
 }
 
 uint64_t lcrypto_handle_asn_arr(char *cert) {
   char c[2*4096];
 
-  uint32_t fs = lcrypto_read_cert(cert, c, 1);
-  printf("fs %d\n", fs);
-  lasn_dump_and_parse_arr((uint8_t*)c, fs);
+  lasn_dump_and_parse_arr((uint8_t*)c, lcrypto_read_cert(cert, c, 1));
   return 1;
 }

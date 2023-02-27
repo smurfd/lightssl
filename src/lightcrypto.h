@@ -47,7 +47,6 @@ uint32_t utf8encode(uint32_t cp);
 
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-typedef struct asn_arr asn_arr;
 
 struct asn_arr {
   uint8_t type, pos;
@@ -55,40 +54,21 @@ struct asn_arr {
   const uint8_t *data;
 };
 
-// Header byte of the ASN.1 type INTEGER
-#define ASN1_TYPE_INTEGER 0x02
-// Header byte of the ASN.1 type BIT STRING
-#define ASN1_TYPE_BIT_STRING 0x03
-// Header byte of the ASN.1 type OCTET STRING
-#define ASN1_TYPE_OCTET_STRING 0x04
-// Header byte of the ASN.1 type NULL
-#define ASN1_TYPE_NULL 0x05
-// Header byte of the ASN.1 type OBJECT IDENTIFIER
-#define ASN1_TYPE_OBJECT_IDENTIFIER 0x06
-// Header byte of the ASN.1 type SEQUENCE
-#define ASN1_TYPE_SEQUENCE 0x30
-// Header byte of the ASN.1 type SET
-#define ASN1_TYPE_SET 0x31
-// Header byte of the ASN.1 type UTF8String
-#define ASN1_TYPE_UTF8_STRING 0x12
-// Header byte of the ASN.1 type PrintableString
-#define ASN1_TYPE_PRINTABLE_STRING 0x19
-// Header byte of the ASN.1 type T61String
-#define ASN1_TYPE_T61_STRING 0x20
-// Header byte of the ASN.1 type IA5String
-#define ASN1_TYPE_IA5_STRING 0x22
-// Header byte of the ASN.1 type UTCTime
-#define ASN1_TYPE_UTCTIME 0x23
-// Header byte of the ASN.1 type GeneralizedTime
-#define ASN1_TYPE_GENERALIZEDTIME 0x24
+typedef struct asn_arr asn_arr;
 
-void lasn_printhex(const uint8_t *d, uint32_t len);
-uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
-uint32_t lasn_get_len_enc_len(uint32_t datalen);
-int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
-int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
-int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen);
-int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
+#define ASN1_TYPE_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
+#define ASN1_TYPE_BIT_STRING 0x03 // Header byte of the ASN.1 type BIT STRING
+#define ASN1_TYPE_OCTET_STRING 0x04 // Header byte of the ASN.1 type OCTET STRING
+#define ASN1_TYPE_NULL 0x05 // Header byte of the ASN.1 type NULL
+#define ASN1_TYPE_OBJECT_IDENTIFIER 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
+#define ASN1_TYPE_SEQUENCE 0x30 // Header byte of the ASN.1 type SEQUENCE
+#define ASN1_TYPE_SET 0x31 // Header byte of the ASN.1 type SET
+#define ASN1_TYPE_UTF8_STRING 0x12 // Header byte of the ASN.1 type UTF8String
+#define ASN1_TYPE_PRINTABLE_STRING 0x19 // Header byte of the ASN.1 type PrintableString
+#define ASN1_TYPE_T61_STRING 0x20 // Header byte of the ASN.1 type T61String
+#define ASN1_TYPE_IA5_STRING 0x22 // Header byte of the ASN.1 type IA5String
+#define ASN1_TYPE_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
+#define ASN1_TYPE_GENERALIZEDTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 
 // Keep static functions
 // uint64_t lightcrypto_rand();
@@ -96,6 +76,13 @@ int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
 // void *lightcrypto_handler(void *sdesc);
 // void lightcrypto_recvkey(int s, head *h, key *k);
 // void lightcrypto_sendkey(int s, head *h, key *k);
+// void lasn_printhex(const uint8_t *d, uint32_t len);
+// uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
+// uint32_t lasn_get_len_enc_len(uint32_t datalen);
+// int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
+// int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
+// int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen);
+// int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
 #endif
 /*
 ```
