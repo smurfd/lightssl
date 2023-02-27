@@ -47,13 +47,13 @@ uint32_t utf8encode(uint32_t cp);
 
 // asn1
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-struct asn_arr {
+struct asn {
   uint8_t type, pos;
   uint32_t len;
   const uint8_t *data;
 };
 
-typedef struct asn_arr asn_arr;
+typedef struct asn asn;
 
 #define ASN1_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
 #define ASN1_BITSTRI 0x03 // Header byte of the ASN.1 type BIT STRING
