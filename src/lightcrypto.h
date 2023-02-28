@@ -45,24 +45,24 @@ static uint8_t AS1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
 static uint8_t AS2[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
 static uint8_t AS3[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
 
-key lcrypto_genkeys(uint64_t g, uint64_t p);
-int lcrypto_keys();
-int lcrypto_init(cc *host, cc *port, bool b);
-int lcrypto_listen(int s, sock *cli);
+key lcgenkeys(uint64_t g, uint64_t p);
+int lckeys();
+int lcinit(cc *host, cc *port, bool b);
+int lclisten(int s, sock *cli);
 
-void lcrypto_end(int s);
-void lcrypto_crypt(uint64_t data, key k, uint64_t *enc);
-void lcrypto_genshare(key *k1, key *k2, uint64_t p, bool srv);
-void lcrypto_transferkey(int s, bool snd, head *h, key *k);
-void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
+void lcend(int s);
+void lccrypt(uint64_t data, key k, uint64_t *enc);
+void lcgenshare(key *k1, key *k2, uint64_t p, bool srv);
+void lctransferkey(int s, bool snd, head *h, key *k);
+void lctransferdata(const int s, void* data, head *h, bool snd,
   uint64_t len);
-void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]);
-void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
+void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]);
+void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 
-uint64_t lcrypto_handle_cert(char *cert, char d[LEN]);
-uint64_t lcrypto_handle_asn(char *cert);
-uint32_t utf8decode(uint32_t c);
-uint32_t utf8encode(uint32_t cp);
+uint64_t lchandle_cert(char *cert, char d[LEN]);
+uint64_t lchandle_asn(char *cert);
+uint32_t lcutf8decode(uint32_t c);
+uint32_t lcutf8encode(uint32_t cp);
 
 // Keep static functions
 // uint64_t lightcrypto_rand();

@@ -17,11 +17,11 @@
 
 //
 // Get BLOCK size
-static int lcrypto_getblock() {return BLOCK;}
+static int lcgetblock() {return BLOCK;}
 
 //
 // Random uint64_t
-static uint64_t lcrypto_rand() {
+static uint64_t lcrand() {
   uint64_t r = 1;
 
   for (int i = 0; i < 5; ++i) {r = (r << 15) | (rand() & 0x7FFF);}
@@ -30,34 +30,34 @@ static uint64_t lcrypto_rand() {
 
 //
 // Generate the shared key
-void lcrypto_genshare(key *k1, key *k2, uint64_t p, bool srv) {
+void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
   if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
   else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
 }
 
 //
 // Generate a public and private keypair
-key lcrypto_genkeys(uint64_t g, uint64_t p) {
+key lcgenkeys(uint64_t g, uint64_t p) {
   key k;
 
-  k.priv = lcrypto_rand(); k.publ = (int64_t)pow(g, k.priv) % p;
+  k.priv = lcrand(); k.publ = (int64_t)pow(g, k.priv) % p;
   return k;
 }
 
 //
 // Encrypt and decrypt data with shared key
-void lcrypto_crypt(uint64_t data, key k, uint64_t *enc) {(*enc) = data ^ k.shar;}
+void lccrypt(uint64_t data, key k, uint64_t *enc) {(*enc) = data ^ k.shar;}
 
 //
 // Receive key
-static void lcrypto_recvkey(int s, head *h, key *k) {
+static void lcrecvkey(int s, head *h, key *k) {
   recv(s, h, sizeof(head), 0); recv(s, k, sizeof(key), 0); (*k).priv = 0;
   // This to ensure if we receive a private key we clear it
 }
 
 //
 // Send key
-static void lcrypto_sendkey(int s, head *h, key *k) {
+static void lcsendkey(int s, head *h, key *k) {
   key kk;
 
   // This to ensure not to send the private key
@@ -67,7 +67,7 @@ static void lcrypto_sendkey(int s, head *h, key *k) {
 
 //
 // Transfer data (send and receive)
-void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
+void lctransferdata(const int s, void* data, head *h, bool snd,
   uint64_t len) {
   if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(uint64_t)*len, 0);}
   else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(uint64_t) * len, 0);}
@@ -75,43 +75,43 @@ void lcrypto_transferdata(const int s, void* data, head *h, bool snd,
 
 //
 // Transfer keys (send and receive)
-void lcrypto_transferkey(int s, bool snd, head *h, key *k) {
+void lctransferkey(int s, bool snd, head *h, key *k) {
   key tmp;
 
-  if (snd) {lcrypto_sendkey(s, h, k);}
-  else {lcrypto_recvkey(s, h, &tmp);
+  if (snd) {lcsendkey(s, h, k);}
+  else {lcrecvkey(s, h, &tmp);
     (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
     // This to ensure if we receive a private key we clear it
 }
 
 //
 // Server handler
-static void *lcrypto_handler(void *sdesc) {
-  uint64_t dat[lcrypto_getblock()], cd[lcrypto_getblock()];
+static void *lchandler(void *sdesc) {
+  uint64_t dat[lcgetblock()], cd[lcgetblock()];
   int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
-  uint64_t g1 = lcrypto_rand(), p1 = lcrypto_rand();
-  key k1 = lcrypto_genkeys(g1, p1), k2;
+  uint64_t g1 = lcrand(), p1 = lcrand();
+  key k1 = lcgenkeys(g1, p1), k2;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   head h; h.g = g1; h.p = p1;
 
   // Send and receive stuff
   if (h.len > BLOCK) {return (void*)-1;}
-  lcrypto_transferkey(s, true, &h, &k1);
-  lcrypto_transferkey(s, false, &h, &k2);
-  lcrypto_genshare(&k1, &k2, h.p, true);
+  lctransferkey(s, true, &h, &k1);
+  lctransferkey(s, false, &h, &k2);
+  lcgenshare(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
   // Decrypt the data
-  lcrypto_transferdata(s, &dat, &h, false, BLOCK-1);
-  for (uint64_t i = 0; i < 10; i++) {lcrypto_crypt(dat[i], k2, &cd[i]);}
+  lctransferdata(s, &dat, &h, false, BLOCK-1);
+  for (uint64_t i = 0; i < 10; i++) {lccrypt(dat[i], k2, &cd[i]);}
   pthread_exit(NULL);
   return 0;
 }
 
 //
 // Initialize server and client (b=true for server deamon)
-int lcrypto_init(cc *host, cc *port, bool b) {
+int lcinit(cc *host, cc *port, bool b) {
   int s = socket(AF_INET, SOCK_STREAM, 0);
   sock_in adr;
 
@@ -126,11 +126,11 @@ int lcrypto_init(cc *host, cc *port, bool b) {
 
 //
 // End connection
-void lcrypto_end(int s) {close(s);}
+void lcend(int s) {close(s);}
 
 //
 // Server listener
-int lcrypto_listen(const int s, sock *cli) {
+int lclisten(const int s, sock *cli) {
   int c = 1, ns[sizeof(int)], len = sizeof(sock_in);
 
   listen(s, 3);
@@ -138,7 +138,7 @@ int lcrypto_listen(const int s, sock *cli) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
     *ns = c;
-    if (pthread_create(&thrd, NULL, lcrypto_handler, (void*)ns) < 0){return -1;}
+    if (pthread_create(&thrd, NULL, lchandler, (void*)ns) < 0){return -1;}
     pthread_join(thrd, NULL);
   }
   return c;
@@ -146,18 +146,18 @@ int lcrypto_listen(const int s, sock *cli) {
 
 //
 // Generate a keypair & shared key then print it (test / demo)
-int lcrypto_keys() {
-  uint64_t g1 = lcrypto_rand(), g2 = lcrypto_rand(), p1 = lcrypto_rand();
-  uint64_t p2 = lcrypto_rand(), c = 123456, d = 1, e = 1;
-  key k1 = lcrypto_genkeys(g1, p1), k2 = lcrypto_genkeys(g2, p2);
+int lckeys() {
+  uint64_t g1 = lcrand(), g2 = lcrand(), p1 = lcrand();
+  uint64_t p2 = lcrand(), c = 123456, d = 1, e = 1;
+  key k1 = lcgenkeys(g1, p1), k2 = lcgenkeys(g2, p2);
 
-  lcrypto_genshare(&k1, &k2, p1, false);
-  lcrypto_genshare(&k1, &k2, p1, true);
+  lcgenshare(&k1, &k2, p1, false);
+  lcgenshare(&k1, &k2, p1, true);
   printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
   printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
   printf("Alice & Bobs shared key: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
-  lcrypto_crypt(c, k1, &d);
-  lcrypto_crypt(d, k2, &e);
+  lccrypt(c, k1, &d);
+  lccrypt(d, k2, &e);
   printf("Before:  0x%.16llx\nEncrypt: 0x%.16llx\nDecrypt: 0x%.16llx\n",c,d,e);
   return c == e;
 }
@@ -166,7 +166,7 @@ int lcrypto_keys() {
 // UTF8 encode/decode
 
 // from UTF-8 encoding to Unicode Codepoint
-uint32_t utf8decode(uint32_t c) {
+uint32_t lcutf8decode(uint32_t c) {
   uint32_t mask;
   uint64_t n[] = {0x00EFBFBF, 0x000F0000, 0x003F0000, 0x07000000, 0x00003F00,
     0x0000003F};
@@ -179,7 +179,7 @@ uint32_t utf8decode(uint32_t c) {
 }
 
 // From Unicode Codepoint to UTF-8 encoding
-uint32_t utf8encode(uint32_t cp) {
+uint32_t lcutf8encode(uint32_t cp) {
   uint32_t c = cp;
   uint64_t n[] = {0x000003F, 0x0000FC0, 0x003F000, 0x01C0000, 0x0000800,
     0x0000C080, 0x0010000, 0x00E08080, 0xF0808080};
@@ -195,7 +195,7 @@ uint32_t utf8encode(uint32_t cp) {
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
-static uint64_t lcrypto_get_header(char c[], uint8_t h[]) {
+static uint64_t lcget_header(char c[], uint8_t h[]) {
   uint64_t i = 0;
 
   // Check for the start of -----BEGIN CERTIFICATE-----
@@ -204,7 +204,7 @@ static uint64_t lcrypto_get_header(char c[], uint8_t h[]) {
   return i + 1;
 }
 
-static uint64_t lcrypto_get_footer(char c[], uint64_t len, uint8_t f[]) {
+static uint64_t lcget_footer(char c[], uint64_t len, uint8_t f[]) {
   uint64_t i = 0, j = 0;
 
   // check for the start of -----END CERTIFICATE-----
@@ -213,7 +213,7 @@ static uint64_t lcrypto_get_footer(char c[], uint64_t len, uint8_t f[]) {
   return i + 1;
 }
 
-static uint64_t lcrypto_get_data(char c[], uint64_t h, uint64_t f, uint64_t l,
+static uint64_t lcget_data(char c[], uint64_t h, uint64_t f, uint64_t l,
   char d[]) {
   uint64_t co = l - f - h + 1, i = 0;
 
@@ -221,7 +221,7 @@ static uint64_t lcrypto_get_data(char c[], uint64_t h, uint64_t f, uint64_t l,
   return i;
 }
 
-static uint64_t lcrypto_read_cert(char *fn, char c[], bool iscms) {
+static uint64_t lcread_cert(char *fn, char c[], bool iscms) {
   FILE* ptr = fopen(fn, "r");
   uint64_t len = 0;
 
@@ -239,47 +239,47 @@ static uint64_t lcrypto_read_cert(char *fn, char c[], bool iscms) {
   return len;
 }
 
-static void lcrypto_print_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
+static void lcprint_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
   printf("Data: %s\n", d); printf("Footer: %s\n", f);
 }
 
-uint64_t lcrypto_handle_cert(char *cert, char d[LEN]) {
+uint64_t lchandle_cert(char *cert, char d[LEN]) {
   uint64_t len = 0, foot, head, data;
   uint8_t h[36], f[36];
   char crt[LEN];
 
-  len = lcrypto_read_cert(cert, crt, 0);
-  head = lcrypto_get_header(crt, h);
-  foot = lcrypto_get_footer(crt, len, f);
-  data = lcrypto_get_data(crt, head, foot, len, d);
-  lcrypto_print_cert(len, h, f, d);
+  len = lcread_cert(cert, crt, 0);
+  head = lcget_header(crt, h);
+  foot = lcget_footer(crt, len, f);
+  data = lcget_data(crt, head, foot, len, d);
+  lcprint_cert(len, h, f, d);
   return data;
 }
 
-static uint32_t lcrypto_oct(int i, int inl, cuc d[257]) {
+static uint32_t lcoct(int i, int inl, cuc d[257]) {
   if (i < inl) {return d[i];} else {return 0;}
 }
 
-static uint32_t lcrypto_sex(cc d[257], char c[257], int i) {
+static uint32_t lcsex(cc d[257], char c[257], int i) {
   if (d[i] == '=') {return 0 & i++;} else {return c[(int)d[i]];}
 }
 
-void lcrypto_encode64(cuc *data, int inl, int *ol, char ed[*ol]) {
+void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]) {
   static int tab[] = {0, 2, 1};
   uint32_t a, b, c, tri;
 
   *ol = 4 * ((inl + 2) / 3);
   for (int i = 0, j = 0; i < inl;) {
-    a = lcrypto_oct(i++, inl, data); b = lcrypto_oct(i++, inl, data);
-    c = lcrypto_oct(i++, inl, data);
+    a = lcoct(i++, inl, data); b = lcoct(i++, inl, data);
+    c = lcoct(i++, inl, data);
     tri = (a << 0x10) + (b << 0x08) + c;
     for (int k = 3; k >=0; k--) {ed[j++] = enc[(tri >> k * 6) & 0x3F];}
   }
   for (int i = 0; i < tab[inl % 3]; i++) ed[*ol - 1 - i] = '='; ed[*ol] = '\0';
 }
 
-void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
+void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
   static char dec[LEN] = {0};
   uint32_t a, b, c, d, tri;
 
@@ -287,8 +287,8 @@ void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
   for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (*ol)--;}
   for (int i = 0; i < 64; i++) dec[(uint8_t)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
-    a = lcrypto_sex(data, dec, i++); b = lcrypto_sex(data, dec, i++);
-    c = lcrypto_sex(data, dec, i++); d = lcrypto_sex(data, dec, i++);
+    a = lcsex(data, dec, i++); b = lcsex(data, dec, i++);
+    c = lcsex(data, dec, i++); d = lcsex(data, dec, i++);
     tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
     if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
@@ -479,10 +479,10 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 
 //
 // public function to handle asn cert
-uint64_t lcrypto_handle_asn(char *cert) {
+uint64_t lchandle_asn(char *cert) {
   char c[8192];
 
-  return lasn_dump_and_parse((uint8_t*)c, lcrypto_read_cert(cert, c, 1));
+  return lasn_dump_and_parse((uint8_t*)c, lcread_cert(cert, c, 1));
 }
 
 // Save static functions that isnt used
