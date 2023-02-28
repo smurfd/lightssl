@@ -218,17 +218,13 @@ static void lkeys_m_mod(uint64_t *a, uint64_t *b) {
 //
 // Modulo multiply
 static void lkeys_m_mul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
-  uint64_t p[DI2];
-
-  lkeys_mul(p, b, c); lkeys_m_mod(a, p);
+  uint64_t p[DI2]; lkeys_mul(p, b, c); lkeys_m_mod(a, p);
 }
 
 //
 // Modulo square
 static void lkeys_m_sqr(uint64_t *a, const uint64_t *b) {
-  uint64_t p[DI2];
-
-  lkeys_sqr(p, b); lkeys_m_mod(a, p);
+  uint64_t p[DI2]; lkeys_sqr(p, b); lkeys_m_mod(a, p);
 }
 
 //
@@ -412,7 +408,7 @@ static void lkeys_p_addc(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
 //
 // Modulo inversion
 static void lkeys_m_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
-  uint64_t a[DI], b[DI], u[DI], v[DI], car;
+  uint64_t a[DI], b[DI], u[DI], v[DI], car, x8 = 0x8000000000000000;
   int cmpResult;
 
   if(lkeys_zero(p)) {lkeys_clear(r); return;}
@@ -424,20 +420,20 @@ static void lkeys_m_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
     car = 0;
     if (EVEN(a)) {
       lkeys_rs1(a); if (!EVEN(u)) {car = lkeys_add(u, u, m);}
-      lkeys_rs1(u); if (car) {u[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(u); if (car) {u[DI - 1] |= x8;}
     } else if (EVEN(b)) {
       lkeys_rs1(b); if (!EVEN(v)) {car = lkeys_add(v, v, m);}
-      lkeys_rs1(v); if (car) {v[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(v); if (car) {v[DI - 1] |= x8;}
     } else if (cmpResult > 0) {
       lkeys_sub(a, a, b);
       lkeys_rs1(a); if (lkeys_cmp(u, v) < 0) {lkeys_add(u, u, m);}
       lkeys_sub(u, u, v); if (!EVEN(u)) {car = lkeys_add(u, u, m);}
-      lkeys_rs1(u); if (car) {u[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(u); if (car) {u[DI - 1] |= x8;}
     } else {
       lkeys_sub(b, b, a);
       lkeys_rs1(b); if (lkeys_cmp(v, u) < 0) {lkeys_add(v, v, m);}
       lkeys_sub(v, v, u); if (!EVEN(v)) {car = lkeys_add(v, v, m);}
-      lkeys_rs1(v); if (car) {v[DI - 1] |= 0x8000000000000000;}
+      lkeys_rs1(v); if (car) {v[DI - 1] |= x8;}
     }
   }
   lkeys_set(r, u);
@@ -556,8 +552,7 @@ int lkeys_sign(const uint64_t priv[KB], const uint64_t hash[KB],
 // Verify signature
 int lkeys_vrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB],
     const uint64_t sign[KB2]) {
-  uint64_t tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI];
-  uint64_t ry[DI];
+  uint64_t tx[DI], ty[DI], tz[DI],r[DI],s[DI],u1[DI],u2[DI],z[DI],rx[DI],ry[DI];
   pt public, sum;
 
   lkeys_p_decom(&public, publ);
