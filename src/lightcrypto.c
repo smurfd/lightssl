@@ -299,6 +299,9 @@ void lcrypto_decode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
 
 // ------------
 // stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
+
+//
+// Print data in hex and formatted
 static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
   uint32_t c = 0;
 
@@ -308,6 +311,8 @@ static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
   else printf("----- hex end ----\n");
 }
 
+//
+// Print data
 static void lasn_print(const asn *asn, int depth) {
   int i = 0;
 
@@ -318,8 +323,10 @@ static void lasn_print(const asn *asn, int depth) {
   }
 }
 
+//
+// Get the length // t = type, 1 = tlv, 0 = data
 static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
-  uint32_t a, b = 0, ret; // t = type, 1 = tlv, 0 = data
+  uint32_t a, b = 0, ret;
 
   if (len < 2) return 0xFFFFFFFF;
   ++data; a = *data++; len -= 2; *off = 0;
@@ -334,11 +341,15 @@ static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, b
   return ret;
 }
 
+//
+// Initialize the asn struct
 static void lasn_init(asn **asn) {
   (*asn) = malloc(sizeof(struct asn));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
 
+//
+// Count the der objects
 static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
   uint32_t childrenlen = 0, derdatlen = derenclen - deroff, childoff;
@@ -354,8 +365,8 @@ static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
       if (derenclen < derdatlen || childlen == 0xFFFFFFFF) return -1;
       if ((childlen + childrenlen) > derdatlen) return -1;
       int32_t childobj = lasn_der_objcnt(child, childlen);
-      objcnt += childobj;
       if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
+      objcnt += childobj;
       childrenlen += childlen;
       deroff += childlen;
     }
@@ -363,6 +374,8 @@ static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   return objcnt;
 }
 
+//
+// Decode the der encrypted data
 static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
     asn **oobj, uint32_t oobjc) {
   uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
@@ -398,8 +411,12 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
   return 1;
 }
 
+//
+// Error handler
 static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
 
+//
+// Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
   asn *ct[] = {0}, *asnobj[] = {0}, *cms[] = {0}, *encd[] = {0};
@@ -460,6 +477,8 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   return 0;
 }
 
+//
+// public function to handle asn cert
 uint64_t lcrypto_handle_asn(char *cert) {
   char c[8192];
 
