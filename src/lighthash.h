@@ -47,6 +47,8 @@ int lhash_hmac_input(ctxh *c, cuc *text,int text_len);
 int lhash_hmac_final(ctxh *c, uint8_t bits, uint32_t bit_count);
 int lhash_hmac_result(ctxh *c, uint8_t digest[SHA_HSH_SZ]);
 
-int lhash_hash(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra, int hs);
+int lhash_hash(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,
+  int hs);
 void lhash_hash_new(cc *in, char* s);
+void lhash3_hash_new(uint8_t *n, char *ss);
 #endif

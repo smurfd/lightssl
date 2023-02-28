@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include "../lighthash3.h"
+#include "../lighthash.h"
 
 int main() {
   uint8_t *smurfd = (uint8_t*)"smurfd";
