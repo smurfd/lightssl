@@ -447,16 +447,15 @@ static void lkeys_m_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
 // Point multiplication
 static void lkeys_p_mul(pt *r, pt *p, uint64_t *q, uint64_t *s) {
   uint64_t Rx[2][DI], Ry[2][DI], z[DI];
-  int nb;
 
   lkeys_set(Rx[1], p->x); lkeys_set(Ry[1], p->y);
   lkeys_p_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
   for (int i = lkeys_bits(q) - 2; i > 0; --i) {
-    nb = !lkeys_chk(q, i);
+    int nb = !lkeys_chk(q, i);
     lkeys_p_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
     lkeys_p_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
   }
-  nb = !lkeys_chk(q, 0);
+  int nb = !lkeys_chk(q, 0);
   lkeys_p_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
   // Find final 1/Z value.
   lkeys_m_sub(z, Rx[1], Rx[0], curve_p);
@@ -472,12 +471,11 @@ static void lkeys_p_mul(pt *r, pt *p, uint64_t *q, uint64_t *s) {
   lkeys_set(r->x, Rx[0]); lkeys_set(r->y, Ry[0]);
 }
 
-// Public functions
-
 //
 // Random rotate
 static uint64_t lkeys_rnd_rotate(uint64_t x, uint64_t k) {
-  return (x << k) | (x >> (32 - k));}
+  return (x << k) | (x >> (32 - k));
+}
 
 //
 // Random next
@@ -532,7 +530,7 @@ int lkeys_shar_secr(const uint64_t publ[KB + 1], const uint64_t priv[KB],
 //
 // Create signature
 int lkeys_sign(const uint64_t priv[KB], const uint64_t hash[KB],
-  uint64_t sign[KB2]) {
+    uint64_t sign[KB2]) {
   uint64_t k[DI], tmp[DI], s[DI], x = 1;
   pt p;
 
@@ -557,7 +555,7 @@ int lkeys_sign(const uint64_t priv[KB], const uint64_t hash[KB],
 //
 // Verify signature
 int lkeys_vrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB],
-  const uint64_t sign[KB2]) {
+    const uint64_t sign[KB2]) {
   uint64_t tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI];
   uint64_t ry[DI];
   pt public, sum;
