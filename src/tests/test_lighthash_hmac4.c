@@ -24,7 +24,7 @@ int main() {
     "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
     "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
     "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa";
-  int kl = 131, dl = 152, err = lhash_hash(da, dl, 1, 0, 0, ka, kl, "E37B6A775D"
+  int kl = 131, dl = 152, err = lh(da, dl, 1, 0, 0, ka, kl, "E37B6A775D"
     "C87DBAA4DFA9F96E5E3FFDDEBD71F8867289865DF5A32D20CDC944B6022CAC3C4982B10D5E"
     "EB55C3E4DE15134676FB6DE0446065C97440FA8C6A58", 64);
   assert(err == 1); if (err != 1) return 0;

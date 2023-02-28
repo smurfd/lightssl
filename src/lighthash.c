@@ -41,7 +41,7 @@ const uint8_t hexdigits[] = "0123456789ABCDEF";
 
 //
 // SHA Process message block
-static void lhash_sha_proc_msgblk(ctxs *c) {
+static void lhsha_proc_msgblk(ctxs *c) {
   uint64_t A[8], W[80], t1, t2, t3 = 0;
   int t, t8;
 
@@ -68,24 +68,24 @@ static void lhash_sha_proc_msgblk(ctxs *c) {
 
 //
 // SHA Pad message if needed. Process it. Cont pad 2nd block if needed.
-static void lhash_sha_pad_msg(ctxs *c, uint8_t pad_byte) {
+static void lhsha_pad_msg(ctxs *c, uint8_t pad_byte) {
   if (c->msg_blk_i >= (SHA_BLK_SZ - 16)) {
     c->mb[c->msg_blk_i++] = pad_byte;
     while (c->msg_blk_i < SHA_BLK_SZ) c->mb[c->msg_blk_i++] = 0;
-    lhash_sha_proc_msgblk(c);
+    lhsha_proc_msgblk(c);
   } else c->mb[c->msg_blk_i++] = pad_byte;
   while (c->msg_blk_i < (SHA_BLK_SZ - 16)) {c->mb[c->msg_blk_i++] = 0;}
   for (int i = 0; i < 8; i++) c->mb[112 + i] =
     (uint8_t)(c->len_hi >> (56 - (i*8)));
   for (int i = 0; i < 8; i++) c->mb[120 + i] =
     (uint8_t)(c->len_lo >> (56 - (i*8)));
-  lhash_sha_proc_msgblk(c);
+  lhsha_proc_msgblk(c);
 }
 
 //
 // SHA Finalize
-static void lhash_sha_finalize(ctxs *c, uint8_t pad_byte) {
-  lhash_sha_pad_msg(c, pad_byte);
+static void lhsha_finalize(ctxs *c, uint8_t pad_byte) {
+  lhsha_pad_msg(c, pad_byte);
   // Clear message
   for (int_least16_t i = 0; i < SHA_BLK_SZ; ++i) {c->mb[i] = 0;}
   c->len_hi = c->len_lo = 0;
@@ -94,7 +94,7 @@ static void lhash_sha_finalize(ctxs *c, uint8_t pad_byte) {
 
 //
 // SHA Error check
-static int lhash_sha_error(ctxs *c, cuc *msg_arr, uint32_t length, int b) {
+static int lhsha_error(ctxs *c, cuc *msg_arr, uint32_t length, int b) {
   if (!c) return SHA_NULL;
   if (!length) return SHA_OK;
   if (!msg_arr && b == 0) return SHA_NULL;
@@ -106,7 +106,7 @@ static int lhash_sha_error(ctxs *c, cuc *msg_arr, uint32_t length, int b) {
 
 //
 // SHA Clear
-int lhash_sha_reset(ctxs *c) {
+int lhsha_reset(ctxs *c) {
   if (!c) return SHA_NULL;
   c->msg_blk_i = 0;
   c->len_hi = c->len_lo = 0;
@@ -118,12 +118,12 @@ int lhash_sha_reset(ctxs *c) {
 
 //
 // SHA Input
-int lhash_sha_input(ctxs *c, cuc *msg_arr, uint32_t length) {
-  lhash_sha_error(c, msg_arr, length, 0);
+int lhsha_input(ctxs *c, cuc *msg_arr, uint32_t length) {
+  lhsha_error(c, msg_arr, length, 0);
   while (length--) {
     c->mb[c->msg_blk_i++] = *msg_arr;
     if ((SHA_ADDL(c, 8) == SHA_OK) && (c->msg_blk_i == SHA_BLK_SZ))
-      lhash_sha_proc_msgblk(c);
+      lhsha_proc_msgblk(c);
     msg_arr++;
   }
   return c->corrupt;
@@ -131,18 +131,18 @@ int lhash_sha_input(ctxs *c, cuc *msg_arr, uint32_t length) {
 
 //
 // SHA Add final bits
-int lhash_sha_final(ctxs *c, uint8_t msg_bit, uint32_t length) {
-  lhash_sha_error(c, (cuc *)0, length, 1);
+int lhsha_final(ctxs *c, uint8_t msg_bit, uint32_t length) {
+  lhsha_error(c, (cuc *)0, length, 1);
   SHA_ADDL(c, length);
-  lhash_sha_finalize(c, (uint8_t)((msg_bit & masks[length]) | markbit[length]));
+  lhsha_finalize(c, (uint8_t)((msg_bit & masks[length]) | markbit[length]));
   return c->corrupt;
 }
 
 //
 // SHA Get digest
-int lhash_sha_result(ctxs *c, uint8_t msg_dig[SHA_HSH_SZ]) {
-  lhash_sha_error(c, msg_dig, 0, 2);
-  if (!c->compute) lhash_sha_finalize(c, 0x80);
+int lhsha_result(ctxs *c, uint8_t msg_dig[SHA_HSH_SZ]) {
+  lhsha_error(c, msg_dig, 0, 2);
+  if (!c->compute) lhsha_finalize(c, 0x80);
   for (int i = 0; i < SHA_HSH_SZ; ++i) {
     msg_dig[i] = (uint8_t)(c->imh[i>>3] >> 8 * (7 - (i % 8)));
   }
@@ -151,7 +151,7 @@ int lhash_sha_result(ctxs *c, uint8_t msg_dig[SHA_HSH_SZ]) {
 
 //
 // SHA Check if hashvalue matches a predef hexstr and convert to str if s!=NULL
-int lhash_sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
+int lhsha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
   int j = 0, k, l;
 
   for (int i = 0; i < hashsize; ++i) {
@@ -164,23 +164,23 @@ int lhash_sha_match_to_str(cuc *hashvalue, cc *hexstr, int hashsize, char *s) {
 
 //
 // Create a SHA hash from string
-void lhash_hash_new(cc *in, char* s) {
+void lhnew(cc *in, char* s) {
   uint8_t msg_dig[SHA_HSH_SZ], inn[strlen(in)];
   ctxs sha;
 
   // Convert char* to uint8_t*
   for (uint64_t i = 0; i < strlen(in); i++) {inn[i] = (uint8_t)in[i];}
-  lhash_sha_reset(&sha);
-  lhash_sha_input(&sha, inn, strlen(in));
-  lhash_sha_final(&sha, (uint8_t)0, 0);
-  lhash_sha_result(&sha, msg_dig);
+  lhsha_reset(&sha);
+  lhsha_input(&sha, inn, strlen(in));
+  lhsha_final(&sha, (uint8_t)0, 0);
+  lhsha_result(&sha, msg_dig);
   // Convert uint8_t* to char*
-  lhash_sha_match_to_str(msg_dig, s, 64, s);
+  lhsha_match_to_str(msg_dig, s, 64, s);
 }
 
 //
 // HMAC error check
-static int lhash_hmac_error(ctxh *c) {
+static int lhhmac_error(ctxh *c) {
   if (!c) return SHA_NULL;
   if (c->corrupt) return c->corrupt;
   if (c->compute) return c->corrupt = SHA_ERR;
@@ -189,7 +189,7 @@ static int lhash_hmac_error(ctxh *c) {
 
 //
 // HMAC initialize Context
-int lhash_hmac_reset(ctxh *c, cuc *key, int key_len) {
+int lhhmac_reset(ctxh *c, cuc *key, int key_len) {
   uint8_t k_ipad[SHA_BLK_SZ], tmp[SHA_HSH_SZ], blocksize, hashsize, ret;
 
   if (!c) return SHA_NULL;
@@ -201,8 +201,8 @@ int lhash_hmac_reset(ctxh *c, cuc *key, int key_len) {
   // If key is longer than the hash blocksize, reset it to key = HASH(key).
   if (key_len > blocksize) {
     ctxs ct;
-    ret = lhash_sha_reset(&ct) || lhash_sha_input(&ct, key, key_len) ||
-      lhash_sha_result(&ct, tmp);
+    ret = lhsha_reset(&ct) || lhsha_input(&ct, key, key_len) ||
+      lhsha_result(&ct, tmp);
     if (ret != SHA_OK) return ret;
     key = tmp;
     key_len = hashsize;
@@ -216,60 +216,59 @@ int lhash_hmac_reset(ctxh *c, cuc *key, int key_len) {
   for (int i = key_len; i < blocksize; i++) {
     k_ipad[i] = 0x36; c->k_opad[i] = 0x5c;
   }
-  return c->corrupt = lhash_sha_reset(&c->sha) ||
-    lhash_sha_input(&c->sha, k_ipad, blocksize);
+  return c->corrupt = lhsha_reset(&c->sha) ||
+    lhsha_input(&c->sha, k_ipad, blocksize);
 }
 
 //
 // HMAC input
-int lhash_hmac_input(ctxh *c, cuc *text, int text_len) {
-  lhash_hmac_error(c);
-  return c->corrupt = lhash_sha_input(&c->sha, text, text_len);
+int lhhmac_input(ctxh *c, cuc *text, int text_len) {
+  lhhmac_error(c);
+  return c->corrupt = lhsha_input(&c->sha, text, text_len);
 }
 
 //
 // HMAC Add final bits
-int lhash_hmac_final(ctxh *c, uint8_t bits, uint32_t bit_count) {
-  lhash_hmac_error(c);
-  return c->corrupt = lhash_sha_final(&c->sha, bits, bit_count);
+int lhhmac_final(ctxh *c, uint8_t bits, uint32_t bit_count) {
+  lhhmac_error(c);
+  return c->corrupt = lhsha_final(&c->sha, bits, bit_count);
 }
 
 //
 // HMAC Get digest
-int lhash_hmac_result(ctxh *c, uint8_t *digest) {
+int lhhmac_result(ctxh *c, uint8_t *digest) {
   // Finish up 1st pass. Perform outer SHA, init context for 2nd pass.
   // Start with outer pad, then results of 1st hash. Finish up 2nd pass
-  lhash_hmac_error(c);
-  int ret = lhash_sha_result(&c->sha, digest) || lhash_sha_reset(&c->sha) ||
-    lhash_sha_input(&c->sha, c->k_opad, c->blk_size) ||
-    lhash_sha_input(&c->sha, digest, c->size)||lhash_sha_result(&c->sha, digest);
+  lhhmac_error(c);
+  int ret = lhsha_result(&c->sha, digest) || lhsha_reset(&c->sha) ||
+    lhsha_input(&c->sha, c->k_opad, c->blk_size) ||
+    lhsha_input(&c->sha, digest, c->size)||lhsha_result(&c->sha, digest);
   c->compute = 1;
   return c->corrupt = ret;
 }
 
 //
 // HMAC & SHA Test suite runner
-int lhash_hash(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,
-  int hs) {
+int lh(cc *ta, int l,uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,int hs) {
   uint8_t msg_dig[SHA_HSH_SZ], err;
   ctxh hmac; ctxs sha;
 
   if (k) {
-    err = lhash_hmac_reset(&hmac, k, kl); if (err != SHA_OK) {return err;}
-    for (uint64_t i = 0; i < r; ++i) {err = lhash_hmac_input(&hmac, (cuc *)ta, l);
+    err = lhhmac_reset(&hmac, k, kl); if (err != SHA_OK) {return err;}
+    for (uint64_t i = 0; i < r; ++i) {err = lhhmac_input(&hmac, (cuc *)ta, l);
       if (err != SHA_OK) {return err;}}
-    if (n > 0) {err = lhash_hmac_final(&hmac, (uint8_t)eb, n);
+    if (n > 0) {err = lhhmac_final(&hmac, (uint8_t)eb, n);
       if (err != SHA_OK) {return err;}}
-    err = lhash_hmac_result(&hmac, msg_dig); if (err != SHA_OK) {return err;}
+    err = lhhmac_result(&hmac, msg_dig); if (err != SHA_OK) {return err;}
   } else {
-    err = lhash_sha_reset(&sha); if (err != SHA_OK) {return err;}
-    for (uint64_t i = 0; i < r; ++i) {err = lhash_sha_input(&sha, (cuc *)ta, l);
+    err = lhsha_reset(&sha); if (err != SHA_OK) {return err;}
+    for (uint64_t i = 0; i < r; ++i) {err = lhsha_input(&sha, (cuc *)ta, l);
       if (err != SHA_OK) {return err;}}
-    if (n > 0) {err = lhash_sha_final(&sha, (uint8_t)eb, n);
+    if (n > 0) {err = lhsha_final(&sha, (uint8_t)eb, n);
       if (err != SHA_OK) {return err;}}
-    err = lhash_sha_result(&sha, msg_dig); if (err != SHA_OK) {return err;}
+    err = lhsha_result(&sha, msg_dig); if (err != SHA_OK) {return err;}
   }
-  return lhash_sha_match_to_str(msg_dig, ra, hs, NULL);
+  return lhsha_match_to_str(msg_dig, ra, hs, NULL);
 }
 
 //
@@ -281,7 +280,7 @@ static uint64_t ROL64(uint64_t a, uint64_t n) {
 
 //
 // Convert a hex bitstring to a string
-static void bit2str(uint8_t *ss, char *s) {
+static void lh3bit2str(uint8_t *ss, char *s) {
   for (uint64_t i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }
 
@@ -298,7 +297,7 @@ static void bit2str(uint8_t *ss, char *s) {
 // The corresponding state array, denoted by A, is defined as follows:
 // For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, A[x, y, z]=S[w(5y+x)+z].
 // For example, if b=1600, so that w=64,
-static void str2state(const uint8_t *s, uint64_t (*a)[5][5]) {
+static void lh3str2state(const uint8_t *s, uint64_t (*a)[5][5]) {
   for (int x = 0; x < 5; x++) {
     for (int y = 0; y < 5; y++) {
       uint64_t lane = 0;
@@ -334,7 +333,7 @@ static void state2str(uint64_t (*a)[5][5], uint8_t *s) {
 // D[x, z] = C[(x1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w].
 // 3. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
-static void lhash3_theta(uint64_t (*a)[5][5]) {
+static void lh3theta(uint64_t (*a)[5][5]) {
   uint64_t c[5], d[5] = {0};
 
   for (int x = 0; x < 5; x++) {
@@ -360,7 +359,7 @@ static void lhash3_theta(uint64_t (*a)[5][5]) {
 // a. for all z such that 0 ≤ z < w, let A′[x, y, z] = A[x, y, (z – (t + 1)(t + 2)/2) mod w];
 // b. let (x, y) = (y, (2x + 3y) mod 5).
 // 4. Return A′.
-static void lhash3_rho(uint64_t (*a)[5][5]) {
+static void lh3rho(uint64_t (*a)[5][5]) {
   uint64_t x = 1, y = 0, xtmp = 0, ap[5][5], cb;
 
   memcpy(ap, *a, sizeof(uint64_t) * 5 * 5);
@@ -382,7 +381,7 @@ static void lhash3_rho(uint64_t (*a)[5][5]) {
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z]= A[(x + 3y) mod 5, x, z].
 // 2. Return A′.
-static void lhash3_pi(uint64_t (*a)[5][5]) {
+static void lh3pi(uint64_t (*a)[5][5]) {
   uint64_t ap[5][5];
 
   memcpy(ap, *a, sizeof(uint64_t) * 5 * 5);
@@ -395,7 +394,7 @@ static void lhash3_pi(uint64_t (*a)[5][5]) {
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′ [x, y, z] = A[x, y, z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5, y, z]).
 // 2. Return A′.
-static void lhash3_chi(uint64_t (*a)[5][5]) {
+static void lh3chi(uint64_t (*a)[5][5]) {
   uint64_t ap[5][5], one = 1, t1, t2, t3;
 
   memcpy(ap, *a, sizeof(uint64_t) * 5 * 5);
@@ -424,7 +423,7 @@ static void lhash3_chi(uint64_t (*a)[5][5]) {
 //   e. R[6] = R[6] ⊕ R[8];
 //   f. R =Trunc8[R].
 // 4. Return R[0]
-static uint8_t lhash3_rc(uint64_t t) {
+static uint8_t lh3rc(uint64_t t) {
   uint8_t m = MOD(t, 255), r1 = 128, r0;
 
   if (m == 0) return 1;
@@ -446,10 +445,10 @@ static uint8_t lhash3_rc(uint64_t t) {
 // 3. For j from 0 to l, let RC[2j – 1] = rc(j + 7ir).
 // 4. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A′ [0, 0, z] ⊕ RC[z].
 // 5. Return A′.
-static void lhash3_iota(uint64_t (*A)[5][5], uint64_t ir) {
+static void lh3iota(uint64_t (*A)[5][5], uint64_t ir) {
   uint64_t r = 0;
 
-  for (uint64_t i = 0; i <= 6; i++) {r += ROL64(lhash3_rc(i+7*ir), (int)pow(2, i)- 1);}
+  for (uint64_t i = 0; i <= 6; i++) {r += ROL64(lh3rc(i+7*ir),(int)pow(2,i)-1);}
   (*A)[0][0] ^= r;
 }
 
@@ -459,18 +458,18 @@ static void lhash3_iota(uint64_t (*A)[5][5], uint64_t ir) {
 // 2. For ir from 12 + 2l – nr to 12 + 2l – 1, let A = Rnd(A, ir).
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
-static void lhash3_keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
+static void lh3keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
   uint64_t a[5][5];
 
-  str2state(sm, &a);
+  lh3str2state(sm, &a);
   // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-  for (int i = 0; i <= 23; i++) {lhash3_theta(&a);lhash3_rho(&a);lhash3_pi(&a);lhash3_chi(&a);lhash3_iota(&a,i);}
+  for (int i = 0; i <= 23; i++) {lh3theta(&a);lh3rho(&a);lh3pi(&a);lh3chi(&a);lh3iota(&a,i);}
   state2str(&a, (*s));
 }
 
 //
 // Concatenate
-static uint64_t lhash3_cat(const uint8_t *x, uint64_t xl, const uint8_t *y,
+static uint64_t lh3cat(const uint8_t *x, uint64_t xl, const uint8_t *y,
   const uint64_t yl, uint8_t **z) {
   uint64_t zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
@@ -492,7 +491,7 @@ static uint64_t lhash3_cat(const uint8_t *x, uint64_t xl, const uint8_t *y,
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static uint64_t lhash3_pad10(uint64_t x, uint64_t m, uint8_t **p) {
+static uint64_t lh3pad10(uint64_t x, uint64_t m, uint8_t **p) {
   long j = MOD((-m - 2), x) + 2;
   int bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
 
@@ -515,26 +514,26 @@ static uint64_t lhash3_pad10(uint64_t x, uint64_t m, uint8_t **p) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void lhash3_sponge(uint8_t *n, int l, uint8_t **ps) {
+static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
   uint64_t b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
   uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0};
   uint8_t *p, *pi, *z, *pad, str[200] = {0};
 
-  len = lhash3_pad10(r, l, &pad);
-  plen = lhash3_cat(n, l, pad, len, &p);
+  len = lh3pad10(r, l, &pad);
+  plen = lh3cat(n, l, pad, len, &p);
   for (uint64_t i = 0; i < plen / r; i++) {
-    lhash3_cat(&p[i * r / 8], r, az, c, &pi);
+    lh3cat(&p[i * r / 8], r, az, c, &pi);
     for (uint64_t j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
     free(pi);
-    lhash3_keccak_p(sxor, &s);
+    lh3keccak_p(sxor, &s);
   }
 
   while (true) {
     memcpy(str, s, r / 8);
-    zl = lhash3_cat(z, zl, str, r, &z);
+    zl = lh3cat(z, zl, str, r, &z);
     if (zl >= SHA3_BITS) {memcpy((*ps), z, 512 / 8); break;}
     memcpy(sc, s, b / 8);
-    lhash3_keccak_p(sc, &s);
+    lh3keccak_p(sc, &s);
   }
   free(pad); free(p); free(z);
 }
@@ -556,12 +555,12 @@ static void lhash3_sponge(uint8_t *n, int l, uint8_t **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void lhash3_hash_new(uint8_t *n, char *s) {
+void lh3new(uint8_t *n, char *s) {
   uint8_t *m, z1[] = {2}, *ss = malloc(128 * sizeof(uint8_t));
   uint64_t d = strlen((char*)n) * 8;
 
-  lhash3_cat(n, d, z1, 2, &m);
-  lhash3_sponge(m, d + 2, &ss);
-  bit2str(ss, s);
+  lh3cat(n, d, z1, 2, &m);
+  lh3sponge(m, d + 2, &ss);
+  lh3bit2str(ss, s);
   free(ss);
 }
