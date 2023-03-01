@@ -282,7 +282,7 @@ static void lkp_double(uint64_t *a, uint64_t *b, uint64_t *c) {
   uint64_t t4[DI], t5[DI];
 
   if (lkzero(c)) {return;}
-  lkm_sqr(t4, b);   lkm_mul(t5, a, t4); lkm_sqr(t4, t4); 
+  lkm_sqr(t4, b);   lkm_mul(t5, a, t4); lkm_sqr(t4, t4);
   lkm_mul(b, b, c); lkm_sqr(c, c);
 
   lkm_add(a, a, c, curve_p); lkm_add(c, c, c, curve_p);
