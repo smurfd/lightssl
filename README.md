@@ -40,23 +40,27 @@ Test client, in another terminal run
 ```
 Test hashing (SHA2-256)
 ```
-./build/test_lighthash
+./build/test_hash_sha[0-4]
+```
+Test hashing (HMAC-256)
+```
+./build/test_hash_hmac[0-4]
 ```
 Test hashing (SHA3-512)
 ```
-./build/test_lighthash3
+./build/test_hash3
 ```
 Test keys (secp384r1)
 ```
-./build/test_lightkeys
+./build/test_keys
 ```
 Test ciphers (AES)
 ```
-./build/test_lightciphers
+./build/test_ciphers
 ```
-Test crypto (ASN.1) not working yet
+Test crypto (ASN.1)
 ```
-./build/test_lightcrypto build/ca.key
+./build/test_crypto build/ca.key build/ca.csm
 ```
 ### Use lightssl
 See the [tests](https://github.com/smurfd/lightssl/tree/main/src/tests)
