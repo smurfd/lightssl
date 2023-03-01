@@ -47,13 +47,12 @@ static void lhsha_proc_msgblk(ctxs *c) {
 
   // Initialize the first 16 words in the array W
   for (t = t8 = 0; t < 16; t++, t8 += 8) {
-    for (int i = 0; i < 8; i++) t3 |= ((uint64_t)(c->mb[t8 + i]) <<
-      (56 - (i * 8)));
+    for (int i = 0; i < 8; i++)
+      t3 |= ((uint64_t)(c->mb[t8 + i]) << (56 - (i * 8)));
     W[t] = t3; t3 = 0;
   }
-  for (t = 16; t < 80; t++) {
+  for (t = 16; t < 80; t++)
     W[t] = SHA_s1(W[t - 2]) + W[t - 7] + SHA_s0(W[t - 15]) + W[t - 16];
-  }
   for (int i = 0; i < 8; i++) {A[i] = c->imh[i];}
   for (t = 0; t < 80; t++) {
     t1 = A[7] + SHA_S1(A[4]) + SHA_CH00(A[4],A[5],A[6]) + k0[t] + W[t];
@@ -298,15 +297,13 @@ static void lh3bit2str(uint8_t *ss, char *s) {
 // For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, A[x, y, z]=S[w(5y+x)+z].
 // For example, if b=1600, so that w=64,
 static void lh3str2state(const uint8_t *s, uint64_t (*a)[5][5]) {
-  for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++)
     for (int y = 0; y < 5; y++) {
       uint64_t lane = 0;
-      for (int z = 0; z < 8; z++) {
+      for (int z = 0; z < 8; z++)
         lane = lane + ROL64(s[8 * (5 * y + x) + z], z * 8);
-      }
       (*a)[x][y] = lane;
     }
-  }
 }
 
 //
@@ -317,13 +314,10 @@ static void lh3str2state(const uint8_t *s, uint64_t (*a)[5][5]) {
 static void state2str(uint64_t (*a)[5][5], uint8_t *s) {
   int count = 0;
 
-  for (int y = 0; y < 5; y++) {
-    for (int x = 0; x < 5; x++) {
-      for (int z = 0; z < 8; z++) {
+  for (int y = 0; y < 5; y++)
+    for (int x = 0; x < 5; x++)
+      for (int z = 0; z < 8; z++)
         s[count++] = (uint8_t)(ROL64((*a)[x][y], 64 - z * 8) & (uint64_t)255);
-      }
-    }
-  }
 }
 
 //
@@ -336,19 +330,16 @@ static void state2str(uint64_t (*a)[5][5], uint8_t *s) {
 static void lh3theta(uint64_t (*a)[5][5]) {
   uint64_t c[5], d[5] = {0};
 
-  for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++)
     c[x] = ((*a)[x][0] ^ (*a)[x][1] ^ (*a)[x][2] ^ (*a)[x][3] ^ (*a)[x][4]);
-  }
-  for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++)
     for (int z = 0; z < 64; z++) {
       uint64_t r1 = ROL64(c[MOD(x - 1, 5)], 64 - z);
       uint64_t r2 = ROL64(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
       d[x] = d[x] + ROL64((r1 ^ r2) & 1, z);
     }
-  }
-  for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++)
     for (int y = 0; y < 5; y++) {(*a)[x][y] ^= d[x];}
-  }
 }
 
 //
@@ -385,9 +376,8 @@ static void lh3pi(uint64_t (*a)[5][5]) {
   uint64_t ap[5][5];
 
   memcpy(ap, *a, sizeof(uint64_t) * 5 * 5);
-  for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++)
     for (int y = 0; y < 5; y++) {(*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];}
-  }
 }
 
 //
@@ -398,7 +388,7 @@ static void lh3chi(uint64_t (*a)[5][5]) {
   uint64_t ap[5][5], one = 1, t1, t2, t3;
 
   memcpy(ap, *a, sizeof(uint64_t) * 5 * 5);
-  for (int x = 0; x < 5; x++) {
+  for (int x = 0; x < 5; x++)
     for (int y = 0; y < 5; y++) {
       (*a)[x][y] = 0;
       for (int z = 0; z < 64; z++) {
@@ -408,7 +398,6 @@ static void lh3chi(uint64_t (*a)[5][5]) {
         (*a)[x][y] += t1 ^ (t2 & t3);
       }
     }
-  }
 }
 
 //
@@ -463,7 +452,9 @@ static void lh3keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
 
   lh3str2state(sm, &a);
   // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-  for (int i = 0; i <= 23; i++) {lh3theta(&a);lh3rho(&a);lh3pi(&a);lh3chi(&a);lh3iota(&a,i);}
+  for (int i = 0; i <= 23; i++) {
+    lh3theta(&a);lh3rho(&a);lh3pi(&a);lh3chi(&a);lh3iota(&a,i);
+  }
   state2str(&a, (*s));
 }
 

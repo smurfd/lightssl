@@ -70,9 +70,8 @@ static uint32_t lkbits(uint64_t *a) {
 //
 // Compare a and b
 static int lkcmp(const uint64_t *a, const uint64_t *b) {
-  for (int i = DI-1; i >= 0; --i) {
+  for (int i = DI-1; i >= 0; --i)
     if (a[i] > b[i]) {return 1;} else if (a[i] < b[i]) {return -1;}
-  }
   return 0;
 }
 
@@ -171,9 +170,8 @@ static void lko_mul(uint64_t *a, const uint64_t *b) {
   a[DI + 2] = lkadd(a + 2, a + 2, b);
   ovr += lksub(a, a, t);
   uint64_t d = a[DI] - ovr;
-  if (d > a[DI]) {
+  if (d > a[DI])
     for (uint8_t i = 1+DI; ; ++i) {--a[i]; if (a[i] != (uint64_t) - 1) {break;}}
-  }
   a[DI] = d;
 }
 

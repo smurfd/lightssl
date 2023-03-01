@@ -167,9 +167,9 @@ int lckeys() {
 
 // from UTF-8 encoding to Unicode Codepoint
 uint32_t lcutf8decode(uint32_t c) {
-  uint32_t mask;
   uint64_t n[] = {0x00EFBFBF, 0x000F0000, 0x003F0000, 0x07000000, 0x00003F00,
     0x0000003F};
+  uint32_t mask;
 
   if (c > 0x7F) {
     mask = (c <= n[0]) ? n[1] : n[2];
@@ -180,9 +180,9 @@ uint32_t lcutf8decode(uint32_t c) {
 
 // From Unicode Codepoint to UTF-8 encoding
 uint32_t lcutf8encode(uint32_t cp) {
-  uint32_t c = cp;
   uint64_t n[] = {0x000003F, 0x0000FC0, 0x003F000, 0x01C0000, 0x0000800,
     0x0000C080, 0x0010000, 0x00E08080, 0xF0808080};
+  uint32_t c = cp;
 
   if (cp > 0x7F) {
     c = (cp & n[0]) | (cp & n[1]) << 2 | (cp & n[2]) << 4 | (cp & n[3]) << 6;

@@ -229,25 +229,22 @@ const uint8_t MIXINV[4][4] = {{14, 11, 13, 9}, {9, 14, 11, 13},
 //
 // Copy a state array to another
 static void copy_state(uint8_t s[4][NB], uint8_t in[4][NB]) {
-  for (int j = 0; j < 4; ++j) {
+  for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i) {s[j][i] = in[j][i];}
-  }
 }
 
 //
 // Copy to a state array from array
 static void state_from_arr(uint8_t s[4][NB], uint8_t in[NB4]) {
-  for (int j = 0; j < 4; ++j) {
+  for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i) {s[j][i] = in[j + 4 * i];}
-  }
 }
 
 //
 // Copy to array from state array
 static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
-  for (int j = 0; j < 4; ++j) {
+  for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i) {s[j + 4 * i] = in[j][i];}
-  }
 }
 
 //
@@ -268,11 +265,10 @@ static void lpinvshiftrows(uint8_t state[4][NB]) { // See Sec. 5.3.1
 //
 //
 static void lpinvsubbytes(uint8_t state[4][NB]) { // See Sec. 5.3.2
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++)
     for (int j = 0; j < NB; j++) {
       uint8_t s = state[i][j]; state[i][j] = SBOXINV[s / 16][s % 16];
     }
-  }
 }
 
 //
@@ -281,13 +277,10 @@ static void lpinvmixcolumns(uint8_t state[4][NB]) { // See Sec. 5.3.3
   uint8_t temp_state[4][NB];
 
   for (int i = 0; i < 4; ++i) {memset(temp_state[i], 0, 4);}
-  for (int i = 0; i < 4; ++i) {
-    for (int k = 0; k < 4; ++k) {
-      for (int j = 0; j < 4; ++j) {
+  for (int i = 0; i < 4; ++i)
+    for (int k = 0; k < 4; ++k)
+      for (int j = 0; j < 4; ++j)
         temp_state[i][j] ^= GF[MIXINV[i][k]][state[k][j]];
-      }
-    }
-  }
   for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
 }
 
@@ -297,20 +290,18 @@ static void lpaddroundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec. 5.1.4
   uint8_t tmp[4][NB];
 
   copy_state(tmp, state);
-  for (int j = 0; j < NB; ++j) {
+  for (int j = 0; j < NB; ++j)
     for (int i = 0; i < 4; ++i) {tmp[i][j] = state[i][j] ^ w[i + 4 * j];}
-  }
   copy_state(state, tmp);
 }
 
 //
 // 5.1.x
 static void lpsubbytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++)
     for (int j = 0; j < NB; j++) {
       uint8_t s = state[i][j]; state[i][j] = SBOX[s / 16][s % 16];
     }
-  }
 }
 
 //
@@ -325,14 +316,11 @@ static void lpmixcolumns(uint8_t state[4][NB]) { // See Sec. 5.1.3
   uint8_t temp_state[4][NB];
 
   for (int i = 0; i < 4; ++i) {memset(temp_state[i], 0, 4);}
-  for (int i = 0; i < 4; ++i) {
-    for (int k = 0; k < 4; ++k) {
-      for (int j = 0; j < 4; ++j) {
+  for (int i = 0; i < 4; ++i)
+    for (int k = 0; k < 4; ++k)
+      for (int j = 0; j < 4; ++j)
         if (MIX[i][k] == 1) {temp_state[i][j] ^= state[k][j];}
         else {temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];}
-      }
-    }
-  }
   for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
 }
 
@@ -379,8 +367,7 @@ static void lpkeyexpansion(uint8_t key[NK * 2], uint8_t w[NB * NR]) {
 
 //
 //
-static void lpxor(const uint8_t *a, const uint8_t *b, uint8_t *c,
-    uint32_t len) {
+static void lpxor(const uint8_t *a, const uint8_t *b, uint8_t *c, uint32_t len) {
   for (uint32_t i = 0; i < len; i++) {c[i] = a[i] ^ b[i];}
 }
 
@@ -423,48 +410,44 @@ static void lpdecryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
 }
 
 //
-// l = inlength, k = key, o = out
+// k = key, o = out
 // https://medium.com/asecuritysite-when-bob-met-alice/a-bluffers-guide-to-aes-modes-ecb-cbc-cfb-and-all-that-jazz-4180f1882e16
-void lpencrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
-    uint8_t o[], bool cbc) {
+void lpencrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc) {
   uint8_t block[BBL]={0}, encryptedblock[BBL]={0}, roundkeys[4*NB*(NR+1)]={0};
 
   lpkeyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
-  if (cbc) { // CBC
-    for (uint32_t i = 0; i < l; i += BBL) {
+  if (cbc) // CBC
+    for (uint32_t i = 0; i < BBL; i += BBL) {
       lpxor(block, (in + i), block, BBL);
       lpencryptblock(block, (o + i), roundkeys);
       memcpy(block, (o + i), BBL);
     }
-  } else { // CFB
-    for (uint32_t i = 0; i < l; i += BBL) {
+  else // CFB
+    for (uint32_t i = 0; i < BBL; i += BBL) {
       lpencryptblock(block, encryptedblock, roundkeys);
       lpxor((in + i), encryptedblock, (o + i), BBL);
       memcpy(block, (o + i), BBL);
     }
-  }
 }
 
 //
-// l = inlength, k = key, o = out
-void lpdecrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
-    uint8_t o[], bool cbc) {
+// k = key, o = out
+void lpdecrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc) {
   uint8_t block[NB*NR]={0}, encryptedblock[NB*NR]={0}, roundkeys[4*NB*(NR+1)]={0};
 
   lpkeyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
-  if (cbc) { // CBC
-    for (uint32_t i = 0; i < l; i += BBL) {
+  if (cbc) // CBC
+    for (uint32_t i = 0; i < BBL; i += BBL) {
       lpdecryptblock((in + i), (o + i), roundkeys);
       lpxor(block, (o + i), (o + i), BBL);
       memcpy(block, in + i, BBL);
     }
-  } else { // CFB
-    for (uint32_t i = 0; i < l; i += BBL) {
+  else // CFB
+    for (uint32_t i = 0; i < BBL; i += BBL) {
       lpencryptblock(block, encryptedblock, roundkeys);
       lpxor(in + i, encryptedblock, o + i, BBL);
       memcpy(block, in + i, BBL);
     }
-  }
 }
