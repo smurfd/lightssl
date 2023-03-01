@@ -12,16 +12,8 @@
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 
 // SSL
-#define RAND() (rand() & 0x7FFFFFFFFFFFFFFF)
-#define RAND64() ((uint64_t)(RAND()) << 48) ^ ((uint64_t)(RAND()) << 35) ^ \
-  ((uint64_t)(RAND()) << 22) ^ ((uint64_t)(RAND()) << 9) ^ \
-  ((uint64_t)(RAND()) >> 4)
-
-// TLS
-#define TLSCIPHER 222
-#define TLSVERSION 0x304
-#define TLSCIPHERAVAIL 222
-#define TLSCOMPRESSION 123
+#define RD() (rand() & 0x7FFFFFFFFFFFFFFF)
+#define RAND64() RD() << 48 ^ RD() << 35 ^ RD() << 22 ^ RD() << 9 ^ RD() >> 4
 
 // Hash
 #define SHA_CH00(x, y, z) (((x) & ((y) ^ (z))) ^ (z))
@@ -29,9 +21,8 @@
 #define SHA_PARI(x, y, z)  ((x) ^  (y) ^ (z))
 
 // Define the SHA shift, rotate left and rotate right macros
-#define SHA_SHRI(b, w)  (((uint64_t)(w)) >> (b))
-#define SHA_ROTR(b, w) ((((uint64_t)(w)) >> (b)) | (((uint64_t)(w)) << \
-  (64 - (b))))
+#define SHA_SHRI(b, w)  (((w)) >> (b))
+#define SHA_ROTR(b, w) ((((w)) >> (b)) | (((w)) << (64 - (b))))
 
 // Define the SHA SIGMA and sigma macros
 #define SHA_S0(w) (SHA_ROTR(28, w) ^ SHA_ROTR(34, w) ^ SHA_ROTR(39, w))

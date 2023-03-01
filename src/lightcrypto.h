@@ -45,17 +45,16 @@ static uint8_t AS1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
 static uint8_t AS2[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
 static uint8_t AS3[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
 
-key lcgenkeys(uint64_t g, uint64_t p);
 int lckeys();
-int lcinit(cc *host, cc *port, bool b);
 int lclisten(int s, sock *cli);
+int lcinit(cc *host, cc *port, bool b);
+key lcgenkeys(uint64_t g, uint64_t p);
 
 void lcend(int s);
 void lccrypt(uint64_t data, key k, uint64_t *enc);
 void lcgenshare(key *k1, key *k2, uint64_t p, bool srv);
 void lctransferkey(int s, bool snd, head *h, key *k);
-void lctransferdata(const int s, void* data, head *h, bool snd,
-  uint64_t len);
+void lctransferdata(const int s, void* data, head *h, bool snd, uint64_t len);
 void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 

@@ -180,7 +180,7 @@ static void lko_mul(uint64_t *a, const uint64_t *b) {
 //
 // Modulo add
 static void lkm_add(uint64_t *a, const uint64_t *b, const uint64_t *c,
-  const uint64_t *m) {
+    const uint64_t *m) {
   uint64_t ovr = lkadd(a, b, c);
 
   if (ovr || lkcmp(a, m) >= 0) {lksub(a, a, m);}
@@ -189,7 +189,7 @@ static void lkm_add(uint64_t *a, const uint64_t *b, const uint64_t *c,
 //
 // Modulo sub
 static void lkm_sub(uint64_t *a, const uint64_t *b, const uint64_t *c,
-  const uint64_t *m) {
+    const uint64_t *m) {
   if (lksub(a, b, c)) {lkadd(a, a, m);}
 }
 
@@ -241,8 +241,8 @@ static void lkm_sqrt(uint64_t a[DI]) {
 //
 //
 static void lkm_mmul(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *m) {
-  uint64_t p[DI2], mm[DI2];
   uint32_t ds, bs, pb, mb = lkbits(m);
+  uint64_t p[DI2], mm[DI2];
 
   lkmul(p, b, c);
   pb = lkbits(p + DI);
@@ -282,33 +282,21 @@ static void lkp_double(uint64_t *a, uint64_t *b, uint64_t *c) {
   uint64_t t4[DI], t5[DI];
 
   if (lkzero(c)) {return;}
-  lkm_sqr(t4, b);
-  lkm_mul(t5, a, t4);
-  lkm_sqr(t4, t4);
-  lkm_mul(b, b, c);
-  lkm_sqr(c, c);
+  lkm_sqr(t4, b);   lkm_mul(t5, a, t4); lkm_sqr(t4, t4); 
+  lkm_mul(b, b, c); lkm_sqr(c, c);
 
-  lkm_add(a, a, c, curve_p);
-  lkm_add(c, c, c, curve_p);
-  lkm_sub(c, a, c, curve_p);
-  lkm_mul(a, a, c);
+  lkm_add(a, a, c, curve_p); lkm_add(c, c, c, curve_p);
+  lkm_sub(c, a, c, curve_p); lkm_mul(a, a, c);
 
-  lkm_add(c, a, a, curve_p);
-  lkm_add(a, a, c, curve_p);
+  lkm_add(c, a, a, curve_p); lkm_add(a, a, c, curve_p);
   if (lkchk(a, 0)) {
     uint64_t ovr = lkadd(a, a, curve_p);
     lkrs1(a);
     a[DI - 1] |= ovr << 63;
   } else {lkrs1(a);}
-  lkm_sqr(c, a);
-  lkm_sub(c, c, t5, curve_p);
-  lkm_sub(c, c, t5, curve_p);
-  lkm_sub(t5, t5, c, curve_p);
-  lkm_mul(a, a, t5);
-  lkm_sub(t4, a, t4, curve_p);
-  lkset(a, c);
-  lkset(c, b);
-  lkset(b, t4);
+  lkm_sqr(c, a); lkm_sub(c, c, t5, curve_p); lkm_sub(c, c, t5, curve_p);
+  lkm_sub(t5, t5, c, curve_p); lkm_mul(a, a, t5); lkm_sub(t4, a, t4, curve_p);
+  lkset(a, c); lkset(c, b); lkset(b, t4);
 }
 
 //
@@ -316,11 +304,8 @@ static void lkp_double(uint64_t *a, uint64_t *b, uint64_t *c) {
 static void lkp_decom(pt *a, const uint64_t b[KB + 1]) {
   uint64_t tr[DI] = {3};
 
-  lkset(a->x, b + 1);
-  lkm_sqr(a->y, a->x);
-  lkm_sub(a->y, a->y, tr, curve_p);
-  lkm_mul(a->y, a->y, a->x);
-  lkm_add(a->y, a->y, curve_b, curve_p);
+  lkset(a->x, b + 1); lkm_sqr(a->y, a->x); lkm_sub(a->y, a->y, tr, curve_p);
+  lkm_mul(a->y, a->y, a->x); lkm_add(a->y, a->y, curve_b, curve_p);
   lkm_sqrt(a->y);
   if ((a->y[0] & 0x01) != (b[0] & 0x01)) {lksub(a->y, curve_p, a->y);}
 }
@@ -330,24 +315,18 @@ static void lkp_decom(pt *a, const uint64_t b[KB + 1]) {
 static void lkp_appz(uint64_t *a, uint64_t *b, const uint64_t *z) {
   uint64_t t[DI];
 
-  lkm_sqr(t, z);
-  lkm_mul(a, a, t);
-  lkm_mul(t, t, z);
-  lkm_mul(b, b, t);
+  lkm_sqr(t, z); lkm_mul(a, a, t); lkm_mul(t, t, z); lkm_mul(b, b, t);
 }
 
 //
 // P = (x1, y1) => 2P, (x2, y2) => P'
 static void lkp_inidoub(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d,
-  uint64_t *p) {
+    uint64_t *p) {
   uint64_t z[DI];
 
-  lkset(c, a); lkset(d, b);
-  lkclear(z); z[0] = 1;
+  lkset(c, a); lkset(d, b); lkclear(z); z[0] = 1;
   if (p) {lkset(z, p);}
-  lkp_appz(a, b, z);
-  lkp_double(a, b, z);
-  lkp_appz(c, d, z);
+  lkp_appz(a, b, z); lkp_double(a, b, z); lkp_appz(c, d, z);
 }
 
 //
@@ -355,51 +334,30 @@ static void lkp_inidoub(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d,
 static void lkp_add(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
   uint64_t t5[DI];
 
-  lkm_sub(t5, c, a, curve_p);
-  lkm_sqr(t5, t5);
-  lkm_mul(a, a, t5);
-  lkm_mul(c, c, t5);
-  lkm_sub(d, d, b, curve_p);
-  lkm_sqr(t5, d);
+  lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
+  lkm_mul(c, c, t5); lkm_sub(d, d, b, curve_p); lkm_sqr(t5, d);
 
-  lkm_sub(t5, t5, a, curve_p);
-  lkm_sub(t5, t5, c, curve_p);
-  lkm_sub(c, c, a, curve_p);
-  lkm_mul(b, b, c);
-  lkm_sub(c, a, t5, curve_p);
-  lkm_mul(d, d, c);
-  lkm_sub(d, d, b, curve_p);
+  lkm_sub(t5, t5, a, curve_p); lkm_sub(t5, t5, c, curve_p);
+  lkm_sub(c, c, a, curve_p); lkm_mul(b, b, c); lkm_sub(c, a, t5, curve_p);
+  lkm_mul(d, d, c); lkm_sub(d, d, b, curve_p);
   lkset(c, t5);
 }
 
 //
-// Points add
+// Points add // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
 static void lkp_addc(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
-  // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
   uint64_t t5[DI], t6[DI], t7[DI];
 
-  lkm_sub(t5, c, a, curve_p);
-  lkm_sqr(t5, t5);
-  lkm_mul(a, a, t5);
-  lkm_mul(c, c, t5);
-  lkm_add(t5, d, b, curve_p);
-  lkm_sub(d, d, b, curve_p);
+  lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
+  lkm_mul(c, c, t5); lkm_add(t5, d, b, curve_p); lkm_sub(d, d, b, curve_p);
 
-  lkm_sub(t6, c, a, curve_p);
-  lkm_mul(b, b, t6);
-  lkm_add(t6, a, c, curve_p);
-  lkm_sqr(c, d);
-  lkm_sub(c, c, t6, curve_p);
+  lkm_sub(t6, c, a, curve_p); lkm_mul(b, b, t6); lkm_add(t6, a, c, curve_p);
+  lkm_sqr(c, d); lkm_sub(c, c, t6, curve_p);
 
-  lkm_sub(t7, a, c, curve_p);
-  lkm_mul(d, d, t7);
-  lkm_sub(d, d, b, curve_p);
+  lkm_sub(t7, a, c, curve_p); lkm_mul(d, d, t7);lkm_sub(d, d, b, curve_p);
 
-  lkm_sqr(t7, t5);
-  lkm_sub(t7, t7, t6, curve_p);
-  lkm_sub(t6, t7, a, curve_p);
-  lkm_mul(t6, t6, t5);
-  lkm_sub(b, t6, b, curve_p);
+  lkm_sqr(t7, t5); lkm_sub(t7, t7, t6, curve_p); lkm_sub(t6, t7, a, curve_p);
+  lkm_mul(t6, t6, t5); lkm_sub(b, t6, b, curve_p);
   lkset(a, t7);
 }
 
@@ -548,7 +506,7 @@ int lksign(const uint64_t priv[KB], const uint64_t hash[KB],
 
 //
 // Verify signature
-int lkvrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB],
+int lkvrfy(const uint64_t publ[KB+1], const uint64_t hash[KB],
     const uint64_t sign[KB2]) {
   uint64_t tx[DI], ty[DI], tz[DI],r[DI],s[DI],u1[DI],u2[DI],z[DI],rx[DI],ry[DI];
   pt public, sum;

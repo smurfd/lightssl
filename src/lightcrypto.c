@@ -68,7 +68,7 @@ static void lcsendkey(int s, head *h, key *k) {
 //
 // Transfer data (send and receive)
 void lctransferdata(const int s, void* data, head *h, bool snd,
-  uint64_t len) {
+    uint64_t len) {
   if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(uint64_t)*len, 0);}
   else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(uint64_t) * len, 0);}
 }
@@ -214,7 +214,7 @@ static uint64_t lcget_footer(char c[], uint64_t len, uint8_t f[]) {
 }
 
 static uint64_t lcget_data(char c[], uint64_t h, uint64_t f, uint64_t l,
-  char d[]) {
+    char d[]) {
   uint64_t co = l - f - h + 1, i = 0;
 
   while (i < co) {d[i] = c[h + i]; i++;} d[i-1] = '\0';
@@ -325,7 +325,8 @@ static void lasn_print(const asn *asn, int depth) {
 
 //
 // Get the length // t = type, 1 = tlv, 0 = data
-static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t) {
+static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off,
+    bool t) {
   uint32_t a, b = 0, ret;
 
   if (len < 2) return 0xFFFFFFFF;

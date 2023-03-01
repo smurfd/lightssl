@@ -11,23 +11,18 @@ extern const uint64_t h0[], k0[80];
 
 // This structure will hold context information for the SHA hashing operation.
 typedef struct ctxs {
-  uint64_t imh[SHA_HSH_SZ / 8];                       // Intermediate Message Digest
-  uint64_t len_hi, len_lo;                            // Message length in bits
-  int_least16_t msg_blk_i;                       // Message_Block array index
-  uint8_t mb[SHA_BLK_SZ];                            // 1024-bit message blocks
-  int compute;                                   // Is the hash computed?
-  int corrupt;                                   // Cumulative corrupt code
+  uint64_t imh[SHA_HSH_SZ / 8], len_hi, len_lo; // Intermediate Message Digest & Message length in bits
+  int_least16_t msg_blk_i;                      // Message_Block array index
+  uint8_t mb[SHA_BLK_SZ];                       // 1024-bit message blocks
+  int compute, corrupt;                         // Is the hash computed. Cumulative corrupt code
 } ctxs;
 
 // This structure will hold context information for the HMAC keyed-hashing operation.
 typedef struct ctxh {
-  int which;                                     // Which SHA is being used
-  int size;                                      // Hash size of SHA being used
-  int blk_size;                                  // Block size of SHA being used
+  int which, size, blk_size;                     // Which SHA, Hash size & Block size is being used
   ctxs sha;                                      // SHA Context
-  uint8_t k_opad[SHA_BLK_SZ];                        // Key XORd with opad
-  int compute;                                   // Is the MAC computed?
-  int corrupt;                                   // Cumulative corruption code
+  uint8_t k_opad[SHA_BLK_SZ];                    // Key XORd with opad
+  int compute, corrupt;                          // Is the MAC computed. Cumulative corruption code
 } ctxh;
 
 // SHA Hashing (keeping the static ones as commented to get a overview)
@@ -41,6 +36,8 @@ typedef struct ctxh {
 // int lhash_hmac_input(ctxh *c, cuc *text,int text_len);
 // int lhash_hmac_final(ctxh *c, uint8_t bits, uint32_t bit_count);
 // int lhash_hmac_result(ctxh *c, uint8_t digest[SHA_HSH_SZ]);
+// lh for LightHash
+// lh3 for LightHash3
 int lh(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,int hs);
 void lhnew(cc *in, char* s);
 void lh3new(uint8_t *n, char *ss);

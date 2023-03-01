@@ -507,8 +507,7 @@ static uint64_t lh3pad10(uint64_t x, uint64_t m, uint8_t **p) {
 // 10. Let S=f(S), and continue with Step 8.
 static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
   uint64_t b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
-  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0};
-  uint8_t *p, *pi, *z, *pad, str[200] = {0};
+  uint8_t az[64], s[200], sc[200], sxor[200], *p, *pi, *z, *pad, str[200];
 
   len = lh3pad10(r, l, &pad);
   plen = lh3cat(n, l, pad, len, &p);
@@ -518,7 +517,6 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
     free(pi);
     lh3keccak_p(sxor, &s);
   }
-
   while (true) {
     memcpy(str, s, r / 8);
     zl = lh3cat(z, zl, str, r, &z);
