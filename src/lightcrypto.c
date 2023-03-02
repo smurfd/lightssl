@@ -452,18 +452,20 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
     if ((*encalgi) == NULL || (*encalgi)[1].type != ASN1_OBJIDEN)
       return lasn_err("EncryptionAlgoIdentifier");
     if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0 ||
-      memcmp((*encalgi)[1].data, AS4, (*encalgi)[1].len) == 0) {
+      memcmp((*encalgi)[1].data, AS4, (*encalgi)[1].len) == 0 ||
+      memcmp((*encalgi)[1].data, AS5, (*encalgi)[1].len) == 0) {
       if ((*encalgi)[1].data[8] == 0x02) printf("Cnt encr alg: AES-128-CBC\n");
       if ((*encalgi)[1].data[8] == 0x2a) printf("Cnt encr alg: AES-256-CBC\n");
+      if ((*encalgi)[1].data[8] == 0x30) printf("Cnt encr alg: AES-256-CBC RC2\n");
       (*aesiv) = &(*encalgi)[1];
-      if ((*aesiv) == NULL || (*aesiv)[1].type != ASN1_OCTSTRI)
+      if ((*aesiv) == NULL || ((*aesiv)[1].type != ASN1_OCTSTRI && (*aesiv)[1].type != ASN1_SEQUENC))
         return lasn_err("AES IV");
       lasn_printhex("AES IV:", (*aesiv)[1].data, (*aesiv)[1].len);
     } else {printf("unknown encryption algo\n");}
     (*encct) = &(*ctencalg)[3];
-    if ((*encct) == NULL || (*encct)[1].type != 0x80)
+    if ((*encct) == NULL || ((*encct)[1].type != 0x80 && (*encct)[1].type != 0x02))
       return lasn_err("No encrypted content");
-    lasn_printhex("Encrypted content:", (*encct)[1].data, (*encct)[1].len);
+    lasn_printhex("Encrypted content:", (*encct)[0].data, (*encct)[0].len);
   }
   // this if statement works now, but not 100% sure its correct
   if ((*encci)[2].pos != 0 && (*encci)[2].pos != (*encci)[2].len)

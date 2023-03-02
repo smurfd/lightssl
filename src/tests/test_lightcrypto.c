@@ -22,8 +22,11 @@ int main(int argc, char **argv) {
   assert(strcmp(s1, s0) == 0);
   lcdecode64((char*)data, strlen((char*)data), &d, s4);
 
-  if (argc < 3) lchandle_asn("ca256.csm");
-  else lchandle_asn(argv[2]);
+  if (argc < 3) {
+    lchandle_asn("ca128.csm");
+    lchandle_asn("ca256.csm");
+    lchandle_asn("ca256rc2.csm");
+  } else lchandle_asn(argv[2]);
   printf("OK\n");
   return 0;
 }
