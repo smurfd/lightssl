@@ -9,12 +9,10 @@ int main() {
   char s[128] = {0};
 
   lh3new(smurfd, s);
-  assert(strcmp(s, "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2d"
-    "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cda25f20")
-    == 0);
-  assert(strcmp(s, "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2d"
-    "cdcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cdffffff")
-    != 0); // Assume failure
+  assert(strcmp(s, "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2dc"
+  "dcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cda25f20")== 0);
+  assert(strcmp(s, "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2dc"
+  "dcc7d61e73d4f2c51051e45d26215f9f7729b8986549e169dcee3280bed61cdffffff")!= 0); // Assume failure
   printf("OK\n");
   return 0;
 }
