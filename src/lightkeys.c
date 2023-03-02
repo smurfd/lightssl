@@ -179,8 +179,7 @@ static void lko_mul(uint64_t *a, const uint64_t *b) {
 
 //
 // Modulo add
-static void lkm_add(uint64_t *a, const uint64_t *b, const uint64_t *c,
-    const uint64_t *m) {
+static void lkm_add(uint64_t *a, const uint64_t *b, uint64_t *c, uint64_t *m) {
   uint64_t ovr = lkadd(a, b, c);
 
   if (ovr || lkcmp(a, m) >= 0) {lksub(a, a, m);}
@@ -188,8 +187,7 @@ static void lkm_add(uint64_t *a, const uint64_t *b, const uint64_t *c,
 
 //
 // Modulo sub
-static void lkm_sub(uint64_t *a, const uint64_t *b, const uint64_t *c,
-    const uint64_t *m) {
+static void lkm_sub(uint64_t *a, const uint64_t *b, uint64_t *c, uint64_t *m) {
   if (lksub(a, b, c)) {lkadd(a, a, m);}
 }
 
@@ -481,8 +479,7 @@ int lkshar_secr(const uint64_t publ[KB + 1], const uint64_t priv[KB],
 
 //
 // Create signature
-int lksign(const uint64_t priv[KB], const uint64_t hash[KB],
-    uint64_t sign[KB2]) {
+int lksign(const uint64_t priv[KB], uint64_t hash[KB], uint64_t sign[KB2]) {
   uint64_t k[DI], tmp[DI], s[DI], x = 1;
   pt p;
 
@@ -506,8 +503,7 @@ int lksign(const uint64_t priv[KB], const uint64_t hash[KB],
 
 //
 // Verify signature
-int lkvrfy(const uint64_t publ[KB+1], const uint64_t hash[KB],
-    const uint64_t sign[KB2]) {
+int lkvrfy(const uint64_t publ[KB+1], uint64_t hash[KB], uint64_t sign[KB2]) {
   uint64_t tx[DI], ty[DI], tz[DI],r[DI],s[DI],u1[DI],u2[DI],z[DI],rx[DI],ry[DI];
   pt public, sum;
 
