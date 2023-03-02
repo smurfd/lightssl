@@ -457,8 +457,10 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
     (*encalgi) = &(*ctencalg)[1];
     if ((*encalgi) == NULL || (*encalgi)[1].type != ASN1_OBJIDEN)
       return lasn_err("EncryptionAlgoIdentifier");
-    if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0) {
-      printf("content encrypt algo: AES-128-CBC\n");
+    if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0 ||
+      memcmp((*encalgi)[1].data, AS4, (*encalgi)[1].len) == 0) {
+      if ((*encalgi)[1].data[8] == 0x02) printf("Cnt encr alg: AES-128-CBC\n");
+      if ((*encalgi)[1].data[8] == 0x2a) printf("Cnt encr alg: AES-256-CBC\n");
       (*aesiv) = &(*encalgi)[1];
       if ((*aesiv) == NULL || (*aesiv)[1].type != ASN1_OCTSTRI)
         return lasn_err("AES IV");
