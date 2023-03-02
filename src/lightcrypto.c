@@ -38,9 +38,7 @@ void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
 //
 // Generate a public and private keypair
 key lcgenkeys(uint64_t g, uint64_t p) {
-  key k;
-
-  k.priv = lcrand(); k.publ = (int64_t)pow(g, k.priv) % p;
+  key k; k.priv = lcrand(); k.publ = (int64_t)pow(g, k.priv) % p;
   return k;
 }
 
@@ -58,17 +56,14 @@ static void lcrecvkey(int s, head *h, key *k) {
 //
 // Send key
 static void lcsendkey(int s, head *h, key *k) {
-  key kk;
-
   // This to ensure not to send the private key
-  kk.publ = (*k).publ; kk.shar = (*k).shar; kk.priv = 0;
+  key kk; kk.publ = (*k).publ; kk.shar = (*k).shar; kk.priv = 0;
   send(s, h, sizeof(head), 0); send(s, &kk, sizeof(key), 0);
 }
 
 //
 // Transfer data (send and receive)
-void lctransferdata(const int s, void* data, head *h, bool snd,
-    uint64_t len) {
+void lctransferdata(const int s, void* data, head *h, bool snd, uint64_t len) {
   if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(uint64_t)*len, 0);}
   else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(uint64_t) * len, 0);}
 }
@@ -213,8 +208,7 @@ static uint64_t lcget_footer(char c[], uint64_t len, uint8_t f[]) {
   return i + 1;
 }
 
-static uint64_t lcget_data(char c[], uint64_t h, uint64_t f, uint64_t l,
-    char d[]) {
+static uint64_t lcget_data(char c[],uint64_t h,uint64_t f,uint64_t l,char d[]) {
   uint64_t co = l - f - h + 1, i = 0;
 
   while (i < co) {d[i] = c[h + i]; i++;} d[i-1] = '\0';

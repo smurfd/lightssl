@@ -73,7 +73,7 @@
 #define EVEN(p) (!(p[0] & 1))
 
 typedef struct pt {uint64_t x[DI], y[DI];} pt;
-typedef struct {uint64_t a, b, c, d;} prng_t;
+typedef struct prng_t {uint64_t a, b, c, d;} prng_t;
 
 static uint64_t curve_p[DI] = {0x00000000ffffffff, 0xffffffff00000000,
   0xfffffffffffffffe, 0xffffffffffffffff, 0xffffffffffffffff,0xffffffffffffffff},
