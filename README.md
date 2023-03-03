@@ -1,4 +1,4 @@
-![https://www.flaticon.com/free-icons/free-access](https://github.com/smurfd/lightssl/tree/main/img/open-lock.png "Free access icons created by JessiGue - Flaticon")
+![https://www.flaticon.com/free-icons/free-access](./img/open-lock.png "Free access icons created by JessiGue - Flaticon")
 # lightSSL
 Do SSL really need to be so hard?
 
@@ -87,4 +87,3 @@ int main() {
 # Very simple Crypto handshake
 very simple Crypto handshake in Python
 [lightcrypto](https://github.com/smurfd/lightssl/tree/main/src/lightcrypto)
-<a href="https://www.flaticon.com/free-icons/free-access" title="free access icons">Free access icons created by JessiGue - Flaticon</a>
