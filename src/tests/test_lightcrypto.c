@@ -23,9 +23,9 @@ int main(int argc, char **argv) {
   lcdecode64((char*)data, strlen((char*)data), &d, s4);
 
   if (argc < 3) {
-    lchandle_asn("ca128.csm");
-    lchandle_asn("ca256.csm");
-    lchandle_asn("ca256rc2.csm");
+    lchandle_asn("ca128.cms");
+    lchandle_asn("ca256.cms");
+    lchandle_asn("ca256rc2.cms");
   } else lchandle_asn(argv[2]);
   printf("OK\n");
   return 0;
