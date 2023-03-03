@@ -16,19 +16,6 @@
 #include "lightdefs.h"
 
 //
-// Get BLOCK size
-static int lcgetblock() {return BLOCK;}
-
-//
-// Random uint64_t
-static uint64_t lcrand() {
-  uint64_t r = 1;
-
-  for (int i = 0; i < 5; ++i) {r = (r << 15) | (rand() & 0x7FFF);}
-  return r & 0xFFFFFFFFFFFFFFFF;
-}
-
-//
 // Generate the shared key
 void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
   if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
@@ -38,7 +25,7 @@ void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
 //
 // Generate a public and private keypair
 key lcgenkeys(uint64_t g, uint64_t p) {
-  key k; k.priv = lcrand(); k.publ = (int64_t)pow(g, k.priv) % p;
+  key k; k.priv = RAND64(); k.publ = (int64_t)pow(g, k.priv) % p;
   return k;
 }
 
@@ -47,10 +34,9 @@ key lcgenkeys(uint64_t g, uint64_t p) {
 void lccrypt(uint64_t data, key k, uint64_t *enc) {(*enc) = data ^ k.shar;}
 
 //
-// Receive key
+// Receive key (clears private key if we receive it for some reason)
 static void lcrecvkey(int s, head *h, key *k) {
   recv(s, h, sizeof(head), 0); recv(s, k, sizeof(key), 0); (*k).priv = 0;
-  // This to ensure if we receive a private key we clear it
 }
 
 //
@@ -82,11 +68,11 @@ void lctransferkey(int s, bool snd, head *h, key *k) {
 //
 // Server handler
 static void *lchandler(void *sdesc) {
-  uint64_t dat[lcgetblock()], cd[lcgetblock()];
+  uint64_t dat[BLOCK], cd[BLOCK];
   int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
-  uint64_t g1 = lcrand(), p1 = lcrand();
+  uint64_t g1 = RAND64(), p1 = RAND64();
   key k1 = lcgenkeys(g1, p1), k2;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   head h; h.g = g1; h.p = p1;
@@ -142,8 +128,8 @@ int lclisten(const int s, sock *cli) {
 //
 // Generate a keypair & shared key then print it (test / demo)
 int lckeys() {
-  uint64_t g1 = lcrand(), g2 = lcrand(), p1 = lcrand();
-  uint64_t p2 = lcrand(), c = 123456, d = 1, e = 1;
+  uint64_t g1 = RAND64(), g2 = RAND64(), p1 = RAND64();
+  uint64_t p2 = RAND64(), c = 123456, d = 1, e = 1;
   key k1 = lcgenkeys(g1, p1), k2 = lcgenkeys(g2, p2);
 
   lcgenshare(&k1, &k2, p1, false);

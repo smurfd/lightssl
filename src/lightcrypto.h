@@ -34,6 +34,7 @@ struct asn {
 #define ASN1_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
 #define ASN1_GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 #define LEN 4096
+
 static char enc[] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
   'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
