@@ -221,7 +221,7 @@ static uint64_t lcread_cert(char *fn, char c[], bool iscms) {
 
 static void lcprint_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
-  printf("Data: %s\n", d); printf("Footer: %s\n", f);
+  printf("Data:\n%s\n", d); printf("Footer: %s\n", f);
 }
 
 uint64_t lchandle_cert(char *cert, char d[LEN]) {
@@ -329,14 +329,12 @@ static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
     while (childrenlen < derdatlen) {
       const uint8_t *child = (der + deroff);
       uint32_t childlen = lasn_get_len(child, derenclen - deroff, &childoff, 1);
+      int32_t childobj = lasn_der_objcnt(child, childlen);
 
       if (derenclen < derdatlen || childlen == 0xFFFFFFFF) return -1;
       if ((childlen + childrenlen) > derdatlen) return -1;
-      int32_t childobj = lasn_der_objcnt(child, childlen);
       if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
-      objcnt += childobj;
-      childrenlen += childlen;
-      deroff += childlen;
+      objcnt += childobj; childrenlen += childlen; deroff += childlen;
     }
   }
   return objcnt;
@@ -353,9 +351,7 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
   lasn_init(o);
   if (der == NULL || o == NULL || derlen == 0) return -1;
   if (derenclen == 0xFFFFFFFF || derlen < derenclen) return -1;
-  (*o)->type = *der;
-  (*o)->len = derdatl;
-  (*o)->data = derdat;
+  (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
   if ((*der & 0x20) != 0) {
     if (oobj == NULL || oobjc <= 0) return -1;
     while (childrenlen < derdatl) {
@@ -369,10 +365,8 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
       asn *childo = *oobj;
       oobj++; --oobjc;
       if (lasn_der_dec(child, childlen, &childo, oobj, oobjc) < 0) return -1;
-      oobj += (childobj - 1);
-      oobjc -= (childobj - 1);
-      childrenlen += childlen;
-      deroff += childlen;
+      oobj += (childobj - 1); oobjc -= (childobj - 1);
+      childrenlen += childlen; deroff += childlen;
       (*o)->pos = childrenlen;
     }
   }
