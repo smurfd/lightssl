@@ -317,61 +317,40 @@ static void lasn_init(asn **asn) {
 }
 
 //
-// Count the der objects
-static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
-  uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t childrenlen = 0, derdatlen = derenclen - deroff;
-  int32_t objcnt = 1;
-
-  if (der == NULL || derlen == 0 || derenclen == 0xFFFFFFFF) return -1;
-  if (derlen < derenclen || derenclen < deroff) return -1;
-  if ((*der & 0x20) != 0) {
-    while (childrenlen < derdatlen) {
-      const uint8_t *child = (der + deroff);
-      uint32_t childlen = lasn_get_len(child, derenclen - deroff, NULL, 1);
-      int32_t childobj = lasn_der_objcnt(child, childlen);
-
-      if (derenclen < derdatlen || childlen == 0xFFFFFFFF) return -1;
-      if ((childlen + childrenlen) > derdatlen) return -1;
-      if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
-      objcnt += childobj; childrenlen += childlen; deroff += childlen;
-    }
-  }
-  return objcnt;
-}
-
-//
-// Decode the der encrypted data
+// dec = false, Count the der objects
+// dec = true, Decode the der encrypted data
 static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
-    asn **oobj, uint32_t oobjc) {
+    asn **oobj, uint32_t oobjc, bool dec) {
   uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t childrenlen = 0, derdatl = derenclen - deroff;
+  uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff;
   const uint8_t *derdat = (der + deroff);
   int32_t objcnt = 1;
 
-  lasn_init(o);
-  if (der == NULL || o == NULL || derlen == 0) return -1;
+  if (dec) {
+    lasn_init(o); if (o == NULL) return -1;
+    (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
+  }
+  if (der == NULL || derlen == 0 || derenclen < deroff) return -1;
   if (derenclen == 0xFFFFFFFF || derlen < derenclen) return -1;
-  if (derenclen < deroff) return -1;
-  (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
   if ((*der & 0x20) != 0) {
-    if (oobj == NULL || oobjc <= 0) return -1;
+    if (dec && (oobj == NULL || oobjc <= 0)){return -1;}
     while (childrenlen < derdatl) {
       const uint8_t *child = (der + deroff);
-      uint32_t childlen = lasn_get_len(child, (derenclen - deroff), NULL, 1);
-      int32_t childobj = lasn_der_objcnt(child, childlen);
+      uint32_t childlen = lasn_get_len(child, (derenclen - deroff),&childoff,1);
+      int32_t childobj = lasn_der_dec(child, childlen, NULL, NULL, 0, 0);
 
       if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
-      if (childobj < 0 || childobj > (int)oobjc) return -1;
-      if (derenclen < derdatl || childlen == 0xFFFFFFFF) return -1;
-
-      asn *childo = *oobj;
-      oobj++; --oobjc;
-      if (lasn_der_dec(child, childlen, &childo, oobj, oobjc) < 0) return -1;
-      oobj += (childobj - 1); oobjc -= (childobj - 1);
+      if (childobj < 0 || derenclen < derdatl) return -1;
+      if (dec) {
+        if (childobj > (int)oobjc) return -1;
+        asn *childo = *oobj;
+        oobj++; --oobjc;
+        if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0) return -1;
+        oobj += (childobj - 1); oobjc -= (childobj - 1);
+      } else objcnt += childobj;
       childrenlen += childlen; deroff += childlen;
       if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
-      (*o)->pos = childrenlen;
+      if (dec) (*o)->pos = childrenlen;
     }
   }
   return objcnt;
@@ -384,12 +363,12 @@ static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
 //
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
-  int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
+  int32_t objcnt = lasn_der_dec((uint8_t*)cmsd, fs, NULL, NULL, 0, 0);
   asn *ct[]={0}, *asnobj[]={0}, *cms[]={0}, *encd[]={0}, *aesiv[]={0};
   asn *ci[]={0}, *cmsv[]={0}, *ict[]={0}, *et[]={0}, *algi[]={0}, *alg[]={0};
 
   if (objcnt < 0) return lasn_err("Objects");
-  if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt) < 0) return lasn_err("Parse");
+  if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0) return lasn_err("Parse");
   lasn_print((*cms), 0);
   (*ct) = (*cms); (*encd) = &(*ct)[2]; (*cmsv) = &(*encd)[1];
   (*ci) = &(*cmsv)[1]; (*ict) = &(*ci)[1]; (*alg) = &(*ict)[1];
