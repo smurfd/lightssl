@@ -320,7 +320,7 @@ static void lasn_init(asn **asn) {
 // Count the der objects
 static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t childrenlen = 0, derdatlen = derenclen - deroff, childoff;
+  uint32_t childrenlen = 0, derdatlen = derenclen - deroff;
   int32_t objcnt = 1;
 
   if (der == NULL || derlen == 0 || derenclen == 0xFFFFFFFF) return -1;
@@ -328,7 +328,7 @@ static int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen) {
   if ((*der & 0x20) != 0) {
     while (childrenlen < derdatlen) {
       const uint8_t *child = (der + deroff);
-      uint32_t childlen = lasn_get_len(child, derenclen - deroff, &childoff, 1);
+      uint32_t childlen = lasn_get_len(child, derenclen - deroff, NULL, 1);
       int32_t childobj = lasn_der_objcnt(child, childlen);
 
       if (derenclen < derdatlen || childlen == 0xFFFFFFFF) return -1;
@@ -347,30 +347,34 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
   uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
   uint32_t childrenlen = 0, derdatl = derenclen - deroff;
   const uint8_t *derdat = (der + deroff);
+  int32_t objcnt = 1;
 
   lasn_init(o);
   if (der == NULL || o == NULL || derlen == 0) return -1;
   if (derenclen == 0xFFFFFFFF || derlen < derenclen) return -1;
+  if (derenclen < deroff) return -1;
   (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
   if ((*der & 0x20) != 0) {
     if (oobj == NULL || oobjc <= 0) return -1;
     while (childrenlen < derdatl) {
       const uint8_t *child = (der + deroff);
-      uint32_t childdatoff, childmaxlen = (derenclen - deroff);
-      uint32_t childlen = lasn_get_len(child, childmaxlen, &childdatoff, 1);
+      uint32_t childlen = lasn_get_len(child, (derenclen - deroff), NULL, 1);
       int32_t childobj = lasn_der_objcnt(child, childlen);
 
       if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
       if (childobj < 0 || childobj > (int)oobjc) return -1;
+      if (derenclen < derdatl || childlen == 0xFFFFFFFF) return -1;
+
       asn *childo = *oobj;
       oobj++; --oobjc;
       if (lasn_der_dec(child, childlen, &childo, oobj, oobjc) < 0) return -1;
       oobj += (childobj - 1); oobjc -= (childobj - 1);
       childrenlen += childlen; deroff += childlen;
+      if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
       (*o)->pos = childrenlen;
     }
   }
-  return 1;
+  return objcnt;
 }
 
 //
