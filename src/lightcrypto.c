@@ -15,6 +15,10 @@
 #include "lightcrypto.h"
 #include "lightdefs.h"
 
+// What im looking for:
+// https://github.com/gh2o/tls_mini
+// asn1 stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
+
 //
 // Generate the shared key
 void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
@@ -190,14 +194,14 @@ static uint64_t lcget_footer(char c[], uint64_t len, uint8_t f[]) {
 
   // check for the start of -----END CERTIFICATE-----
   j = strlen(c) - strlen(strstr(c, "-----E"));
-  while (c[i] != '\n') {f[i] = c[j]; i++; j++;} f[i] = '\0';
+  while (c[i] != '\n') {f[i] = c[j]; i++; j++;} f[i-2] = '\0';
   return i + 1;
 }
 
 static uint64_t lcget_data(char c[],uint64_t h,uint64_t f,uint64_t l,char d[]) {
-  uint64_t co = l - f - h + 1, i = 0;
+  uint64_t co = l - f - h, i = 0;
 
-  while (i < co) {d[i] = c[h + i]; i++;} d[i-1] = '\0';
+  while (i < co) {d[i] = c[h + i]; i++;} d[i] = '\0';
   return i;
 }
 
@@ -274,12 +278,6 @@ void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
   }
 }
 
-// What im looking for:
-// https://github.com/gh2o/tls_mini
-
-// ------------
-// stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
-
 //
 // Print data in hex and formatted
 static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
@@ -287,8 +285,7 @@ static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
 
   printf("%s\n----- hex data ----\n", str);
   while(c < len) {printf("%02x ", d[c]); if (++c % 8 == 0) printf("\n");}
-  if (c % 8) printf("\n----- hex end ----\n");
-  else printf("----- hex end ----\n");
+  if (c % 8) printf("\n"); printf("----- hex end ----\n");
 }
 
 //
@@ -407,52 +404,49 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   if (objcnt < 0) return lasn_err("Objects");
   if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt) < 0) return lasn_err("Parse");
   lasn_print((*cms), 0);
-  printf("----- parse begin ----\n");
+  (*ct) = (*cms); (*encd) = &(*ct)[2]; (*cmsv) = &(*encd)[1];
+  (*encci) = &(*cmsv)[1]; (*enccict) = &(*encci)[1];
+  (*ctencalg) = &(*enccict)[1]; (*encalgi) = &(*ctencalg)[1];
+  (*aesiv) = &(*encalgi)[1]; (*encct) = &(*ctencalg)[3];
+
   if ((*cms)->type != ASN1_SEQUENC) return lasn_err("Sequence");
-  (*ct) = (*cms);
   if ((*ct) == NULL || (*ct)[1].type != ASN1_OBJIDEN)
     return lasn_err("ContentType");
   if (memcmp((*ct)[1].data, AS1, (*ct)[1].len) != 0)
     return lasn_err("ContentType EncryptedData");
-  printf("Content type: encryptedData\n");
-  (*encd) = &(*ct)[2];
   if ((*encd) == NULL || (*encd)[1].type != ASN1_SEQUENC)
     return lasn_err("ContentType EncryptedData");
-  (*cmsv) = &(*encd)[1];
   if ((*cmsv) == NULL || (*cmsv)[1].type != ASN1_INTEGER || (*cmsv)[1].len != 1)
     return lasn_err("CMS Version");
-  printf("CMS version: %d\n", (*cmsv)[1].data[0]);
-  (*encci) = &(*cmsv)[1];
   if ((*encci) == NULL || (*encci)[1].type != ASN1_SEQUENC)
     return lasn_err("EncryptedContent");
-  (*enccict) = &(*encci)[1];
   if ((*enccict) == NULL || (*enccict)[1].type != ASN1_OBJIDEN)
     return lasn_err("ContentType EncryptedContent");
-  if ((*enccict)[1].len != 9 || memcmp((*enccict)[1].data, AS2, (*enccict)[1].len) != 0)
+  if ((*enccict)[1].len != 9 ||
+      memcmp((*enccict)[1].data, AS2, (*enccict)[1].len) != 0)
     return lasn_err("ContentType EncryptedContent PKCS#7");
-  printf("ContentType EncryptedContent: PKCS#7\n");
-  (*ctencalg) = &(*enccict)[1];
   if ((*ctencalg) == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
   if ((*ctencalg)[1].type == ASN1_SEQUENC) {
-    (*encalgi) = &(*ctencalg)[1];
     if ((*encalgi) == NULL || (*encalgi)[1].type != ASN1_OBJIDEN)
       return lasn_err("EncryptionAlgoIdentifier");
     if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0 ||
-      memcmp((*encalgi)[1].data, AS4, (*encalgi)[1].len) == 0 ||
-      memcmp((*encalgi)[1].data, AS5, (*encalgi)[1].len) == 0) {
-      if ((*encalgi)[1].data[8] == 0x02) printf("Cnt encr alg: AES-128-CBC\n");
-      if ((*encalgi)[1].data[8] == 0x2a) printf("Cnt encr alg: AES-256-CBC\n");
-      if ((*encalgi)[1].data[8] == 0x30) printf("Cnt encr alg: AES-256-CBC RC2\n");
-      (*aesiv) = &(*encalgi)[1];
-      if ((*aesiv) == NULL || ((*aesiv)[1].type != ASN1_OCTSTRI && (*aesiv)[1].type != ASN1_SEQUENC))
-        return lasn_err("AES IV");
-      lasn_printhex("AES IV:", (*aesiv)[1].data, (*aesiv)[1].len);
+        memcmp((*encalgi)[1].data, AS4, (*encalgi)[1].len) == 0 ||
+        memcmp((*encalgi)[1].data, AS5, (*encalgi)[1].len) == 0) {
+      if ((*aesiv) == NULL || ((*aesiv)[1].type != ASN1_OCTSTRI &&
+          (*aesiv)[1].type != ASN1_SEQUENC)) return lasn_err("AES IV");
     } else {printf("unknown encryption algo\n");}
-    (*encct) = &(*ctencalg)[3];
     if ((*encct) == NULL || ((*encct)[1].type != 0x80 && (*encct)[1].type != 0x02))
       return lasn_err("No encrypted content");
-    lasn_printhex("Encrypted content:", (*encct)[0].data, (*encct)[0].len);
   }
+  printf("----- parse begin ----\n");
+  printf("Content type: encryptedData\n");
+  printf("CMS version: %d\n", (*cmsv)[1].data[0]);
+  printf("ContentType EncryptedContent: PKCS#7\n");
+  if ((*encalgi)[1].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
+  if ((*encalgi)[1].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
+  if ((*encalgi)[1].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
+  lasn_printhex("AES IV:", (*aesiv)[1].data, (*aesiv)[1].len);
+  lasn_printhex("Encrypted content:", (*encct)[0].data, (*encct)[0].len);
   // this if statement works now, but not 100% sure its correct
   if ((*encci)[2].pos != 0 && (*encci)[2].pos != (*encci)[2].len)
     printf("unprot attributes avail\n");
