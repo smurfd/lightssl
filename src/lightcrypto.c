@@ -181,19 +181,17 @@ uint32_t lcutf8encode(uint32_t cp) {
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
 static uint64_t lcget_header(char c[], uint8_t h[]) {
-  uint64_t i = 0;
-
+  uint64_t i = strlen(c) - strlen(strstr(c, "-----B"));
   // Check for the start of -----BEGIN CERTIFICATE-----
-  i = strlen(c) - strlen(strstr(c, "-----B"));
+
   while (c[i] != '\n') {h[i] = c[i]; i++;} h[i] = '\0';
   return i + 1;
 }
 
 static uint64_t lcget_footer(char c[], uint64_t len, uint8_t f[]) {
-  uint64_t i = 0, j = 0;
-
+  uint64_t i = 0, j = strlen(c) - strlen(strstr(c, "-----E"));
   // check for the start of -----END CERTIFICATE-----
-  j = strlen(c) - strlen(strstr(c, "-----E"));
+
   while (c[i] != '\n') {f[i] = c[j]; i++; j++;} f[i-2] = '\0';
   return i + 1;
 }
@@ -229,14 +227,13 @@ static void lcprint_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
 }
 
 uint64_t lchandle_cert(char *cert, char d[LEN]) {
-  uint64_t len = 0, foot, head, data;
   uint8_t h[36], f[36];
   char crt[LEN];
+  uint64_t len = lcread_cert(cert, crt, 0);
+  uint64_t head = lcget_header(crt, h);
+  uint64_t foot = lcget_footer(crt, len, f);
+  uint64_t data = lcget_data(crt, head, foot, len, d);
 
-  len = lcread_cert(cert, crt, 0);
-  head = lcget_header(crt, h);
-  foot = lcget_footer(crt, len, f);
-  data = lcget_data(crt, head, foot, len, d);
   lcprint_cert(len, h, f, d);
   return data;
 }
@@ -397,60 +394,53 @@ static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_objcnt((uint8_t*)cmsd, fs);
-  asn *ct[] = {0}, *asnobj[] = {0}, *cms[] = {0}, *encd[] = {0};
-  asn *encci[] = {0}, *cmsv[] = {0}, *enccict[] = {0}, *aesiv[] = {0};
-  asn *ctencalg[] = {0}, *encalgi[] = {0}, *encct[] = {0};
+  asn *ct[]={0}, *asnobj[]={0}, *cms[]={0}, *encd[]={0}, *aesiv[]={0};
+  asn *ci[]={0}, *cmsv[]={0}, *ict[]={0}, *et[]={0}, *algi[]={0}, *alg[]={0};
 
   if (objcnt < 0) return lasn_err("Objects");
   if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt) < 0) return lasn_err("Parse");
   lasn_print((*cms), 0);
   (*ct) = (*cms); (*encd) = &(*ct)[2]; (*cmsv) = &(*encd)[1];
-  (*encci) = &(*cmsv)[1]; (*enccict) = &(*encci)[1];
-  (*ctencalg) = &(*enccict)[1]; (*encalgi) = &(*ctencalg)[1];
-  (*aesiv) = &(*encalgi)[1]; (*encct) = &(*ctencalg)[3];
+  (*ci) = &(*cmsv)[1]; (*ict) = &(*ci)[1]; (*alg) = &(*ict)[1];
+  (*algi) = &(*alg)[1]; (*aesiv) = &(*algi)[1]; (*et) = &(*alg)[3];
 
+  // _err CT = ContentType, EC = EncryptedContent
   if ((*cms)->type != ASN1_SEQUENC) return lasn_err("Sequence");
-  if ((*ct) == NULL || (*ct)[1].type != ASN1_OBJIDEN)
-    return lasn_err("ContentType");
-  if (memcmp((*ct)[1].data, AS1, (*ct)[1].len) != 0)
-    return lasn_err("ContentType EncryptedData");
-  if ((*encd) == NULL || (*encd)[1].type != ASN1_SEQUENC)
-    return lasn_err("ContentType EncryptedData");
+  if ((*ct) == NULL || (*ct)[1].type != ASN1_OBJIDEN) return lasn_err("CT");
+  if (memcmp((*ct)[1].data, AS1, (*ct)[1].len) != 0 || (*encd) == NULL ||
+    (*encd)[1].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
   if ((*cmsv) == NULL || (*cmsv)[1].type != ASN1_INTEGER || (*cmsv)[1].len != 1)
     return lasn_err("CMS Version");
-  if ((*encci) == NULL || (*encci)[1].type != ASN1_SEQUENC)
-    return lasn_err("EncryptedContent");
-  if ((*enccict) == NULL || (*enccict)[1].type != ASN1_OBJIDEN)
-    return lasn_err("ContentType EncryptedContent");
-  if ((*enccict)[1].len != 9 ||
-      memcmp((*enccict)[1].data, AS2, (*enccict)[1].len) != 0)
-    return lasn_err("ContentType EncryptedContent PKCS#7");
-  if ((*ctencalg) == NULL) {printf("ERR: EncryptionAlgo\n"); return 1;}
-  if ((*ctencalg)[1].type == ASN1_SEQUENC) {
-    if ((*encalgi) == NULL || (*encalgi)[1].type != ASN1_OBJIDEN)
+  if ((*ci) == NULL || (*ci)[1].type != ASN1_SEQUENC) return lasn_err("EC");
+  if ((*ict) == NULL || (*ict)[1].type != ASN1_OBJIDEN) return lasn_err("CT EC");
+  if ((*ict)[1].len != 9 || memcmp((*ict)[1].data, AS2, (*ict)[1].len) != 0)
+    return lasn_err("CT EC PKCS#7");
+  if ((*alg) == NULL) {printf("ERR: EncryptionAlgorithm\n"); return 1;}
+  if ((*alg)[1].type == ASN1_SEQUENC) {
+    if ((*algi) == NULL || (*algi)[1].type != ASN1_OBJIDEN)
       return lasn_err("EncryptionAlgoIdentifier");
-    if (memcmp((*encalgi)[1].data, AS3, (*encalgi)[1].len) == 0 ||
-        memcmp((*encalgi)[1].data, AS4, (*encalgi)[1].len) == 0 ||
-        memcmp((*encalgi)[1].data, AS5, (*encalgi)[1].len) == 0) {
+    if (memcmp((*algi)[1].data, AS3, (*algi)[1].len) == 0 ||
+        memcmp((*algi)[1].data, AS4, (*algi)[1].len) == 0 ||
+        memcmp((*algi)[1].data, AS5, (*algi)[1].len) == 0) {
       if ((*aesiv) == NULL || ((*aesiv)[1].type != ASN1_OCTSTRI &&
           (*aesiv)[1].type != ASN1_SEQUENC)) return lasn_err("AES IV");
-    } else {printf("unknown encryption algo\n");}
-    if ((*encct) == NULL || ((*encct)[1].type != 0x80 && (*encct)[1].type != 0x02))
+    } else {printf("Unknown encryption algorithm\n");}
+    if ((*et) == NULL || ((*et)[1].type != 0x80 && (*et)[1].type != 0x02))
       return lasn_err("No encrypted content");
   }
   printf("----- parse begin ----\n");
   printf("Content type: encryptedData\n");
   printf("CMS version: %d\n", (*cmsv)[1].data[0]);
   printf("ContentType EncryptedContent: PKCS#7\n");
-  if ((*encalgi)[1].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
-  if ((*encalgi)[1].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
-  if ((*encalgi)[1].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
+  if ((*algi)[1].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
+  if ((*algi)[1].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
+  if ((*algi)[1].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
   lasn_printhex("AES IV:", (*aesiv)[1].data, (*aesiv)[1].len);
-  lasn_printhex("Encrypted content:", (*encct)[0].data, (*encct)[0].len);
+  lasn_printhex("Encrypted content:", (*et)[0].data, (*et)[0].len);
   // this if statement works now, but not 100% sure its correct
-  if ((*encci)[2].pos != 0 && (*encci)[2].pos != (*encci)[2].len)
-    printf("unprot attributes avail\n");
-  else printf("no unprot attributes avail\n");
+  // Are unprotected attributes available?
+  if ((*ci)[2].pos != 0 && (*ci)[2].pos != (*ci)[2].len) printf("Unprot\n");
+  else printf("No Unprot\n");
   printf("----- parse end ----\n");
   free((*cms));
   return 0;
