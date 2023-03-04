@@ -74,10 +74,8 @@ static void lhsha_pad_msg(ctxs *c, uint8_t pad_byte) {
     lhsha_proc_msgblk(c);
   } else c->mb[c->msg_blk_i++] = pad_byte;
   while (c->msg_blk_i < (SHA_BLK_SZ - 16)) {c->mb[c->msg_blk_i++] = 0;}
-  for (int i = 0; i < 8; i++) c->mb[112 + i] =
-    (uint8_t)(c->len_hi >> (56 - (i*8)));
-  for (int i = 0; i < 8; i++) c->mb[120 + i] =
-    (uint8_t)(c->len_lo >> (56 - (i*8)));
+  for (int i = 0; i < 8; i++) {c->mb[112 + i] = (c->len_hi >> (56 - (i*8)));
+    c->mb[120 + i] = (c->len_lo >> (56 - (i*8)));}
   lhsha_proc_msgblk(c);
 }
 
@@ -222,15 +220,13 @@ int lhhmac_reset(ctxh *c, cuc *key, int key_len) {
 //
 // HMAC input
 int lhhmac_input(ctxh *c, cuc *text, int text_len) {
-  lhhmac_error(c);
-  return c->corrupt = lhsha_input(&c->sha, text, text_len);
+  lhhmac_error(c); return c->corrupt = lhsha_input(&c->sha, text, text_len);
 }
 
 //
 // HMAC Add final bits
 int lhhmac_final(ctxh *c, uint8_t bits, uint32_t bit_count) {
-  lhhmac_error(c);
-  return c->corrupt = lhsha_final(&c->sha, bits, bit_count);
+  lhhmac_error(c); return c->corrupt = lhsha_final(&c->sha, bits, bit_count);
 }
 
 //
@@ -460,8 +456,7 @@ static void lh3keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
 
 //
 // Concatenate
-static uint64_t lh3cat(const uint8_t *x, uint64_t xl, const uint8_t *y,
-  const uint64_t yl, uint8_t **z) {
+static uint64_t lh3cat(uint8_t *x, uint64_t xl, uint8_t *y, uint64_t yl, uint8_t **z) {
   uint64_t zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
   *z = calloc(512, sizeof(uint8_t));
@@ -507,7 +502,7 @@ static uint64_t lh3pad10(uint64_t x, uint64_t m, uint8_t **p) {
 // 10. Let S=f(S), and continue with Step 8.
 static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
   uint64_t b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
-  uint8_t az[64], s[200], sc[200], sxor[200], *p, *pi, *z, *pad, str[200];
+  uint8_t az[64], s[200], sc[200], sxor[200], *p, *pi, *z=NULL, *pad, str[200];
 
   len = lh3pad10(r, l, &pad);
   plen = lh3cat(n, l, pad, len, &p);

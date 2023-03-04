@@ -29,8 +29,7 @@ void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
 //
 // Generate a public and private keypair
 key lcgenkeys(uint64_t g, uint64_t p) {
-  key k; k.priv = RAND64(); k.publ = (int64_t)pow(g, k.priv) % p;
-  return k;
+  key k; k.priv = RAND64(); k.publ = (int64_t)pow(g, k.priv) % p; return k;
 }
 
 //
@@ -72,11 +71,10 @@ void lctransferkey(int s, bool snd, head *h, key *k) {
 //
 // Server handler
 static void *lchandler(void *sdesc) {
-  uint64_t dat[BLOCK], cd[BLOCK];
+  uint64_t dat[BLOCK], cd[BLOCK], g1 = RAND64(), p1 = RAND64();
   int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
-  uint64_t g1 = RAND64(), p1 = RAND64();
   key k1 = lcgenkeys(g1, p1), k2;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   head h; h.g = g1; h.p = p1;
@@ -229,8 +227,7 @@ static void lcprint_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
 uint64_t lchandle_cert(char *cert, char d[LEN]) {
   uint8_t h[36], f[36];
   char crt[LEN];
-  uint64_t len = lcread_cert(cert, crt, 0);
-  uint64_t head = lcget_header(crt, h);
+  uint64_t len = lcread_cert(cert, crt, 0), head = lcget_header(crt, h);
   uint64_t foot = lcget_footer(crt, len, f);
   uint64_t data = lcget_data(crt, head, foot, len, d);
 
@@ -248,13 +245,11 @@ static uint32_t lcsex(cc d[257], char c[257], int i) {
 
 void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]) {
   static int tab[] = {0, 2, 1};
-  uint32_t a, b, c, tri;
 
   *ol = 4 * ((inl + 2) / 3);
   for (int i = 0, j = 0; i < inl;) {
-    a = lcoct(i++, inl, data); b = lcoct(i++, inl, data);
-    c = lcoct(i++, inl, data);
-    tri = (a << 0x10) + (b << 0x08) + c;
+    uint32_t a = lcoct(i++, inl, data), b = lcoct(i++, inl, data);
+    uint32_t c = lcoct(i++, inl, data), tri = (a << 0x10) + (b << 0x08) + c;
     for (int k = 3; k >=0; k--) {ed[j++] = enc[(tri >> k * 6) & 0x3F];}
   }
   for (int i = 0; i < tab[inl % 3]; i++) ed[*ol - 1 - i] = '='; ed[*ol] = '\0';
@@ -262,15 +257,14 @@ void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]) {
 
 void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
   static char dec[LEN] = {0};
-  uint32_t a, b, c, d, tri;
 
   *ol = inl / 4 * 3;
   for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (*ol)--;}
   for (int i = 0; i < 64; i++) dec[(uint8_t)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
-    a = lcsex(data, dec, i++); b = lcsex(data, dec, i++);
-    c = lcsex(data, dec, i++); d = lcsex(data, dec, i++);
-    tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
+    uint32_t a = lcsex(data, dec, i++), b = lcsex(data, dec, i++);
+    uint32_t c = lcsex(data, dec, i++), d = lcsex(data, dec, i++);
+    uint32_t tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
     if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
 }
@@ -299,8 +293,7 @@ static void lasn_print(const asn *asn, int depth) {
 
 //
 // Get the length // t = type, 1 = tlv, 0 = data
-static uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off,
-    bool t) {
+static uint32_t lasn_get_len(const uint8_t *data,uint32_t len, uint32_t *off,bool t) {
   uint32_t a, b = 0, ret;
 
   if (len < 2) return 0xFFFFFFFF;
@@ -415,7 +408,7 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   if ((*ict) == NULL || (*ict)[1].type != ASN1_OBJIDEN) return lasn_err("CT EC");
   if ((*ict)[1].len != 9 || memcmp((*ict)[1].data, AS2, (*ict)[1].len) != 0)
     return lasn_err("CT EC PKCS#7");
-  if ((*alg) == NULL) {printf("ERR: EncryptionAlgorithm\n"); return 1;}
+  if ((*alg) == NULL) {lasn_err("EncryptionAlgorithm");}
   if ((*alg)[1].type == ASN1_SEQUENC) {
     if ((*algi) == NULL || (*algi)[1].type != ASN1_OBJIDEN)
       return lasn_err("EncryptionAlgoIdentifier");
