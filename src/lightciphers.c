@@ -243,28 +243,6 @@ static void lpinvshiftrows(uint8_t state[4][NB]) { // See Sec. 5.3.1
 
 //
 //
-static void lpinvsubbytes(uint8_t state[4][NB]) { // See Sec. 5.3.2
-  for (int i = 0; i < 4; i++)
-    for (int j = 0; j < NB; j++) {
-      uint8_t s = state[i][j]; state[i][j] = SBOXINV[s / 16][s % 16];
-    }
-}
-
-//
-//
-static void lpinvmixcolumns(uint8_t state[4][NB]) { // See Sec. 5.3.3
-  uint8_t temp_state[4][NB];
-
-  for (int i = 0; i < 4; ++i) {memset(temp_state[i], 0, 4);}
-  for (int i = 0; i < 4; ++i)
-    for (int k = 0; k < 4; ++k)
-      for (int j = 0; j < 4; ++j)
-        temp_state[i][j] ^= GF[MIXINV[i][k]][state[k][j]];
-  for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
-}
-
-//
-//
 static void lpaddroundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec. 5.1.4
   uint8_t tmp[4][NB];
 
@@ -276,10 +254,13 @@ static void lpaddroundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec. 5.1.4
 
 //
 // 5.1.x
-static void lpsubbytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
+// See Sec. 5.1.1 & 5.3.2
+static void lpsubbytes(uint8_t state[4][NB], bool inv) {
   for (int i = 0; i < 4; i++)
     for (int j = 0; j < NB; j++) {
-      uint8_t s = state[i][j]; state[i][j] = SBOX[s / 16][s % 16];
+      uint8_t s = state[i][j];
+      if (inv) state[i][j] = SBOXINV[s / 16][s % 16];
+      else state[i][j] = SBOX[s / 16][s % 16];
     }
 }
 
@@ -290,16 +271,19 @@ static void lpshiftrows(uint8_t state[4][NB]) { // See Sec. 5.1.2
 }
 
 //
-//
-static void lpmixcolumns(uint8_t state[4][NB]) { // See Sec. 5.1.3
+// See Sec. 5.1.3 & 5.3.3
+static void lpmixcolumns(uint8_t state[4][NB], bool inv) {
   uint8_t temp_state[4][NB];
 
   for (int i = 0; i < 4; ++i) {memset(temp_state[i], 0, 4);}
   for (int i = 0; i < 4; ++i)
     for (int k = 0; k < 4; ++k)
       for (int j = 0; j < 4; ++j)
-        if (MIX[i][k] == 1) {temp_state[i][j] ^= state[k][j];}
-        else {temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];}
+        if (inv) temp_state[i][j] ^= GF[MIXINV[i][k]][state[k][j]];
+        else {
+          if (MIX[i][k] == 1) {temp_state[i][j] ^= state[k][j];}
+          else {temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];}
+        }
   for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
 }
 
@@ -335,9 +319,7 @@ static void lpkeyexpansion(uint8_t key[NK * 2], uint8_t w[NB * NR]) {
   for (int i = NK4; i < 4 * NB * (NR + 1); i += 4) {
     for (int j = 0; j < 4; ++j) {tmp[j] = w[i - 4 + j];}
     if (i / 4 % NK == 0) {
-      lprotword(tmp);
-      lpsubword(tmp);
-      lprcon(rc, i / (4 * NK));
+      lprotword(tmp); lpsubword(tmp); lprcon(rc, i / (4 * NK));
       for (int k = 0; k < 4; k++) {tmp[k] = tmp[k] ^ rc[k];}
     } else if (NK > 6 && i / 4 % NK == 4) {lpsubword(tmp);}
     for (int j = 0; j < 4; ++j) {w[i+j] = w[i + j - 4 * NK] ^ tmp[j];}
@@ -351,34 +333,23 @@ static void lpxor(const uint8_t *a, const uint8_t *b, uint8_t *c, uint32_t len) 
 }
 
 //
-//
-static void lpencryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
-  uint8_t state[4][NB] = {{0}, {0}};
+// Encrypt and decrypt block in one function, enc = true for encrypt
+static void lpcryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk, bool enc) {
+  uint8_t state[4][NB] = {{0}, {0}}, *r1, *r2;
+  if (enc) {r1 = rk; r2 = rk + NR * 4 * NB;} else {r1 = rk + NR * 4 * NB; r2 = rk;}
 
-  state_from_arr(state, in);
-  lpaddroundkey(state, rk);
-  for (uint32_t round = 1; round <= NR - 1; round++) {
-    lpsubbytes(state); lpshiftrows(state); lpmixcolumns(state);
-    lpaddroundkey(state, rk + round * 4 * NB);
-  }
-  lpsubbytes(state); lpshiftrows(state);
-  lpaddroundkey(state, rk + NR * 4 * NB);
-  arr_from_state(out, state);
-}
-
-//
-//
-static void lpdecryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
-  uint8_t state[4][NB] = {{0}, {0}};
-
-  state_from_arr(state, in);
-  lpaddroundkey(state, rk + NR * 4 * NB);
-  for (uint32_t round = NR - 1; round >= 1; round--) {
-    lpinvsubbytes(state); lpinvshiftrows(state);
-    lpaddroundkey(state, rk + round * 4 * NB); lpinvmixcolumns(state);
-  }
-  lpinvsubbytes(state); lpinvshiftrows(state);
-  lpaddroundkey(state, rk);
+  state_from_arr(state, in); lpaddroundkey(state, r1);
+  if (enc)
+    for (uint32_t round = 1; round <= NR - 1; round++) {
+      lpsubbytes(state, false); lpshiftrows(state); lpmixcolumns(state, false);
+      lpaddroundkey(state, rk + round * 4 * NB);
+    }
+  else
+    for (uint32_t round = NR - 1; round >= 1; round--) {
+      lpsubbytes(state, true); lpinvshiftrows(state);
+      lpaddroundkey(state, rk + round * 4 * NB); lpmixcolumns(state, true);
+    }
+  lpsubbytes(state, false); lpshiftrows(state); lpaddroundkey(state, r2);
   arr_from_state(out, state);
 }
 
@@ -394,10 +365,10 @@ void lpcrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc, bool
     for (uint32_t i = 0; i < BBL; i += BBL) {
       if (enc) {
         lpxor(block, (in + i), block, BBL);
-        lpencryptblock(block, (o + i), roundkeys);
+        lpcryptblock(block, (o + i), roundkeys, true);
         memcpy(block, (o + i), BBL);
       } else {
-        lpdecryptblock((in + i), (o + i), roundkeys);
+        lpcryptblock((in + i), (o + i), roundkeys, false);
         lpxor(block, (o + i), (o + i), BBL);
         memcpy(block, in + i, BBL);
       }
@@ -405,11 +376,11 @@ void lpcrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc, bool
   else // CFB
     for (uint32_t i = 0; i < BBL; i += BBL) {
       if (enc) {
-        lpencryptblock(block, encryptedblock, roundkeys);
+        lpcryptblock(block, encryptedblock, roundkeys, true);
         lpxor((in + i), encryptedblock, (o + i), BBL);
         memcpy(block, (o + i), BBL);
       } else {
-        lpencryptblock(block, encryptedblock, roundkeys);
+        lpcryptblock(block, encryptedblock, roundkeys, false);
         lpxor(in + i, encryptedblock, o + i, BBL);
         memcpy(block, in + i, BBL);
       }
