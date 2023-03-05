@@ -307,7 +307,7 @@ static void lh3str2state(const uint8_t *s, uint64_t (*a)[5][5]) {
 // can be constructed from the lanes and planes of A, as follows:
 // For each pair of integers (i, j) such that 0≤i<5 and 0≤j<5, define the string Lane(i, j)
 // by Lane(i,j)= A[i,j,0] || A[i,j,1] || A[i,j,2] || ... || A[i,j,w-2] || A[i,j,w-1].
-static void state2str(uint64_t (*a)[5][5], uint8_t *s) {
+static void lh3state2str(uint64_t (*a)[5][5], uint8_t *s) {
   int count = 0;
 
   for (int y = 0; y < 5; y++)
@@ -451,7 +451,7 @@ static void lh3keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
   for (int i = 0; i <= 23; i++) {
     lh3theta(&a);lh3rho(&a);lh3pi(&a);lh3chi(&a);lh3iota(&a,i);
   }
-  state2str(&a, (*s));
+  lh3state2str(&a, (*s));
 }
 
 //
