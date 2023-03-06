@@ -27,7 +27,7 @@ int main() {
   int kl = 131, dl = 152, err = lh(da, dl, 1, 0, 0, ka, kl, "E37B6A775DC87DBAA4"
     "DFA9F96E5E3FFDDEBD71F8867289865DF5A32D20CDC944B6022CAC3C4982B10D5EEB55C3E4"
     "DE15134676FB6DE0446065C97440FA8C6A58", 64);
-  assert(err == 1); if (err != 1) return 0;
+  assert(err == 1);
   printf("OK\n");
   return 0;
 }

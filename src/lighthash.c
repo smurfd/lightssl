@@ -194,7 +194,6 @@ int lhhmac_reset(ctxh *c, cuc *key, int key_len) {
   c->corrupt = SHA_OK;
   blocksize = c->blk_size = SHA_BLK_SZ;
   hashsize = c->size = SHA_HSH_SZ;
-
   // If key is longer than the hash blocksize, reset it to key = HASH(key).
   if (key_len > blocksize) {
     ctxs ct;
@@ -204,7 +203,6 @@ int lhhmac_reset(ctxh *c, cuc *key, int key_len) {
     key = tmp;
     key_len = hashsize;
   }
-
   // HMAC Transform
   for (int i = 0; i < key_len; i++) {
     k_ipad[i] = key[i] ^ 0x36; c->k_opad[i] = key[i] ^ 0x5c;
@@ -237,7 +235,7 @@ int lhhmac_result(ctxh *c, uint8_t *digest) {
   lhhmac_error(c);
   int ret = lhsha_result(&c->sha, digest) || lhsha_reset(&c->sha) ||
     lhsha_input(&c->sha, c->k_opad, c->blk_size) ||
-    lhsha_input(&c->sha, digest, c->size)||lhsha_result(&c->sha, digest);
+    lhsha_input(&c->sha, digest, c->size) || lhsha_result(&c->sha, digest);
   c->compute = 1;
   return c->corrupt = ret;
 }

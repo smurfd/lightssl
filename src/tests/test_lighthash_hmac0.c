@@ -12,7 +12,7 @@ int main() {
   int dl = 8, kl = 20, err = lh(da, dl, 1, 0, 0, ka, kl, "87AA7CDEA5EF619D4FF0B"
     "4241A1D6CB02379F4E2CE4EC2787AD0B30545E17CDEDAA833B7D6B8A702038B274EAEA3F4E"
     "4BE9D914EEB61F1702E696C203A126854", 64);
-  assert(err == 1); if (err != 1) return 0;
+  assert(err == 1);
   printf("OK\n");
   return 0;
 }

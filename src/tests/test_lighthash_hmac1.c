@@ -14,7 +14,7 @@ int main() {
   int dl = 50, kl = 25, err = lh(da, dl, 1, 0, 0, ka, kl, "B0BA465637458C6990E5"
     "A8C5F61D4AF7E576D97FF94B872DE76F8050361EE3DBA91CA5C11AA25EB4D679275CC57880"
     "63A5F19741120C4F2DE2ADEBEB10A298DD", 64);
-  assert(err == 1); if (err != 1) return 0;
+  assert(err == 1);
   printf("OK\n");
   return 0;
 }
