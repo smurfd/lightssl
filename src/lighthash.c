@@ -546,3 +546,35 @@ void lh3new(uint8_t *n, char *s) {
   lh3bit2str(ss, s);
   free(ss);
 }
+
+// Shake inspired from https://github.com/mjosaarinen/tiny_sha3
+void lh3shake_xof(uint8_t *sm, uint8_t (*s)[200]) {
+  sm[64] ^= 0x1F;
+  sm[135] ^= 0x80;
+  lh3keccak_p(sm, s);
+}
+
+uint8_t lh3shake_out(uint8_t *sm, uint8_t (*s)[200], uint8_t next) {
+  uint8_t j = next;
+
+  for (size_t i = 0; i < 32; i++) {
+    if (j >= 136) {
+      lh3keccak_p(sm, s);
+      j = 0;
+    }
+    (*s)[i] = sm[j++];
+  }
+  return j;
+}
+
+void lh3shake_test() {
+  uint8_t buf[32], next = 0, s[200];
+
+  //shake256_init
+  memset(buf, 0xA3, 20);
+  //for (int j = 0; j < 200; j += 20) shake_update(&sha3, buf, 20);
+
+  lh3shake_xof(buf, &s);
+  for (int j = 0; j < 512; j += 32)   // output. discard bytes 0..479
+    next = lh3shake_out(buf, &s, next);
+}
