@@ -41,6 +41,7 @@ typedef struct ctxh {
 int lh(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,int hs);
 void lhnew(cc *in, char* s);
 void lh3new(uint8_t *n, char *ss);
+void lh3shake_test();
 #endif
 
 // TODO:

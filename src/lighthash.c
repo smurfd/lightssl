@@ -551,30 +551,103 @@ void lh3new(uint8_t *n, char *s) {
 void lh3shake_xof(uint8_t *sm, uint8_t (*s)[200]) {
   sm[64] ^= 0x1F;
   sm[135] ^= 0x80;
-  lh3keccak_p(sm, s);
+  lh3keccak_p(sm, sm);
 }
 
 uint8_t lh3shake_out(uint8_t *sm, uint8_t (*s)[200], uint8_t next) {
-  uint8_t j = next;
+  uint8_t j = next, tmp[200];
 
+  //for (int i = 0; i < 32; i++) tmp[i] = (*s)[i];
   for (size_t i = 0; i < 32; i++) {
     if (j >= 136) {
-      lh3keccak_p(sm, s);
+      lh3keccak_p(sm, sm);
       j = 0;
     }
+    //sm[i] = (*s)[j++];
+    //sm[i] = tmp[j++];
     (*s)[i] = sm[j++];
+    //printf("xx %d %d\n", (*s)[i], sm[j]);
+    printf("xx %d %d\n", sm[i], (*s)[j]);
+
+    //printf("%02x", sm[i]);
+  }//printf("\n");
+  //for (int i = 0; i < 32; i++) sm[i] = tmp[i];
+  return j;
+}
+
+uint8_t lh3shake_upd(uint8_t *sm, uint8_t s[200], uint8_t next) {
+  uint8_t j = next;
+
+  for (size_t i = 0; i < 20; i++) {
+    sm[j++] ^= 163;//sm[i];
+    printf("sm0 %d %d %d %d\n", sm[i], 20, j, s[j]);
+    if (j >= 136) {
+    printf("sm1 %d %d\n", sm[0], s[0]);
+
+      lh3keccak_p(sm, sm);
+      printf("sm2 %02x %02x %02x\n", s[0], sm[0], s[0] ^ 163);
+      printf("sm2 %02x %02x %02x\n", s[1], sm[1], s[1] ^ 163);
+      printf("sm2 %02x %02x %02x\n", s[2], sm[2], s[2] ^ 163);
+      printf("sm2 %02x %02x %02x\n", s[3], sm[3], s[3] ^ 163);
+      //for (int k=0;k < 20; k++) sm[k] = s[k];
+      j = 0;
+    }
   }
+
   return j;
 }
 
 void lh3shake_test() {
-  uint8_t buf[32], next = 0, s[200];
-
-  //shake256_init
+  uint8_t *buf = malloc(200*sizeof(uint8_t)), *str = malloc(200*sizeof(uint8_t)),ref[32] = {0}, next = 0, s[200] = {0};
+  printf("befr memset\n");
   memset(buf, 0xA3, 20);
-  //for (int j = 0; j < 200; j += 20) shake_update(&sha3, buf, 20);
+  printf("aftr memset\n");
+  printf("ref "); for (int i = 0; i < 32; i++) printf("%02x", str[i]); printf("\n");
+  printf("buf "); for (int i = 0; i < 32; i++) printf("%02x", buf[i]); printf("\n");
 
-  lh3shake_xof(buf, &s);
-  for (int j = 0; j < 512; j += 32)   // output. discard bytes 0..479
-    next = lh3shake_out(buf, &s, next);
+  for (int j = 0; j < 200; j += 20) {
+    next = lh3shake_upd(str, buf, next);
+    printf("ref "); for (int i = 0; i < 32; i++) printf("%02x", str[i]); printf("\n");
+    printf("buf "); for (int i = 0; i < 32; i++) printf("%02x", buf[i]); printf("\n");
+
+  }
+  printf("aftr upd\n");
+  printf("ref "); for (int i = 0; i < 32; i++) printf("%02x", str[i]); printf("\n");
+  printf("buf "); for (int i = 0; i < 32; i++) printf("%02x", buf[i]); printf("\n");
+
+  next = 0;
+  lh3shake_xof(str, &s);
+      printf("aftr xof\n");
+  printf("ref "); for (int i = 0; i < 32; i++) printf("%02x", str[i]); printf("\n");
+  printf("buf "); for (int i = 0; i < 32; i++) printf("%02x", buf[i]); printf("\n");
+      printf("-------------\n");
+
+  for (int i = 0; i < 32; i++) s[i] = str[i];
+  for (int i = 0; i < 32; i++) printf("%02x ", s[i]);
+  for (int j = 0; j < 512; j += 32) {  // output. discard bytes 0..479
+   if (j==0) next = lh3shake_out(str, &s, next);
+   else next = lh3shake_out(str, &s/*str*/ , next);
+  printf("ref "); for (int i = 0; i < 32; i++) printf("%02x", str[i]); printf("\n");
+  printf("buf "); for (int i = 0; i < 32; i++) printf("%02x", s[i]); printf("\n");
+    //if (j > 256) exit(0);
+
+  }
+  printf("aftr out\n");
+  printf("ref "); for (int i = 0; i < 32; i++) printf("%02x", str[i]); printf("\n");
+  printf("buf "); for (int i = 0; i < 32; i++) printf("%02x", s[i]); printf("\n");
+  //exit(0);
+  //test_readhex(ref, "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb", sizeof(ref));
+
+  char ccc[2] = {0}, ss[] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
+  char sss[64];
+
+  lh3bit2str(s, sss);
+  sss[64] = '\0';
+  assert(strcmp(sss, ss) == 0);
+  //for (int i=0; i < strlen(ss); i+=2) {ccc[0] = (int)s[i]; ccc[1] = (int)s[i+1]; ccc[2] = '\0';printf("%d %d %d %s:: %d %d\n", (int)strtol(ccc, NULL, 16), ccc[0], ccc[1], ccc, s[i], s[i+1]);}
+  //printf("aftr hx %d\n", (int)strtol("6a", NULL, 16));
+  //for (int i = 0; i < 32; i++)
+  //  assert(s[i] == ref[i]);
+    //printf("%d\n", memcmp(s, (uint8_t*)"6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb", 32));
+  free(buf);
 }
