@@ -437,7 +437,7 @@ void lkrnd_init(uint64_t seed) {
 //
 // Make public key
 int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]) {
-  uint64_t private[DI], x = 1; // range [1, n-1]
+  uint64_t private[DI*2], x = 1; // range [1, n-1]
   pt public;
 
   while(x) {
@@ -455,7 +455,7 @@ int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]) {
 //
 // create a secret from the public and private key
 int lkshar_secr(uint64_t publ[KB + 1], uint64_t priv[KB], uint64_t secr[KB]) {
-  pt public, product;
+  pt public = *(pt*)malloc(sizeof(pt)), product = *(pt*)malloc(sizeof(pt));
   uint64_t private[DI], random[DI];
 
   lkp_decom(&public, publ);
