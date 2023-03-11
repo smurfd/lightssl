@@ -441,7 +441,7 @@ static void lh3iota(uint64_t (*A)[5][5], uint64_t ir) {
 // 2. For ir from 12 + 2l – nr to 12 + 2l – 1, let A = Rnd(A, ir).
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
-static void lh3keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
+static void lh3keccak_p(uint8_t *sm, uint8_t s[200]) {
   uint64_t a[5][5];
 
   lh3str2state(sm, &a);
@@ -449,8 +449,9 @@ static void lh3keccak_p(uint8_t *sm, uint8_t (*s)[200]) {
   for (int i = 0; i <= 23; i++) {
     lh3theta(&a);lh3rho(&a);lh3pi(&a);lh3chi(&a);lh3iota(&a,i);
   }
-  lh3state2str(&a, (*s));
+  lh3state2str(&a, s);
 }
+
 
 //
 // Concatenate
@@ -500,7 +501,7 @@ static uint64_t lh3pad10(uint64_t x, uint64_t m, uint8_t **p) {
 // 10. Let S=f(S), and continue with Step 8.
 static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
   uint64_t b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
-  uint8_t az[64], s[200], sc[200], sxor[200], *p, *pi, *z=NULL, *pad, str[200];
+  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi, *z=NULL, *pad, str[200] = {0};
 
   len = lh3pad10(r, l, &pad);
   plen = lh3cat(n, l, pad, len, &p);
@@ -508,14 +509,14 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
     lh3cat(&p[i * r / 8], r, az, c, &pi);
     for (uint64_t j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
     free(pi);
-    lh3keccak_p(sxor, &s);
+    lh3keccak_p(sxor, s);
   }
   while (true) {
     memcpy(str, s, r / 8);
     zl = lh3cat(z, zl, str, r, &z);
     if (zl >= SHA3_BITS) {memcpy((*ps), z, 512 / 8); break;}
     memcpy(sc, s, b / 8);
-    lh3keccak_p(sc, &s);
+    lh3keccak_p(sc, s);
   }
   free(pad); free(p); free(z);
 }
@@ -538,13 +539,14 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void lh3new(uint8_t *n, char *s) {
-  uint8_t *m, z1[] = {2}, *ss = malloc(128 * sizeof(uint8_t));
+  uint8_t *m = malloc(256 * sizeof(uint8_t)), z1[] = {2}, *ss = malloc(256 * sizeof(uint8_t));
   uint64_t d = strlen((char*)n) * 8;
 
   lh3cat(n, d, z1, 2, &m);
   lh3sponge(m, d + 2, &ss);
   lh3bit2str(ss, s);
-  free(ss);
+  for (int i = 0; i < 128; i++) printf("%d %01x : %d %c :: %d %01x ::: %llu\n", ss[i], ss[i], s[i], s[i], m[i], m[i], (d+2));
+  free(m);free(ss);
 }
 
 // Shake inspired from https://github.com/mjosaarinen/tiny_sha3
@@ -561,15 +563,13 @@ uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
     for (size_t i = 0; i < 20; i++) {
       sm[j++] ^= 163;//sm[i];
       if (j >= 136) {
-        lh3keccak_p(sm, sm);
-        j = 0;
+        lh3keccak_p(sm, sm); j = 0;
       }
     }
   } else {
     for (size_t i = 0; i < 32; i++) {
       if (j >= 136) {
-        lh3keccak_p(sm, sm);
-        j = 0;
+        lh3keccak_p(sm, sm); j = 0;
       }
       s[i] = sm[j++];
     }
@@ -578,8 +578,8 @@ uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
 }
 
 void lh3shake_test() {
-  uint8_t *buf = malloc(200*sizeof(uint8_t)), *str = malloc(200*sizeof(uint8_t)),ref[32] = {0}, next = 0, next2 = 0, s[200] = {0};
-  char sss[64], ccc[2] = {0}, ss[] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
+  uint8_t *buf = malloc(200*sizeof(uint8_t)), *str = malloc(200*sizeof(uint8_t)), next = 0, next2 = 0, s[200] = {0};
+  char sss[64], ss[] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
 
   memset(buf, 0xA3, 20);
   for (int j = 0; j < 200; j += 20) {next = lh3shake_touch(str, buf, next, true);}
@@ -588,6 +588,7 @@ void lh3shake_test() {
   for (int j = 0; j < 512; j += 32) {next2 = lh3shake_touch(str, s, next2, false);}
   lh3bit2str(s, sss);
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
+  if (*ss) {}
   // verified assert via debug mode
-  free(buf);
+  free(buf); free(str);
 }
