@@ -167,7 +167,7 @@ static void lksqr(uint64_t *a, const uint64_t *b) {
 //
 static void lko_mul(uint64_t *a, const uint64_t *b) {
   lkset(a, b);
-  uint64_t t[DI], ovr = lkls(t, b, 32);
+  uint64_t t[DI] = {0}, ovr = lkls(t, b, 32);
   a[DI + 1] = ovr + lkadd(a + 1, a + 1, t);
   a[DI + 2] = lkadd(a + 2, a + 2, b);
   ovr += lksub(a, a, t);
@@ -195,7 +195,7 @@ static void lkm_sub(uint64_t *a, const uint64_t *b, const uint64_t *c, const uin
 // Modulo mod
 static void lkm_mod(uint64_t *a, uint64_t *b) {
   while (!lkzero(b + DI)) {
-    uint64_t ovr = 0, t[DI2];
+    uint64_t ovr = 0, t[DI2] = {0};
     lkclear(t); lkclear(t + DI);
     lko_mul(t, b + DI);
     lkclear(b + DI);
@@ -212,7 +212,7 @@ static void lkm_mod(uint64_t *a, uint64_t *b) {
 //
 // Modulo multiply
 static void lkm_mul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
-  uint64_t p[DI2];
+  uint64_t p[DI2] = {0};
 
   lkmul(p, b, c); lkm_mod(a, p);
 }
@@ -220,7 +220,7 @@ static void lkm_mul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
 //
 // Modulo square
 static void lkm_sqr(uint64_t *a, const uint64_t *b) {
-  uint64_t p[DI2];
+  uint64_t p[DI2] = {0};
 
   lksqr(p, b); lkm_mod(a, p);
 }
@@ -242,7 +242,7 @@ static void lkm_sqrt(uint64_t a[DI]) {
 //
 static void lkm_mmul(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *m) {
   uint32_t ds, bs, pb, mb = lkbits(m);
-  uint64_t p[DI2], mm[DI2];
+  uint64_t p[DI2] = {0}, mm[DI2] = {0};
 
   lkmul(p, b, c);
   pb = lkbits(p + DI);
@@ -278,7 +278,7 @@ static int lkp_zero(pt *a) {return (lkzero(a->x) && lkzero(a->y));}
 //
 // Points double
 static void lkp_double(uint64_t *a, uint64_t *b, uint64_t *c) {
-  uint64_t t4[DI], t5[DI];
+  uint64_t t4[DI] = {0}, t5[DI] = {0};
 
   if (lkzero(c)) {return;}
   lkm_sqr(t4, b); lkm_mul(t5, a, t4); lkm_sqr(t4, t4);
@@ -315,7 +315,7 @@ static void lkp_decom(pt *a, const uint64_t b[KB + 1]) {
 //
 // Modify (x1, y1) => (x1 * z^2, y1 * z^3)
 static void lkp_appz(uint64_t *a, uint64_t *b, const uint64_t *z) {
-  uint64_t t[DI];
+  uint64_t t[DI] = {0};
 
   lkm_sqr(t, z); lkm_mul(a, a, t); lkm_mul(t, t, z); lkm_mul(b, b, t);
 }
@@ -323,7 +323,7 @@ static void lkp_appz(uint64_t *a, uint64_t *b, const uint64_t *z) {
 //
 // P = (x1, y1) => 2P, (x2, y2) => P'
 static void lkp_inidoub(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d, uint64_t *p) {
-  uint64_t z[DI];
+  uint64_t z[DI] = {0};
 
   lkset(c, a); lkset(d, b);
   lkclear(z); z[0] = 1;
@@ -334,7 +334,7 @@ static void lkp_inidoub(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d, uint
 //
 // Points add
 static void lkp_add(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
-  uint64_t t5[DI];
+  uint64_t t5[DI] = {0};
 
   lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5);
   lkm_mul(a, a, t5); lkm_mul(c, c, t5); lkm_sub(d, d, b, curve_p);
@@ -349,7 +349,7 @@ static void lkp_add(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
 // Points add
 static void lkp_addc(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
   // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
-  uint64_t t5[DI], t6[DI], t7[DI];
+  uint64_t t5[DI] = {0}, t6[DI] = {0}, t7[DI] = {0};
 
   lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
   lkm_mul(c, c, t5); lkm_add(t5, d, b, curve_p); lkm_sub(d, d, b, curve_p);
@@ -366,7 +366,7 @@ static void lkp_addc(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
 //
 // Modulo inversion
 static void lkm_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
-  uint64_t a[DI], b[DI], u[DI], v[DI], car;
+  uint64_t a[DI] = {0}, b[DI] = {0}, u[DI] = {0}, v[DI] = {0}, car;
   int cmpResult;
 
   if(lkzero(p)) {lkclear(r); return;}
@@ -406,7 +406,7 @@ static void lkm_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
 //
 // Point multiplication
 static void lkp_mul(pt *r, pt *p, uint64_t *q, uint64_t *s) {
-  uint64_t Rx[2][DI], Ry[2][DI], z[DI];
+  uint64_t Rx[2][DI], Ry[2][DI], z[DI] = {0};
   int nb;
 
   lkset(Rx[1], p->x); lkset(Ry[1], p->y);
@@ -454,14 +454,14 @@ void prng_init(uint64_t seed) {
 //
 // Make public key
 int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]) {
-  uint64_t private[DI], x = 1; // range [1, n-1]
+  uint64_t private[DI], co = 1; // range [1, n-1]
   pt public;
 
-  while(x) {
+  while(co) {
     if (lkzero(private)) {continue;}
     if (lkcmp(curve_n, private) != 1) {lksub(private, private, curve_n);}
     lkp_mul(&public, &curve_g, private, NULL);
-    x = lkp_zero(&public);
+    co = lkp_zero(&public);
   }
   lkset(priv, private); lkset(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
@@ -471,14 +471,14 @@ int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]) {
 //
 // create a secret from the public and private key
 int lkshar_secr(const uint64_t publ[KB + 1], const uint64_t priv[KB], uint64_t secr[KB]) {
-  uint64_t private[DI], random[DI];
+  uint64_t private[DI] = {0}, random[DI] = {0};
   pt public, product;
 
   lkp_decom(&public, publ);
   lkset(private, priv);
   lkp_mul(&product, &public, private, random);
   lkset(secr, product.x);
-  return !lkp_zero(&product);
+  return lkp_zero(&product);
 }
 
 //
@@ -504,7 +504,7 @@ int lksign(const uint64_t priv[KB], const uint64_t hash[KB], uint64_t sign[KB2])
 //
 // Verify signature
 int lkvrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB], const uint64_t sign[KB2]) {
-  uint64_t tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
+  uint64_t tx[DI]={0}, ty[DI]={0}, tz[DI]={0}, r[DI]={0}, s[DI]={0}, u1[DI]={0}, u2[DI]={0}, z[DI]={0}, rx[DI]={0}, ry[DI]={0};
   pt public, sum;
 
   lkp_decom(&public, publ);
