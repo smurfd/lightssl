@@ -16,47 +16,56 @@
 
 // secp384r1
 // Rewritten from https://github.com/jestan/easy-ecc
+#include <math.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "lightkeys.h"
 #include "lightdefs.h"
 
 //
+// Imitate pythons %. -1 % 5 = 4, not -1
+static int mod(const int n, const int m) {return ((n % m) + m) % m;}
+
+//
 // Clear a
-static void lkclear(uint64_t *a) {for (uint8_t i = 0; i < DI; ++i) {a[i] = 0;}}
+static void keys_clear(u64 *a) {for (u08 i = 0; i < DI; ++i) {a[i] = 0;}}
 
 //
 // Check if a is zero, return 1, if not return 0
-static int lkzero(const uint64_t *a) {
-  for (uint8_t i = 0; i < DI; ++i) {if (a[i]) {return 0;}} return 1;
+static int keys_zero(const u64 *a) {
+  for (u08 i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
+  return 1;
 }
 
 //
 // Check if bit a or b is set, if so return diff from zero
-static uint64_t lkchk(const uint64_t *a, const uint32_t b) {
-  return (a[b / 64] & ((uint64_t)1 << (MOD(b, 64))));
+static u64 keys_chk(const u64 *a, const ui b) {
+  return (a[b / 64] & ((u64)1 << (mod(b, 64))));
 }
 
 //
 // Count 64bit in a
-static uint32_t lkcount(const uint64_t *a) {
-  int i = DI - 1;
-  while (true) {if (i < 0 && a[i] != 0) return (i + 1); i--;}
+static ui keys_count(const u64 *a) {
+  int i;
+  for (i = DI - 1; i >= 0 && a[i] == 0; --i) {}
+  return (i + 1);
 }
 
 //
 // Set a from b
-static void lkset(uint64_t *a, const uint64_t *b) {
-  for (uint8_t i = 0; i < DI; ++i) {a[i] = b[i];}
+static void keys_set(u64 *a, const u64 *b) {
+  for (u08 i = 0; i < DI; ++i) {a[i] = b[i];}
 }
 
 //
 // Check number of bits needed for a
-static uint32_t lkbits(uint64_t *a) {
-  uint32_t i, nd = lkcount(a); uint64_t d;
+static ui keys_bits(u64 *a) {
+  ui i, nd = keys_count(a); u64 d;
 
   if (nd == 0) return 0;
   nd--; d = a[nd];
@@ -66,19 +75,21 @@ static uint32_t lkbits(uint64_t *a) {
 
 //
 // Compare a and b
-static int lkcmp(const uint64_t *a, const uint64_t *b) {
-  for (int i = DI-1; i >= 0; --i)
-    if (a[i] > b[i]) {return 1;} else if (a[i] < b[i]) {return -1;}
+static int keys_cmp(const u64 *a, const u64 *b) {
+  for (int i = DI-1; i >= 0; --i) {
+    if (a[i] > b[i]) {return 1;}
+    else if (a[i] < b[i]) {return -1;}
+  }
   return 0;
 }
 
 //
 // Left shift
-static uint64_t lkls(uint64_t *a, const uint64_t *b, const uint32_t c) {
-  uint64_t ovr = 0;
+static u64 keys_ls(u64 *a, const u64 *b, const ui c) {
+  u64 ovr = 0;
 
-  for (uint8_t i = 0; i < DI; ++i) {
-    uint64_t t = b[i]; a[i] = (t << c) | ovr;
+  for (u08 i = 0; i < DI; ++i) {
+    u64 t = b[i]; a[i] = (t << c) | ovr;
     ovr = t >> (64 - c);
   }
   return ovr;
@@ -86,20 +97,20 @@ static uint64_t lkls(uint64_t *a, const uint64_t *b, const uint32_t c) {
 
 //
 // Right shift by 1
-static void lkrs1(uint64_t *a) {
-  uint64_t *e = a, ovr = 0;
+static void keys_rs1(u64 *a) {
+  u64 *e = a, ovr = 0;
 
   a += DI;
-  while (a-- > e) {uint64_t t = *a; *a = (t >> 1) | ovr; ovr = t << 63;}
+  while (a-- > e) {u64 t = *a; *a = (t >> 1) | ovr; ovr = t << 63;}
 }
 
 //
 // Adds b and c
-static uint64_t lkadd(uint64_t *a, const uint64_t *b, const uint64_t *c) {
-  uint64_t ovr = 0;
+static u64 keys_add(u64 *a, const u64 *b, const u64 *c) {
+  u64 ovr = 0;
 
-  for (uint8_t i = 0; i < DI; ++i) {
-    uint64_t s = b[i] + c[i] + ovr;
+  for (u08 i = 0; i < DI; ++i) {
+    u64 s = b[i] + c[i] + ovr;
     if (s != b[i]) {ovr = (s < b[i]);} a[i] = s;
   }
   return ovr;
@@ -107,11 +118,11 @@ static uint64_t lkadd(uint64_t *a, const uint64_t *b, const uint64_t *c) {
 
 //
 // Sub b and c
-static uint64_t lksub(uint64_t *a, const uint64_t *b, const uint64_t *c) {
-  uint64_t ovr = 0;
+static u64 keys_sub(u64 *a, const u64 *b, const u64 *c) {
+  u64 ovr = 0;
 
-  for (uint8_t i = 0; i < DI; ++i) {
-    uint64_t d = b[i] - c[i] - ovr;
+  for (u08 i = 0; i < DI; ++i) {
+    u64 d = b[i] - c[i] - ovr;
     if (d != b[i]) {ovr = (d > b[i]);} a[i] = d;
   }
   return ovr;
@@ -119,54 +130,57 @@ static uint64_t lksub(uint64_t *a, const uint64_t *b, const uint64_t *c) {
 
 //
 //
-static void akrr(uint64_t **a, uint64_t k, u128 *r, uint64_t *r2) {
-  (*a)[k] = (uint64_t)(*r); (*r) = ((*r) >> 64)|(((u128)(*r2)) << 64);(*r2) = 0;
+static void akrr(u64 **a, u64 k, u128 *r, u64 *r2) {
+  (*a)[k] = (u64)(*r); (*r) = ((*r) >> 64) | (((u128)(*r2)) << 64); (*r2) = 0;
 }
 
 //
 // Multiply
-static void lkmul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
-  u128 r = 0; uint64_t r2 = 0, di22 = DI * 2 - 1;
+static void keys_mul(u64 *a, const u64 *b, const u64 *c) {
+  u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
-  for (uint8_t k = 0; k < di22; ++k) {
-    uint32_t min = (k < DI ? 0 : (k + 1) - DI);
-    for (uint8_t j = min; j <= k && j < DI; ++j) {
+  for (u08 k = 0; k < di22; ++k) {
+    ui min = (k < DI ? 0 : (k + 1) - DI);
+    for (u08 j = min; j <= k && j < DI; ++j) {
       u128 p = (u128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
     }
     akrr(&a, k, &r, &r2);
   }
-  a[di22] = (uint64_t)r;
+  a[di22] = (u64)r;
 }
 
 //
 // Square
-static void lksqr(uint64_t *a, const uint64_t *b) {
-  u128 r = 0; uint64_t r2 = 0, di22 = DI * 2 - 1;
+static void keys_sqr(u64 *a, const u64 *b) {
+  u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
-  for (uint8_t k = 0; k < di22; ++k) {
-    uint32_t min = (k < DI ? 0 : (k + 1) - DI);
-    for (uint8_t j = min; j <= k && j <= k - j; ++j) {
+  for (u08 k = 0; k < di22; ++k) {
+    ui min = (k < DI ? 0 : (k + 1) - DI);
+    for (u08 j = min; j <= k && j <= k - j; ++j) {
       u128 p = (u128)b[j] * b[k - j]; // product
       if (j < k - j) {r2 += p >> 127; p *= 2;}
       r += p; r2 += (r < p);
     }
     akrr(&a, k, &r, &r2);
   }
-  a[di22] = (uint64_t)r;
+  a[di22] = (u64)r;
 }
 
 //
 //
-static void lko_mul(uint64_t *a, const uint64_t *b) {
-  lkset(a, b);
-  uint64_t t[DI], ovr = lkls(t, b, 32);
-  a[DI + 1] = ovr + lkadd(a + 1, a + 1, t);
-  a[DI + 2] = lkadd(a + 2, a + 2, b);
-  ovr += lksub(a, a, t);
-  uint64_t d = a[DI] - ovr;
-  if (d > a[DI])
-    for (uint8_t i = 1+DI; ; ++i) {--a[i]; if (a[i] != (uint64_t) - 1) {break;}}
+static void keys_o_mul(u64 *a, const u64 *b) {
+  u64 t[DI], ovr;
+
+  keys_set(a, b);
+  ovr = keys_ls(t, b, 32);
+  a[DI + 1] = ovr + keys_add(a + 1, a + 1, t);
+  a[DI + 2] = keys_add(a + 2, a + 2, b);
+  ovr += keys_sub(a, a, t);
+  u64 d = a[DI] - ovr;
+  if (d > a[DI]) {
+    for (u08 i = 1+DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
+  }
   a[DI] = d;
 }
 
@@ -174,254 +188,318 @@ static void lko_mul(uint64_t *a, const uint64_t *b) {
 
 //
 // Modulo add
-static void lkm_add(uint64_t *a, const uint64_t *b, uint64_t *c, uint64_t *m) {
-  if (lkadd(a, b, c) || lkcmp(a, m) >= 0) {lksub(a, a, m);}
+static void keys_m_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
+  u64 ovr = keys_add(a, b, c);
+
+  if (ovr || keys_cmp(a, m) >= 0) {keys_sub(a, a, m);}
 }
 
 //
 // Modulo sub
-static void lkm_sub(uint64_t *a, const uint64_t *b, uint64_t *c, uint64_t *m) {
-  if (lksub(a, b, c)) {lkadd(a, a, m);}
+static void keys_m_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
+  if (keys_sub(a, b, c)) {keys_add(a, a, m);}
 }
 
 //
 // Modulo mod
-static void lkm_mod(uint64_t *a, uint64_t *b) {
-  while (!lkzero(b + DI)) {
-    uint64_t t[DI2], ovr = 0;
-    lkclear(t); lkclear(t + DI);
-    lko_mul(t, b + DI);
-    lkclear(b + DI);
-    for (uint8_t i = 0; i < DI + 3; ++i) {
-      uint64_t s = b[i] + t[i] + ovr;
+static void keys_m_mod(u64 *a, u64 *b) {
+  u64 t[DI2];
+
+  while (!keys_zero(b + DI)) {
+    u64 ovr = 0;
+    keys_clear(t); keys_clear(t + DI);
+    keys_o_mul(t, b + DI);
+    keys_clear(b + DI);
+    for (u08 i = 0; i < DI + 3; ++i) {
+      u64 s = b[i] + t[i] + ovr;
       if (s != b[i]) {ovr = (s < b[i]);}
       b[i] = s;
     }
   }
-  while (lkcmp(b, curve_p) > 0) {lksub(b, b, curve_p);}
-  lkset(a, b);
+  while (keys_cmp(b, curve_p) > 0) {keys_sub(b, b, curve_p);}
+  keys_set(a, b);
 }
 
 //
 // Modulo multiply
-static void lkm_mul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
-  uint64_t p[DI2]; lkmul(p, b, c); lkm_mod(a, p);
+static void keys_m_mul(u64 *a, const u64 *b, const u64 *c) {
+  u64 p[DI2];
+
+  keys_mul(p, b, c); keys_m_mod(a, p);
 }
 
 //
 // Modulo square
-static void lkm_sqr(uint64_t *a, const uint64_t *b) {
-  uint64_t p[DI2]; lksqr(p, b); lkm_mod(a, p);
+static void keys_m_sqr(u64 *a, const u64 *b) {
+  u64 p[DI2];
+
+  keys_sqr(p, b); keys_m_mod(a, p);
 }
 
 //
 // Modulo square root
-static void lkm_sqrt(uint64_t a[DI]) {
-  uint64_t p1[DI] = {1}, r[DI] = {1};
+static void keys_m_sqrt(u64 a[DI]) {
+  u64 p1[DI] = {1}, r[DI] = {1};
 
-  lkadd(p1, curve_p, p1);
-  for (uint32_t i = lkbits(p1) - 1; i > 1; --i) {
-    lkm_sqr(r, r); if (lkchk(p1, i)) {lkm_mul(r, r, a);}
+  keys_add(p1, curve_p, p1);
+  for (ui i = keys_bits(p1) - 1; i > 1; --i) {
+    keys_m_sqr(r, r);
+    if (keys_chk(p1, i)) {keys_m_mul(r, r, a);}
   }
-  lkset(a, r);
+  keys_set(a, r);
 }
 
 //
 //
-static void lkm_mmul(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *m) {
-  uint64_t p[DI2], mm[DI2];
+static void keys_m_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
+  u64 p[DI2], mm[DI2];
+  ui ds, bs, pb, mb = keys_bits(m);
 
-  lkmul(p, b, c);
-  uint32_t ds, bs, pb = lkbits(p + DI), mb = lkbits(m);
+  keys_mul(p, b, c);
+  pb = keys_bits(p + DI);
   if (pb) {pb += DI * 64;}
-  else {pb = lkbits(p);};
-  if (pb < mb) {lkset(a, p); return;}
+  else {pb = keys_bits(p);};
+  if (pb < mb) {keys_set(a, p); return;}
 
-  lkclear(mm); lkclear(mm + DI);
-  ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);
-  if (bs) {mm[ds + DI] = lkls(mm + ds, m, bs);}
-  else {lkset(mm + ds, m);}
+  keys_clear(mm); keys_clear(mm + DI);
+  ds = (pb - mb) / 64; bs = mod(pb - mb, 64);
+  if (bs) {mm[ds + DI] = keys_ls(mm + ds, m, bs);}
+  else {keys_set(mm + ds, m);}
 
-  lkclear(a); a[0] = 1;
-  while (pb > DI * 64 || lkcmp(mm, m) >= 0) {
-    int cmp = lkcmp(DI + mm, DI + p);
-    if (cmp < 0 || (cmp == 0 && lkcmp(mm, p) <= 0)) {
-      if (lksub(p, p, mm)) {lksub(DI + p, DI + p, a);}
-      lksub(DI + p, DI + p, DI + mm);
+  keys_clear(a); a[0] = 1;
+  while (pb > DI * 64 || keys_cmp(mm, m) >= 0) {
+    int cmp = keys_cmp(DI + mm, DI + p);
+    if (cmp < 0 || (cmp == 0 && keys_cmp(mm, p) <= 0)) {
+      if (keys_sub(p, p, mm)) {keys_sub(DI + p, DI + p, a);}
+      keys_sub(DI + p, DI + p, DI + mm);
     }
-    uint64_t ovr = (mm[DI] & 0x01) << 63;
-    lkrs1(DI + mm); lkrs1(mm);
+    u64 ovr = (mm[DI] & 0x01) << 63;
+    keys_rs1(DI + mm); keys_rs1(mm);
     mm[DI - 1] |= ovr;
     --pb;
   }
-  lkset(a, p);
+  keys_set(a, p);
 }
 
 // Points functions
 
 //
 // Points is this zero?
-static int lkp_zero(pt *a) {return (lkzero(a->x) && lkzero(a->y));}
+static int keys_p_zero(pt *a) {return (keys_zero(a->x) && keys_zero(a->y));}
 
 //
 // Points double
-static void lkp_double(uint64_t *a, uint64_t *b, uint64_t *c) {
-  uint64_t t4[DI], t5[DI];
+static void keys_p_double(u64 *a, u64 *b, u64 *c) {
+  u64 t4[DI], t5[DI];
 
-  if (lkzero(c)) {return;}
-  lkm_sqr(t4, b);   lkm_mul(t5, a, t4); lkm_sqr(t4, t4);
-  lkm_mul(b, b, c); lkm_sqr(c, c);
+  if (keys_zero(c)) {return;}
+  keys_m_sqr(t4, b);
+  keys_m_mul(t5, a, t4);
+  keys_m_sqr(t4, t4);
+  keys_m_mul(b, b, c);
+  keys_m_sqr(c, c);
 
-  lkm_add(a, a, c, curve_p); lkm_add(c, c, c, curve_p);
-  lkm_sub(c, a, c, curve_p); lkm_mul(a, a, c);
+  keys_m_add(a, a, c, curve_p);
+  keys_m_add(c, c, c, curve_p);
+  keys_m_sub(c, a, c, curve_p);
+  keys_m_mul(a, a, c);
 
-  lkm_add(c, a, a, curve_p); lkm_add(a, a, c, curve_p);
-  if (lkchk(a, 0)) {
-    uint64_t ovr = lkadd(a, a, curve_p);
-    lkrs1(a);
+  keys_m_add(c, a, a, curve_p);
+  keys_m_add(a, a, c, curve_p);
+  if (keys_chk(a, 0)) {
+    u64 ovr = keys_add(a, a, curve_p);
+    keys_rs1(a);
     a[DI - 1] |= ovr << 63;
-  } else {lkrs1(a);}
-  lkm_sqr(c, a); lkm_sub(c, c, t5, curve_p); lkm_sub(c, c, t5, curve_p);
-  lkm_sub(t5, t5, c, curve_p); lkm_mul(a, a, t5); lkm_sub(t4, a, t4, curve_p);
-  lkset(a, c); lkset(c, b); lkset(b, t4);
+  } else {keys_rs1(a);}
+  keys_m_sqr(c, a);
+  keys_m_sub(c, c, t5, curve_p);
+  keys_m_sub(c, c, t5, curve_p);
+  keys_m_sub(t5, t5, c, curve_p);
+  keys_m_mul(a, a, t5);
+  keys_m_sub(t4, a, t4, curve_p);
+  keys_set(a, c);
+  keys_set(c, b);
+  keys_set(b, t4);
 }
 
 //
 //
-static void lkp_decom(pt *a, const uint64_t b[KB + 1]) {
-  uint64_t tr[DI] = {3};
+static void keys_p_decom(pt *a, const u64 b[KB + 1]) {
+  u64 tr[DI] = {3};
 
-  lkset(a->x, b + 1); lkm_sqr(a->y, a->x); lkm_sub(a->y, a->y, tr, curve_p);
-  lkm_mul(a->y, a->y, a->x); lkm_add(a->y, a->y, curve_b, curve_p);
-  lkm_sqrt(a->y);
-  if ((a->y[0] & 0x01) != (b[0] & 0x01)) {lksub(a->y, curve_p, a->y);}
+  keys_set(a->x, b + 1);
+  keys_m_sqr(a->y, a->x);
+  keys_m_sub(a->y, a->y, tr, curve_p);
+  keys_m_mul(a->y, a->y, a->x);
+  keys_m_add(a->y, a->y, curve_b, curve_p);
+  keys_m_sqrt(a->y);
+  if ((a->y[0] & 0x01) != (b[0] & 0x01)) {keys_sub(a->y, curve_p, a->y);}
 }
 
 //
 // Modify (x1, y1) => (x1 * z^2, y1 * z^3)
-static void lkp_appz(uint64_t *a, uint64_t *b, const uint64_t *z) {
-  uint64_t t[DI];
+static void keys_p_appz(u64 *a, u64 *b, const u64 *z) {
+  u64 t[DI];
 
-  lkm_sqr(t, z); lkm_mul(a, a, t); lkm_mul(t, t, z); lkm_mul(b, b, t);
+  keys_m_sqr(t, z);
+  keys_m_mul(a, a, t);
+  keys_m_mul(t, t, z);
+  keys_m_mul(b, b, t);
 }
 
 //
 // P = (x1, y1) => 2P, (x2, y2) => P'
-static void lkp_inidoub(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d,
-    uint64_t *p) {
-  uint64_t z[DI];
+static void keys_p_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
+  u64 z[DI];
 
-  lkset(c, a); lkset(d, b); lkclear(z); z[0] = 1;
-  if (p) {lkset(z, p);}
-  lkp_appz(a, b, z); lkp_double(a, b, z); lkp_appz(c, d, z);
+  keys_set(c, a); keys_set(d, b);
+  keys_clear(z); z[0] = 1;
+  if (p) {keys_set(z, p);}
+  keys_p_appz(a, b, z);
+  keys_p_double(a, b, z);
+  keys_p_appz(c, d, z);
 }
 
 //
 // Points add
-static void lkp_add(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
-  uint64_t t5[DI];
+static void keys_p_add(u64 *a, u64 *b, u64 *c, u64 *d) {
+  u64 t5[DI];
 
-  lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
-  lkm_mul(c, c, t5); lkm_sub(d, d, b, curve_p); lkm_sqr(t5, d);
+  keys_m_sub(t5, c, a, curve_p);
+  keys_m_sqr(t5, t5);
+  keys_m_mul(a, a, t5);
+  keys_m_mul(c, c, t5);
+  keys_m_sub(d, d, b, curve_p);
+  keys_m_sqr(t5, d);
 
-  lkm_sub(t5, t5, a, curve_p); lkm_sub(t5, t5, c, curve_p);
-  lkm_sub(c, c, a, curve_p); lkm_mul(b, b, c); lkm_sub(c, a, t5, curve_p);
-  lkm_mul(d, d, c); lkm_sub(d, d, b, curve_p);
-  lkset(c, t5);
+  keys_m_sub(t5, t5, a, curve_p);
+  keys_m_sub(t5, t5, c, curve_p);
+  keys_m_sub(c, c, a, curve_p);
+  keys_m_mul(b, b, c);
+  keys_m_sub(c, a, t5, curve_p);
+  keys_m_mul(d, d, c);
+  keys_m_sub(d, d, b, curve_p);
+  keys_set(c, t5);
 }
 
 //
-// Points add // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
-static void lkp_addc(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d) {
-  uint64_t t5[DI], t6[DI], t7[DI];
+// Points add
+static void keys_p_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
+  // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
+  u64 t5[DI], t6[DI], t7[DI];
 
-  lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
-  lkm_mul(c, c, t5); lkm_add(t5, d, b, curve_p); lkm_sub(d, d, b, curve_p);
+  keys_m_sub(t5, c, a, curve_p);
+  keys_m_sqr(t5, t5);
+  keys_m_mul(a, a, t5);
+  keys_m_mul(c, c, t5);
+  keys_m_add(t5, d, b, curve_p);
+  keys_m_sub(d, d, b, curve_p);
 
-  lkm_sub(t6, c, a, curve_p); lkm_mul(b, b, t6); lkm_add(t6, a, c, curve_p);
-  lkm_sqr(c, d); lkm_sub(c, c, t6, curve_p);
+  keys_m_sub(t6, c, a, curve_p);
+  keys_m_mul(b, b, t6);
+  keys_m_add(t6, a, c, curve_p);
+  keys_m_sqr(c, d);
+  keys_m_sub(c, c, t6, curve_p);
 
-  lkm_sub(t7, a, c, curve_p); lkm_mul(d, d, t7);lkm_sub(d, d, b, curve_p);
+  keys_m_sub(t7, a, c, curve_p);
+  keys_m_mul(d, d, t7);
+  keys_m_sub(d, d, b, curve_p);
 
-  lkm_sqr(t7, t5); lkm_sub(t7, t7, t6, curve_p); lkm_sub(t6, t7, a, curve_p);
-  lkm_mul(t6, t6, t5); lkm_sub(b, t6, b, curve_p);
-  lkset(a, t7);
+  keys_m_sqr(t7, t5);
+  keys_m_sub(t7, t7, t6, curve_p);
+  keys_m_sub(t6, t7, a, curve_p);
+  keys_m_mul(t6, t6, t5);
+  keys_m_sub(b, t6, b, curve_p);
+  keys_set(a, t7);
 }
 
 //
 // Modulo inversion
-static void lkm_inv(uint64_t *r, uint64_t *p, uint64_t *m) {
-  uint64_t a[DI], b[DI], u[DI], v[DI], car, x8 = 0x8000000000000000;
+static void keys_m_inv(u64 *r, u64 *p, u64 *m) {
+  u64 a[DI], b[DI], u[DI], v[DI], car;
   int cmpResult;
 
-  if(lkzero(p)) {lkclear(r); return;}
-  lkset(a, p);
-  lkset(b, m);
-  lkclear(u); u[0] = 1;
-  lkclear(v);
-  while ((cmpResult = lkcmp(a, b)) != 0) {
+  if(keys_zero(p)) {keys_clear(r); return;}
+  keys_set(a, p);
+  keys_set(b, m);
+  keys_clear(u); u[0] = 1;
+  keys_clear(v);
+  while ((cmpResult = keys_cmp(a, b)) != 0) {
     car = 0;
     if (EVEN(a)) {
-      lkrs1(a); if (!EVEN(u)) {car = lkadd(u, u, m);}
-      lkrs1(u); if (car) {u[DI - 1] |= x8;}
+      keys_rs1(a);
+      if (!EVEN(u)) {car = keys_add(u, u, m);}
+      keys_rs1(u);
+      if (car) {u[DI - 1] |= 0x8000000000000000;}
     } else if (EVEN(b)) {
-      lkrs1(b); if (!EVEN(v)) {car = lkadd(v, v, m);}
-      lkrs1(v); if (car) {v[DI - 1] |= x8;}
+      keys_rs1(b);
+      if (!EVEN(v)) {car = keys_add(v, v, m);}
+      keys_rs1(v);
+      if (car) {v[DI - 1] |= 0x8000000000000000;}
     } else if (cmpResult > 0) {
-      lksub(a, a, b);
-      lkrs1(a); if (lkcmp(u, v) < 0) {lkadd(u, u, m);}
-      lksub(u, u, v); if (!EVEN(u)) {car = lkadd(u, u, m);}
-      lkrs1(u); if (car) {u[DI - 1] |= x8;}
+      keys_sub(a, a, b);
+      keys_rs1(a);
+      if (keys_cmp(u, v) < 0) {keys_add(u, u, m);}
+      keys_sub(u, u, v);
+      if (!EVEN(u)) {car = keys_add(u, u, m);}
+      keys_rs1(u);
+      if (car) {u[DI - 1] |= 0x8000000000000000;}
     } else {
-      lksub(b, b, a);
-      lkrs1(b); if (lkcmp(v, u) < 0) {lkadd(v, v, m);}
-      lksub(v, v, u); if (!EVEN(v)) {car = lkadd(v, v, m);}
-      lkrs1(v); if (car) {v[DI - 1] |= x8;}
+      keys_sub(b, b, a);
+      keys_rs1(b);
+      if (keys_cmp(v, u) < 0) {keys_add(v, v, m);}
+      keys_sub(v, v, u);
+      if (!EVEN(v)) {car = keys_add(v, v, m);}
+      keys_rs1(v);
+      if (car) {v[DI-1] |= 0x8000000000000000;}
     }
   }
-  lkset(r, u);
+  keys_set(r, u);
 }
 
 //
 // Point multiplication
-static void lkp_mul(pt *r, pt *p, uint64_t *q, uint64_t *s) {
-  uint64_t Rx[2][DI], Ry[2][DI], z[DI];
+static void keys_p_mul(pt *r, pt *p, u64 *q, u64 *s) {
+  u64 Rx[2][DI], Ry[2][DI], z[DI];
+  int nb;
 
-  lkset(Rx[1], p->x); lkset(Ry[1], p->y);
-  lkp_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
-  for (int i = lkbits(q) - 2; i > 0; --i) {
-    int nb = !lkchk(q, i);
-    lkp_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
-    lkp_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
+  keys_set(Rx[1], p->x);
+  keys_set(Ry[1], p->y);
+  keys_p_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
+  for (int i = keys_bits(q) - 2; i > 0; --i) {
+    nb = !keys_chk(q, i);
+    keys_p_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
+    keys_p_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
   }
-  int nb = !lkchk(q, 0);
-  lkp_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
+  nb = !keys_chk(q, 0);
+  keys_p_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
   // Find final 1/Z value.
-  lkm_sub(z, Rx[1], Rx[0], curve_p);
-  lkm_mul(z, z, Ry[1 - nb]);
-  lkm_mul(z, z, p->x);
-  lkm_inv(z, z, curve_p);
-  lkm_mul(z, z, p->y);
-  lkm_mul(z, z, Rx[1 - nb]);
+  keys_m_sub(z, Rx[1], Rx[0], curve_p);
+  keys_m_mul(z, z, Ry[1-nb]);
+  keys_m_mul(z, z, p->x);
+  keys_m_inv(z, z, curve_p);
+  keys_m_mul(z, z, p->y);
+  keys_m_mul(z, z, Rx[1-nb]);
 
   // End 1/Z calculation
-  lkp_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
-  lkp_appz(Rx[0], Ry[0], z);
-  lkset(r->x, Rx[0]); lkset(r->y, Ry[0]);
+  keys_p_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+  keys_p_appz(Rx[0], Ry[0], z);
+  keys_set(r->x, Rx[0]);
+  keys_set(r->y, Ry[0]);
 }
+
+// Public functions
 
 //
 // Random rotate
-static uint64_t lkrnd_rotate(uint64_t x, uint64_t k) {
-  return (x << k) | (x >> (32 - k));
-}
+u64 prng_rotate(u64 x, u64 k) {return (x << k) | (x >> (32 - k));}
 
 //
 // Random next
-uint64_t lkrnd_next(void) {
-  uint64_t e = prng_ctx.a - lkrnd_rotate(prng_ctx.b, 27);
+u64 prng_next(void) {
+  u64 e = prng_ctx.a - prng_rotate(prng_ctx.b, 27);
 
-  prng_ctx.a = prng_ctx.b ^ lkrnd_rotate(prng_ctx.c, 17);
+  prng_ctx.a = prng_ctx.b ^ prng_rotate(prng_ctx.c, 17);
   prng_ctx.b = prng_ctx.c + prng_ctx.d;
   prng_ctx.c = prng_ctx.d + e; prng_ctx.d = e + prng_ctx.a;
   return prng_ctx.d;
@@ -429,113 +507,118 @@ uint64_t lkrnd_next(void) {
 
 //
 // Random init
-void lkrnd_init(uint64_t seed) {
+void prng_init(u64 seed) {
   prng_ctx.a = 0xea7f00d1; prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
-  for (uint64_t i = 0; i < 31; ++i) {(void)lkrnd_next();}
+  for (u64 i = 0; i < 31; ++i) {(void)prng_next();}
 }
 
 //
 // Make public key
-int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]) {
-  uint64_t private[DI*2], x = 1; // range [1, n-1]
+int keys_make_keys(u64 publ[KB + 1], u64 priv[KB]) {
+  u64 private[DI], x = 1; // range [1, n-1]
   pt public;
 
   while(x) {
-    if (lkzero(private)) {continue;}
-    if (lkcmp(curve_n, private) != 1) {lksub(private, private, curve_n);}
-    lkp_mul(&public, &curve_g, private, NULL);
-    x = lkp_zero(&public);
+    if (keys_zero(private)) {continue;}
+    if (keys_cmp(curve_n, private) != 1) {keys_sub(private, private, curve_n);}
+    keys_p_mul(&public, &curve_g, private, NULL);
+    x = keys_p_zero(&public);
   }
-  lkset(priv, private);
-  lkset(publ + 1, public.x);
+  keys_set(priv, private);
+  keys_set(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
   return 1;
 }
 
 //
 // create a secret from the public and private key
-int lkshar_secr(uint64_t publ[KB + 1], uint64_t priv[KB], uint64_t secr[KB]) {
-  pt public = *(pt*)malloc(sizeof(pt)), product = *(pt*)malloc(sizeof(pt));
-  uint64_t private[DI], random[DI];
+int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
+  pt public, product;
+  u64 private[DI], random[DI];
 
-  lkp_decom(&public, publ);
-  lkset(private, priv);
-  lkp_mul(&product, &public, private, random);
-  lkset(secr, product.x);
-  return !lkp_zero(&product);
+  keys_p_decom(&public, publ);
+  keys_set(private, priv);
+  keys_p_mul(&product, &public, private, random);
+  keys_set(secr, product.x);
+  return !keys_p_zero(&product);
 }
 
 //
 // Create signature
-int lksign(const uint64_t priv[KB], uint64_t hash[KB], uint64_t sign[KB2]) {
-  uint64_t k[DI], tmp[DI], s[DI], x = 1;
+int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]) {
+  u64 k[DI], tmp[DI], s[DI], x = 1;
   pt p;
 
   while (x) {
-    if (lkzero(k)) {continue;}
-    if (lkcmp(curve_n, k) != 1) {lksub(k, k, curve_n);}
-    lkp_mul(&p, &curve_g, k, NULL);
-    if (lkcmp(curve_n, p.x) != 1) {lksub(p.x, p.x, curve_n);}
-    x = lkzero(p.x);
+    if (keys_zero(k)) {continue;}
+    if (keys_cmp(curve_n, k) != 1) {keys_sub(k, k, curve_n);}
+    keys_p_mul(&p, &curve_g, k, NULL);
+    if (keys_cmp(curve_n, p.x) != 1) {keys_sub(p.x, p.x, curve_n);}
+    x = keys_zero(p.x);
   }
-  lkset(tmp, priv);
-  lkm_mmul(s, p.x, tmp, curve_n);
-  lkset(tmp, hash);
-  lkm_add(s, tmp, s, curve_n);
-  lkm_inv(k, k, curve_n);
-  lkm_mmul(s, s, k, curve_n);
-  lkset(sign, p.x);
-  lkset(sign + KB, s);
+  keys_set(tmp, priv);
+  keys_m_mmul(s, p.x, tmp, curve_n);
+  keys_set(tmp, hash);
+  keys_m_add(s, tmp, s, curve_n);
+  keys_m_inv(k, k, curve_n);
+  keys_m_mmul(s, s, k, curve_n);
+  keys_set(sign, p.x);
+  keys_set(sign + KB, s);
   return 1;
 }
 
 //
 // Verify signature
-int lkvrfy(const uint64_t publ[KB+1], uint64_t hash[KB], uint64_t sign[KB2]) {
-  uint64_t tx[DI], ty[DI], tz[DI],r[DI],s[DI],u1[DI],u2[DI],z[DI],rx[DI],ry[DI];
+int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
+  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
   pt public, sum;
 
-  lkp_decom(&public, publ);
-  lkset(r, sign);
-  lkset(s, sign + KB);
-  if (lkzero(r) || lkzero(s)) {return 0;}
-  if (lkcmp(curve_n, r) != 1 || lkcmp(curve_n, s) != 1) {return 0;}
-  lkm_inv(z, s, curve_n);
-  lkset(u1, hash);
-  lkm_mmul(u1, u1, z, curve_n);
-  lkm_mmul(u2, r, z, curve_n);
+  keys_p_decom(&public, publ);
+  keys_set(r, sign);
+  keys_set(s, sign + KB);
+  if (keys_zero(r) || keys_zero(s)) {return 0;}
+  if (keys_cmp(curve_n, r) != 1 || keys_cmp(curve_n, s) != 1) {return 0;}
+  keys_m_inv(z, s, curve_n);
+  keys_set(u1, hash);
+  keys_m_mmul(u1, u1, z, curve_n);
+  keys_m_mmul(u2, r, z, curve_n);
 
   // Calculate sum = G + Q.
-  lkset(sum.x, public.x); lkset(sum.y, public.y);
-  lkset(tx, curve_g.x); lkset(ty, curve_g.y);
-  lkm_sub(z, sum.x, tx, curve_p);
-  lkp_add(tx, ty, sum.x, sum.y);
-  lkm_inv(z, z, curve_p);
-  lkp_appz(sum.x, sum.y, z);
+  keys_set(sum.x, public.x);
+  keys_set(sum.y, public.y);
+  keys_set(tx, curve_g.x);
+  keys_set(ty, curve_g.y);
+  keys_m_sub(z, sum.x, tx, curve_p);
+  keys_p_add(tx, ty, sum.x, sum.y);
+  keys_m_inv(z, z, curve_p);
+  keys_p_appz(sum.x, sum.y, z);
 
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
-  uint32_t nb = (lkbits(u1) > lkbits(u2) ? lkbits(u1) : lkbits(u2));
-  pt *point = points[(!!lkchk(u1, nb - 1)) | ((!!lkchk(u2, nb - 1)) << 1)];
+  ui nb = (keys_bits(u1) > keys_bits(u2) ? keys_bits(u1) : keys_bits(u2));
+  pt *point = points[(!!keys_chk(u1, nb - 1)) | ((!!keys_chk(u2, nb - 1)) << 1)];
 
-  lkset(rx, point->x);
-  lkset(ry, point->y);
-  lkclear(z);
+  keys_set(rx, point->x);
+  keys_set(ry, point->y);
+  keys_clear(z);
   z[0] = 1;
   for (int i = nb - 2; i >= 0; --i) {
-    lkp_double(rx, ry, z);
-    int index = (!!lkchk(u1, i)) | ((!!lkchk(u2, i)) << 1);
+    keys_p_double(rx, ry, z);
+    int index = (!!keys_chk(u1, i)) | ((!!keys_chk(u2, i)) << 1);
     pt *point = points[index];
     if (point) {
-      lkset(tx, point->x); lkset(ty, point->y);
-      lkp_appz(tx, ty, z);
-      lkm_sub(tz, rx, tx, curve_p);
-      lkp_add(tx, ty, rx, ry);
-      lkm_mul(z, z, tz);
+      keys_set(tx, point->x);
+      keys_set(ty, point->y);
+      keys_p_appz(tx, ty, z);
+      keys_m_sub(tz, rx, tx, curve_p);
+      keys_p_add(tx, ty, rx, ry);
+      keys_m_mul(z, z, tz);
     }
   }
-  lkm_inv(z, z, curve_p);
-  lkp_appz(rx, ry, z);
-  if (lkcmp(curve_n, rx) != 1) {lksub(rx, rx, curve_n);}
-  return (lkcmp(rx, r) == 0);
+  keys_m_inv(z, z, curve_p);
+  keys_p_appz(rx, ry, z);
+  if (keys_cmp(curve_n, rx) != 1) {keys_sub(rx, rx, curve_n);}
+  for (int i = 0 ; i < DI; i++) printf("%llu  %llu\n", rx[i], r[i]);
+
+  return (keys_cmp(rx, r) == 0);
 }

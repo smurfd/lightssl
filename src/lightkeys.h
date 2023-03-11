@@ -1,15 +1,29 @@
 #ifndef LIGHTKEYS_H
 #define LIGHTKEYS_H 1
+
+#include <math.h>
+#include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
+#include "lightcrypto.h"
 #include "lightdefs.h"
 
+typedef int8_t i08;
+typedef uint8_t u08;
+typedef unsigned int ui;
+typedef unsigned char b08;
+typedef const uint8_t cu8;
+typedef long long unsigned int u64;
+
 // Random
-void lkrnd_init(uint64_t seed);
-uint64_t lkrnd_next(void);
-// lk for LightKeys
-int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]);
-int lkshar_secr(uint64_t publ[KB + 1], uint64_t priv[KB], uint64_t secr[KB]);
-int lksign(const uint64_t priv[KB], uint64_t hash[KB], uint64_t sign[KB2]);
-int lkvrfy(const uint64_t publ[KB + 1], uint64_t hash[KB], uint64_t sign[KB2]);
+u64 prng_rotate(u64 x, u64 k);
+u64 prng_next(void);
+void prng_init(u64 seed);
+
+int keys_make_keys(u64 publ[KB + 1], u64 priv[KB]);
+int keys_shar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]);
+int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]);
+int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]);
 #endif

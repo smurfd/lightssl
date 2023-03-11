@@ -11,8 +11,9 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wno-unused-variable -Wno-unused-function -Wall -Wextra -Wno-unused-parameter -pedantic -O3 -pthread ")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wno-unused-variable -Wno-unused-function -Wall -Wextra -Wno-unused-parameter -pedantic -pthread ")
 
+set_source_files_properties(src/lighthash.c PROPERTIES COMPILE_FLAGS -O3) # WHAT THE ACTUAL F***????!!!!!! test fail without this
 add_library(lighthash OBJECT src/lighthash.c)
 add_library(lightkeys OBJECT src/lightkeys.c)
 add_library(lightcrypto OBJECT src/lightcrypto.c)

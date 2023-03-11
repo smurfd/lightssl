@@ -9,4 +9,4 @@ make -Cbuild/release test
 cmake -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug -DCMAKE_C_COMPILER=clang
 sh ./src/example/gen_cert.sh
 make -Cbuild/debug
-#make -Cbuild/debug test
+make -Cbuild/debug test
