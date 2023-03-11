@@ -554,27 +554,24 @@ void lh3shake_xof(uint8_t *sm, uint8_t (*s)[200]) {
   lh3keccak_p(sm, sm);
 }
 
-uint8_t lh3shake_out(uint8_t *sm, uint8_t (*s)[200], uint8_t next) {
-  uint8_t j = next, tmp[200];
-
-  for (size_t i = 0; i < 32; i++) {
-    if (j >= 136) {
-      lh3keccak_p(sm, sm);
-      j = 0;
-    }
-    (*s)[i] = sm[j++];
-  }
-  return j;
-}
-
-uint8_t lh3shake_upd(uint8_t *sm, uint8_t s[200], uint8_t next) {
+uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
   uint8_t j = next;
 
-  for (size_t i = 0; i < 20; i++) {
-    sm[j++] ^= 163;//sm[i];
-    if (j >= 136) {
-      lh3keccak_p(sm, sm);
-      j = 0;
+  if (upd) {
+    for (size_t i = 0; i < 20; i++) {
+      sm[j++] ^= 163;//sm[i];
+      if (j >= 136) {
+        lh3keccak_p(sm, sm);
+        j = 0;
+      }
+    }
+  } else {
+    for (size_t i = 0; i < 32; i++) {
+      if (j >= 136) {
+        lh3keccak_p(sm, sm);
+        j = 0;
+      }
+      s[i] = sm[j++];
     }
   }
   return j;
@@ -585,15 +582,14 @@ void lh3shake_test() {
   char sss[64], ccc[2] = {0}, ss[] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
 
   memset(buf, 0xA3, 20);
-  for (int j = 0; j < 200; j += 20) {
-    next = lh3shake_upd(str, buf, next);
-  }
+  for (int j = 0; j < 200; j += 20) {next = lh3shake_touch(str, buf, next, true);}
   next = 0;
   lh3shake_xof(str, &s);
 
   for (int i = 0; i < 32; i++) s[i] = str[i];
-  for (int j = 0; j < 512; j += 32) {next = lh3shake_out(str, &s, next);}
+  for (int j = 0; j < 512; j += 32) {next = lh3shake_touch(str, s, next, false);}
   lh3bit2str(s, sss);
   for (int i = 0; i < 64; i++) {printf("%d  %d\n", sss[i], ss[i]); assert(sss[i] == ss[i]);}
+  // print until we fix fxxin assert working with cmake release/debug
   free(buf);
 }
