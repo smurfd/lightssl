@@ -40,13 +40,13 @@ static int lkzero(const uint64_t *a) {
 
 //
 // Check if bit a or b is set, if so return diff from zero
-static uint64_t lkchk(const uint64_t *a, const uint32_t b) {
+static uint64_t lkchk(const uint64_t *a, const uint64_t b) {
   return (a[b / 64] & ((uint64_t)1 << (MOD(b, 64))));
 }
 
 //
 // Count 64bit in a
-static uint32_t lkcount(const uint64_t *a) {
+static uint64_t lkcount(const uint64_t *a) {
   int i;
   for (i = DI - 1; i >= 0 && a[i] == 0; --i) {}
   return (i + 1);
@@ -60,8 +60,8 @@ static void lkset(uint64_t *a, const uint64_t *b) {
 
 //
 // Check number of bits needed for a
-static uint32_t lkbits(uint64_t *a) {
-  uint32_t i, nd = lkcount(a); uint64_t d;
+static uint64_t lkbits(uint64_t *a) {
+  uint64_t i, nd = lkcount(a),  d;
 
   if (nd == 0) return 0;
   nd--; d = a[nd];
@@ -81,7 +81,7 @@ static int lkcmp(const uint64_t *a, const uint64_t *b) {
 
 //
 // Left shift
-static uint64_t lkls(uint64_t *a, const uint64_t *b, const uint32_t c) {
+static uint64_t lkls(uint64_t *a, const uint64_t *b, const uint64_t c) {
   uint64_t ovr = 0;
 
   for (uint8_t i = 0; i < DI; ++i) {
@@ -136,7 +136,7 @@ static void lkmul(uint64_t *a, const uint64_t *b, const uint64_t *c) {
   u128 r = 0; uint64_t r2 = 0, di22 = DI * 2 - 1;
 
   for (uint8_t k = 0; k < di22; ++k) {
-    uint32_t min = (k < DI ? 0 : (k + 1) - DI);
+    uint64_t min = (k < DI ? 0 : (k + 1) - DI);
     for (uint8_t j = min; j <= k && j < DI; ++j) {
       u128 p = (u128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
@@ -152,7 +152,7 @@ static void lksqr(uint64_t *a, const uint64_t *b) {
   u128 r = 0; uint64_t r2 = 0, di22 = DI * 2 - 1;
 
   for (uint8_t k = 0; k < di22; ++k) {
-    uint32_t min = (k < DI ? 0 : (k + 1) - DI);
+    uint64_t min = (k < DI ? 0 : (k + 1) - DI);
     for (uint8_t j = min; j <= k && j <= k - j; ++j) {
       u128 p = (u128)b[j] * b[k - j]; // product
       if (j < k - j) {r2 += p >> 127; p *= 2;}
@@ -231,7 +231,7 @@ static void lkm_sqrt(uint64_t a[DI]) {
   uint64_t p1[DI] = {1}, r[DI] = {1};
 
   lkadd(p1, curve_p, p1);
-  for (uint32_t i = lkbits(p1) - 1; i > 1; --i) {
+  for (uint64_t i = lkbits(p1) - 1; i > 1; --i) {
     lkm_sqr(r, r);
     if (lkchk(p1, i)) {lkm_mul(r, r, a);}
   }
@@ -241,7 +241,7 @@ static void lkm_sqrt(uint64_t a[DI]) {
 //
 //
 static void lkm_mmul(uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *m) {
-  uint32_t ds, bs, pb, mb = lkbits(m);
+  uint64_t ds, bs, pb, mb = lkbits(m);
   uint64_t p[DI2] = {0}, mm[DI2] = {0};
 
   lkmul(p, b, c);
@@ -549,7 +549,7 @@ int lkvrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB], const uint64_t 
   printf("-----------------\n");
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
-  uint32_t nb = (lkbits(u1) > lkbits(u2) ? lkbits(u1) : lkbits(u2));
+  uint64_t nb = (lkbits(u1) > lkbits(u2) ? lkbits(u1) : lkbits(u2));
   pt *point = points[(!!lkchk(u1, nb - 1)) | ((!!lkchk(u2, nb - 1)) << 1)];
 
   lkset(rx, point->x); lkset(ry, point->y); lkclear(z);
@@ -587,5 +587,7 @@ int lkvrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB], const uint64_t 
     printf("vrfy09: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
         publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
   printf("-----------------\n");
+  printf("vrfy00: %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s\n", "publ", "hash", "sign", "public.x", "r", "s", "z", "u1", "u2", "sum.x", "sum.y", "tx", "ty", "rx", "ry");
+
   return (lkcmp(rx, r) == 0);
 }
