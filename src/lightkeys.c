@@ -565,7 +565,15 @@ int lkvrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB], const uint64_t 
     if (point) {
       lkset(tx, point->x); lkset(ty, point->y);
       lkp_appz(tx, ty, z); lkm_sub(tz, rx, tx, curve_p);
+      for (int j = 0; j < DI; j++)
+        printf("poin01: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
+          publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
+      printf("-----------------\n");
       lkp_add(tx, ty, rx, ry); lkm_mul(z, z, tz);
+      for (int j = 0; j < DI; j++)
+        printf("poin02: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
+          publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
+      printf("-----------------\n");
     }
   }
   for (int j = 0; j < DI; j++)
