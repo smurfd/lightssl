@@ -1,5 +1,5 @@
 mkdir -p build/debug build/release
-
+chmod -R +w build/
 cat >> `pwd`/build/ca.cnf <<EOL
 [ req ]
 encrypt_key = no
