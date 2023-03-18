@@ -15,11 +15,11 @@ Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 ```bash
 rm -rf build
 cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_C_COMPILER=clang
-sh ./src/example/gen_cert.sh
+sh ./src/scripts/gen_cert.sh
 make -Cbuild
 make -Cbuild test
 ```
-`./build.sh` has those parts in it
+`./scr/scripts/build.sh` has those parts in it
 
 ### Tests
 Test server, in one terminal run

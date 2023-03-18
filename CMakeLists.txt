@@ -14,7 +14,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wno-unused-variable -Wno-unused-function -Wall -Wextra -Wno-unused-parameter -pedantic -pthread -O1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wno-unused-variable -Wno-unused-function -Wall -Wextra -Wno-unused-parameter -pedantic -pthread")
 
 add_library(lighthash OBJECT src/lighthash.c)
 add_library(lightkeys OBJECT src/lightkeys.c)
