@@ -1,3 +1,5 @@
+mkdir -p build/debug build/release
+
 cat >> `pwd`/build/ca.cnf <<EOL
 [ req ]
 encrypt_key = no
