@@ -10,12 +10,12 @@
 #include "lightdefs.h"
 
 // Random
-uint64_t prng_rotate(uint64_t x, uint64_t k);
-uint64_t prng_next(void);
-void prng_init(uint64_t seed);
+u64 prng_rotate(u64 x, u64 k);
+u64 prng_next(void);
+void prng_init(u64 seed);
 
-int lkmake_keys(uint64_t publ[KB + 1], uint64_t priv[KB]);
-int lkshar_secr(const uint64_t publ[KB + 1], const uint64_t priv[KB], uint64_t secr[KB]);
-int lksign(const uint64_t priv[KB], const uint64_t hash[KB], uint64_t sign[KB2]);
-int lkvrfy(const uint64_t publ[KB + 1], const uint64_t hash[KB], const uint64_t sign[KB2]);
+int lkmake_keys(u64 publ[KB + 1], u64 priv[KB]);
+int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]);
+int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]);
+int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]);
 #endif

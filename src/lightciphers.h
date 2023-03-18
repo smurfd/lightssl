@@ -3,7 +3,7 @@
 #define LIGHTCIPHERS_H 1
 #include "lightdefs.h"
 
-extern const uint64_t WW[8];
+extern const u64 WW[8];
 extern const uint8_t K[32];
 extern const uint8_t SBOX[16][16];
 extern const uint8_t SBOXINV[16][16];

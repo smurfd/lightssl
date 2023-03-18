@@ -11,7 +11,7 @@ int main() {
   int s = lcrypto_init("127.0.0.1", "9998", false);
 
   if (s >= 0) {
-    uint64_t dat[BLOCK], cd[BLOCK];
+    u64 dat[BLOCK], cd[BLOCK];
     key k1, k2;
     head h;
 
@@ -20,8 +20,8 @@ int main() {
     lcrypto_transferkey(s, true, &h, &k2);
     lcrypto_genshare(&k1, &k2, h.p, false);
     printf("share : 0x%.16llx\n", k1.shar);
-    for (uint64_t i = 0; i < 12; i++) {
-      dat[i] = (uint64_t)i; lcrypto_crypt(dat[i], k1, &cd[i]);
+    for (u64 i = 0; i < 12; i++) {
+      dat[i] = (u64)i; lcrypto_crypt(dat[i], k1, &cd[i]);
     }
     lcrypto_transferdata(s, cd, &h, true, 11);
     lcrypto_end(s);

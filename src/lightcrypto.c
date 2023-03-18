@@ -21,20 +21,20 @@
 
 //
 // Generate the shared key
-void lcgenshare(key *k1, key *k2, uint64_t p, bool srv) {
+void lcgenshare(key *k1, key *k2, u64 p, bool srv) {
   if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
   else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
 }
 
 //
 // Generate a public and private keypair
-key lcgenkeys(uint64_t g, uint64_t p) {
+key lcgenkeys(u64 g, u64 p) {
   key k; k.priv = RAND64(); k.publ = (int64_t)pow(g, k.priv) % p; return k;
 }
 
 //
 // Encrypt and decrypt data with shared key
-void lccrypt(uint64_t data, key k, uint64_t *enc) {(*enc) = data ^ k.shar;}
+void lccrypt(u64 data, key k, u64 *enc) {(*enc) = data ^ k.shar;}
 
 //
 // Receive key (clears private key if we receive it for some reason)
@@ -52,9 +52,9 @@ static void lcsendkey(int s, head *h, key *k) {
 
 //
 // Transfer data (send and receive)
-void lctransferdata(const int s, void* data, head *h, bool snd, uint64_t len) {
-  if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(uint64_t)*len, 0);}
-  else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(uint64_t) * len, 0);}
+void lctransferdata(const int s, void* data, head *h, bool snd, u64 len) {
+  if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64)*len, 0);}
+  else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
 
 //
@@ -71,7 +71,7 @@ void lctransferkey(int s, bool snd, head *h, key *k) {
 //
 // Server handler
 static void *lchandler(void *sdesc) {
-  uint64_t dat[BLOCK], cd[BLOCK], g1 = RAND64(), p1 = RAND64();
+  u64 dat[BLOCK], cd[BLOCK], g1 = RAND64(), p1 = RAND64();
   int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
@@ -87,7 +87,7 @@ static void *lchandler(void *sdesc) {
   printf("share : 0x%.16llx\n", k2.shar);
   // Decrypt the data
   lctransferdata(s, &dat, &h, false, BLOCK-1);
-  for (uint64_t i = 0; i < 10; i++) {lccrypt(dat[i], k2, &cd[i]);}
+  for (u64 i = 0; i < 10; i++) {lccrypt(dat[i], k2, &cd[i]);}
   pthread_exit(NULL);
   return 0;
 }
@@ -130,8 +130,8 @@ int lclisten(const int s, sock *cli) {
 //
 // Generate a keypair & shared key then print it (test / demo)
 int lckeys() {
-  uint64_t g1 = RAND64(), g2 = RAND64(), p1 = RAND64();
-  uint64_t p2 = RAND64(), c = 123456, d = 1, e = 1;
+  u64 g1 = RAND64(), g2 = RAND64(), p1 = RAND64();
+  u64 p2 = RAND64(), c = 123456, d = 1, e = 1;
   key k1 = lcgenkeys(g1, p1), k2 = lcgenkeys(g2, p2);
 
   lcgenshare(&k1, &k2, p1, false);
@@ -150,7 +150,7 @@ int lckeys() {
 
 // from UTF-8 encoding to Unicode Codepoint
 uint32_t lcutf8decode(uint32_t c) {
-  uint64_t n[] = {0x00EFBFBF, 0x000F0000, 0x003F0000, 0x07000000, 0x00003F00,
+  u64 n[] = {0x00EFBFBF, 0x000F0000, 0x003F0000, 0x07000000, 0x00003F00,
     0x0000003F};
   uint32_t mask;
 
@@ -163,7 +163,7 @@ uint32_t lcutf8decode(uint32_t c) {
 
 // From Unicode Codepoint to UTF-8 encoding
 uint32_t lcutf8encode(uint32_t cp) {
-  uint64_t n[] = {0x000003F, 0x0000FC0, 0x003F000, 0x01C0000, 0x0000800,
+  u64 n[] = {0x000003F, 0x0000FC0, 0x003F000, 0x01C0000, 0x0000800,
     0x0000C080, 0x0010000, 0x00E08080, 0xF0808080};
   uint32_t c = cp;
 
@@ -178,32 +178,32 @@ uint32_t lcutf8encode(uint32_t cp) {
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
-static uint64_t lcget_header(char c[], uint8_t h[]) {
-  uint64_t i = strlen(c) - strlen(strstr(c, "-----B"));
+static u64 lcget_header(char c[], uint8_t h[]) {
+  u64 i = strlen(c) - strlen(strstr(c, "-----B"));
   // Check for the start of -----BEGIN CERTIFICATE-----
 
   while (c[i] != '\n') {h[i] = c[i]; i++;} h[i] = '\0';
   return i + 1;
 }
 
-static uint64_t lcget_footer(char c[], uint64_t len, uint8_t f[]) {
-  uint64_t i = 0, j = strlen(c) - strlen(strstr(c, "-----E"));
+static u64 lcget_footer(char c[], u64 len, uint8_t f[]) {
+  u64 i = 0, j = strlen(c) - strlen(strstr(c, "-----E"));
   // check for the start of -----END CERTIFICATE-----
 
   while (c[i] != '\n') {f[i] = c[j]; i++; j++;} f[i-2] = '\0';
   return i + 1;
 }
 
-static uint64_t lcget_data(char c[],uint64_t h,uint64_t f,uint64_t l,char d[]) {
-  uint64_t co = l - f - h, i = 0;
+static u64 lcget_data(char c[],u64 h,u64 f,u64 l,char d[]) {
+  u64 co = l - f - h, i = 0;
 
   while (i < co) {d[i] = c[h + i]; i++;} d[i] = '\0';
   return i;
 }
 
-static uint64_t lcread_cert(char *fn, char c[], bool iscms) {
+static u64 lcread_cert(char *fn, char c[], bool iscms) {
   FILE* ptr = fopen(fn, "r");
-  uint64_t len = 0;
+  u64 len = 0;
 
   if (ptr == NULL) {printf("Can't find cert: %s\n", fn);}
   if (iscms) {
@@ -219,17 +219,17 @@ static uint64_t lcread_cert(char *fn, char c[], bool iscms) {
   return len;
 }
 
-static void lcprint_cert(uint64_t len, uint8_t h[], uint8_t f[], char d[]) {
+static void lcprint_cert(u64 len, uint8_t h[], uint8_t f[], char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
   printf("Data:\n%s\n", d); printf("Footer: %s\n", f);
 }
 
-uint64_t lchandle_cert(char *cert, char d[LEN]) {
+u64 lchandle_cert(char *cert, char d[LEN]) {
   uint8_t h[36], f[36];
   char crt[LEN];
-  uint64_t len = lcread_cert(cert, crt, 0), head = lcget_header(crt, h);
-  uint64_t foot = lcget_footer(crt, len, f);
-  uint64_t data = lcget_data(crt, head, foot, len, d);
+  u64 len = lcread_cert(cert, crt, 0), head = lcget_header(crt, h);
+  u64 foot = lcget_footer(crt, len, f);
+  u64 data = lcget_data(crt, head, foot, len, d);
 
   lcprint_cert(len, h, f, d);
   return data;
@@ -418,7 +418,7 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 
 //
 // public function to handle asn cert
-uint64_t lchandle_asn(char *cert) {
+u64 lchandle_asn(char *cert) {
   char c[8192];
 
   return lasn_dump_and_parse((uint8_t*)c, lcread_cert(cert, c, 1));

@@ -7,7 +7,7 @@
 #define cc const char
 #define u128 unsigned __int128
 #define cuc const uint8_t
-#define u64 unsigned long long long int
+#define u64 unsigned long long int // because linux u64 is not same as on mac
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 
@@ -72,10 +72,10 @@
 #define DI2 (DI * 2)
 #define EVEN(p) (!(p[0] & 1))
 
-typedef struct pt {uint64_t x[DI], y[DI];} pt;
-typedef struct prng_t {uint64_t a, b, c, d;} prng_t;
+typedef struct pt {u64 x[DI], y[DI];} pt;
+typedef struct prng_t {u64 a, b, c, d;} prng_t;
 
-static uint64_t curve_p[DI] = {0x00000000ffffffff, 0xffffffff00000000,
+static u64 curve_p[DI] = {0x00000000ffffffff, 0xffffffff00000000,
   0xfffffffffffffffe, 0xffffffffffffffff, 0xffffffffffffffff,0xffffffffffffffff},
   curve_b[DI] = {0x2a85c8edd3ec2aef, 0xc656398d8a2ed19d, 0x0314088f5013875a,
   0x181d9c6efe814112, 0x988e056be3f82d19, 0xb3312fa7e23ee7e4},

@@ -25,11 +25,11 @@ int main() {
 
   lciphers_encrypt(plain, BBL, key, iv, out, false);
   lciphers_decrypt(out, BBL, key, iv, in, false);
-  for (uint64_t i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
+  for (u64 i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
 
   lciphers_encrypt(plain, BBL, key, iv, out, true);
   lciphers_decrypt(out, BBL, key, iv, in, true);
-  for (uint64_t i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
+  for (u64 i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
   printf("OK\n");
   return 0;
 }

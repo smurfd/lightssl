@@ -7,11 +7,11 @@
 
 // Initial Hash Values: FIPS 180-3 sections 5.3.4 and 5.3.5
 extern const uint8_t hexdigits[], masks[8], markbit[8];
-extern const uint64_t h0[], k0[80];
+extern const u64 h0[], k0[80];
 
 // This structure will hold context information for the SHA hashing operation.
 typedef struct ctxs {
-  uint64_t imh[SHA_HSH_SZ / 8], len_hi, len_lo; // Intermediate Message Digest & Message length in bits
+  u64 imh[SHA_HSH_SZ / 8], len_hi, len_lo; // Intermediate Message Digest & Message length in bits
   int_least16_t msg_blk_i;                      // Message_Block array index
   uint8_t mb[SHA_BLK_SZ];                       // 1024-bit message blocks
   int compute, corrupt;                         // Is the hash computed. Cumulative corrupt code
@@ -38,7 +38,7 @@ typedef struct ctxh {
 // int lhash_hmac_result(ctxh *c, uint8_t digest[SHA_HSH_SZ]);
 // lh for LightHash
 // lh3 for LightHash3
-int lh(cc *ta, int l, uint64_t r, int n, int eb, cuc *k, int kl, cc *ra,int hs);
+int lh(cc *ta, int l, u64 r, int n, int eb, cuc *k, int kl, cc *ra,int hs);
 void lhnew(cc *in, char* s);
 void lh3new(uint8_t *n, char *ss);
 void lh3shake_test();

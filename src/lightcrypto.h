@@ -13,8 +13,8 @@ typedef struct header head;
 typedef struct sockaddr sock;
 typedef struct sockaddr_in sock_in;
 
-struct header {uint64_t len, ver, g, p;};
-struct keys {uint64_t publ, priv, shar;};
+struct header {u64 len, ver, g, p;};
+struct keys {u64 publ, priv, shar;};
 struct asn {
   uint8_t type, pos;
   uint32_t len;
@@ -50,23 +50,23 @@ static uint8_t AS5[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x02 ,0x30};
 int lckeys();
 int lclisten(int s, sock *cli);
 int lcinit(cc *host, cc *port, bool b);
-key lcgenkeys(uint64_t g, uint64_t p);
+key lcgenkeys(u64 g, u64 p);
 
 void lcend(int s);
-void lccrypt(uint64_t data, key k, uint64_t *enc);
-void lcgenshare(key *k1, key *k2, uint64_t p, bool srv);
+void lccrypt(u64 data, key k, u64 *enc);
+void lcgenshare(key *k1, key *k2, u64 p, bool srv);
 void lctransferkey(int s, bool snd, head *h, key *k);
-void lctransferdata(const int s, void* data, head *h, bool snd, uint64_t len);
+void lctransferdata(const int s, void* data, head *h, bool snd, u64 len);
 void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 
-uint64_t lchandle_cert(char *cert, char d[LEN]);
-uint64_t lchandle_asn(char *cert);
+u64 lchandle_cert(char *cert, char d[LEN]);
+u64 lchandle_asn(char *cert);
 uint32_t lcutf8decode(uint32_t c);
 uint32_t lcutf8encode(uint32_t cp);
 
 // Keep static functions
-// uint64_t lightcrypto_rand();
+// u64 lightcrypto_rand();
 // int lightcrypto_getblock();
 // void *lightcrypto_handler(void *sdesc);
 // void lightcrypto_recvkey(int s, head *h, key *k);
