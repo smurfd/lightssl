@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
   uint8_t s2[] = "smurfd and more stuff", s3[257], s4[LEN];
   int d = 0;
 
-  if (argc < 2) lchandle_cert("../ca.key", data);
+  if (argc < 2) {lchandle_cert("ca.key", data);}
   else lchandle_cert(argv[1], data);
   lcdecode64(s0, strlen(s0), &d, s3);
   lcencode64(s2, strlen("smurfd and more stuff"), &d, s1);
@@ -23,9 +23,9 @@ int main(int argc, char **argv) {
   lcdecode64((char*)data, strlen((char*)data), &d, s4);
 
   if (argc < 3) {
-    lchandle_asn("../ca128.cms");
-    lchandle_asn("../ca256.cms");
-    lchandle_asn("../ca256rc2.cms");
+    lchandle_asn("ca128.cms");
+    lchandle_asn("ca256.cms");
+    lchandle_asn("ca256rc2.cms");
   } else lchandle_asn(argv[2]);
   printf("OK\n");
   return 0;

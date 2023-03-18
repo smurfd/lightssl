@@ -7,7 +7,7 @@
 #define cc const char
 #define u128 unsigned __int128
 #define cuc const uint8_t
-
+#define u64 unsigned long long long int
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 
