@@ -1,4 +1,4 @@
-cat >> build/ca.cnf <<EOL
+cat >> `pwd`/build/ca.cnf <<EOL
 [ req ]
 encrypt_key = no
 utf8 = yes
@@ -20,21 +20,21 @@ EOL
 
 # release
 openssl req -x509 -sha256 -days 3650 -newkey rsa:4096 \
-  -config build/ca.cnf -keyout ./build/release/ca.key -out ./build/release/ca.crt &> /dev/null
+  -config `pwd`/build/ca.cnf -keyout `pwd`/build/release/ca.key -out `pwd`/build/release/ca.crt &> /dev/null
 
-openssl x509 -in ./build/release/ca.crt -text -noout &> /dev/null
+openssl x509 -in `pwd`/build/release/ca.crt -text -noout &> /dev/null
 
-echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > ./build/release/ca128.cms
-echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -outform der > ./build/release/ca256.cms
-echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -rc2-128 -outform der > ./build/release/ca256rc2.cms
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > `pwd`/build/release/ca128.cms
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -outform der > `pwd`/build/release/ca256.cms
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -rc2-128 -outform der > `pwd`/build/release/ca256rc2.cms
 
 # debug
 openssl req -x509 -sha256 -days 3650 -newkey rsa:4096 \
-  -config build/ca.cnf -keyout ./build/debug/ca.key -out ./build/debug/ca.crt &> /dev/null
+  -config `pwd`/build/ca.cnf -keyout `pwd`/build/debug/ca.key -out `pwd`/build/debug/ca.crt &> /dev/null
 
-openssl x509 -in ./build/debug/ca.crt -text -noout &> /dev/null
+openssl x509 -in `pwd`/build/debug/ca.crt -text -noout &> /dev/null
 
-echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > ./build/debug/ca128.cms
-echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -outform der > ./build/debug/ca256.cms
-echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -rc2-128 -outform der > ./build/debug/ca256rc2.cms
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > `pwd`/build/debug/ca128.cms
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -outform der > `pwd`/build/debug/ca256.cms
+echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -rc2-128 -outform der > `pwd`/build/debug/ca256rc2.cms
 
