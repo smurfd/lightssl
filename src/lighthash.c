@@ -578,7 +578,7 @@ uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
 }
 
 void lh3shake_test() {
-  uint8_t *buf = malloc(512*sizeof(uint8_t)), *str = malloc(512*sizeof(uint8_t)), next = 0, next2 = 0, s[200] = {0};
+  uint8_t buf[512] = {0}, str[512] = {0}, next = 0, next2 = 0, s[200] = {0};
   char sss[64], ss[64] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
 
   memset(buf, 0xA3, 20);
@@ -589,6 +589,4 @@ void lh3shake_test() {
   lh3bit2str(s, sss);
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
   if (*ss) {}
-  // verified assert via debug mode
-  if (buf) free(buf); if (str) free(str);
 }
