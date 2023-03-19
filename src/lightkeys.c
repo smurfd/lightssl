@@ -41,13 +41,13 @@ static int lkzero(const u64 *a) {
 //
 // Check if bit a or b is set, if so return diff from zero
 static u64 lkchk(const u64 *a, const u64 b) {
-  return (a[b / 64] & ((u64)1 << (b % 64)));//MOD(b, 64))));
+  return (a[b / 64] & ((u64)1 << MOD(b, 64)));
 }
 
 //
 // Count 64bit in a
 static u64 lkcount(const u64 *a) {
-  for (int i = DI - 1; i >= 0/* && a[i] == 0;*/ ;--i) {if (a[i]!=0) return (i + 1);}
+  for (int i = DI - 1; i >= 0; --i) {if (a[i] != 0) return (i + 1);}
   return 0;
 }
 
@@ -140,30 +140,7 @@ static void lkmul(u64 *a, const u64 *b, const u64 *c) {
       u128 p = (u128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
     }
-        a[k] = (uint64_t)r;
-        r = (r >> 64) | (((u128)r2) << 64);
-        r2 = 0;
-    //akrr(&a, k, &r, &r2);
-  }
-  a[di22] = (u64)r;
-}
-
-//
-// Square
-static void lksqr(u64 *a, const u64 *b) {
-  u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
-
-  for (u64 k = 0; k < di22; ++k) {
-    u64 min = (k < DI ? 0 : (k + 1) - DI);
-    for (u64 j = min; j <= k && j <= k - j; ++j) {
-      u128 p = (u128)b[j] * b[k - j]; // product
-      if (j < k - j) {r2 += p >> 127; p *= 2;}
-      r += p; r2 += (r < p);
-    }
-        a[k] = (uint64_t)r;
-        r = (r >> 64) | (((u128)r2) << 64);
-        r2 = 0;
-    //akrr(&a, k, &r, &r2);
+    akrr(&a, k, &r, &r2);
   }
   a[di22] = (u64)r;
 }
@@ -228,7 +205,7 @@ static void lkm_mul(u64 *a, const u64 *b, const u64 *c) {
 static void lkm_sqr(u64 *a, const u64 *b) {
   u64 p[DI2] = {0};
 
-  lkmul(p, b, b);/*lksqr(p, b); */lkm_mod(a, p);
+  lkmul(p, b, b); lkm_mod(a, p);
 }
 
 //
@@ -257,7 +234,7 @@ static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   if (pb < mb) {lkset(a, p); return;}
 
   lkclear(mm); lkclear(mm + DI);
-  ds = (pb - mb) / 64; bs = (pb-mb)%64;//MOD(pb - mb, 64);
+  ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);//(pb-mb)%64;//
   if (bs) {mm[ds + DI] = lkls(mm + ds, m, bs);}
   else {lkset(mm + ds, m);}
 
