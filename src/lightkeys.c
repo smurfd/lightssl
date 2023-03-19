@@ -234,7 +234,7 @@ static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   if (pb < mb) {lkset(a, p); return;}
 
   lkclear(mm); lkclear(mm + DI);
-  ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);//(pb-mb)%64;//
+  ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);
   if (bs) {mm[ds + DI] = lkls(mm + ds, m, bs);}
   else {lkset(mm + ds, m);}
 
@@ -488,46 +488,21 @@ int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   u64 tx[DI]={0}, ty[DI]={0}, tz[DI]={0}, r[DI]={0}, s[DI]={0}, u1[DI]={0}, u2[DI]={0}, z[DI]={0}, rx[DI]={0}, ry[DI]={0};
   pt public, sum;
 
-  printf("vrfy00: %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s\n", "publ", "hash", "sign", "public.x", "r", "s", "z", "u1", "u2", "sum.x", "sum.y", "tx", "ty", "rx", "ry");
-  for (int j = 0; j < DI; j++)
-    printf("vrfy01: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
   lkp_decom(&public, publ);
   lkset(r, sign);
   lkset(s, sign + KB);
-  for (int j = 0; j < DI; j++)
-    printf("vrfy02: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
 
   if (lkzero(r) || lkzero(s)) {return 0;}
   if (lkcmp(curve_n, r) != 1 || lkcmp(curve_n, s) != 1) {return 0;}
   lkm_inv(z, s, curve_n);
   lkset(u1, hash);
-  for (int j = 0; j < DI; j++)
-    printf("vrfy03: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
   lkm_mmul(u1, u1, z, curve_n); lkm_mmul(u2, r, z, curve_n);
 
   // Calculate sum = G + Q.
   lkset(sum.x, public.x); lkset(sum.y, public.y);
   lkset(tx, curve_g.x); lkset(ty, curve_g.y);
-  for (int j = 0; j < DI; j++)
-    printf("vrfy04: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
   lkm_sub(z, sum.x, tx, curve_p); lkp_add(tx, ty, sum.x, sum.y);
-  for (int j = 0; j < DI; j++)
-    printf("vrfy05: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
   lkm_inv(z, z, curve_p); lkp_appz(sum.x, sum.y, z);
-  for (int j = 0; j < DI; j++)
-    printf("vrfy06: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
   u64 nb = (lkbits(u1) > lkbits(u2) ? lkbits(u1) : lkbits(u2));
@@ -535,10 +510,6 @@ int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
 
   lkset(rx, point->x); lkset(ry, point->y); lkclear(z);
   z[0] = 1;
-  for (int j = 0; j < DI; j++)
-    printf("vrfy07: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
   for (int i = nb - 2; i >= 0; --i) {
     lkp_double(rx, ry, z);
     int index = (!!lkchk(u1, i)) | ((!!lkchk(u2, i)) << 1);
@@ -546,29 +517,10 @@ int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
     if (point) {
       lkset(tx, point->x); lkset(ty, point->y);
       lkp_appz(tx, ty, z); lkm_sub(tz, rx, tx, curve_p);
-      for (int j = 0; j < DI; j++)
-        printf("poin01: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-          publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-      printf("-----------------\n");
       lkp_add(tx, ty, rx, ry); lkm_mul(z, z, tz);
-      for (int j = 0; j < DI; j++)
-        printf("poin02: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-          publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-      printf("-----------------\n");
     }
   }
-  for (int j = 0; j < DI; j++)
-    printf("vrfy08: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
-
   lkm_inv(z, z, curve_p); lkp_appz(rx, ry, z);
   if (lkcmp(curve_n, rx) != 1) {lksub(rx, rx, curve_n);}
-  for (int j = 0; j < DI; j++)
-    printf("vrfy09: %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu, %20llu\n",
-        publ[j], hash[j], sign[j], public.x[j], r[j], s[j], z[j], u1[j], u2[j], sum.x[j], sum.y[j], tx[j], ty[j], rx[j], ry[j]);
-  printf("-----------------\n");
-  printf("vrfy00: %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s, %20s\n", "publ", "hash", "sign", "public.x", "r", "s", "z", "u1", "u2", "sum.x", "sum.y", "tx", "ty", "rx", "ry");
-
   return (lkcmp(rx, r) == 0);
 }
