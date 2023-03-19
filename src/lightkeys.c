@@ -149,7 +149,7 @@ static void lkmul(u64 *a, const u64 *b, const u64 *c) {
 //
 static void lko_mul(u64 *a, const u64 *b) {
   lkset(a, b);
-  u64 t[DI] = {0}, ovr = lkls(t, b, 32);
+  u64 t[DI], ovr = lkls(t, b, 32);
   a[DI + 1] = ovr + lkadd(a + 1, a + 1, t);
   a[DI + 2] = lkadd(a + 2, a + 2, b);
   ovr += lksub(a, a, t);
@@ -176,7 +176,8 @@ static void lkm_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
 //
 // Modulo mod
 static void lkm_mod(u64 *a, u64 *b) {
-  u64 t[DI2] = {0};
+  u64 t[DI2];
+
   while (!lkzero(b + DI)) {
     u64 ovr = 0;
     lkclear(t); lkclear(t + DI);
@@ -195,7 +196,7 @@ static void lkm_mod(u64 *a, u64 *b) {
 //
 // Modulo multiply
 static void lkm_mul(u64 *a, const u64 *b, const u64 *c) {
-  u64 p[DI2] = {0};
+  u64 p[DI2];
 
   lkmul(p, b, c); lkm_mod(a, p);
 }
@@ -203,7 +204,7 @@ static void lkm_mul(u64 *a, const u64 *b, const u64 *c) {
 //
 // Modulo square
 static void lkm_sqr(u64 *a, const u64 *b) {
-  u64 p[DI2] = {0};
+  u64 p[DI2];
 
   lkmul(p, b, b); lkm_mod(a, p);
 }
@@ -225,7 +226,7 @@ static void lkm_sqrt(u64 a[DI]) {
 //
 static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   u64 ds, bs, pb, mb = lkbits(m);
-  u64 p[DI2] = {0}, mm[DI2] = {0};
+  u64 p[DI2], mm[DI2];
 
   lkmul(p, b, c);
   pb = lkbits(p + DI);
@@ -261,7 +262,7 @@ static int lkp_zero(pt *a) {return (lkzero(a->x) && lkzero(a->y));}
 //
 // Points double
 static void lkp_double(u64 *a, u64 *b, u64 *c) {
-  u64 t4[DI] = {0}, t5[DI] = {0};
+  u64 t4[DI], t5[DI];
 
   if (lkzero(c)) {return;}
   lkm_sqr(t4, b); lkm_mul(t5, a, t4); lkm_sqr(t4, t4);
@@ -282,7 +283,7 @@ static void lkp_double(u64 *a, u64 *b, u64 *c) {
 }
 
 //
-//
+// decompress point
 static void lkp_decom(pt *a, const u64 b[KB + 1]) {
   u64 tr[DI] = {3};
 
@@ -298,7 +299,7 @@ static void lkp_decom(pt *a, const u64 b[KB + 1]) {
 //
 // Modify (x1, y1) => (x1 * z^2, y1 * z^3)
 static void lkp_appz(u64 *a, u64 *b, const u64 *z) {
-  u64 t[DI] = {0};
+  u64 t[DI];
 
   lkm_sqr(t, z); lkm_mul(a, a, t); lkm_mul(t, t, z); lkm_mul(b, b, t);
 }
@@ -306,7 +307,7 @@ static void lkp_appz(u64 *a, u64 *b, const u64 *z) {
 //
 // P = (x1, y1) => 2P, (x2, y2) => P'
 static void lkp_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
-  u64 z[DI] = {0};
+  u64 z[DI];
 
   lkset(c, a); lkset(d, b);
   lkclear(z); z[0] = 1;
@@ -317,7 +318,7 @@ static void lkp_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
 //
 // Points add
 static void lkp_add(u64 *a, u64 *b, u64 *c, u64 *d) {
-  u64 t5[DI] = {0};
+  u64 t5[DI];
 
   lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5);
   lkm_mul(a, a, t5); lkm_mul(c, c, t5); lkm_sub(d, d, b, curve_p);
@@ -332,7 +333,7 @@ static void lkp_add(u64 *a, u64 *b, u64 *c, u64 *d) {
 // Points add
 static void lkp_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
   // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
-  u64 t5[DI] = {0}, t6[DI] = {0}, t7[DI] = {0};
+  u64 t5[DI], t6[DI], t7[DI];
 
   lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
   lkm_mul(c, c, t5); lkm_add(t5, d, b, curve_p); lkm_sub(d, d, b, curve_p);
@@ -349,7 +350,7 @@ static void lkp_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
 //
 // Modulo inversion
 static void lkm_inv(u64 *r, u64 *p, u64 *m) {
-  u64 a[DI] = {0}, b[DI] = {0}, u[DI] = {0}, v[DI] = {0}, car;
+  u64 a[DI], b[DI], u[DI], v[DI], car;
   int cmpResult;
 
   if(lkzero(p)) {lkclear(r); return;}
@@ -389,7 +390,7 @@ static void lkm_inv(u64 *r, u64 *p, u64 *m) {
 //
 // Point multiplication
 static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
-  u64 Rx[2][DI], Ry[2][DI], z[DI] = {0};
+  u64 Rx[2][DI], Ry[2][DI], z[DI];
   int nb;
 
   lkset(Rx[1], p->x); lkset(Ry[1], p->y);
@@ -452,7 +453,7 @@ int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
 //
 // create a secret from the public and private key
 int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB], u64 random[DI]) {
-  u64 private[DI] = {0};
+  u64 private[DI];
   pt public, product;
 
   lkp_decom(&public, publ);
@@ -485,7 +486,7 @@ int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
 //
 // Verify signature
 int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
-  u64 tx[DI]={0}, ty[DI]={0}, tz[DI]={0}, r[DI]={0}, s[DI]={0}, u1[DI]={0}, u2[DI]={0}, z[DI]={0}, rx[DI]={0}, ry[DI]={0};
+  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
   pt public, sum;
 
   lkp_decom(&public, publ);
