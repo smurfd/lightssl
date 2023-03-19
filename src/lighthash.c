@@ -539,13 +539,13 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void lh3new(uint8_t *n, char *s) {
-  uint8_t *m = malloc(256 * sizeof(uint8_t)), z1[] = {2}, *ss = malloc(256 * sizeof(uint8_t));
+  uint8_t *m = malloc(256 * sizeof(uint8_t)), z1[] = {2};
+  uint8_t *ss = malloc(256 * sizeof(uint8_t));
   u64 d = strlen((char*)n) * 8;
 
   lh3cat(n, d, z1, 2, &m);
   lh3sponge(m, d + 2, &ss);
   lh3bit2str(ss, s);
-  for (int i = 0; i < 128; i++) printf("%d %01x : %d %c :: %d %01x ::: %llu\n", ss[i], ss[i], s[i], s[i], m[i], m[i], (d+2));
   free(m);free(ss);
 }
 
