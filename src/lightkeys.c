@@ -27,6 +27,23 @@
 #include "lightkeys.h"
 #include "lightdefs.h"
 
+static void lkpack(u64 n[DI], const u64 b[KB]) {
+  for(u64 i = 0; i < DI; ++i) {
+    const uint64_t *d = b + 8 * (DI - 1 - i);
+    n[i] = ((uint64_t)d[0] << 56) | ((uint64_t)d[1] << 48) |
+           ((uint64_t)d[2] << 40) | ((uint64_t)d[3] << 32) |
+           ((uint64_t)d[4] << 24) | ((uint64_t)d[5] << 16) |
+           ((uint64_t)d[6] << 8)  | (uint64_t)d[7];
+  }
+}
+
+static void lkunpack(uint64_t b[KB], const uint64_t n[DI]) {
+  for(u64 i = 0; i < DI; ++i) {
+    uint64_t *d = b + 8 * (DI - 1 - i);
+    for (u64 j = 0; j < 8; j++) {d[j] = n[i] >> ((7 - j) * 8);}
+  }
+}
+
 //
 // Clear a
 static void lkclear(u64 *a) {for (int i = 0; i < DI; ++i) {a[i] = 0;}}
@@ -60,7 +77,7 @@ static void lkset(u64 *a, const u64 *b) {
 //
 // Check number of bits needed for a
 static u64 lkbits(u64 *a) {
-  u64 i, nd = lkcount(a),  d;
+  u64 i, nd = lkcount(a), d;
 
   if (nd == 0) return 0;
   d = a[nd-1];
@@ -287,7 +304,7 @@ static void lkp_double(u64 *a, u64 *b, u64 *c) {
 static void lkp_decom(pt *a, const u64 b[KB + 1]) {
   u64 tr[DI] = {3};
 
-  lkset(a->x, b + 1);
+  lkpack(a->x, b + 1);
   lkm_sqr(a->y, a->x);
   lkm_sub(a->y, a->y, tr, curve_p);
   lkm_mul(a->y, a->y, a->x);
@@ -445,7 +462,7 @@ int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
     lkp_mul(&public, &curve_g, private, NULL);
     if (!lkp_zero(&public)) break;
   }
-  lkset(priv, private); lkset(publ + 1, public.x);
+  lkunpack(priv, private); lkunpack(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
   return 1;
 }
@@ -457,9 +474,9 @@ int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB], u64 ra
   pt public, product;
 
   lkp_decom(&public, publ);
-  lkset(private, priv);
+  lkpack(private, priv);
   lkp_mul(&product, &public, private, random);
-  lkset(secr, product.x);
+  lkunpack(secr, product.x);
   return !lkp_zero(&product);
 }
 
@@ -475,11 +492,13 @@ int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
     lkp_mul(&p, &curve_g, k, NULL);
     if (lkcmp(curve_n, p.x) != 1) {lksub(p.x, p.x, curve_n);}
   } while (lkzero(p.x));
-  lkset(sign, p.x);
-  lkset(tmp, priv); lkm_mmul(s, p.x, tmp, curve_n);
-  lkset(tmp, hash); lkm_add(s, tmp, s, curve_n);
+  lkunpack(sign, p.x);
+  lkpack(tmp, priv);
+  lkm_mmul(s, p.x, tmp, curve_n);
+  lkpack(tmp, hash);
+  lkm_add(s, tmp, s, curve_n);
   lkm_inv(k, k, curve_n); lkm_mmul(s, s, k, curve_n);
-  lkset(sign + KB, s);
+  lkunpack(sign + KB, s);
   return 1;
 }
 
@@ -490,13 +509,11 @@ int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   pt public, sum;
 
   lkp_decom(&public, publ);
-  lkset(r, sign);
-  lkset(s, sign + KB);
-
+  lkpack(r, sign); lkpack(s, sign + KB);
   if (lkzero(r) || lkzero(s)) {return 0;}
   if (lkcmp(curve_n, r) != 1 || lkcmp(curve_n, s) != 1) {return 0;}
   lkm_inv(z, s, curve_n);
-  lkset(u1, hash);
+  lkpack(u1, hash);
   lkm_mmul(u1, u1, z, curve_n); lkm_mmul(u2, r, z, curve_n);
 
   // Calculate sum = G + Q.
