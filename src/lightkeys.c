@@ -29,33 +29,32 @@
 
 //
 // Clear a
-static void lkclear(u64 *a) {for (uint8_t i = 0; i < DI; ++i) {a[i] = 0;}}
+static void lkclear(u64 *a) {for (int i = 0; i < DI; ++i) {a[i] = 0;}}
 
 //
 // Check if a is zero, return 1, if not return 0
 static int lkzero(const u64 *a) {
-  for (uint8_t i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
+  for (int i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
   return 1;
 }
 
 //
 // Check if bit a or b is set, if so return diff from zero
 static u64 lkchk(const u64 *a, const u64 b) {
-  return (a[b / 64] & ((u64)1 << (MOD(b, 64))));
+  return (a[b / 64] & ((u64)1 << (b % 64)));//MOD(b, 64))));
 }
 
 //
 // Count 64bit in a
 static u64 lkcount(const u64 *a) {
-  int i;
-  for (i = DI - 1; i >= 0 && a[i] == 0; --i) {}
-  return (i + 1);
+  for (int i = DI - 1; i >= 0/* && a[i] == 0;*/ ;--i) {if (a[i]!=0) return (i + 1);}
+  return 0;
 }
 
 //
 // Set a from b
 static void lkset(u64 *a, const u64 *b) {
-  for (uint8_t i = 0; i < DI; ++i) {a[i] = b[i];}
+  for (int i = 0; i < DI; ++i) {a[i] = b[i];}
 }
 
 //
@@ -64,9 +63,9 @@ static u64 lkbits(u64 *a) {
   u64 i, nd = lkcount(a),  d;
 
   if (nd == 0) return 0;
-  nd--; d = a[nd];
+  d = a[nd-1];
   for (i = 0; d; ++i) d >>= 1;
-  return ((nd) * 64 + i);
+  return ((nd-1) * 64 + i);
 }
 
 //
@@ -84,7 +83,7 @@ static int lkcmp(const u64 *a, const u64 *b) {
 static u64 lkls(u64 *a, const u64 *b, const u64 c) {
   u64 ovr = 0;
 
-  for (uint8_t i = 0; i < DI; ++i) {
+  for (int i = 0; i < DI; ++i) {
     u64 t = b[i]; a[i] = (t << c) | ovr;
     ovr = t >> (64 - c);
   }
@@ -105,7 +104,7 @@ static void lkrs1(u64 *a) {
 static u64 lkadd(u64 *a, const u64 *b, const u64 *c) {
   u64 ovr = 0;
 
-  for (uint8_t i = 0; i < DI; ++i) {
+  for (int i = 0; i < DI; ++i) {
     u64 s = b[i] + c[i] + ovr;
     if (s != b[i]) {ovr = (s < b[i]);} a[i] = s;
   }
@@ -117,7 +116,7 @@ static u64 lkadd(u64 *a, const u64 *b, const u64 *c) {
 static u64 lksub(u64 *a, const u64 *b, const u64 *c) {
   u64 ovr = 0;
 
-  for (uint8_t i = 0; i < DI; ++i) {
+  for (int i = 0; i < DI; ++i) {
     u64 d = b[i] - c[i] - ovr;
     if (d != b[i]) {ovr = (d > b[i]);} a[i] = d;
   }
@@ -135,13 +134,16 @@ static void akrr(u64 **a, u64 k, u128 *r, u64 *r2) {
 static void lkmul(u64 *a, const u64 *b, const u64 *c) {
   u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
-  for (uint8_t k = 0; k < di22; ++k) {
+  for (u64 k = 0; k < di22; ++k) {
     u64 min = (k < DI ? 0 : (k + 1) - DI);
-    for (uint8_t j = min; j <= k && j < DI; ++j) {
+    for (u64 j = min; j <= k && j < DI; ++j) {
       u128 p = (u128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
     }
-    akrr(&a, k, &r, &r2);
+        a[k] = (uint64_t)r;
+        r = (r >> 64) | (((u128)r2) << 64);
+        r2 = 0;
+    //akrr(&a, k, &r, &r2);
   }
   a[di22] = (u64)r;
 }
@@ -151,14 +153,17 @@ static void lkmul(u64 *a, const u64 *b, const u64 *c) {
 static void lksqr(u64 *a, const u64 *b) {
   u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
 
-  for (uint8_t k = 0; k < di22; ++k) {
+  for (u64 k = 0; k < di22; ++k) {
     u64 min = (k < DI ? 0 : (k + 1) - DI);
-    for (uint8_t j = min; j <= k && j <= k - j; ++j) {
+    for (u64 j = min; j <= k && j <= k - j; ++j) {
       u128 p = (u128)b[j] * b[k - j]; // product
       if (j < k - j) {r2 += p >> 127; p *= 2;}
       r += p; r2 += (r < p);
     }
-    akrr(&a, k, &r, &r2);
+        a[k] = (uint64_t)r;
+        r = (r >> 64) | (((u128)r2) << 64);
+        r2 = 0;
+    //akrr(&a, k, &r, &r2);
   }
   a[di22] = (u64)r;
 }
@@ -173,7 +178,7 @@ static void lko_mul(u64 *a, const u64 *b) {
   ovr += lksub(a, a, t);
   u64 d = a[DI] - ovr;
   if (d > a[DI]) {
-    for (uint8_t i = 1+DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
+    for (u64 i = 1+DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
   }
   a[DI] = d;
 }
@@ -194,12 +199,13 @@ static void lkm_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
 //
 // Modulo mod
 static void lkm_mod(u64 *a, u64 *b) {
+  u64 t[DI2] = {0};
   while (!lkzero(b + DI)) {
-    u64 ovr = 0, t[DI2] = {0};
+    u64 ovr = 0;
     lkclear(t); lkclear(t + DI);
     lko_mul(t, b + DI);
     lkclear(b + DI);
-    for (uint8_t i = 0; i < DI + 3; ++i) {
+    for (u64 i = 0; i < DI + 3; ++i) {
       u64 s = b[i] + t[i] + ovr;
       if (s != b[i]) {ovr = (s < b[i]);}
       b[i] = s;
@@ -222,7 +228,7 @@ static void lkm_mul(u64 *a, const u64 *b, const u64 *c) {
 static void lkm_sqr(u64 *a, const u64 *b) {
   u64 p[DI2] = {0};
 
-  lksqr(p, b); lkm_mod(a, p);
+  lkmul(p, b, b);/*lksqr(p, b); */lkm_mod(a, p);
 }
 
 //
@@ -251,7 +257,7 @@ static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   if (pb < mb) {lkset(a, p); return;}
 
   lkclear(mm); lkclear(mm + DI);
-  ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);
+  ds = (pb - mb) / 64; bs = (pb-mb)%64;//MOD(pb - mb, 64);
   if (bs) {mm[ds + DI] = lkls(mm + ds, m, bs);}
   else {lkset(mm + ds, m);}
 
@@ -453,15 +459,13 @@ void prng_init(u64 seed) {
 
 //
 // Make public key
-int lkmake_keys(u64 publ[KB + 1], u64 priv[KB]) {
-  u64 private[DI], co = 1; // range [1, n-1]
+int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
   pt public;
 
-  while(co) {
-    if (lkzero(private)) {continue;}
+  while(true) {
     if (lkcmp(curve_n, private) != 1) {lksub(private, private, curve_n);}
     lkp_mul(&public, &curve_g, private, NULL);
-    co = lkp_zero(&public);
+    if (!lkp_zero(&public)) break;
   }
   lkset(priv, private); lkset(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
@@ -470,34 +474,34 @@ int lkmake_keys(u64 publ[KB + 1], u64 priv[KB]) {
 
 //
 // create a secret from the public and private key
-int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB]) {
-  u64 private[DI] = {0}, random[DI] = {0};
+int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB], u64 random[DI]) {
+  u64 private[DI] = {0};
   pt public, product;
 
   lkp_decom(&public, publ);
   lkset(private, priv);
   lkp_mul(&product, &public, private, random);
   lkset(secr, product.x);
-  return lkp_zero(&product);
+  return !lkp_zero(&product);
 }
 
 //
 // Create signature
-int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2]) {
-  u64 k[DI], tmp[DI], s[DI], co = 1;
+int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
+  u64 tmp[DI], s[DI];
   pt p;
 
-  while (co) {
+  do {
     if (lkzero(k)) {continue;}
     if (lkcmp(curve_n, k) != 1) {lksub(k, k, curve_n);}
     lkp_mul(&p, &curve_g, k, NULL);
     if (lkcmp(curve_n, p.x) != 1) {lksub(p.x, p.x, curve_n);}
-    co = lkzero(p.x);
-  }
+  } while (lkzero(p.x));
+  lkset(sign, p.x);
   lkset(tmp, priv); lkm_mmul(s, p.x, tmp, curve_n);
   lkset(tmp, hash); lkm_add(s, tmp, s, curve_n);
   lkm_inv(k, k, curve_n); lkm_mmul(s, s, k, curve_n);
-  lkset(sign, p.x); lkset(sign + KB, s);
+  lkset(sign + KB, s);
   return 1;
 }
 
