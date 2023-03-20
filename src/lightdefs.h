@@ -1,6 +1,6 @@
 //                                                                            //
-#ifndef DEFS_H
-#define DEFS_H 1
+#ifndef LIGHTDEFS_H
+#define LIGHTDEFS_H 1
 #include <stdint.h>
 
 // Only defines here, no typedefs

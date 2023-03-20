@@ -16,14 +16,9 @@
 
 // secp384r1
 // Rewritten from https://github.com/jestan/easy-ecc
-#include <math.h>
-#include <time.h>
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <assert.h>
 #include "lightkeys.h"
 #include "lightdefs.h"
 
