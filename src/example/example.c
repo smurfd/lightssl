@@ -12,4 +12,5 @@ int main() {
   printf("s=%s\n", ss);
   printf("------ // -----\n");
   assert(strcmp(ss, hash) == 0);
+  assert(strcmp(ss + 1, hash) != 0); // Assert failure
 }

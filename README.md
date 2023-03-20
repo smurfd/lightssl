@@ -14,46 +14,47 @@ Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
 
 ```bash
 rm -rf build
-cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_C_COMPILER=clang
+cmake -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug -DCMAKE_C_COMPILER=clang
 sh ./src/scripts/gen_cert.sh
-make -Cbuild
-make -Cbuild test
+make -Cbuild/debug
+make -Cbuild/debug test
 ```
-`./scr/scripts/build.sh` has those parts in it
+`./scr/scripts/build.sh` has those parts in it. Use the Debug type to have
+asserts working.
 
 ### Tests
 Test server, in one terminal run
 ```
-./build/test_lightcrypto_srv
+./build/debug/debug_test_crypto_srv
 ```
 Test client, in another terminal run
 ```
-./build/test_lightcrypto_cli
+./build/debug/debug_test_crypto_cli
 ```
 Test hashing (SHA2-256)
 ```
-./build/test_hash_sha[0-4]
+./build/debug/debug_test_hash_sha[0-4]
 ```
 Test hashing (HMAC-256)
 ```
-./build/test_hash_hmac[0-4]
+./build/debug/debug_test_hash_hmac[0-4]
 ```
 Test hashing (SHA3-512)
 ```
-./build/test_hash3
+./build/debug/debug_test_hash3
 ```
 Test keys (secp384r1)
 ```
-./build/test_keys
+./build/debug/debug_test_keys
 ```
 Test ciphers (AES)
 ```
-./build/test_ciphers
+./build/debug/debug_test_ciphers
 ```
 Test crypto (ASN.1)
 ```
-./build/test_crypto build/ca.key build/ca128.csm  #AES 128
-./build/test_crypto build/ca.key build/ca256.csm  #AES 256
+./build/debug/debug_test_crypto build/ca.key build/ca128.csm  #AES 128
+./build/debug/debug_test_crypto build/ca.key build/ca256.csm  #AES 256
 ```
 ### Use lightssl
 See the [tests](https://github.com/smurfd/lightssl/tree/main/src/tests)
