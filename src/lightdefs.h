@@ -15,26 +15,6 @@
 #define RD() (rand() & 0x7FFFFFFFFFFFFFFF)
 #define RAND64() RD() << 48 ^ RD() << 35 ^ RD() << 22 ^ RD() << 9 ^ RD() >> 4
 
-// Hash
-#define SHA_CH00(x, y, z) (((x) & ((y) ^ (z))) ^ (z))
-#define SHA_MAJ0(x, y, z) (((x) & ((y) | (z))) | ((y) & (z)))
-#define SHA_PARI(x, y, z)  ((x) ^  (y) ^ (z))
-
-// Define the SHA shift, rotate left and rotate right macros
-#define SHA_SHRI(b, w)  (((w)) >> (b))
-#define SHA_ROTR(b, w) ((((w)) >> (b)) | (((w)) << (64 - (b))))
-
-// Define the SHA SIGMA and sigma macros
-#define SHA_S0(w) (SHA_ROTR(28, w) ^ SHA_ROTR(34, w) ^ SHA_ROTR(39, w))
-#define SHA_S1(w) (SHA_ROTR(14, w) ^ SHA_ROTR(18, w) ^ SHA_ROTR(41, w))
-#define SHA_s0(w) (SHA_ROTR( 1, w) ^ SHA_ROTR( 8, w) ^ SHA_SHRI( 7, w))
-#define SHA_s1(w) (SHA_ROTR(19, w) ^ SHA_ROTR(61, w) ^ SHA_SHRI( 6, w))
-
-// Add "length" to the length. Set Corrupted when overflow has occurred.
-#define SHA_L(c) (++c->len_hi == 0) ? SHA_ITL : (c)->corrupt
-#define SHA_T(c, l) c->corrupt = ((c->len_lo += l) < 0)
-#define SHA_ADDL(c, l) (SHA_T(c, l) && SHA_L(c))
-
 // Lightciphers
 #define NB 4
 #define NK 8
@@ -46,20 +26,6 @@
 
 // Lightcrypto
 #define BLOCK 1024
-
-// Lighthash
-// These constants hold size information for each of the SHA hashing operations
-#define SHA_BLK_SZ 128                           // SHA Message Block Size
-#define SHA_HSH_SZ 64                            // SHA Hash Size
-#define SHA_HSH_SB 512                           // SHA Hash Size Bits
-
-// All SHA functions return one of these values.
-#define SHA_OK 0                                 // Success
-#define SHA_NULL 1                               // Null pointer parameter
-#define SHA_ITL 2                                // Input data too long
-#define SHA_ERR 3                                // State error
-#define SHA_BAD 4                                // passed a bad parameter
-#define LENGTH(x) (sizeof(x) - 1)
 
 // Lighthash3
 #define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
