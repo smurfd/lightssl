@@ -1,13 +1,8 @@
 //                                                                            //
-#include <time.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <assert.h>
 #include <stdint.h>
-#include <string.h>
-#include <inttypes.h>
 #include "../lightcrypto.h"
 
 int main(int argc, char **argv) {

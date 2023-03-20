@@ -5,7 +5,7 @@
 #include "../lightdefs.h"
 #include "../lighthash.h"
 
-#define TEST9_512                                                            \
+#define TEST                                                                 \
   "\x3a\xdd\xec\x85\x59\x32\x16\xd1\x61\x9a\xa0\x2d\x97\x56\x97\x0b\xfc\x70" \
   "\xac\xe2\x74\x4f\x7c\x6b\x27\x88\x15\x10\x28\xf7\xb6\xa2\x55\x0f\xd7\x4a" \
   "\x7e\x6e\x69\xc2\xc9\xb4\x5f\xc4\x54\x96\x6d\xc3\x1d\x2e\x10\xda\x1f\x95" \
@@ -16,7 +16,7 @@
   "\x6d\xd4\xbd\xd8\x77\x78\xc9\x04\x3b\x93\x84\xf5\x49\x06"
 
 int main() {
-  assert(lh(TEST9_512, LENGTH(TEST9_512), 1, 3, 0x80, 0, 0, "32BA76FC30EAA0208A"
+  assert(lh(TEST, LENGTH(TEST), 1, 3, 0x80, 0, 0, "32BA76FC30EAA0208A"
     "EB50FFB5AF1864FDBF17902A4DC0A682C61FCEA6D92B783267B21080301837F59DE79C6B33"
     "7DB2526F8A0A510E5E53CAFED4355FE7C2F1", 64) == 1);
   printf("OK\n");
