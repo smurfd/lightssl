@@ -29,17 +29,17 @@
 
 static void lkpack(u64 n[DI], const u64 b[KB]) {
   for(u64 i = 0; i < DI; ++i) {
-    const uint64_t *d = b + 8 * (DI - 1 - i);
-    n[i] = ((uint64_t)d[0] << 56) | ((uint64_t)d[1] << 48) |
-           ((uint64_t)d[2] << 40) | ((uint64_t)d[3] << 32) |
-           ((uint64_t)d[4] << 24) | ((uint64_t)d[5] << 16) |
-           ((uint64_t)d[6] << 8)  | (uint64_t)d[7];
+    const u64 *d = b + 8 * (DI - 1 - i);
+    n[i] = ((u64)d[0] << 56) | ((u64)d[1] << 48) |
+           ((u64)d[2] << 40) | ((u64)d[3] << 32) |
+           ((u64)d[4] << 24) | ((u64)d[5] << 16) |
+           ((u64)d[6] << 8)  | (u64)d[7];
   }
 }
 
-static void lkunpack(uint64_t b[KB], const uint64_t n[DI]) {
+static void lkunpack(u64 b[KB], const u64 n[DI]) {
   for(u64 i = 0; i < DI; ++i) {
-    uint64_t *d = b + 8 * (DI - 1 - i);
+    u64 *d = b + 8 * (DI - 1 - i);
     for (u64 j = 0; j < 8; j++) {d[j] = n[i] >> ((7 - j) * 8);}
   }
 }
