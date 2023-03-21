@@ -18,12 +18,6 @@ static u64 ROL64(u64 a, u64 n) {
 }
 
 //
-// Convert a hex bitstring to a string
-static void lh3bit2str(uint8_t *ss, char *s) {
-  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
-}
-
-//
 // The state for the KECCAK-p[b, nr] permutation is comprised of b bits.
 // The specifications in this Standard contain two other quantities related to
 // b: b/25 and log2(b/25), denoted by w and l, respectively.
@@ -177,7 +171,7 @@ static uint8_t lh3rc(u64 t) {
 static void lh3iota(u64 (*A)[5][5], u64 ir) {
   u64 r = 0;
 
-  for (u64 i = 0; i <= 6; i++) {r += ROL64(lh3rc(i+7*ir),(int)pow(2,i)-1);}
+  for (u64 i = 0; i <= 6; i++) {r += ROL64(lh3rc(i + 7 * ir), (int)pow(2,i)-1);}
   (*A)[0][0] ^= r;
 }
 
@@ -303,26 +297,24 @@ void lh3shake_xof(uint8_t *sm, uint8_t (*s)[200]) {
 }
 
 uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
-  uint8_t j = next;
+  uint8_t j = next, co = 32;
 
-  if (upd) {
-    for (size_t i = 0; i < 20; i++) {
-      sm[j++] ^= 163;//sm[i];
-      if (j >= 136) {
-        lh3keccak_p(sm, sm); j = 0;
-      }
-    }
-  } else {
-    for (size_t i = 0; i < 32; i++) {
-      if (j >= 136) {
-        lh3keccak_p(sm, sm); j = 0;
-      }
-      s[i] = sm[j++];
-    }
+  if (upd) co = 20;
+  for (size_t i = 0; i < co; i++) {
+    if (upd) sm[j++] ^= s[i];
+    if (j >= 136) {lh3keccak_p(sm, sm); j = 0;}
+    if (!upd) s[i] = sm[j++];
   }
   return j;
 }
 
+//
+// Convert a hex bitstring to a string
+void lh3bit2str(uint8_t *ss, char *s) {
+  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
+}
+
+/*
 void lh3shake_test() {
   uint8_t buf[512] = {0}, str[512] = {0}, next = 0, next2 = 0, s[200] = {0};
   char sss[64], ss[64] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
@@ -334,5 +326,5 @@ void lh3shake_test() {
   for (int j = 0; j < 512; j += 32) {next2 = lh3shake_touch(str, s, next2, false);}
   lh3bit2str(s, sss);
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
-  if (*ss) {}
-}
+  if (*ss) {} // avoid warning of not used
+}*/
