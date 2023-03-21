@@ -197,37 +197,32 @@ const uint8_t GF[15][256] = {{0x0}, {0x0},
   0xfd, 0xa7, 0xa9, 0xbb, 0xb5, 0x9f, 0x91, 0x83, 0x8d}}; // mul 14
 
 // https://en.wikipedia.org/wiki/Rijndael_MixColumns & Matrix representation
-const uint8_t MIX[4][4] = {
-  {2, 3, 1, 1}, {1, 2, 3, 1},
+const uint8_t MIX[4][4] = {{2, 3, 1, 1}, {1, 2, 3, 1},
   {1, 1, 2, 3}, {3, 1, 1, 2}};
 
 // https://en.wikipedia.org/wiki/Rijndael_MixColumns & InverseMixColumns
-const uint8_t MIXINV[4][4] = {
-  {14, 11, 13, 9}, {9, 14, 11, 13},
+const uint8_t MIXINV[4][4] = {{14, 11, 13, 9}, {9, 14, 11, 13},
   {13, 9, 14, 11}, {11, 13, 9, 14}};
 
 //
 // Copy a state array to another
 static void copy_state(uint8_t s[4][NB], uint8_t in[4][NB]) {
-  for (int j = 0; j < 4; ++j) {
+  for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i) {s[j][i] = in[j][i];}
-  }
 }
 
 //
 // Copy to a state array from array
 static void state_from_arr(uint8_t s[4][NB], uint8_t in[NB4]) {
-  for (int j = 0; j < 4; ++j) {
+  for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i) {s[j][i] = in[j + 4 * i];}
-  }
 }
 
 //
 // Copy to array from state array
 static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
-  for (int j = 0; j < 4; ++j) {
+  for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i) {s[j + 4 * i] = in[j][i];}
-  }
 }
 
 //
@@ -242,20 +237,17 @@ static void lciphers_shiftrow(uint8_t state[4][NB], uint32_t i, uint32_t n) {
 //
 // 5.3.x
 static void lciphers_invshiftrows(uint8_t state[4][NB]) { // See Sec. 5.3.1
-  lciphers_shiftrow(state, 1, NB - 1);
-  lciphers_shiftrow(state, 2, NB - 2);
-  lciphers_shiftrow(state, 3, NB - 3);
+  for (int i = 1; i < 4; i++) lciphers_shiftrow(state, i, NB - i);
 }
 
 //
 //
 static void lciphers_invsubbytes(uint8_t state[4][NB]) { // See Sec. 5.3.2
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++)
     for (int j = 0; j < NB; j++) {
       uint8_t s = state[i][j];
       state[i][j] = SBOXINV[s / 16][s % 16];
     }
-  }
 }
 
 //
@@ -280,9 +272,8 @@ static void lciphers_addroundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec.
   uint8_t tmp[4][NB];
 
   copy_state(tmp, state);
-  for (int j = 0; j < NB; ++j) {
+  for (int j = 0; j < NB; ++j)
     for (int i = 0; i < 4; ++i) {tmp[i][j] = state[i][j] ^ w[i + 4 * j];}
-  }
   copy_state(state, tmp);
 }
 
@@ -300,9 +291,7 @@ static void lciphers_subbytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
 //
 //
 static void lciphers_shiftrows(uint8_t state[4][NB]) { // See Sec. 5.1.2
-  lciphers_shiftrow(state, 1, 1);
-  lciphers_shiftrow(state, 2, 2);
-  lciphers_shiftrow(state, 3, 3);
+  for (int i = 1; i < 4; i++) lciphers_shiftrow(state, i, i);
 }
 
 //
