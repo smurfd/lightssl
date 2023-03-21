@@ -35,6 +35,10 @@ Test hashing (SHA3-512)
 ```
 ./build/debug/debug_test_hash3
 ```
+Test hashing Shake
+```
+./build/debug/debug_test_hash3_shake
+```
 Test keys (secp384r1)
 ```
 ./build/debug/debug_test_keys
