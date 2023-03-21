@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "../lightcrypto.h"
 
-int main() {
+int main(void) {
   int s = lcinit("127.0.0.1", "9998", true);
   sock *cli = NULL;
 

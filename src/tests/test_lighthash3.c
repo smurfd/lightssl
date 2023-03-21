@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "../lighthash.h"
 
-int main() {
+int main(void) {
   uint8_t *smurfd = (uint8_t*)"smurfd";
   char s[256] = {0};
 
