@@ -16,7 +16,7 @@ int main() {
   for (int j = 0; j < 512; j += 32) {next2 = lh3shake_touch(str, s, next2, false);}
   lh3bit2str(s, sss);
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
-  if (*ss) {} // avoid warning of not used
+  if (*ss) {} // get rid of not used var warning
   printf("OK\n");
   return 0;
 }
