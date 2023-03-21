@@ -8,9 +8,9 @@ Do SSL really need to be so hard?
 Ciphers: AES<br>
 Keys: ECDSA<br>
 Crypto: ASN1<br>
-Hashing: SHA2-256 & HMAC, SHA3-256, SHA3-512<br>
+Hashing: SHA3-256, SHA3-512<br>
 
-### Compile lightssl
+### Compile lightSSL
 
 ```bash
 rm -rf build
@@ -31,14 +31,6 @@ Test client, in another terminal run
 ```
 ./build/debug/debug_test_crypto_cli
 ```
-Test hashing (SHA2-256)
-```
-./build/debug/debug_test_hash_sha[0-4]
-```
-Test hashing (HMAC-256)
-```
-./build/debug/debug_test_hash_hmac[0-4]
-```
 Test hashing (SHA3-512)
 ```
 ./build/debug/debug_test_hash3
@@ -56,16 +48,16 @@ Test crypto (ASN.1)
 ./build/debug/debug_test_crypto build/ca.key build/ca128.csm  #AES 128
 ./build/debug/debug_test_crypto build/ca.key build/ca256.csm  #AES 256
 ```
-### Use lightssl
-See the [tests](https://github.com/smurfd/lightssl/tree/main/src/tests)
+### Use lightSSL
+See the [tests](https://github.com/smurfd/lightssl/tree/master/src/tests)
 
 ### Compile your project (in the src/example folder)
 ```bash
-clang -c -o lighthash.o ../src/lighthash.c -fPIC
-clang -c -o lightkeys.o ../src/lightkeys.c -fPIC
-clang -c -o lightcrypto.o ../src/lightcrypto.c -fPIC
-clang -c -o lightciphers.o ../src/lightciphers.c -fPIC
-clang example.c -o example lighthash.o
+clang -c -o lighthash.o ../lighthash.c -fPIC -Wall -pedantic -O3
+clang -c -o lightkeys.o ../lightkeys.c -fPIC -Wall -pedantic -O3
+clang -c -o lightcrypto.o ../lightcrypto.c -fPIC -Wall -pedantic -O3
+clang -c -o lightciphers.o ../lightciphers.c -fPIC -Wall -pedantic -O3
+clang example.c -o example lighthash.o -Wall -pedantic -O3
 ./example
 rm -f example *.o
 ```
