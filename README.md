@@ -49,8 +49,8 @@ Test ciphers (AES)
 ```
 Test crypto (ASN.1)
 ```
-./build/debug/debug_test_crypto build/ca.key build/ca128.csm  #AES 128
-./build/debug/debug_test_crypto build/ca.key build/ca256.csm  #AES 256
+./build/debug/debug_test_crypto build/debug/ca.key build/debug/ca128.cms  #AES 128
+./build/debug/debug_test_crypto build/debug/ca.key build/debug/ca256.cms  #AES 256
 ```
 ### Use lightSSL
 See the [tests](https://github.com/smurfd/lightssl/tree/master/src/tests)
