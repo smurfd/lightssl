@@ -6,7 +6,7 @@
 
 int main(void) {
   uint8_t *smurfd = (uint8_t*)"smurfd";
-  char s[256] = {0};
+  char s[256];
 
   lh3new(smurfd, s);
   assert(strcmp(s, "5c452b35648528cf3a00a42021489011dd455b78fc34190c7680173b2dc\

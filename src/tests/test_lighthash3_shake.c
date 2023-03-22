@@ -6,7 +6,7 @@
 #include "../lighthash.h"
 
 int main(void) {
-  uint8_t buf[512] = {0}, str[512] = {0}, next = 0, next2 = 0, s[200] = {0};
+  uint8_t buf[512], str[512], next = 0, next2 = 0, s[200];
   char sss[64], ss[64] = "6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d7\
 67197a0beeb";
 
