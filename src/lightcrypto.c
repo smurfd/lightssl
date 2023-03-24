@@ -359,7 +359,7 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
 //
 // Error handler
 static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
-
+static void lasn_print1(asn *a) {printf("ASN : %lu %lu %lu %lu\n", a->type, a->len, a->pos, a->data[0]);}
 //
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
@@ -370,10 +370,22 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   if (objcnt < 0) return lasn_err("Objects");
   if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0) return lasn_err("Parse");
   lasn_print((*cms), 0);
+
   (*ct) = (*cms); (*encd) = &(*ct)[2]; (*cmsv) = &(*encd)[1];
   (*ci) = &(*cmsv)[1]; (*ict) = &(*ci)[1]; (*alg) = &(*ict)[1];
   (*algi) = &(*alg)[1]; (*aesiv) = &(*algi)[1]; (*et) = &(*alg)[3];
+  lasn_print1((*cms));
+  lasn_print1((*ct));
+  lasn_print1((*encd));
+  lasn_print1((*cmsv));
 
+  lasn_print1((*ci));
+  lasn_print1((*ict));
+  lasn_print1((*alg));
+  lasn_print1((*algi));
+
+  lasn_print1((*aesiv));
+  lasn_print1((*et));
   // _err CT = ContentType, EC = EncryptedContent
   if ((*cms)->type != ASN1_SEQUENC) return lasn_err("Sequence");
   if ((*ct) == NULL || (*ct)[1].type != ASN1_OBJIDEN) return lasn_err("CT");
