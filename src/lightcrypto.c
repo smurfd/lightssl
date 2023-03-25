@@ -321,11 +321,12 @@ static void lasn_init(asn **asn) {
 // dec = true, Decode the der encrypted data
 static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
     asn **oobj, uint32_t oobjc, bool dec) {
-  uint32_t deroff, derenclen = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff;
+  uint32_t deroff = 0, derenclen = lasn_get_len(der, derlen, &deroff, 1);
+  uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff = 0;
   const uint8_t *derdat = (der + deroff);
   int32_t objcnt = 1;
 
+  printf("dec1: %lu, %lu, %lu\n", derenclen, derdatl, *derdat);
   if (dec) {
     lasn_init(o); if (o == NULL) return -1;
     (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
@@ -338,6 +339,7 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
       const uint8_t *child = (der + deroff);
       uint32_t childlen = lasn_get_len(child, (derenclen - deroff),&childoff,1);
       int32_t childobj = lasn_der_dec(child, childlen, NULL, NULL, 0, 0);
+      printf("dec2: %lu, %lu, %lu\n", *child, childlen, childobj);
 
       if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
       if (childobj < 0 || derenclen < derdatl) return -1;
@@ -347,6 +349,8 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
         oobj++; --oobjc;
         if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0) return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
+        //printf("dec3: %lu, %lu, %lu\n", oobj, oobjc, childo);
+
       } else objcnt += childobj;
       childrenlen += childlen; deroff += childlen;
       if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
