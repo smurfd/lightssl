@@ -349,7 +349,7 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
         oobj++; --oobjc;
         if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0) return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
-        //printf("dec3: %lu, %lu, %lu\n", oobj, oobjc, childo);
+        printf("dec3: %llu, %llu, %d\n", oobjc, childobj, *child);
 
       } else objcnt += childobj;
       childrenlen += childlen; deroff += childlen;
@@ -363,7 +363,9 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
 //
 // Error handler
 static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
-static void lasn_print1(asn *a) {printf("ASN : %lu %lu %lu %lu\n", a->type, a->len, a->pos, a->data[0]);}
+static void lasn_print1(asn *a) {
+  printf("ASN : %lu %lu %lu\n", a->type, a->len, a->pos);
+}
 //
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
