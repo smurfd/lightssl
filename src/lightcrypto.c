@@ -272,18 +272,18 @@ void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
 //
 // Print data in hex and formatted
 static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
-  uint32_t c = 0;
-
   printf("%s\n----- hex data ----\n", str);
-  while(c < len) {printf("%02x ", d[c]); if (++c % 8 == 0) printf("\n");}
-  if (c % 8) printf("\n"); printf("----- hex end ----\n");
+  for (uint32_t c = 0; c < len;) {
+    if (++c % 8 == 0) printf("\n"); printf("%02x ", d[c]);
+  }
+  if (len - 1 % 8) printf("\n----- hex end ----\n");
 }
 
 //
 // Print data
-static void lasn_print(const asn *asn, int depth) {
+static void lasn_print(const asn *asn) {
   for (int i = 0; asn[i].type != 0; i++) {
-    printf("d=%d, Tag: %02x, len=%u\n", depth, asn[i].type, asn[i].len);
+    printf("Type: %02x, Length: %u\n", asn[i].type, asn[i].len);
     if (asn[i].pos == 0) {lasn_printhex("Value:", asn[i].data, asn[i].len);}
   }
 }
@@ -339,7 +339,8 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
       if (dec) {
         if (childobj > (int)oobjc) return -1;
         asn *childo = *oobj; oobj++; --oobjc;
-        if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0) return -1;
+        if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0)
+          return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
       } else objcnt += childobj;
       childrenlen += childlen; deroff += childlen;
@@ -358,52 +359,52 @@ static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_dec((uint8_t*)cmsd, fs, NULL, NULL, 0, 0), m = 1;
-  asn *cms[]={0}, *asnobj[]={0};
+  asn *cms[] = {0};
 
   if (objcnt < 0) return lasn_err("Objects");
-  if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0)
+  if (lasn_der_dec(cmsd, fs, cms, cms, objcnt, 1) < 0)
     return lasn_err("Parse");
-  lasn_print((*cms), 0);
+  lasn_print((*cms));
   // Hack to handle linux, at this point not sure why on linux type is spread on
   // every other, and on mac its as it should be. something with malloc?
   if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
 
-  if ((*cms)[0*m].type != ASN1_SEQUENC) return lasn_err("Sequence");
-  if ((*cms)[1*m].type != ASN1_OBJIDEN) return lasn_err("CT");
-  if (memcmp((*cms)[1*m].data, AS1, (*cms)[1*m].len) != 0 ||
-    (*cms)[3*m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
-  if ((*cms)[4*m].type != ASN1_INTEGER || (*cms)[4*m].len != 1)
+  if ((*cms)[0 * m].type != ASN1_SEQUENC) return lasn_err("Sequence");
+  if ((*cms)[1 * m].type != ASN1_OBJIDEN) return lasn_err("CT");
+  if (memcmp((*cms)[1 * m].data, AS1, (*cms)[1 * m].len) != 0 ||
+    (*cms)[3 * m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
+  if ((*cms)[4 * m].type != ASN1_INTEGER || (*cms)[4 * m].len != 1)
     return lasn_err("CMS Version");
-  if ((*cms)[5*m].type != ASN1_SEQUENC) return lasn_err("EC");
-  if ((*cms)[6*m].type != ASN1_OBJIDEN) return lasn_err("CT EC");
+  if ((*cms)[5 * m].type != ASN1_SEQUENC) return lasn_err("EC");
+  if ((*cms)[6 * m].type != ASN1_OBJIDEN) return lasn_err("CT EC");
   if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AS2, (*cms)[6*m].len)!=0)
     return lasn_err("CT EC PKCS#7");
-  if ((*cms)[7*m].type == ASN1_SEQUENC) {
-    if ((*cms)[8*m].type != ASN1_OBJIDEN)
+  if ((*cms)[7 * m].type == ASN1_SEQUENC) {
+    if ((*cms)[8 * m].type != ASN1_OBJIDEN)
       return lasn_err("EncryptionAlgoIdentifier");
-    if (memcmp((*cms)[8*m].data, AS3, (*cms)[8*m].len) == 0 ||
-        memcmp((*cms)[8*m].data, AS4, (*cms)[8*m].len) == 0 ||
-        memcmp((*cms)[8*m].data, AS5, (*cms)[8*m].len) == 0) {
+    if (memcmp((*cms)[8 * m].data, AS3, (*cms)[8 * m].len) == 0 ||
+        memcmp((*cms)[8 * m].data, AS4, (*cms)[8 * m].len) == 0 ||
+        memcmp((*cms)[8 * m].data, AS5, (*cms)[8 * m].len) == 0) {
       if (((*cms)[9*m].type != ASN1_OCTSTRI && (*cms)[9*m].type !=ASN1_SEQUENC))
         return lasn_err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
-    if ((*cms)[10*m].type != 0x80 && (*cms)[10*m].type != 0x02)
+    if ((*cms)[10 * m].type != 0x80 && (*cms)[10*m].type != 0x02)
       return lasn_err("No encrypted content");
   }
-  printf("----- parse begin ----\n");
+  printf("\n----- parse begin ----\n");
   printf("Content type: encryptedData\n");
   printf("CMS version: %d\n", (*cms)[3*m].data[0]);
   printf("ContentType EncryptedContent: PKCS#7\n");
-  if ((*cms)[8*m].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
-  if ((*cms)[8*m].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
-  if ((*cms)[8*m].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
-  lasn_printhex("AES IV:", (*cms)[8*m].data, (*cms)[8*m].len);
-  lasn_printhex("Encrypted content:", (*cms)[9*m].data, (*cms)[9*m].len);
+  if ((*cms)[8 * m].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
+  if ((*cms)[8 * m].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
+  if ((*cms)[8 * m].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
+  lasn_printhex("AES IV:", (*cms)[8 * m].data, (*cms)[8 * m].len);
+  lasn_printhex("Encrypted content:", (*cms)[9 * m].data, (*cms)[9 * m].len);
   // this if statement works now, but not 100% sure its correct
   // Are unprotected attributes available?
-  if ((*cms)[5*m].pos != 0 && (*cms)[5*m].pos != (*cms)[5*m].len)
-    printf("Unprot\n");
-  else printf("No Unprot\n");
+  if ((*cms)[5 * m].pos != 0 && (*cms)[5 * m].pos != (*cms)[5 * m].len) {
+    printf("Unprotected values\n");
+  } else printf("No Unprotected values\n");
   printf("----- parse end ----\n");
   free((*cms));
   return 0;
