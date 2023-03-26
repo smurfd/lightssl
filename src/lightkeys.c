@@ -207,6 +207,7 @@ static void lkm_mod(u64 *a, u64 *b) {
 
   while (!lkzero(b + DI)) {
     u64 ovr = 0;
+
     lkclear(t); lkclear(t + DI);
     lko_mul(t, b + DI);
     lkclear(b + DI);
@@ -252,8 +253,7 @@ static void lkm_sqrt(u64 a[DI]) {
 //
 //
 static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
-  u64 ds, bs, pb, mb = lkbits(m);
-  u64 p[DI2], mm[DI2];
+  u64 ds, bs, pb, mb = lkbits(m), p[DI2], mm[DI2];
 
   lkmul(p, b, c);
   pb = lkbits(p + DI);
@@ -301,6 +301,7 @@ static void lkp_double(u64 *a, u64 *b, u64 *c) {
   lkm_add(c, a, a, curve_p); lkm_add(a, a, c, curve_p);
   if (lkchk(a, 0)) {
     u64 ovr = lkadd(a, a, curve_p);
+
     lkrs1(a);
     a[DI - 1] |= ovr << 63;
   } else {lkrs1(a);}
@@ -358,8 +359,8 @@ static void lkp_add(u64 *a, u64 *b, u64 *c, u64 *d) {
 
 //
 // Points add
+// t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
 static void lkp_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
-  // t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
   u64 t5[DI], t6[DI], t7[DI];
 
   lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
@@ -417,8 +418,7 @@ static void lkm_inv(u64 *r, u64 *p, u64 *m) {
 //
 // Point multiplication
 static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
-  u64 Rx[2][DI], Ry[2][DI], z[DI];
-  int nb;
+  u64 Rx[2][DI], Ry[2][DI], z[DI], nb;
 
   lkset(Rx[1], p->x); lkset(Ry[1], p->y);
   lkp_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
@@ -488,8 +488,8 @@ int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
 //
 // create a secret from the public and private key
 int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB], u64 random[DI]) {
-  u64 private[DI];
   pt public, product;
+  u64 private[DI];
 
   lkp_decom(&public, publ);
   lkpack(private, priv);
@@ -523,7 +523,7 @@ int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
 //
 // Verify signature
 int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
-  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI], rx[DI], ry[DI];
+  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI],rx[DI],ry[DI];
   pt public, sum;
 
   lkp_decom(&public, publ);
