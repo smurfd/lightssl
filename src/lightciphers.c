@@ -400,7 +400,8 @@ static void lciphers_decryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk
 //
 // l = inlength, k = key, o = out
 // https://medium.com/asecuritysite-when-bob-met-alice/a-bluffers-guide-to-aes-modes-ecb-cbc-cfb-and-all-that-jazz-4180f1882e16
-void lciphers_encrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc) {
+void lciphers_encrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
+  uint8_t o[], bool cbc) {
   uint8_t block[BBL]={0}, encryptedblock[BBL]={0}, roundkeys[4*NB*(NR+1)]={0};
 
   lciphers_keyexpansion(k, roundkeys);
@@ -422,8 +423,9 @@ void lciphers_encrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv, uint8_
 
 //
 // l = inlength, k = key, o = out
-void lciphers_decrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc) {
-  uint8_t block[NB*NR]={0}, encryptedblock[NB*NR]={0}, roundkeys[4*NB*(NR+1)]={0};
+void lciphers_decrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
+  uint8_t o[], bool cbc) {
+  uint8_t block[NB*NR]={0}, encryptedblock[NB*NR]={0},roundkeys[4*NB*(NR+1)]={0};
 
   lciphers_keyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
