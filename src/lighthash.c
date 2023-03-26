@@ -46,9 +46,7 @@ static void lh3str2state(const uint8_t *s, u64 (*a)[5][5]) {
 // For each pair of integers (i, j) such that 0≤i<5 and 0≤j<5, define the string Lane(i, j)
 // by Lane(i,j)= A[i,j,0] || A[i,j,1] || A[i,j,2] || ... || A[i,j,w-2] || A[i,j,w-1].
 static void lh3state2str(u64 (*a)[5][5], uint8_t *s) {
-  int count = 0;
-
-  for (int y = 0; y < 5; y++)
+  for (int count = 0, y = 0; y < 5; y++)
     for (int x = 0; x < 5; x++)
       for (int z = 0; z < 8; z++)
         s[count++] = (uint8_t)(ROL64((*a)[x][y], 64 - z * 8) & (u64)255);
@@ -217,8 +215,7 @@ static u64 lh3cat(uint8_t *x, u64 xl, uint8_t *y, u64 yl, uint8_t **z) {
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
 static u64 lh3pad10(u64 x, u64 m, uint8_t **p) {
-  long j = MOD((-m - 2), x) + 2;
-  int bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
+  u64 j = MOD((-m - 2), x) + 2, bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
 
   *p = calloc(bl, sizeof(uint8_t));
   (*p)[0] |= 1;
@@ -240,8 +237,9 @@ static u64 lh3pad10(u64 x, u64 m, uint8_t **p) {
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
 static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
+  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi,
+    *z = NULL, *pad, str[200] = {0};
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
-  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi, *z=NULL, *pad, str[200] = {0};
 
   len = lh3pad10(r, l, &pad);
   plen = lh3cat(n, l, pad, len, &p);
