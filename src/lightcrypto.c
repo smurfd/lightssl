@@ -282,12 +282,9 @@ static void lasn_printhex(const char *str, const uint8_t *d, uint32_t len) {
 //
 // Print data
 static void lasn_print(const asn *asn, int depth) {
-  int i = 0;
-
-  while (asn[i].type != 0) {
+  for (int i = 0; asn[i].type != 0; i++) {
     printf("d=%d, Tag: %02x, len=%u\n", depth, asn[i].type, asn[i].len);
     if (asn[i].pos == 0) {lasn_printhex("Value:", asn[i].data, asn[i].len);}
-    i++;
   }
 }
 
