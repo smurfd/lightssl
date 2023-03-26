@@ -36,18 +36,3 @@ jobs:
       run: make -Cbuild/debug
     - name: Test
       run: make -Cbuild/debug test
-
-  build-debug-latest:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get -y install clang cmake make git openssl
-    - name: Build
-      run: cmake -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug -DCMAKE_C_COMPILER=clang
-    - name: Generate cert
-      run: sh src/scripts/gen_cert.sh
-    - name: Compile
-      run: make -Cbuild/debug
-    - name: Test
-      run: make -Cbuild/debug test
