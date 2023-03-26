@@ -320,6 +320,7 @@ static uint32_t lasn_get_len(const uint8_t *data,uint32_t len, uint32_t *off,boo
 //
 // Initialize the asn struct
 static void lasn_init(asn **asn) {
+  printf("asn ---- %lu\n", sizeof(struct asn));
   (*asn) = malloc(sizeof(struct asn));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
@@ -380,7 +381,7 @@ static void lasn_print1(asn *a) {
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_dec((uint8_t*)cmsd, fs, NULL, NULL, 0, 0);
   asn *cms[]={0}, *asnobj[]={0};
-
+  uint32_t  m = 1;
   if (objcnt < 0) return lasn_err("Objects");
   if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0) return lasn_err("Parse");
   for (int i = 0; i < 48; i++) printf("%02x ", cmsd[i]); printf("\n\n");
@@ -388,34 +389,37 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   for (int i = 0; i < 48; i++) printf("%02x ", (*cms)[i].type); printf("\n\n");
 
   lasn_print1((*cms));
+  printf("-- %lu, %lu\n", fs, objcnt);
   if ((*cms)[0].type != ASN1_SEQUENC) return lasn_err("Sequence");
-  if ((*cms)[1].type != ASN1_OBJIDEN) return lasn_err("CT");
-  if (memcmp((*cms)[1].data, AS1, (*cms)[1].len) != 0 ||  (*cms)[3].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
-  if ((*cms)[4].type != ASN1_INTEGER || (*cms)[4].len != 1) return lasn_err("CMS Version");
-  if ((*cms)[5].type != ASN1_SEQUENC) return lasn_err("EC");
-  if ((*cms)[6].type != ASN1_OBJIDEN) return lasn_err("CT EC");
-  if ((*cms)[6].len != 9 || memcmp((*cms)[6].data, AS2, (*cms)[6].len) != 0) return lasn_err("CT EC PKCS#7");
-  if ((*cms)[7].type == ASN1_SEQUENC) {
-    if ((*cms)[8].type != ASN1_OBJIDEN) return lasn_err("EncryptionAlgoIdentifier");
-    if (memcmp((*cms)[8].data, AS3, (*cms)[8].len) == 0 ||
-        memcmp((*cms)[8].data, AS4, (*cms)[8].len) == 0 ||
-        memcmp((*cms)[8].data, AS5, (*cms)[8].len) == 0) {
-      if (((*cms)[9].type != ASN1_OCTSTRI && (*cms)[9].type != ASN1_SEQUENC)) return lasn_err("AES IV");
+  if ((*cms)[objcnt].type != 0 && (*cms)[objcnt+1].type != 0) {m = 2;};
+
+  if ((*cms)[1*m].type != ASN1_OBJIDEN) return lasn_err("CT");
+  if (memcmp((*cms)[1*m].data, AS1, (*cms)[1*m].len) != 0 ||  (*cms)[3*m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
+  if ((*cms)[4*m].type != ASN1_INTEGER || (*cms)[4*m].len != 1) return lasn_err("CMS Version");
+  if ((*cms)[5*m].type != ASN1_SEQUENC) return lasn_err("EC");
+  if ((*cms)[6*m].type != ASN1_OBJIDEN) return lasn_err("CT EC");
+  if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AS2, (*cms)[6*m].len) != 0) return lasn_err("CT EC PKCS#7");
+  if ((*cms)[7*m].type == ASN1_SEQUENC) {
+    if ((*cms)[8*m].type != ASN1_OBJIDEN) return lasn_err("EncryptionAlgoIdentifier");
+    if (memcmp((*cms)[8*m].data, AS3, (*cms)[8*m].len) == 0 ||
+        memcmp((*cms)[8*m].data, AS4, (*cms)[8*m].len) == 0 ||
+        memcmp((*cms)[8*m].data, AS5, (*cms)[8*m].len) == 0) {
+      if (((*cms)[9*m].type != ASN1_OCTSTRI && (*cms)[9*m].type != ASN1_SEQUENC)) return lasn_err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
-    if ((*cms)[10].type != 0x80 && (*cms)[10].type != 0x02) return lasn_err("No encrypted content");
+    if ((*cms)[10*m].type != 0x80 && (*cms)[10*m].type != 0x02) return lasn_err("No encrypted content");
   }
   printf("----- parse begin ----\n");
   printf("Content type: encryptedData\n");
-  printf("CMS version: %d\n", (*cms)[3].data[0]);
+  printf("CMS version: %d\n", (*cms)[3*m].data[0]);
   printf("ContentType EncryptedContent: PKCS#7\n");
-  if ((*cms)[8].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
-  if ((*cms)[8].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
-  if ((*cms)[8].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
-  lasn_printhex("AES IV:", (*cms)[8].data, (*cms)[8].len);
-  lasn_printhex("Encrypted content:", (*cms)[9].data, (*cms)[9].len);
+  if ((*cms)[8*m].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
+  if ((*cms)[8*m].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
+  if ((*cms)[8*m].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
+  lasn_printhex("AES IV:", (*cms)[8*m].data, (*cms)[8*m].len);
+  lasn_printhex("Encrypted content:", (*cms)[9*m].data, (*cms)[9*m].len);
   // this if statement works now, but not 100% sure its correct
   // Are unprotected attributes available?
-  if ((*cms)[5].pos != 0 && (*cms)[5].pos != (*cms)[5].len) printf("Unprot\n");
+  if ((*cms)[5*m].pos != 0 && (*cms)[5*m].pos != (*cms)[5*m].len) printf("Unprot\n");
   else printf("No Unprot\n");
   printf("----- parse end ----\n");
   lasn_print((*cms), 0);
