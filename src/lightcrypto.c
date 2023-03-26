@@ -322,8 +322,7 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
   uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff = 0,objcnt=1;
   const uint8_t *derdat = (der + deroff);
 
-  if (dec) {
-    lasn_init(o); if (o == NULL) return -1;
+  if (dec) {lasn_init(o); if (o == NULL) return -1;
     (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
   }
   if (der == NULL || derlen == 0 || derenclen < deroff) return -1;
@@ -339,8 +338,7 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
       if (childobj < 0 || derenclen < derdatl) return -1;
       if (dec) {
         if (childobj > (int)oobjc) return -1;
-        asn *childo = *oobj;
-        oobj++; --oobjc;
+        asn *childo = *oobj; oobj++; --oobjc;
         if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0) return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
       } else objcnt += childobj;
@@ -363,27 +361,34 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   asn *cms[]={0}, *asnobj[]={0};
 
   if (objcnt < 0) return lasn_err("Objects");
-  if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0) return lasn_err("Parse");
+  if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0)
+    return lasn_err("Parse");
   lasn_print((*cms), 0);
-  if ((*cms)[0*m].type != ASN1_SEQUENC) return lasn_err("Sequence");
   // Hack to handle linux, at this point not sure why on linux type is spread on
   // every other, and on mac its as it should be. something with malloc?
   if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
 
+  if ((*cms)[0*m].type != ASN1_SEQUENC) return lasn_err("Sequence");
   if ((*cms)[1*m].type != ASN1_OBJIDEN) return lasn_err("CT");
-  if (memcmp((*cms)[1*m].data, AS1, (*cms)[1*m].len) != 0 ||  (*cms)[3*m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
-  if ((*cms)[4*m].type != ASN1_INTEGER || (*cms)[4*m].len != 1) return lasn_err("CMS Version");
+  if (memcmp((*cms)[1*m].data, AS1, (*cms)[1*m].len) != 0 ||
+    (*cms)[3*m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
+  if ((*cms)[4*m].type != ASN1_INTEGER || (*cms)[4*m].len != 1)
+    return lasn_err("CMS Version");
   if ((*cms)[5*m].type != ASN1_SEQUENC) return lasn_err("EC");
   if ((*cms)[6*m].type != ASN1_OBJIDEN) return lasn_err("CT EC");
-  if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AS2, (*cms)[6*m].len) != 0) return lasn_err("CT EC PKCS#7");
+  if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AS2, (*cms)[6*m].len)!=0)
+    return lasn_err("CT EC PKCS#7");
   if ((*cms)[7*m].type == ASN1_SEQUENC) {
-    if ((*cms)[8*m].type != ASN1_OBJIDEN) return lasn_err("EncryptionAlgoIdentifier");
+    if ((*cms)[8*m].type != ASN1_OBJIDEN)
+      return lasn_err("EncryptionAlgoIdentifier");
     if (memcmp((*cms)[8*m].data, AS3, (*cms)[8*m].len) == 0 ||
         memcmp((*cms)[8*m].data, AS4, (*cms)[8*m].len) == 0 ||
         memcmp((*cms)[8*m].data, AS5, (*cms)[8*m].len) == 0) {
-      if (((*cms)[9*m].type != ASN1_OCTSTRI && (*cms)[9*m].type != ASN1_SEQUENC)) return lasn_err("AES IV");
+      if (((*cms)[9*m].type != ASN1_OCTSTRI && (*cms)[9*m].type !=ASN1_SEQUENC))
+        return lasn_err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
-    if ((*cms)[10*m].type != 0x80 && (*cms)[10*m].type != 0x02) return lasn_err("No encrypted content");
+    if ((*cms)[10*m].type != 0x80 && (*cms)[10*m].type != 0x02)
+      return lasn_err("No encrypted content");
   }
   printf("----- parse begin ----\n");
   printf("Content type: encryptedData\n");
@@ -396,7 +401,8 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   lasn_printhex("Encrypted content:", (*cms)[9*m].data, (*cms)[9*m].len);
   // this if statement works now, but not 100% sure its correct
   // Are unprotected attributes available?
-  if ((*cms)[5*m].pos != 0 && (*cms)[5*m].pos != (*cms)[5*m].len) printf("Unprot\n");
+  if ((*cms)[5*m].pos != 0 && (*cms)[5*m].pos != (*cms)[5*m].len)
+    printf("Unprot\n");
   else printf("No Unprot\n");
   printf("----- parse end ----\n");
   free((*cms));
