@@ -320,7 +320,7 @@ static uint32_t lasn_get_len(const uint8_t *data,uint32_t len, uint32_t *off,boo
 //
 // Initialize the asn struct
 static void lasn_init(asn **asn) {
-  (*asn) = malloc(sizeof(struct asn));
+  (*asn) = calloc(1, sizeof(struct asn));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
 
