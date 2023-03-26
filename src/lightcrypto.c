@@ -216,8 +216,6 @@ static u64 lcread_cert(char *fn, char c[], bool iscms) {
     len = fs;
   } else while (c[len - 1] != EOF) {c[len++] = fgetc(ptr);}
   fclose(ptr);
-  printf("___ le n %llu\n", len);
-
   return len;
 }
 
@@ -287,7 +285,7 @@ static void lasn_print(const asn *asn, int depth) {
   int i = 0;
 
   while (asn[i].type != 0) {
-    printf("d=%d, Tag: %02x, len=%lu\n", depth, asn[i].type, asn[i].len);
+    printf("d=%d, Tag: %02x, len=%u\n", depth, asn[i].type, asn[i].len);
     if (asn[i].pos == 0) {lasn_printhex("Value:", asn[i].data, asn[i].len);}
     i++;
   }
@@ -300,27 +298,20 @@ static uint32_t lasn_get_len(const uint8_t *data,uint32_t len, uint32_t *off,boo
 
   if (len < 2) return 0xFFFFFFFF;
   ++data; a = *data++; len -= 2; *off = 0;
-  printf("LEN1: %lu, %lu, %lu %lu\n", ret, len, a, b);
   if (t == 1) {++(*off); ++(*off); ret = a + (*off);}
   else {ret = a;}
-  printf("LEN2: %lu, %lu, %lu %lu\n", ret, len, a, b);
   if (a < 128) return ret;
   a &= 0x7F; *off += a;
-  printf("LEN3: %lu, %lu, %lu %lu\n", ret, len, a, b);
   if (a == 0 || a > 4 || a > len) return 0xFFFFFFFF;
-  printf("LEN4: %lu, %lu, %lu %lu\n", ret, len, a, b);
   while ((a--) > 0) {b = (b << 8) | ((uint32_t)*data); ++data;};
-  printf("LEN5: %lu, %lu, %lu %lu\n", ret, len, a, b);
   if (t == 1) {if (UINT32_MAX - (*off) < b) return 0xFFFFFFFF; ret = b + (*off);}
   else {ret = b;} // check to not return overflow ^^
-  printf("LEN6: %lu, %lu, %lu %lu\n", ret, len, a, b);
   return ret;
 }
 
 //
 // Initialize the asn struct
 static void lasn_init(asn **asn) {
-  printf("asn ---- %lu\n", sizeof(struct asn));
   (*asn) = malloc(sizeof(struct asn));
   (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
 }
@@ -331,9 +322,8 @@ static void lasn_init(asn **asn) {
 static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
     asn **oobj, uint32_t oobjc, bool dec) {
   uint32_t deroff = 0, derenclen = lasn_get_len(der, derlen, &deroff, 1);
-  uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff = 0;
+  uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff = 0,objcnt=1;
   const uint8_t *derdat = (der + deroff);
-  int32_t objcnt = 1;
 
   if (dec) {
     lasn_init(o); if (o == NULL) return -1;
@@ -347,7 +337,6 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
       const uint8_t *child = (der + deroff);
       uint32_t childlen = lasn_get_len(child, (derenclen - deroff),&childoff,1);
       int32_t childobj = lasn_der_dec(child, childlen, NULL, NULL, 0, 0);
-      printf("dec2: %lu, %lu, %lu\n", *child, childlen, childobj);
 
       if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
       if (childobj < 0 || derenclen < derdatl) return -1;
@@ -357,41 +346,32 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
         oobj++; --oobjc;
         if (lasn_der_dec(child, childlen, &childo, oobj, oobjc, 1) < 0) return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
-        printf("dec3: %llu, %llu, %d\n", oobjc, childobj, *child);
-
       } else objcnt += childobj;
       childrenlen += childlen; deroff += childlen;
       if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
       if (dec) (*o)->pos = childrenlen;
     }
   }
-  printf("decxx: %lu, %lu, %lu\n", derenclen, derdatl, *derdat);
-
   return objcnt;
 }
 
 //
 // Error handler
 static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
-static void lasn_print1(asn *a) {
-  printf("ASN : %lu %lu %lu\n", a->type, a->len, a->pos);
-}
+
 //
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
-  int32_t objcnt = lasn_der_dec((uint8_t*)cmsd, fs, NULL, NULL, 0, 0);
+  int32_t objcnt = lasn_der_dec((uint8_t*)cmsd, fs, NULL, NULL, 0, 0), m = 1;
   asn *cms[]={0}, *asnobj[]={0};
-  uint32_t  m = 1;
+
   if (objcnt < 0) return lasn_err("Objects");
   if (lasn_der_dec(cmsd, fs, cms, asnobj, objcnt, 1) < 0) return lasn_err("Parse");
-  for (int i = 0; i < 48; i++) printf("%02x ", cmsd[i]); printf("\n\n");
-  for (int i = 0; i < 48; i++) printf("%02x ", (*cms)->data[i]); printf("\n\n");
-  for (int i = 0; i < 48; i++) printf("%02x ", (*cms)[i].type); printf("\n\n");
-
-  lasn_print1((*cms));
-  printf("-- %lu, %lu\n", fs, objcnt);
-  if ((*cms)[0].type != ASN1_SEQUENC) return lasn_err("Sequence");
-  if ((*cms)[objcnt].type != 0 && (*cms)[objcnt+1].type != 0) {m = 2;};
+  lasn_print((*cms), 0);
+  if ((*cms)[0*m].type != ASN1_SEQUENC) return lasn_err("Sequence");
+  // Hack to handle linux, at this point not sure why on linux type is spread on
+  // every other, and on mac its as it should be. something with malloc?
+  if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
 
   if ((*cms)[1*m].type != ASN1_OBJIDEN) return lasn_err("CT");
   if (memcmp((*cms)[1*m].data, AS1, (*cms)[1*m].len) != 0 ||  (*cms)[3*m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
@@ -422,7 +402,6 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   if ((*cms)[5*m].pos != 0 && (*cms)[5*m].pos != (*cms)[5*m].len) printf("Unprot\n");
   else printf("No Unprot\n");
   printf("----- parse end ----\n");
-  lasn_print((*cms), 0);
   free((*cms));
   return 0;
 }
