@@ -25,32 +25,32 @@ asserts working.
 ### Tests
 Test server, in one terminal run
 ```
-./build/debug/debug_test_crypto_srv
+./build/debug/test_crypto_srv
 ```
 Test client, in another terminal run
 ```
-./build/debug/debug_test_crypto_cli
+./build/debug/test_crypto_cli
 ```
 Test hashing (SHA3-512)
 ```
-./build/debug/debug_test_hash3
+./build/debug/test_hash3
 ```
 Test hashing Shake
 ```
-./build/debug/debug_test_hash3_shake
+./build/debug/test_hash3_shake
 ```
 Test keys (secp384r1)
 ```
-./build/debug/debug_test_keys
+./build/debug/test_keys
 ```
 Test ciphers (AES)
 ```
-./build/debug/debug_test_ciphers
+./build/debug/test_ciphers
 ```
 Test crypto (ASN.1)
 ```
-./build/debug/debug_test_crypto build/debug/ca.key build/debug/ca128.cms  #AES 128
-./build/debug/debug_test_crypto build/debug/ca.key build/debug/ca256.cms  #AES 256
+./build/debug/test_crypto build/debug/ca.key build/debug/ca128.cms  #AES 128
+./build/debug/test_crypto build/debug/ca.key build/debug/ca256.cms  #AES 256
 ```
 ### Use lightSSL
 See the [tests](https://github.com/smurfd/lightssl/tree/master/src/tests)
