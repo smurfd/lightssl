@@ -59,6 +59,7 @@ void lctransferdata(const int s, void* data, head *h, bool snd, u64 len);
 void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 
+u64 lccreate_cert(char *cert, char c[], int type);
 u64 lchandle_cert(char *cert, char d[LEN]);
 u64 lchandle_asn(char *cert);
 uint32_t lcutf8decode(uint32_t c);

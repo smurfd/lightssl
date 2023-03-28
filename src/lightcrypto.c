@@ -219,6 +219,34 @@ static u64 lcread_cert(char *fn, char c[], bool iscms) {
   return len;
 }
 
+static u64 lcwrite_cert(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "w");
+
+  fprintf(ptr, "-----BEGIN CERTIFICATE-----\n");
+  fprintf(ptr, "%s\n", c);
+  fprintf(ptr, "-----END CERTIFICATE-----\n");
+  fclose(ptr);
+  return 1;
+}
+
+static u64 lcwrite_key(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "w");
+
+  fprintf(ptr, "-----BEGIN PRIVATE KEY-----\n");
+  fprintf(ptr, "%s\n", c);
+  fprintf(ptr, "-----END PRIVATE KEY-----\n");
+  fclose(ptr);
+  return 1;
+}
+
+static u64 lcwrite_cms(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "w");
+
+  fprintf(ptr, "%s\n", c);
+  fclose(ptr);
+  return 1;
+}
+
 static void lcprint_cert(u64 len, uint8_t h[], uint8_t f[], char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
   printf("Data:\n%s\n", d); printf("Footer: %s\n", f);
@@ -233,6 +261,16 @@ u64 lchandle_cert(char *cert, char d[LEN]) {
 
   lcprint_cert(len, h, f, d);
   return data;
+}
+
+u64 lccreate_cert(char *cert, char c[], int type) {
+  // type : 1 = certificate
+  // type : 2 = private key
+  // type : 3 = cms
+  if (type == 1) return lcwrite_cert(cert, c);
+  if (type == 2) return lcwrite_key(cert, c);
+  if (type == 3) return lcwrite_cms(cert, c);
+  return 0;
 }
 
 static uint32_t lcoct(int i, int inl, cuc d[257]) {
