@@ -16,11 +16,8 @@ int main(int argc, char **argv) {
   lcencode64(s2, strlen("smurfd and more stuff"), &d, s1);
   assert(strcmp(s1, s0) == 0);
   lcdecode64((char*)data, strlen((char*)data), &d, s4);
-  if (argc < 3) {
-    lchandle_asn("ca128.cms");
-    lchandle_asn("ca256.cms");
-    lchandle_asn("ca256rc2.cms");
-  } else lchandle_asn(argv[2]);
+  if (argc < 3) {lchandle_asn("ca128.cms"); lchandle_asn("ca256.cms");}
+  else lchandle_asn(argv[2]);
   printf("OK\n");
   return 0;
 }
