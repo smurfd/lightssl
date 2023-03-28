@@ -221,9 +221,12 @@ static u64 lcread_cert(char *fn, char c[], bool iscms) {
 
 static u64 lcwrite_cert(char *fn, char c[]) {
   FILE* ptr = fopen(fn, "w");
+  int i = 4;
 
   fprintf(ptr, "-----BEGIN CERTIFICATE-----\n");
-  fprintf(ptr, "%s\n", c);
+  fprintf(ptr, "MII");
+  while (i < 1779) {fputc('y', ptr); if (i % 64 == 0) fputc('\n', ptr); i++;}
+  fprintf(ptr, "==\n");
   fprintf(ptr, "-----END CERTIFICATE-----\n");
   fclose(ptr);
   return 1;
@@ -231,9 +234,12 @@ static u64 lcwrite_cert(char *fn, char c[]) {
 
 static u64 lcwrite_key(char *fn, char c[]) {
   FILE* ptr = fopen(fn, "w");
+  int i = 4;
 
   fprintf(ptr, "-----BEGIN PRIVATE KEY-----\n");
-  fprintf(ptr, "%s\n", c);
+  fprintf(ptr, "MII");
+  while (i < 3167) {fputc('x', ptr); if (i % 64 == 0) fputc('\n', ptr); i++;}
+  fprintf(ptr, "==\n");
   fprintf(ptr, "-----END PRIVATE KEY-----\n");
   fclose(ptr);
   return 1;
