@@ -456,15 +456,17 @@ static u64 lkwrite_cert(char *fn, char c[]) {
 
 static u64 lkwrite_key(char *fn, char c[]) {
   FILE* ptr = fopen(fn, "w");
-  char ccc[3200];
-  int i = 4, j;
+  char ccc[257];
+  int i = 0, j;
 
-  lcencode64((char*)c, 1264, &j, ccc);
-  fprintf(ptr, "-----BEGIN PRIVATE KEY-----\n");
-  fprintf(ptr, "MII");
-  while (i < 3167) {fprintf(ptr, "%c", ccc[i]); if (i % 64 == 0) {fprintf(ptr, "\n");} i++;}
-  fprintf(ptr, "==\n");
-  fprintf(ptr, "-----END PRIVATE KEY-----\n");
+  lcencode64(c, 128, &j, ccc);
+  printf("j %d\n", j);
+  fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
+  while (i < j) {
+    fprintf(ptr, "%c", ccc[i]);
+    if (i != 0 && i % 64 == 0) {fprintf(ptr, "\n");} i++;
+  }
+  fprintf(ptr, "\n-----END EC PRIVATE KEY-----\n");
   fclose(ptr);
   return 1;
 }
