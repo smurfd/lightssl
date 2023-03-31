@@ -11,6 +11,7 @@ static char enc[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
 
 uint32_t lcutf8decode(uint32_t c);
 uint32_t lcutf8encode(uint32_t cp);
+int lkrand(u64 h[KB], u64 k[KB]);
 void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]);
 void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 #endif

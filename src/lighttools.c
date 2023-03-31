@@ -63,3 +63,33 @@ void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
     if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
 }
+
+//
+// Random rotate
+static u64 prng_rotate(u64 x, u64 k) {return (x << k) | (x >> (32 - k));}
+
+//
+// Random next
+static u64 prng_next(void) {
+  u64 e = prng_ctx.a - prng_rotate(prng_ctx.b, 27);
+
+  prng_ctx.a = prng_ctx.b ^ prng_rotate(prng_ctx.c, 17);
+  prng_ctx.b = prng_ctx.c + prng_ctx.d;
+  prng_ctx.c = prng_ctx.d + e; prng_ctx.d = e + prng_ctx.a;
+  return prng_ctx.d;
+}
+
+//
+// Random init
+static void prng_init(u64 seed) {
+  prng_ctx.a = 0xea7f00d1; prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
+  for (u64 i = 0; i < 31; ++i) {(void)prng_next();}
+}
+
+//
+//
+int lkrand(u64 h[KB], u64 k[KB]) {
+  prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
+  for (int i = 0; i < KB; ++i) {h[i] = prng_next(); k[i] = prng_next();}
+  return 1;
+}

@@ -5,8 +5,6 @@
 #include "lightdefs.h"
 
 u64 lkcreate_cert(char *cert, char c[], int type);
-
-int lkrand(u64 h[KB], u64 k[KB]);
 int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]);
 int lkshar_secr(const u64 publ[KB + 1], const u64 priv[KB], u64 secr[KB],
   u64 random[DI]);

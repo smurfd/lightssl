@@ -23,7 +23,6 @@ int main(void) {
   for (int i = 0; i < KB; i++) {key[i] = (uint8_t)privkey[i];}
   lcencode64(key, 128, &d, key2);
   printf("%s\n", (char*)key2);
-
   lkcreate_cert("ca-own.crt", key, 1);
   lkcreate_cert("ca-own.key", key2, 2);
   lkcreate_cert("ca-own.cms", privkey, 3);
