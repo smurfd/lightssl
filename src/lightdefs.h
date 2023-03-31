@@ -26,6 +26,7 @@
 
 // Lightcrypto
 #define BLOCK 1024
+#define LEN 4096
 
 // Lighthash3
 #define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)

@@ -16,11 +16,13 @@
 
 // secp384r1
 // Rewritten from https://github.com/jestan/easy-ecc
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 #include "lightkeys.h"
 #include "lightdefs.h"
+#include "lighttools.h"
 
 //
 // n[i] = ((u64)d[0] << 56) |
@@ -468,6 +470,52 @@ int lkrand(u64 h[KB], u64 k[KB]) {
   prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
   for (int i = 0; i < KB; ++i) {h[i] = prng_next(); k[i] = prng_next();}
   return 1;
+}
+
+static u64 lkwrite_cert(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "w");
+  int i = 4;
+
+  fprintf(ptr, "-----BEGIN CERTIFICATE-----\n");
+  fprintf(ptr, "MII");
+  while (i < 1779) {fputc('y', ptr); if (i % 64 == 0) fputc('\n', ptr); i++;}
+  fprintf(ptr, "==\n");
+  fprintf(ptr, "-----END CERTIFICATE-----\n");
+  fclose(ptr);
+  return 1;
+}
+
+static u64 lkwrite_key(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "w");
+  char ccc[3200];
+  int i = 4, j;
+
+  lcencode64((char*)c, 1264, &j, ccc);
+  fprintf(ptr, "-----BEGIN PRIVATE KEY-----\n");
+  fprintf(ptr, "MII");
+  while (i < 3167) {fprintf(ptr, "%c", ccc[i]); if (i % 64 == 0) {fprintf(ptr, "\n");} i++;}
+  fprintf(ptr, "==\n");
+  fprintf(ptr, "-----END PRIVATE KEY-----\n");
+  fclose(ptr);
+  return 1;
+}
+
+static u64 lkwrite_cms(char *fn, char c[]) {
+  FILE* ptr = fopen(fn, "w");
+
+  fprintf(ptr, "%s\n", c);
+  fclose(ptr);
+  return 1;
+}
+
+u64 lkcreate_cert(char *cert, char c[], int type) {
+  // type : 1 = certificate
+  // type : 2 = private key
+  // type : 3 = cms
+  if (type == 1) return lkwrite_cert(cert, c);
+  if (type == 2) return lkwrite_key(cert, c);
+  if (type == 3) return lkwrite_cms(cert, c);
+  return 0;
 }
 
 //

@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include "../lightcrypto.h"
+#include "../lighttools.h"
 
 int main(int argc, char **argv) {
   char s0[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm", s1[257], data[LEN];
@@ -18,11 +19,6 @@ int main(int argc, char **argv) {
   lcdecode64((char*)data, strlen((char*)data), &d, s4);
   if (argc < 3) {lchandle_asn("ca128.cms"); lchandle_asn("ca256.cms");}
   else lchandle_asn(argv[2]);
-
-  lccreate_cert("ca-own.crt", "some stuff", 1);
-  lccreate_cert("ca-own.key", "some stuff", 2);
-  lccreate_cert("ca-own.cms", "some stuff", 3);
-
   printf("OK\n");
   return 0;
 }

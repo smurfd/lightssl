@@ -33,13 +33,7 @@ struct asn {
 #define ASN1_IA5STRI 0x22 // Header byte of the ASN.1 type IA5String
 #define ASN1_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
 #define ASN1_GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
-#define LEN 4096
 
-static char enc[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-  'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-  'p', 'q', 'r', 's','t', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
-  '4', '5', '6', '7', '8', '9', '+', '/'};
 static uint8_t AS1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
   0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06};
 static uint8_t AS2[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
@@ -56,14 +50,9 @@ void lccrypt(u64 data, key k, u64 *enc);
 void lcgenshare(key *k1, key *k2, u64 p, bool srv);
 void lctransferkey(int s, bool snd, head *h, key *k);
 void lctransferdata(const int s, void* data, head *h, bool snd, u64 len);
-void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]);
-void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]);
 
-u64 lccreate_cert(char *cert, char c[], int type);
 u64 lchandle_cert(char *cert, char d[LEN]);
 u64 lchandle_asn(char *cert);
-uint32_t lcutf8decode(uint32_t c);
-uint32_t lcutf8encode(uint32_t cp);
 
 // Keep static functions
 // u64 lightcrypto_rand();
