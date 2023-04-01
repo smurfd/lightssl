@@ -1,3 +1,4 @@
+//                                                                            //
 #ifndef LIGHTTOOLS_H
 #define LIGHTTOOLS_H 1
 #include <inttypes.h>
