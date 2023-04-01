@@ -93,3 +93,31 @@ int lkrand(u64 h[KB], u64 k[KB]) {
   for (int i = 0; i < KB; ++i) {h[i] = prng_next(); k[i] = prng_next();}
   return 1;
 }
+
+void pack(uint64_t big[6], const uint8_t byte[48]) {
+  for(uint32_t i = 0; i < 6; ++i) {
+    const uint8_t *dig = byte + 8 * (6 - 1 - i);
+        big[i] = ((uint64_t)dig[0] << 56) |
+        ((uint64_t)dig[1] << 48) |
+        ((uint64_t)dig[2] << 40) |
+        ((uint64_t)dig[3] << 32) |
+        ((uint64_t)dig[4] << 24) |
+        ((uint64_t)dig[5] << 16) |
+        ((uint64_t)dig[6] << 8) |
+        (uint64_t)dig[7];
+  }
+}
+
+void unpack(uint8_t byte[48], const uint64_t big[48/8]) {
+  for(uint32_t i = 0; i < 6; ++i) {
+    uint8_t *dig = byte + 8 * (6 - 1 - i);
+    dig[0] = big[i] >> 56;
+    dig[1] = big[i] >> 48;
+    dig[2] = big[i] >> 40;
+    dig[3] = big[i] >> 32;
+    dig[4] = big[i] >> 24;
+    dig[5] = big[i] >> 16;
+    dig[6] = big[i] >> 8;
+    dig[7] = big[i];
+  }
+}

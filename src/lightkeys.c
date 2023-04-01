@@ -454,12 +454,12 @@ static u64 lkwrite_cert(char *fn, char c[]) {
   return 1;
 }
 
-static u64 lkwrite_key(char *fn, char c[]) {
+static u64 lkwrite_key(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
   char ccc[257];
   int i = 0, j;
 
-  lcencode64((const uint8_t *)c, 128, &j, ccc);
+  lcencode64(c, 164, &j, ccc);
   fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {
     if (i != 0 && i % 64 == 0) {fprintf(ptr, "\n");}
@@ -480,13 +480,13 @@ static u64 lkwrite_cms(char *fn, char c[]) {
 
 // Public functions
 
-u64 lkcreate_cert(char *cert, char c[], int type) {
+u64 lkwrite(char *fn, uint8_t c[], int type) {
   // type : 1 = certificate
   // type : 2 = private key
   // type : 3 = cms
-  if (type == 1) return lkwrite_cert(cert, c);
-  if (type == 2) return lkwrite_key(cert, c);
-  if (type == 3) return lkwrite_cms(cert, c);
+  if (type == 1) return lkwrite_cert(fn, c);
+  if (type == 2) return lkwrite_key(fn, c);
+  if (type == 3) return lkwrite_cms(fn, c);
   return 0;
 }
 
