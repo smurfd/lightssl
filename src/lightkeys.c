@@ -462,8 +462,8 @@ static u64 lkwrite_key(char *fn, char c[]) {
   lcencode64((const uint8_t *)c, 128, &j, ccc);
   fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {
-    fprintf(ptr, "%c", ccc[i]);
-    if (i != 0 && i % 64 == 0) {fprintf(ptr, "\n");} i++;
+    if (i != 0 && i % 64 == 0) {fprintf(ptr, "\n");}
+    fprintf(ptr, "%c", ccc[i++]);
   }
   fprintf(ptr, "\n-----END EC PRIVATE KEY-----\n");
   fclose(ptr);
