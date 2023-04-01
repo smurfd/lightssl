@@ -459,8 +459,7 @@ static u64 lkwrite_key(char *fn, char c[]) {
   char ccc[257];
   int i = 0, j;
 
-  lcencode64(c, 128, &j, ccc);
-  printf("j %d\n", j);
+  lcencode64((const uint8_t *)c, 128, &j, ccc);
   fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {
     fprintf(ptr, "%c", ccc[i]);
