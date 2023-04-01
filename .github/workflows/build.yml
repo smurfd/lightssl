@@ -15,8 +15,6 @@ jobs:
       run: sudo apt-get update && sudo apt-get -y install clang cmake make git openssl
     - name: Build
       run: cmake -DCMAKE_BUILD_TYPE=Release -Bbuild/release -DCMAKE_C_COMPILER=clang
-    - name: Generate cert cnf
-      run: sh src/scripts/gen_cert_cnf.sh
     - name: Generate cert release
       run: sh src/scripts/gen_cert_release.sh
     - name: Compile
@@ -32,8 +30,6 @@ jobs:
       run: sudo apt-get update && sudo apt-get -y install clang cmake make git openssl
     - name: Build
       run: cmake -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug -DCMAKE_C_COMPILER=clang
-    - name: Generate cert cnf
-      run: sh src/scripts/gen_cert_cnf.sh
     - name: Generate cert debug
       run: sh src/scripts/gen_cert_debug.sh
     - name: Compile
@@ -49,8 +45,6 @@ jobs:
       run: sudo apt-get update && sudo apt-get -y install clang cmake make git openssl
     - name: Build
       run: cmake -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug -DCMAKE_C_COMPILER=clang
-    - name: Generate cert cnf
-      run: sh src/scripts/gen_cert_cnf.sh
     - name: Generate cert debug
       run: sh src/scripts/gen_cert_debug.sh
     - name: Compile
