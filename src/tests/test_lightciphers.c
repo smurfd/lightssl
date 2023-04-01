@@ -22,5 +22,4 @@ int main(void) {
   lciphers_decrypt(out, BBL, key, iv, in, true);
   for (u64 i = 0; i < BBL; i++) {assert(plain[i] == in[i]);}
   printf("OK\n");
-  return 0;
 }

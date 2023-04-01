@@ -20,5 +20,4 @@ int main(int argc, char **argv) {
   if (argc < 3) {lchandle_asn("ca128.cms"); lchandle_asn("ca256.cms");}
   else lchandle_asn(argv[2]);
   printf("OK\n");
-  return 0;
 }

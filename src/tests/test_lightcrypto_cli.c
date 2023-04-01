@@ -30,5 +30,4 @@ int main(void) {
   srand(time(0));
   lckeys();
   printf("OK\n");
-  return 0;
 }

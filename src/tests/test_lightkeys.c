@@ -8,7 +8,6 @@
 #include "../lighttools.h"
 #include "../lightcrypto.h"
 
-
 int main(void) {
   u64 sig[KB * 2], h[KB], k[KB], pubkey[KB + 1], privkey[KB], sec[KB];
 
@@ -22,5 +21,4 @@ int main(void) {
 
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
-  return 0;
 }

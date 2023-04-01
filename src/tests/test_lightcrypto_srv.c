@@ -12,5 +12,4 @@ int main(void) {
   if (lclisten(s, cli) < 0) {printf("Can't Thread\n"); exit(0);}
   lcend(s);
   printf("OK\n");
-  return 0;
 }

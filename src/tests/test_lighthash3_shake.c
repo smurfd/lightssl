@@ -19,5 +19,4 @@ int main(void) {
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
   if (*ss) {} // get rid of not used var warning
   printf("OK\n");
-  return 0;
 }
