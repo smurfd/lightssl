@@ -129,7 +129,7 @@ int lclisten(const int s, sock *cli) {
 
 //
 // Generate a keypair & shared key then print it (test / demo)
-int lckeys() {
+int lckeys(void) {
   u64 g1 = RAND64(), g2 = RAND64(), p1 = RAND64();
   u64 p2 = RAND64(), c = 123456, d = 1, e = 1;
   key k1 = lcgenkeys(g1, p1), k2 = lcgenkeys(g2, p2);
