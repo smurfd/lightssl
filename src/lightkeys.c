@@ -441,7 +441,7 @@ static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
   lkset(r->x, Rx[0]); lkset(r->y, Ry[0]);
 }
 
-static u64 lkwrite_cert(char *fn, char c[]) {
+static u64 lkwrite_cert(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
   int i = 4;
 
@@ -470,7 +470,7 @@ static u64 lkwrite_key(char *fn, uint8_t c[]) {
   return 1;
 }
 
-static u64 lkwrite_cms(char *fn, char c[]) {
+static u64 lkwrite_cms(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
 
   fprintf(ptr, "%s\n", c);
