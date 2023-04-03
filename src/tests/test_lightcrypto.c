@@ -23,5 +23,4 @@ int main(int argc, char **argv) {
   lcencode64(s2, strlen("smurfd and more stuff"), &d, s1);
   assert(strcmp(s1, s0) == 0);
   printf("OK\n");
-  return 0;
 }
