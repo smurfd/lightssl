@@ -10,11 +10,11 @@ static char enc[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
   'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
   '4', '5', '6', '7', '8', '9', '+', '/'};
 
-uint32_t lcutf8decode(uint32_t c);
-uint32_t lcutf8encode(uint32_t cp);
-int lkrand(u64 h[KB], u64 k[KB]);
+uint32_t utf8enc(uint32_t c);
+uint32_t utf8dec(uint32_t c);
+int lrand(u64 h[KB], u64 k[KB]);
 int base64enc(cuc *data, int inl, char ed[]);
 int base64dec(cc *data, int inl, uint8_t dd[]);
 void pack(uint64_t big[6], const uint8_t byte[48]);
-void unpack(uint8_t byte[48], const uint64_t big[48/8]);
+void unpack(uint8_t byte[48], const uint64_t big[6]);
 #endif

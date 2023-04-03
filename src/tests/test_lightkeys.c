@@ -12,7 +12,7 @@ int main(void) {
   u64 sig[KB * 2], h[KB], k[KB], pubkey[KB + 1], privkey[KB], sec[KB];
   uint8_t p[256];
 
-  assert(lkrand(h, k));
+  assert(lrand(h, k));
   assert(lkmake_keys(pubkey, privkey, k));
   assert(lkshar_secr(pubkey, privkey, sec, k));
   assert(lksign(privkey, h, sig, k));
