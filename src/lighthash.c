@@ -34,8 +34,7 @@ static void lh3str2state(const uint8_t *s, u64 (*a)[5][5]) {
   for (int x = 0; x < 5; x++)
     for (int y = 0; y < 5; y++) {
       u64 lane = 0;
-      for (int z = 0; z < 8; z++)
-        lane = lane + ROL64(s[8 * (5 * y + x) + z], z * 8);
+      for (int z = 0; z < 8; z++) lane += ROL64(s[8 * (5 * y + x) + z], z * 8);
       (*a)[x][y] = lane;
     }
 }
@@ -70,8 +69,7 @@ static void lh3theta(u64 (*a)[5][5]) {
       u64 r2 = ROL64(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
       d[x] = d[x] + ROL64((r1 ^ r2) & 1, z);
     }
-  for (int x = 0; x < 5; x++)
-    for (int y = 0; y < 5; y++) {(*a)[x][y] ^= d[x];}
+  for (int x = 0; x < 5; x++) for (int y = 0; y < 5; y++) {(*a)[x][y] ^= d[x];}
 }
 
 //
@@ -90,8 +88,7 @@ static void lh3rho(u64 (*a)[5][5]) {
     (*a)[x][y] = 0;
     for (int z = 0; z < 64; z++) {
       cb = (ROL64(ap[x][y], 64 - MOD((z - (t + 1) * (t + 2) / 2), 64)) & 1);
-      cb = ROL64(cb, z);
-      (*a)[x][y] += cb;
+      (*a)[x][y] += ROL64(cb, z);
     }
     xtmp = x;
     x = y;
@@ -179,13 +176,13 @@ static void lh3iota(u64 (*A)[5][5], u64 ir) {
 // 2. For ir from 12 + 2l – nr to 12 + 2l – 1, let A = Rnd(A, ir).
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
+// Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
 static void lh3keccak_p(uint8_t *sm, uint8_t s[200]) {
   u64 a[5][5];
 
   lh3str2state(sm, &a);
-  // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
   for (int i = 0; i <= 23; i++) {
-    lh3theta(&a);lh3rho(&a);lh3pi(&a);lh3chi(&a);lh3iota(&a,i);
+    lh3theta(&a); lh3rho(&a); lh3pi(&a); lh3chi(&a); lh3iota(&a,i);
   }
   lh3state2str(&a, s);
 }
@@ -200,10 +197,9 @@ static u64 lh3cat(uint8_t *x, u64 xl, uint8_t *y, u64 yl, uint8_t **z) {
   if (*z == NULL) return 0;
   memcpy(*z, x, xl8);
   for (u64 i = 0; i < mxl8; i++) {(*z)[xl8] |= (x[xl8] & (1 << i));}
-  u64 zbyc = xl8, zbic = mxl8, ybyc = 0, ybic = 0, v;
+  u64 zbyc = xl8, zbic = mxl8, ybyc = 0, ybic = 0;
   for (u64 i = 0; i < yl; i++) {
-    v = ((y[ybyc] >> ybic) & 1);
-    (*z)[zbyc] |= (v << zbic);
+    (*z)[zbyc] |= (((y[ybyc] >> ybic) & 1) << zbic);
     if (++ybic == 8) {ybyc++; ybic = 0;}
     if (++zbic == 8) {zbyc++; zbic = 0;}
   }
@@ -277,14 +273,13 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void lh3new(uint8_t *n, char *s) {
-  uint8_t *m = malloc(256 * sizeof(uint8_t)), z1[] = {2};
-  uint8_t *ss = malloc(256 * sizeof(uint8_t));
-  u64 d = strlen((char*)n) * 8;
+  u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
+  uint8_t *m = malloc(l), z1[] = {2}, *ss = malloc(l);
 
   lh3cat(n, d, z1, 2, &m);
   lh3sponge(m, d + 2, &ss);
   lh3bit2str(ss, s);
-  free(m);free(ss);
+  free(m); free(ss);
 }
 
 // Shake inspired from https://github.com/mjosaarinen/tiny_sha3
