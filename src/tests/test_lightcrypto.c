@@ -17,11 +17,11 @@ int main(int argc, char **argv) {
   } else if (argc == 3) {
     lchandle_cert(argv[1], data);
     lchandle_asn(argv[2]);
+    lcdecode64((char*)data, strlen((char*)data), &d, s4);
   }
   lcdecode64(s0, strlen(s0), &d, s3);
   lcencode64(s2, strlen("smurfd and more stuff"), &d, s1);
   assert(strcmp(s1, s0) == 0);
-  lcdecode64((char*)data, strlen((char*)data), &d, s4);
   printf("OK\n");
   return 0;
 }
