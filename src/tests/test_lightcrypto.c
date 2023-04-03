@@ -9,7 +9,6 @@
 int main(int argc, char **argv) {
   char s0[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm", s1[257], data[LEN];
   uint8_t s2[] = "smurfd and more stuff", s3[257], s4[LEN];
-  int d = 0;
 
   if (argc == 1) {
     lchandle_cert("build/debug/ca.key", data);
@@ -17,10 +16,10 @@ int main(int argc, char **argv) {
   } else if (argc == 3) {
     lchandle_cert(argv[1], data);
     lchandle_asn(argv[2]);
-    lcdecode64((char*)data, strlen((char*)data), &d, s4);
+    base64dec((char*)data, strlen((char*)data), s4);
   }
-  lcdecode64(s0, strlen(s0), &d, s3);
-  lcencode64(s2, strlen("smurfd and more stuff"), &d, s1);
+  base64dec(s0, strlen(s0), s3);
+  base64enc(s2, strlen("smurfd and more stuff"), s1);
   assert(strcmp(s1, s0) == 0);
   printf("OK\n");
 }

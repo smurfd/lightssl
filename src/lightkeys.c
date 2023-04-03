@@ -457,9 +457,8 @@ static u64 lkwrite_cert(char *fn, uint8_t c[]) {
 static u64 lkwrite_key(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
   char ccc[257];
-  int i = 0, j;
+  int i = 0, j = base64enc(c, 164, ccc);
 
-  lcencode64(c, 164, &j, ccc);
   fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {
     if (i != 0 && i % 64 == 0) {fprintf(ptr, "\n");}

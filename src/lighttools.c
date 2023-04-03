@@ -38,30 +38,31 @@ uint32_t lcutf8encode(uint32_t cp) {
   return c;
 }
 
-void lcencode64(cuc *data, int inl, int *ol, char ed[*ol]) {
-  static int tab[] = {0, 2, 1};
+int base64enc(cuc *data, int inl, char ed[]) {
+  int tab[] = {0, 2, 1}, ol = 4 * ((inl + 2) / 3);
 
-  *ol = 4 * ((inl + 2) / 3);
   for (int i = 0, j = 0; i < inl;) {
     uint32_t a = lcoct(i++, inl, data), b = lcoct(i++, inl, data);
     uint32_t c = lcoct(i++, inl, data), tri = (a << 0x10) + (b << 0x08) + c;
     for (int k = 3; k >=0; k--) {ed[j++] = enc[(tri >> k * 6) & 0x3F];}
   }
-  for (int i = 0; i < tab[inl % 3]; i++) ed[*ol - 1 - i] = '='; ed[*ol] = '\0';
+  for (int i = 0; i < tab[inl % 3]; i++) ed[ol - 1 - i] = '='; ed[ol] = '\0';
+  return ol;
 }
 
-void lcdecode64(cc *data, int inl, int *ol, uint8_t dd[*ol]) {
+int base64dec(cc *data, int inl, uint8_t dd[]) {
   static char dec[LEN] = {0};
+  int ol = inl / 4 * 3;
 
-  *ol = inl / 4 * 3;
-  for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (*ol)--;}
+  for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (ol)--;}
   for (int i = 0; i < 64; i++) dec[(uint8_t)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
     uint32_t a = lcsex(data, dec, i++), b = lcsex(data, dec, i++);
     uint32_t c = lcsex(data, dec, i++), d = lcsex(data, dec, i++);
     uint32_t tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
-    if (j < *ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
+    if (j < ol) {for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;}
   }
+  return ol;
 }
 
 //
