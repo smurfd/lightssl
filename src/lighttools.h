@@ -15,6 +15,6 @@ uint32_t utf8dec(uint32_t c);
 int lrand(u64 h[KB], u64 k[KB]);
 int base64enc(cuc *data, int inl, char ed[]);
 int base64dec(cc *data, int inl, uint8_t dd[]);
-void pack(uint64_t big[6], const uint8_t byte[48]);
-void unpack(uint8_t byte[48], const uint64_t big[6]);
+void pack(u64 big[6], const uint8_t byte[48]);
+void unpack(uint8_t byte[48], const u64 big[6]);
 #endif
