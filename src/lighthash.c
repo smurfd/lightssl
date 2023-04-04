@@ -148,7 +148,7 @@ static uint8_t lh3rc(u64 t) {
   for (u64 i = 1; i <= m; i++) {
     r0 = 0;
     r0 ^= MOD(r1, 2);
-    for (int j = 4; j >= 2; j--) {r1 ^= MOD(r1, 2) << j;}
+    for (int j = 4; j >= 2; j--) r1 ^= MOD(r1, 2) << j;
     r1 /= 2;
     r1 ^= r0 << 7;
   }
@@ -248,7 +248,7 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
   while (true) {
     memcpy(str, s, r / 8);
     zl = lh3cat(z, zl, str, r, &z);
-    if (zl >= SHA3_BITS) {memcpy((*ps), z, 512 / 8); break;}
+    if (zl >= SHA3_BITS) {memcpy((*ps), z, 64); break;}
     memcpy(sc, s, b / 8);
     lh3keccak_p(sc, s);
   }
