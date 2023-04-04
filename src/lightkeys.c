@@ -24,8 +24,6 @@
 #include "lightdefs.h"
 #include "lighttools.h"
 
-
-
 //
 // Clear a
 static void lkclear(u64 *a) {for (int i = 0; i < DI; ++i) {a[i] = 0;}}
@@ -62,9 +60,9 @@ static u64 lkbits(u64 *a) {
   u64 i, nd = lkcount(a), d;
 
   if (nd == 0) return 0;
-  d = a[nd-1];
+  d = a[nd - 1];
   for (i = 0; d; ++i) d >>= 1;
-  return ((nd-1) * 64 + i);
+  return ((nd - 1) * 64 + i);
 }
 
 //
@@ -92,9 +90,8 @@ static u64 lkls(u64 *a, const u64 *b, const u64 c) {
 //
 // Right shift by 1
 static void lkrs1(u64 *a) {
-  u64 *e = a, ovr = 0;
+  u64 *e = a, ovr = 0; a += DI;
 
-  a += DI;
   while (a-- > e) {u64 t = *a; *a = (t >> 1) | ovr; ovr = t << 63;}
 }
 
@@ -154,7 +151,7 @@ static void lko_mul(u64 *a, const u64 *b) {
   ovr += lksub(a, a, t);
   u64 d = a[DI] - ovr;
   if (d > a[DI]) {
-    for (u64 i = 1+DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
+    for (u64 i = 1 + DI; ; ++i) {--a[i]; if (a[i] != (u64) - 1) {break;}}
   }
   a[DI] = d;
 }
@@ -381,7 +378,7 @@ static void lkm_inv(u64 *r, u64 *p, u64 *m) {
       lksub(v, v, u);
       if (!EVEN(v)) {car = lkadd(v, v, m);}
       lkrs1(v);
-      if (car) {v[DI-1] |= 0x8000000000000000;}
+      if (car) {v[DI - 1] |= 0x8000000000000000;}
     }
   }
   lkset(r, u);
@@ -396,21 +393,23 @@ static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
   lkp_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
   for (int i = lkbits(q) - 2; i > 0; --i) {
     nb = !lkchk(q, i);
-    lkp_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
-    lkp_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+    lkp_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
+    lkp_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
   }
   nb = !lkchk(q, 0);
-  lkp_addc(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
+  lkp_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
   // Find final 1/Z value.
   lkm_sub(z, Rx[1], Rx[0], curve_p);
-  lkm_mul(z, z, Ry[1-nb]); lkm_mul(z, z, p->x);
-  lkm_inv(z, z, curve_p); lkm_mul(z, z, p->y); lkm_mul(z, z, Rx[1-nb]);
+  lkm_mul(z, z, Ry[1 - nb]); lkm_mul(z, z, p->x);
+  lkm_inv(z, z, curve_p); lkm_mul(z, z, p->y); lkm_mul(z, z, Rx[1 - nb]);
 
   // End 1/Z calculation
-  lkp_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]); lkp_appz(Rx[0], Ry[0], z);
+  lkp_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]); lkp_appz(Rx[0], Ry[0], z);
   lkset(r->x, Rx[0]); lkset(r->y, Ry[0]);
 }
 
+//
+// Write cert to file
 static u64 lkwrite_cert(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
   int i = 4;
@@ -424,6 +423,8 @@ static u64 lkwrite_cert(char *fn, uint8_t c[]) {
   return 1;
 }
 
+//
+// Write key to file
 static u64 lkwrite_key(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
   char ccc[257];
@@ -439,6 +440,8 @@ static u64 lkwrite_key(char *fn, uint8_t c[]) {
   return 1;
 }
 
+//
+// Write cms to file
 static u64 lkwrite_cms(char *fn, uint8_t c[]) {
   FILE* ptr = fopen(fn, "w");
 
@@ -448,7 +451,8 @@ static u64 lkwrite_cms(char *fn, uint8_t c[]) {
 }
 
 // Public functions
-
+//
+// Write certificates/keys/cms
 u64 lkwrite(char *fn, uint8_t c[], int type) {
   // type : 1 = certificate
   // type : 2 = private key
