@@ -208,21 +208,21 @@ const uint8_t MIXINV[4][4] = {{14, 11, 13, 9}, {9, 14, 11, 13},
 // Copy a state array to another
 static void copy_state(uint8_t s[4][NB], uint8_t in[4][NB]) {
   for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i) {s[j][i] = in[j][i];}
+    for (int i = 0; i < NB; ++i) s[j][i] = in[j][i];
 }
 
 //
 // Copy to a state array from array
 static void state_from_arr(uint8_t s[4][NB], uint8_t in[NB4]) {
   for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i) {s[j][i] = in[j + 4 * i];}
+    for (int i = 0; i < NB; ++i) s[j][i] = in[j + 4 * i];
 }
 
 //
 // Copy to array from state array
 static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
   for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i) {s[j + 4 * i] = in[j][i];}
+    for (int i = 0; i < NB; ++i) s[j + 4 * i] = in[j][i];
 }
 
 //
@@ -230,7 +230,7 @@ static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
 static void lciphers_shiftrow(uint8_t state[4][NB], uint32_t i, uint32_t n) {
   uint8_t tmp[NB];
 
-  for (uint32_t j = 0; j < NB; j++) {tmp[j] = state[i][(j + n) % NB];}
+  for (uint32_t j = 0; j < NB; j++) tmp[j] = state[i][(j + n) % NB];
   memcpy(state[i], tmp, NB * sizeof(uint8_t));
 }
 
@@ -255,15 +255,12 @@ static void lciphers_invsubbytes(uint8_t state[4][NB]) { // See Sec. 5.3.2
 static void lciphers_invmixcolumns(uint8_t state[4][NB]) { // See Sec. 5.3.3
   uint8_t temp_state[4][NB];
 
-  for (int i = 0; i < 4; ++i) {memset(temp_state[i], 0, 4);}
-  for (int i = 0; i < 4; ++i) {
-    for (int k = 0; k < 4; ++k) {
-      for (int j = 0; j < 4; ++j) {
+  for (int i = 0; i < 4; ++i) memset(temp_state[i], 0, 4);
+  for (int i = 0; i < 4; ++i)
+    for (int k = 0; k < 4; ++k)
+      for (int j = 0; j < 4; ++j)
         temp_state[i][j] ^= GF[MIXINV[i][k]][state[k][j]];
-      }
-    }
-  }
-  for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
+  for (int i = 0; i < 4; ++i) memcpy(state[i], temp_state[i], 4);
 }
 
 //
@@ -273,19 +270,18 @@ static void lciphers_addroundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec.
 
   copy_state(tmp, state);
   for (int j = 0; j < NB; ++j)
-    for (int i = 0; i < 4; ++i) {tmp[i][j] = state[i][j] ^ w[i + 4 * j];}
+    for (int i = 0; i < 4; ++i) tmp[i][j] = state[i][j] ^ w[i + 4 * j];
   copy_state(state, tmp);
 }
 
 //
 // 5.1.x
 static void lciphers_subbytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++)
     for (int j = 0; j < NB; j++) {
       uint8_t s = state[i][j];
       state[i][j] = SBOX[s / 16][s % 16];
     }
-  }
 }
 
 //
@@ -299,22 +295,19 @@ static void lciphers_shiftrows(uint8_t state[4][NB]) { // See Sec. 5.1.2
 static void lciphers_mixcolumns(uint8_t state[4][NB]) { // See Sec. 5.1.3
   uint8_t temp_state[4][NB];
 
-  for (int i = 0; i < 4; ++i) {memset(temp_state[i], 0, 4);}
-  for (int i = 0; i < 4; ++i) {
-    for (int k = 0; k < 4; ++k) {
-      for (int j = 0; j < 4; ++j) {
-        if (MIX[i][k] == 1) {temp_state[i][j] ^= state[k][j];}
-        else {temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];}
-      }
-    }
-  }
+  for (int i = 0; i < 4; ++i) memset(temp_state[i], 0, 4);
+  for (int i = 0; i < 4; ++i)
+    for (int k = 0; k < 4; ++k)
+      for (int j = 0; j < 4; ++j)
+        if (MIX[i][k] == 1) temp_state[i][j] ^= state[k][j];
+        else temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];
   for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
 }
 
 //
 //
 static void lciphers_subword(uint8_t *wrd) {
-  for (int i = 0; i < 4; i++) {wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];}
+  for (int i = 0; i < 4; i++) wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];
 }
 
 //
@@ -340,23 +333,23 @@ static void lciphers_rcon(uint8_t *wrd, uint8_t a) {
 static void lciphers_keyexpansion(uint8_t key[NK * 2], uint8_t w[NB * NR]) {
   uint8_t tmp[4], rc[4];
 
-  for (int i = 0; i < NK4; ++i) {w[i] = key[i];}
+  for (int i = 0; i < NK4; ++i) w[i] = key[i];
   for (int i = NK4; i < 4 * NB * (NR + 1); i += 4) {
-    for (int j = 0; j < 4; ++j) {tmp[j] = w[i - 4 + j];}
+    for (int j = 0; j < 4; ++j) tmp[j] = w[i - 4 + j];
     if (i / 4 % NK == 0) {
       lciphers_rotword(tmp);
       lciphers_subword(tmp);
       lciphers_rcon(rc, i / (4 * NK));
       for (int k = 0; k < 4; k++) {tmp[k] = tmp[k] ^ rc[k];}
-    } else if (NK > 6 && i / 4 % NK == 4) {lciphers_subword(tmp);}
-    for (int j = 0; j < 4; ++j) {w[i+j] = w[i + j - 4 * NK] ^ tmp[j];}
+    } else if (NK > 6 && i / 4 % NK == 4) lciphers_subword(tmp);
+    for (int j = 0; j < 4; ++j) w[i + j] = w[i + j - 4 * NK] ^ tmp[j];
   }
 }
 
 //
 //
 static void lciphers_xor(const uint8_t *a, const uint8_t *b, uint8_t *c, uint32_t len) {
-  for (uint32_t i = 0; i < len; i++) {c[i] = a[i] ^ b[i];}
+  for (uint32_t i = 0; i < len; i++) c[i] = a[i] ^ b[i];
 }
 
 //
@@ -406,19 +399,18 @@ void lciphers_encrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
 
   lciphers_keyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
-  if (cbc) { // CBC
+  if (cbc) // CBC
     for (uint32_t i = 0; i < l; i += BBL) {
       lciphers_xor(block, (in + i), block, BBL);
       lciphers_encryptblock(block, (o + i), roundkeys);
       memcpy(block, (o + i), BBL);
     }
-  } else { // CFB
+  else // CFB
     for (uint32_t i = 0; i < l; i += BBL) {
       lciphers_encryptblock(block, encryptedblock, roundkeys);
       lciphers_xor((in + i), encryptedblock, (o + i), BBL);
       memcpy(block, (o + i), BBL);
     }
-  }
 }
 
 //
@@ -429,17 +421,16 @@ void lciphers_decrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
 
   lciphers_keyexpansion(k, roundkeys);
   memcpy(block, iv, BBL);
-  if (cbc) { // CBC
+  if (cbc) // CBC
     for (uint32_t i = 0; i < l; i += BBL) {
       lciphers_decryptblock((in + i), (o + i), roundkeys);
       lciphers_xor(block, (o + i), (o + i), BBL);
       memcpy(block, in + i, BBL);
     }
-  } else { // CFB
+  else // CFB
     for (uint32_t i = 0; i < l; i += BBL) {
       lciphers_encryptblock(block, encryptedblock, roundkeys);
       lciphers_xor(in + i, encryptedblock, o + i, BBL);
       memcpy(block, in + i, BBL);
     }
-  }
 }
