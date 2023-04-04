@@ -18,7 +18,7 @@ int main(void) {
   assert(lksign(privkey, h, sig, k));
   assert(lkvrfy(pubkey, h, sig));
   assert(!lkvrfy(privkey, h, sig)); // assert failure
-  unpack(p, privkey);
+  bit_unpack(p, privkey);
   lkwrite("ca-own.key", p, 2);
 
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning

@@ -107,7 +107,7 @@ int lrand(u64 h[KB], u64 k[KB]) {
 // (uint64_t)dig[7];
 //
 // Bit packing function uint8 to uint64
-void pack(u64 big[6], const uint8_t byte[48]) {
+void bit_pack(u64 big[6], const uint8_t byte[48]) {
   for(uint32_t i = 0; i < 6; ++i) {
     const uint8_t *dig = byte + 8 * (6 - 1 - i);
     for (int j = 7; j >= 0; j--) big[i] |= ((u64)dig[7 - j] << (j * 8));
@@ -124,9 +124,41 @@ void pack(u64 big[6], const uint8_t byte[48]) {
 // dig[7] = big[i];
 //
 // Bit unpack uint64 to uint8
-void unpack(uint8_t byte[48], const u64 big[6]) {
+void bit_unpack(uint8_t byte[48], const u64 big[6]) {
   for(uint32_t i = 0; i < 6; ++i) {
     uint8_t *dig = byte + 8 * (6 - 1 - i);
     for (int j = 7; j >= 0; j--) dig[7 - j] = big[i] >> (j * 8);
+  }
+}
+
+//
+// n[i] = ((u64)d[0] << 56) |
+//        ((u64)d[1] << 48) |
+//        ((u64)d[2] << 40) |
+//        ((u64)d[3] << 32) |
+//        ((u64)d[4] << 24) |
+//        ((u64)d[5] << 16) |
+//        ((u64)d[6] << 8)  |
+//         (u64)d[7];
+void bit_pack64(u64 n[DI], const u64 b[KB]) {
+  for(u64 i = 0; i < DI; ++i) {
+    const u64 *d = b + 8 * (DI - 1 - i); n[i] = 0;
+    for (u64 j = 0; j < 8; j++) n[i] |= ((u64)d[j] << ((7 - j) * 8));
+  }
+}
+
+//
+// d[0] = n[i] >> 56;
+// d[1] = n[i] >> 48;
+// d[2] = n[i] >> 40;
+// d[3] = n[i] >> 32;
+// d[4] = n[i] >> 24;
+// d[5] = n[i] >> 16;
+// d[6] = n[i] >> 8;
+// d[7] = n[i];
+void bit_unpack64(u64 b[KB], const u64 n[DI]) {
+  for(u64 i = 0; i < DI; ++i) {
+    u64 *d = b + 8 * (DI - 1 - i);
+    for (u64 j = 0; j < 8; j++) {d[j] = n[i] >> ((7 - j) * 8);}
   }
 }
