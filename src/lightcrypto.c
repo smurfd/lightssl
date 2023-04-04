@@ -301,22 +301,22 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   // Hack to handle linux, at this point not sure why on linux type is spread on
   // every other, and on mac its as it should be. something with malloc?
   if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
-  if ((*cms)[0 * m].type != ASN1_SEQUENC) return err("Sequence");
-  if ((*cms)[1 * m].type != ASN1_OBJIDEN) return err("CT");
+  if ((*cms)[0 * m].type != A1SEQUENC) return err("Sequence");
+  if ((*cms)[1 * m].type != A1OBJIDEN) return err("CT");
   if (memcmp((*cms)[1 * m].data, AS1, (*cms)[1 * m].len) != 0 ||
-    (*cms)[3 * m].type != ASN1_SEQUENC) return err("CT EncryptedData");
-  if ((*cms)[4 * m].type != ASN1_INTEGER || (*cms)[4 * m].len != 1)
+    (*cms)[3 * m].type != A1SEQUENC) return err("CT EncryptedData");
+  if ((*cms)[4 * m].type != A1INTEGER || (*cms)[4 * m].len != 1)
     return err("CMS Version");
-  if ((*cms)[5 * m].type != ASN1_SEQUENC) return err("EC");
-  if ((*cms)[6 * m].type != ASN1_OBJIDEN) return err("CT EC");
+  if ((*cms)[5 * m].type != A1SEQUENC) return err("EC");
+  if ((*cms)[6 * m].type != A1OBJIDEN) return err("CT EC");
   if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AS2, (*cms)[6*m].len)!=0)
     return err("CT EC PKCS#7");
-  if ((*cms)[7 * m].type == ASN1_SEQUENC) {
-    if ((*cms)[8 * m].type != ASN1_OBJIDEN) return err("EncryptionAlgoIdentifier");
+  if ((*cms)[7 * m].type == A1SEQUENC) {
+    if ((*cms)[8 * m].type != A1OBJIDEN) return err("EncryptionAlgoIdentifier");
     if (memcmp((*cms)[8 * m].data, AS3, (*cms)[8 * m].len) == 0 ||
         memcmp((*cms)[8 * m].data, AS4, (*cms)[8 * m].len) == 0 ||
         memcmp((*cms)[8 * m].data, AS5, (*cms)[8 * m].len) == 0) {
-      if (((*cms)[9*m].type != ASN1_OCTSTRI && (*cms)[9*m].type !=ASN1_SEQUENC))
+      if (((*cms)[9 * m].type != A1OCTSTRI && (*cms)[9 * m].type != A1SEQUENC))
         return err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
     if ((*cms)[10 * m].type != 0x80 && (*cms)[10*m].type != 0x02)
@@ -324,7 +324,7 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   }
   printf("\n----- parse begin ----\n");
   printf("Content type: encryptedData\n");
-  printf("CMS version: %d\n", (*cms)[3*m].data[0]);
+  printf("CMS version: %d\n", (*cms)[3 * m].data[0]);
   printf("ContentType EncryptedContent: PKCS#7\n");
   if ((*cms)[8 * m].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
   if ((*cms)[8 * m].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");

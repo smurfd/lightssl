@@ -20,19 +20,19 @@ struct asn {
   uint32_t len;
   const uint8_t *data;
 };
-#define ASN1_INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
-#define ASN1_BITSTRI 0x03 // Header byte of the ASN.1 type BIT STRING
-#define ASN1_OCTSTRI 0x04 // Header byte of the ASN.1 type OCTET STRING
-#define ASN1_NULL000 0x05 // Header byte of the ASN.1 type NULL
-#define ASN1_OBJIDEN 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
-#define ASN1_SEQUENC 0x30 // Header byte of the ASN.1 type SEQUENCE
-#define ASN1_SET0000 0x31 // Header byte of the ASN.1 type SET
-#define ASN1_UTF8STR 0x12 // Header byte of the ASN.1 type UTF8String
-#define ASN1_PRNTSTR 0x19 // Header byte of the ASN.1 type PrintableString
-#define ASN1_T61STRI 0x20 // Header byte of the ASN.1 type T61String
-#define ASN1_IA5STRI 0x22 // Header byte of the ASN.1 type IA5String
-#define ASN1_UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
-#define ASN1_GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
+#define A1INTEGER 0x02 // Header byte of the ASN.1 type INTEGER
+#define A1BITSTRI 0x03 // Header byte of the ASN.1 type BIT STRING
+#define A1OCTSTRI 0x04 // Header byte of the ASN.1 type OCTET STRING
+#define A1NULL000 0x05 // Header byte of the ASN.1 type NULL
+#define A1OBJIDEN 0x06 // Header byte of the ASN.1 type OBJECT IDENTIFIER
+#define A1SEQUENC 0x30 // Header byte of the ASN.1 type SEQUENCE
+#define A1SET0000 0x31 // Header byte of the ASN.1 type SET
+#define A1UTF8STR 0x12 // Header byte of the ASN.1 type UTF8String
+#define A1PRNTSTR 0x19 // Header byte of the ASN.1 type PrintableString
+#define A1T61STRI 0x20 // Header byte of the ASN.1 type T61String
+#define A1IA5STRI 0x22 // Header byte of the ASN.1 type IA5String
+#define A1UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
+#define A1GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 
 static uint8_t AS1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
   0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06};
