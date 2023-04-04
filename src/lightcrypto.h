@@ -52,7 +52,7 @@ void lctransferkey(int s, bool snd, head *h, key *k);
 void lctransferdata(const int s, void* data, head *h, bool snd, u64 len);
 
 u64 lchandle_cert(char *cert, char d[LEN]);
-u64 lchandle_asn(char *cert);
+u64 lchandle_asn(char *cert, char c[]);
 
 // Keep static functions
 // u64 lightcrypto_rand();

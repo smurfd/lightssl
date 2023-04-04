@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <inttypes.h>
 #include "lightdefs.h"
 #include "lighttools.h"
@@ -33,6 +34,11 @@ static void prng_init(u64 seed) {
   prng_ctx.a = 0xea7f00d1; prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
   for (u64 i = 0; i < 31; ++i) {(void)prng_next();}
 }
+
+//
+// Error "handler"
+int err(char *s) {printf("ERR: %s\n", s); return 1;}
+
 
 // https://stackoverflow.com/questions/66715611/check-for-valid-utf-8-encoding-in-c/66723102#66723102
 // UTF8 encode/decode

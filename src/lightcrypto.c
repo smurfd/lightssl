@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "lightcrypto.h"
+#include "lighttools.h"
 #include "lightdefs.h"
 
 // What im looking for:
@@ -289,44 +290,37 @@ static int32_t lasn_der_dec(const uint8_t *der, uint32_t derlen, asn **o,
 }
 
 //
-// Error handler
-static int lasn_err(char *s) {printf("ERR: %s\n", s); return 1;}
-
-//
 // Output and parse the asn header.
 static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   int32_t objcnt = lasn_der_dec((uint8_t*)cmsd, fs, NULL, NULL, 0, 0), m = 1;
   asn *cms[] = {0};
 
-  if (objcnt < 0) return lasn_err("Objects");
-  if (lasn_der_dec(cmsd, fs, cms, cms, objcnt, 1) < 0)
-    return lasn_err("Parse");
+  if (objcnt < 0) return err("Objects");
+  if (lasn_der_dec(cmsd, fs, cms, cms, objcnt, 1) < 0) return err("Parse");
   lasn_print((*cms));
   // Hack to handle linux, at this point not sure why on linux type is spread on
   // every other, and on mac its as it should be. something with malloc?
   if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
-
-  if ((*cms)[0 * m].type != ASN1_SEQUENC) return lasn_err("Sequence");
-  if ((*cms)[1 * m].type != ASN1_OBJIDEN) return lasn_err("CT");
+  if ((*cms)[0 * m].type != ASN1_SEQUENC) return err("Sequence");
+  if ((*cms)[1 * m].type != ASN1_OBJIDEN) return err("CT");
   if (memcmp((*cms)[1 * m].data, AS1, (*cms)[1 * m].len) != 0 ||
-    (*cms)[3 * m].type != ASN1_SEQUENC) return lasn_err("CT EncryptedData");
+    (*cms)[3 * m].type != ASN1_SEQUENC) return err("CT EncryptedData");
   if ((*cms)[4 * m].type != ASN1_INTEGER || (*cms)[4 * m].len != 1)
-    return lasn_err("CMS Version");
-  if ((*cms)[5 * m].type != ASN1_SEQUENC) return lasn_err("EC");
-  if ((*cms)[6 * m].type != ASN1_OBJIDEN) return lasn_err("CT EC");
+    return err("CMS Version");
+  if ((*cms)[5 * m].type != ASN1_SEQUENC) return err("EC");
+  if ((*cms)[6 * m].type != ASN1_OBJIDEN) return err("CT EC");
   if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AS2, (*cms)[6*m].len)!=0)
-    return lasn_err("CT EC PKCS#7");
+    return err("CT EC PKCS#7");
   if ((*cms)[7 * m].type == ASN1_SEQUENC) {
-    if ((*cms)[8 * m].type != ASN1_OBJIDEN)
-      return lasn_err("EncryptionAlgoIdentifier");
+    if ((*cms)[8 * m].type != ASN1_OBJIDEN) return err("EncryptionAlgoIdentifier");
     if (memcmp((*cms)[8 * m].data, AS3, (*cms)[8 * m].len) == 0 ||
         memcmp((*cms)[8 * m].data, AS4, (*cms)[8 * m].len) == 0 ||
         memcmp((*cms)[8 * m].data, AS5, (*cms)[8 * m].len) == 0) {
       if (((*cms)[9*m].type != ASN1_OCTSTRI && (*cms)[9*m].type !=ASN1_SEQUENC))
-        return lasn_err("AES IV");
+        return err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
     if ((*cms)[10 * m].type != 0x80 && (*cms)[10*m].type != 0x02)
-      return lasn_err("No encrypted content");
+      return err("No encrypted content");
   }
   printf("\n----- parse begin ----\n");
   printf("Content type: encryptedData\n");
@@ -349,8 +343,6 @@ static int lasn_dump_and_parse(uint8_t *cmsd, uint32_t fs) {
 
 //
 // public function to handle asn cert
-u64 lchandle_asn(char *cert) {
-  char c[8192];
-
+u64 lchandle_asn(char *cert, char c[]) {
   return lasn_dump_and_parse((uint8_t*)c, lcread_cert(cert, c, 1));
 }

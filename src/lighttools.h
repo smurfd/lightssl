@@ -12,6 +12,7 @@ static char enc[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
 
 uint32_t utf8enc(uint32_t c);
 uint32_t utf8dec(uint32_t c);
+int err(char *s);
 int lrand(u64 h[KB], u64 k[KB]);
 int base64enc(cuc *data, int inl, char ed[]);
 int base64dec(cc *data, int inl, uint8_t dd[]);
