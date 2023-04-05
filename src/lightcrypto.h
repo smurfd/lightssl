@@ -34,39 +34,31 @@ struct asn {
 #define A1UTCTIME 0x23 // Header byte of the ASN.1 type UTCTime
 #define A1GENTIME 0x24 // Header byte of the ASN.1 type GeneralizedTime
 
-static uint8_t AS1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
+static uint8_t AA[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,
   0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06};
-static uint8_t AS2[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
-static uint8_t AS3[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
-static uint8_t AS4[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01 ,0x2a};
-static uint8_t AS5[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x02 ,0x30};
-int lckeys(void);
-int lclisten(int s, sock *cli);
-int lcinit(cc *host, cc *port, bool b);
-key lcgenkeys(u64 g, u64 p);
+static uint8_t AB[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
+static uint8_t AC[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
+static uint8_t AD[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01 ,0x2a};
+static uint8_t AE[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x02 ,0x30};
 
-void lcend(int s);
-void lccrypt(u64 data, key k, u64 *enc);
-void lcgenshare(key *k1, key *k2, u64 p, bool srv);
-void lctransferkey(int s, bool snd, head *h, key *k);
-void lctransferdata(const int s, void* data, head *h, bool snd, u64 len);
+int crypto_init(cc *host, cc *port, bool b);
+void transfer_key(int s, bool snd, head *h, key *k);
+void transfer_data(const int s, void* data, head *h, bool snd, u64 len);
+void gen_share(key *k1, key *k2, u64 p, bool srv);
+key gen_keys(u64 g, u64 p);
+int srv_listen(int s, sock *cli);
+void cryption(u64 data, key k, u64 *enc);
+void crypto_end(int s);
+int gen_keys_local(void);
 
-u64 lchandle_cert(char *cert, char d[LEN]);
-u64 lchandle_asn(char *cert, char c[]);
 
-// Keep static functions
-// u64 lightcrypto_rand();
-// int lightcrypto_getblock();
-// void *lightcrypto_handler(void *sdesc);
-// void lightcrypto_recvkey(int s, head *h, key *k);
-// void lightcrypto_sendkey(int s, head *h, key *k);
-// void lasn_printhex(const uint8_t *d, uint32_t len);
-// uint32_t lasn_get_len(const uint8_t *data, uint32_t len, uint32_t *off, bool t);
-// uint32_t lasn_get_len_enc_len(uint32_t datalen);
-// int32_t lasn_enc_int(uint32_t val, uint8_t *enc, uint8_t enclen);
-// int32_t lasn_dec_uint(uint8_t *enc, uint8_t enclen, uint32_t *dec);
-// int32_t lasn_der_objcnt(const uint8_t *der, uint32_t derlen);
-// int32_t lasn_der_enc_len(uint32_t len, uint8_t *enc, uint32_t enclen);
+
+
+//void lccrypt(u64 data, key k, u64 *enc);
+
+
+u64 handle_cert(char *cert, char d[LEN]);
+u64 handle_asn(char *cert, char c[]);
 #endif
 /*
 ```

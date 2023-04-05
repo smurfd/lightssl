@@ -6,10 +6,13 @@
 #include "../lightcrypto.h"
 
 int main(void) {
-  int s = lcinit("127.0.0.1", "9998", true);
+  int s = crypto_init("127.0.0.1", "9998", true);
   sock *cli = NULL;
 
-  if (lclisten(s, cli) < 0) {printf("Can't Thread\n"); exit(0);}
-  lcend(s);
+  if (srv_listen(s, cli) < 0) {
+    printf("Can't create a Thread\n");
+    exit(0);
+  }
+  crypto_end(s);
   printf("OK\n");
 }

@@ -8,26 +8,26 @@
 #include "../lightcrypto.h"
 
 int main(void) {
-  int s = lcinit("127.0.0.1", "9998", false);
+  int s = crypto_init("127.0.0.1", "9998", false);
 
   if (s >= 0) {
     u64 dat[BLOCK], cd[BLOCK];
     key k1, k2;
     head h;
 
-    lctransferkey(s, false, &h, &k1);
-    k2 = lcgenkeys(h.g, h.p);
-    lctransferkey(s, true, &h, &k2);
-    lcgenshare(&k1, &k2, h.p, false);
+    transfer_key(s, false, &h, &k1);
+    k2 = gen_keys(h.g, h.p);
+    transfer_key(s, true, &h, &k2);
+    gen_share(&k1, &k2, h.p, false);
     printf("share : 0x%.16llx\n", k1.shar);
     for (u64 i = 0; i < 12; i++) {
-      dat[i] = (u64)i; lccrypt(dat[i], k1, &cd[i]);
+      dat[i] = (u64)i; cryption(dat[i], k1, &cd[i]);
     }
-    lctransferdata(s, cd, &h, true, 11);
-    lcend(s);
+    transfer_data(s, cd, &h, true, 11);
+    crypto_end(s);
   }
   // locally generate two keypairs
   srand(time(0));
-  lckeys();
+  gen_keys_local();
   printf("OK\n");
 }
