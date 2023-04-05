@@ -197,32 +197,37 @@ const uint8_t GF[15][256] = {{0x0}, {0x0},
   0xfd, 0xa7, 0xa9, 0xbb, 0xb5, 0x9f, 0x91, 0x83, 0x8d}}; // mul 14
 
 // https://en.wikipedia.org/wiki/Rijndael_MixColumns & Matrix representation
-const uint8_t MIX[4][4] = {{2, 3, 1, 1}, {1, 2, 3, 1},
-  {1, 1, 2, 3}, {3, 1, 1, 2}};
+const uint8_t MIX[4][4] = {
+  {2, 3, 1, 1}, {1, 2, 3, 1}, {1, 1, 2, 3}, {3, 1, 1, 2}
+};
 
 // https://en.wikipedia.org/wiki/Rijndael_MixColumns & InverseMixColumns
-const uint8_t MIXINV[4][4] = {{14, 11, 13, 9}, {9, 14, 11, 13},
-  {13, 9, 14, 11}, {11, 13, 9, 14}};
+const uint8_t MIXINV[4][4] = {
+  {14, 11, 13, 9}, {9, 14, 11, 13}, {13, 9, 14, 11}, {11, 13, 9, 14}
+};
 
 //
 // Copy a state array to another
 static void copy_state(uint8_t s[4][NB], uint8_t in[4][NB]) {
   for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i) s[j][i] = in[j][i];
+    for (int i = 0; i < NB; ++i)
+      s[j][i] = in[j][i];
 }
 
 //
 // Copy to a state array from array
 static void state_from_arr(uint8_t s[4][NB], uint8_t in[NB4]) {
   for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i) s[j][i] = in[j + 4 * i];
+    for (int i = 0; i < NB; ++i)
+      s[j][i] = in[j + 4 * i];
 }
 
 //
 // Copy to array from state array
 static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
   for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i) s[j + 4 * i] = in[j][i];
+    for (int i = 0; i < NB; ++i)
+      s[j + 4 * i] = in[j][i];
 }
 
 //
@@ -230,14 +235,16 @@ static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
 static void lciphers_shiftrow(uint8_t state[4][NB], uint32_t i, uint32_t n) {
   uint8_t tmp[NB];
 
-  for (uint32_t j = 0; j < NB; j++) tmp[j] = state[i][(j + n) % NB];
+  for (uint32_t j = 0; j < NB; j++)
+    tmp[j] = state[i][(j + n) % NB];
   memcpy(state[i], tmp, NB * sizeof(uint8_t));
 }
 
 //
 // 5.3.x
 static void lciphers_invshiftrows(uint8_t state[4][NB]) { // See Sec. 5.3.1
-  for (int i = 1; i < 4; i++) lciphers_shiftrow(state, i, NB - i);
+  for (int i = 1; i < 4; i++)
+    lciphers_shiftrow(state, i, NB - i);
 }
 
 //
@@ -255,7 +262,8 @@ static void lciphers_invsubbytes(uint8_t state[4][NB]) { // See Sec. 5.3.2
 static void lciphers_invmixcolumns(uint8_t state[4][NB]) { // See Sec. 5.3.3
   uint8_t temp_state[4][NB];
 
-  for (int i = 0; i < 4; ++i) memset(temp_state[i], 0, 4);
+  for (int i = 0; i < 4; ++i)
+    memset(temp_state[i], 0, 4);
   for (int i = 0; i < 4; ++i)
     for (int k = 0; k < 4; ++k)
       for (int j = 0; j < 4; ++j)
@@ -270,7 +278,8 @@ static void lciphers_addroundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec.
 
   copy_state(tmp, state);
   for (int j = 0; j < NB; ++j)
-    for (int i = 0; i < 4; ++i) tmp[i][j] = state[i][j] ^ w[i + 4 * j];
+    for (int i = 0; i < 4; ++i)
+      tmp[i][j] = state[i][j] ^ w[i + 4 * j];
   copy_state(state, tmp);
 }
 
@@ -287,7 +296,8 @@ static void lciphers_subbytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
 //
 //
 static void lciphers_shiftrows(uint8_t state[4][NB]) { // See Sec. 5.1.2
-  for (int i = 1; i < 4; i++) lciphers_shiftrow(state, i, i);
+  for (int i = 1; i < 4; i++)
+    lciphers_shiftrow(state, i, i);
 }
 
 //
@@ -295,19 +305,22 @@ static void lciphers_shiftrows(uint8_t state[4][NB]) { // See Sec. 5.1.2
 static void lciphers_mixcolumns(uint8_t state[4][NB]) { // See Sec. 5.1.3
   uint8_t temp_state[4][NB];
 
-  for (int i = 0; i < 4; ++i) memset(temp_state[i], 0, 4);
+  for (int i = 0; i < 4; ++i)
+    memset(temp_state[i], 0, 4);
   for (int i = 0; i < 4; ++i)
     for (int k = 0; k < 4; ++k)
       for (int j = 0; j < 4; ++j)
         if (MIX[i][k] == 1) temp_state[i][j] ^= state[k][j];
         else temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];
-  for (int i = 0; i < 4; ++i) {memcpy(state[i], temp_state[i], 4);}
+  for (int i = 0; i < 4; ++i)
+    memcpy(state[i], temp_state[i], 4);
 }
 
 //
 //
 static void lciphers_subword(uint8_t *wrd) {
-  for (int i = 0; i < 4; i++) wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];
+  for (int i = 0; i < 4; i++)
+    wrd[i] = SBOX[wrd[i] / 16][wrd[i] % 16];
 }
 
 //
@@ -315,7 +328,10 @@ static void lciphers_subword(uint8_t *wrd) {
 static void lciphers_rotword(uint8_t *wrd) {
   uint8_t tmp = wrd[0];
 
-  for (int i = 0; i < 4; i++) {wrd[i] = wrd[i + 1]; if (i == 3) wrd[3] = tmp;}
+  for (int i = 0; i < 4; i++) {
+    wrd[i] = wrd[i + 1];
+    if (i == 3) wrd[3] = tmp;
+  }
 }
 
 //
@@ -323,7 +339,8 @@ static void lciphers_rotword(uint8_t *wrd) {
 static void lciphers_rcon(uint8_t *wrd, uint8_t a) {
   uint8_t c = 1;
 
-  for (int i = 0; i < a - 1; i++) {c = (c << 1) ^ (((c >> 7) & 1) * 0x1b);}
+  for (int i = 0; i < a - 1; i++)
+    c = (c << 1) ^ (((c >> 7) & 1) * 0x1b);
   wrd[0] = c;
   wrd[1] = wrd[2] = wrd[3] = 0;
 }
@@ -333,29 +350,35 @@ static void lciphers_rcon(uint8_t *wrd, uint8_t a) {
 static void lciphers_keyexpansion(uint8_t key[NK * 2], uint8_t w[NB * NR]) {
   uint8_t tmp[4], rc[4];
 
-  for (int i = 0; i < NK4; ++i) w[i] = key[i];
+  for (int i = 0; i < NK4; ++i)
+    w[i] = key[i];
   for (int i = NK4; i < 4 * NB * (NR + 1); i += 4) {
-    for (int j = 0; j < 4; ++j) tmp[j] = w[i - 4 + j];
+    for (int j = 0; j < 4; ++j)
+      tmp[j] = w[i - 4 + j];
     if (i / 4 % NK == 0) {
       lciphers_rotword(tmp);
       lciphers_subword(tmp);
       lciphers_rcon(rc, i / (4 * NK));
-      for (int k = 0; k < 4; k++) {tmp[k] = tmp[k] ^ rc[k];}
-    } else if (NK > 6 && i / 4 % NK == 4) lciphers_subword(tmp);
-    for (int j = 0; j < 4; ++j) w[i + j] = w[i + j - 4 * NK] ^ tmp[j];
+      for (int k = 0; k < 4; k++)
+        tmp[k] = tmp[k] ^ rc[k];
+    } else if (NK > 6 && i / 4 % NK == 4)
+      lciphers_subword(tmp);
+    for (int j = 0; j < 4; ++j)
+      w[i + j] = w[i + j - 4 * NK] ^ tmp[j];
   }
 }
 
 //
 //
 static void lciphers_xor(const uint8_t *a, const uint8_t *b, uint8_t *c, uint32_t len) {
-  for (uint32_t i = 0; i < len; i++) c[i] = a[i] ^ b[i];
+  for (uint32_t i = 0; i < len; i++)
+    c[i] = a[i] ^ b[i];
 }
 
 //
 //
 static void lciphers_encryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
-  uint8_t state[4][NB] = {{0},{0}};
+  uint8_t state[4][NB] = {{0}, {0}};
 
   state_from_arr(state, in);
   lciphers_addroundkey(state, rk);
@@ -374,7 +397,7 @@ static void lciphers_encryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk
 //
 //
 static void lciphers_decryptblock(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
-  uint8_t state[4][NB] = {{0},{0}};
+  uint8_t state[4][NB] = {{0}, {0}};
 
   state_from_arr(state, in);
   lciphers_addroundkey(state, rk + NR * 4 * NB);
