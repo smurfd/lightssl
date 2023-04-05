@@ -7,8 +7,6 @@ extern const uint8_t SBOXINV[16][16], GF[15][256], MIX[4][4], MIX[4][4];
 extern const uint8_t K[32], SBOX[16][16];
 extern const u64 WW[8];
 
-void lciphers_encrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
-  uint8_t o[], bool cbc);
-void lciphers_decrypt(uint8_t in[], uint32_t l, uint8_t k[], uint8_t *iv,
-  uint8_t o[], bool cbc);
+void ciph_encrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc);
+void ciph_decrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc);
 #endif
