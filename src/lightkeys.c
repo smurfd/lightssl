@@ -513,39 +513,40 @@ int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) 
 //
 // Verify signature
 int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
-  u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI],rx[DI],ry[DI];
+  u64 u1[DI], u2[DI], tx[DI], ty[DI], tz[DI], rx[DI], ry[DI], rz[DI];
   pt public, sum;
 
   lkp_decom(&public, publ);
-  bit_pack64(r, sign); bit_pack64(s, sign + KB);
-  if (lkzero(r) || lkzero(s)) return 0;
-  if (lkcmp(curve_n, r) != 1 || lkcmp(curve_n, s) != 1) return 0;
-  lkm_inv(z, s, curve_n);
+  bit_pack64(rx, sign); bit_pack64(ry, sign + KB);
+  if (lkzero(rx) || lkzero(ry)) return 0;
+  if (lkcmp(curve_n, rx) != 1 || lkcmp(curve_n, ry) != 1) return 0;
+  lkm_inv(rz, ry, curve_n);
   bit_pack64(u1, hash);
-  lkm_mmul(u1, u1, z, curve_n); lkm_mmul(u2, r, z, curve_n);
+  lkm_mmul(u1, u1, rz, curve_n); lkm_mmul(u2, rx, rz, curve_n);
 
   // Calculate sum = G + Q.
   lkset(sum.x, public.x); lkset(sum.y, public.y);
   lkset(tx, curve_g.x); lkset(ty, curve_g.y);
-  lkm_sub(z, sum.x, tx, curve_p); lkp_add(tx, ty, sum.x, sum.y);
-  lkm_inv(z, z, curve_p); lkp_appz(sum.x, sum.y, z);
+  lkm_sub(rz, sum.x, tx, curve_p); lkp_add(tx, ty, sum.x, sum.y);
+  lkm_inv(rz, rz, curve_p); lkp_appz(sum.x, sum.y, rz);
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
   u64 nb = (lkbits(u1) > lkbits(u2) ? lkbits(u1) : lkbits(u2));
   u64 n1 = (!!lkchk(u1, nb - 1)) | ((!!lkchk(u2, nb - 1)) << 1);
-  lkset(rx, points[n1]->x); lkset(ry, points[n1]->y); lkclear(z);
-  z[0] = 1;
+  lkset(rx, points[n1]->x); lkset(ry, points[n1]->y); lkclear(rz);
+  rz[0] = 1;
   for (int i = nb - 2; i >= 0; --i) {
-    lkp_double(rx, ry, z);
+    lkp_double(rx, ry, rz);
     u64 n2 = (!!lkchk(u1, i)) | ((!!lkchk(u2, i)) << 1);
     if (points[n2]) {
       lkset(tx, points[n2]->x); lkset(ty, points[n2]->y);
-      lkp_appz(tx, ty, z); lkm_sub(tz, rx, tx, curve_p);
-      lkp_add(tx, ty, rx, ry); lkm_mul(z, z, tz);
+      lkp_appz(tx, ty, rz); lkm_sub(tz, rx, tx, curve_p);
+      lkp_add(tx, ty, rx, ry); lkm_mul(rz, rz, tz);
     }
   }
-  lkm_inv(z, z, curve_p); lkp_appz(rx, ry, z);
+  lkm_inv(rz, rz, curve_p); lkp_appz(rx, ry, rz);
   if (lkcmp(curve_n, rx) != 1)
     lksub(rx, rx, curve_n);
-  return (lkcmp(rx, r) == 0);
+  bit_pack64(ry, sign);
+  return (lkcmp(rx, ry) == 0);
 }
