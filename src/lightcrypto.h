@@ -51,12 +51,6 @@ void cryption(u64 data, key k, u64 *enc);
 void crypto_end(int s);
 int gen_keys_local(void);
 
-
-
-
-//void lccrypt(u64 data, key k, u64 *enc);
-
-
 u64 handle_cert(char *cert, char d[LEN]);
 u64 handle_asn(char *cert, char c[]);
 #endif
