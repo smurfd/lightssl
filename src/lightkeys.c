@@ -26,12 +26,14 @@
 
 //
 // Clear a
-static void lkclear(u64 *a) {for (int i = 0; i < DI; ++i) a[i] = 0;}
+static void lkclear(u64 *a) {
+  memset(a, 0, DI * sizeof(u64));
+}
 
 //
 // Check if a is zero, return 1, if not return 0
 static int lkzero(const u64 *a) {
-  for (int i = 0; i < DI; ++i) {if (a[i]) {return 0;}}
+  for (int i = 0; i < DI; ++i) if (a[i]) return 0;
   return 1;
 }
 
@@ -51,7 +53,7 @@ static u64 lkcount(const u64 *a) {
 //
 // Set a from b
 static void lkset(u64 *a, const u64 *b) {
-  for (int i = 0; i < DI; ++i) a[i] = b[i];
+  memcpy(a, b, DI * sizeof(u64));
 }
 
 //
@@ -68,10 +70,9 @@ static u64 lkbits(u64 *a) {
 //
 // Compare a and b
 static int lkcmp(const u64 *a, const u64 *b) {
-  for (int i = DI-1; i >= 0; --i) {
-    if (a[i] > b[i]) {return 1;}
-    else if (a[i] < b[i]) {return -1;}
-  }
+  for (int i = DI - 1; i >= 0; --i)
+    if (a[i] > b[i]) return 1;
+    else if (a[i] < b[i]) return -1;
   return 0;
 }
 
@@ -122,7 +123,8 @@ static u64 lksub(u64 *a, const u64 *b, const u64 *c) {
 //
 //
 static void akrr(u64 **a, u64 k, u128 *r, u64 *r2) {
-  (*a)[k] = (u64)(*r); (*r) = ((*r) >> 64) | (((u128)(*r2)) << 64); (*r2) = 0;
+  (*a)[k] = (u64)(*r);
+  (*r) = ((*r) >> 64) | (((u128)(*r2)) << 64); (*r2) = 0;
 }
 
 //
