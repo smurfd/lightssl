@@ -13,13 +13,13 @@ int main(void) {
   uint8_t p[256];
 
   assert(lrand(h, k));
-  assert(lkmake_keys(pubkey, privkey, k));
-  assert(lkshar_secr(pubkey, privkey, sec, k));
-  assert(lksign(privkey, h, sig, k));
-  assert(lkvrfy(pubkey, h, sig));
-  assert(!lkvrfy(privkey, h, sig)); // assert failure
+  assert(keys_make(pubkey, privkey, k));
+  assert(keys_secr(pubkey, privkey, sec, k));
+  assert(keys_sign(privkey, h, sig, k));
+  assert(keys_vrfy(pubkey, h, sig));
+  assert(!keys_vrfy(privkey, h, sig)); // assert failure
   bit_unpack(p, privkey);
-  lkwrite("ca-own.key", p, 2);
+  keys_write("ca-own.key", p, 2);
 
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");

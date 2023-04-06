@@ -410,8 +410,7 @@ static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
 
 //
 // Write cert to file
-static u64 lkwrite_cert(char *fn, uint8_t c[]) {
-  FILE* ptr = fopen(fn, "w");
+static u64 write_crt(FILE* ptr, uint8_t data[]) {
   int i = 4;
 
   fprintf(ptr, "-----BEGIN CERTIFICATE-----\n");
@@ -419,57 +418,55 @@ static u64 lkwrite_cert(char *fn, uint8_t c[]) {
   while (i < 1779) {fputc('y', ptr); if (i % 64 == 0) fputc('\n', ptr); i++;}
   fprintf(ptr, "==\n");
   fprintf(ptr, "-----END CERTIFICATE-----\n");
-  fclose(ptr);
   return 1;
 }
 
 //
 // Write key to file
-static u64 lkwrite_key(char *fn, uint8_t c[]) {
-  FILE* ptr = fopen(fn, "w");
-  char ccc[257];
-  int i = 0, j = base64enc(c, 164, ccc);
+static u64 write_key(FILE* ptr, uint8_t data[]) {
+  char tmp[257] = {0};
+  int i = 0, j = base64enc(data, 164, tmp);
 
   fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {
-    if (i != 0 && i % 64 == 0) {fprintf(ptr, "\n");}
-    fprintf(ptr, "%c", ccc[i++]);
+    if (i != 0 && i % 64 == 0)
+      fprintf(ptr, "\n");
+    fprintf(ptr, "%c", tmp[i++]);
   }
   fprintf(ptr, "\n-----END EC PRIVATE KEY-----\n");
-  fclose(ptr);
   return 1;
 }
 
 //
 // Write cms to file
-static u64 lkwrite_cms(char *fn, uint8_t c[]) {
-  FILE* ptr = fopen(fn, "w");
-
-  fprintf(ptr, "%s\n", c);
-  fclose(ptr);
+static u64 write_cms(FILE* ptr, uint8_t data[]) {
+  fprintf(ptr, "%s\n", data);
   return 1;
 }
 
-// Public functions
 //
 // Write certificates/keys/cms
-u64 lkwrite(char *fn, uint8_t c[], int type) {
+u64 keys_write(char *fn, uint8_t data[], int type) {
+  FILE* ptr = fopen(fn, "w");
+  u64 ret = 0;
   // type : 1 = certificate
   // type : 2 = private key
   // type : 3 = cms
-  if (type == 1) return lkwrite_cert(fn, c);
-  if (type == 2) return lkwrite_key(fn, c);
-  if (type == 3) return lkwrite_cms(fn, c);
-  return 0;
+  if (type == 1) ret = write_crt(ptr, data);
+  if (type == 2) ret = write_key(ptr, data);
+  if (type == 3) ret = write_cms(ptr, data);
+  fclose(ptr);
+  return ret;
 }
 
 //
 // Make public key
-int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
+int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
   pt public;
 
   while(true) {
-    if (lkcmp(curve_n, private) != 1) lksub(private, private, curve_n);
+    if (lkcmp(curve_n, private) != 1)
+      lksub(private, private, curve_n);
     lkp_mul(&public, &curve_g, private, NULL);
     if (!lkp_zero(&public)) break;
   }
@@ -480,7 +477,7 @@ int lkmake_keys(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
 
 //
 // Create a secret from the public and private key
-int lkshar_secr(const u64 pub[KB+1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
+int keys_secr(const u64 pub[KB+1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
   pt public, product;
   u64 private[DI];
 
@@ -493,7 +490,7 @@ int lkshar_secr(const u64 pub[KB+1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) 
 
 //
 // Create signature
-int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
+int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
   u64 tmp[DI], s[DI];
   pt p;
 
@@ -515,7 +512,7 @@ int lksign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
 
 //
 // Verify signature
-int lkvrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
+int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   u64 tx[DI], ty[DI], tz[DI], r[DI], s[DI], u1[DI], u2[DI], z[DI],rx[DI],ry[DI];
   pt public, sum;
 
