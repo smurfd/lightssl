@@ -79,9 +79,11 @@ int base64enc(const uint8_t *data, int inl, char ed[]) {
   for (int i = 0, j = 0; i < inl;) {
     uint32_t a = oct(i++, inl, data), b = oct(i++, inl, data);
     uint32_t c = oct(i++, inl, data), tri = (a << 0x10) + (b << 0x08) + c;
-    for (int k = 3; k >=0; k--) ed[j++] = enc[(tri >> k * 6) & 0x3F];
+    for (int k = 3; k >=0; k--)
+      ed[j++] = enc[(tri >> k * 6) & 0x3F];
   }
-  for (int i = 0; i < tab[inl % 3]; i++) ed[ol - 1 - i] = '=';
+  for (int i = 0; i < tab[inl % 3]; i++)
+    ed[ol - 1 - i] = '=';
   ed[ol] = '\0';
   return ol;
 }
@@ -98,7 +100,9 @@ int base64dec(const char *data, int inl, uint8_t dd[]) {
     uint32_t a = sex(data, dec, i++), b = sex(data, dec, i++);
     uint32_t c = sex(data, dec, i++), d = sex(data, dec, i++);
     uint32_t tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
-    if (j < ol) for (int k = 2; k >= 0; k--) dd[j++] = (tri >> k * 8) & 0xFF;
+    if (j < ol)
+      for (int k = 2; k >= 0; k--)
+        dd[j++] = (tri >> k * 8) & 0xFF;
   }
   return ol;
 }
