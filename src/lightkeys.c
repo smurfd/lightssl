@@ -532,21 +532,20 @@ int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
   u64 nb = (lkbits(u1) > lkbits(u2) ? lkbits(u1) : lkbits(u2));
-  pt *point = points[(!!lkchk(u1, nb - 1)) | ((!!lkchk(u2, nb - 1)) << 1)];
-
-  lkset(rx, point->x); lkset(ry, point->y); lkclear(z);
+  u64 n1 = (!!lkchk(u1, nb - 1)) | ((!!lkchk(u2, nb - 1)) << 1);
+  lkset(rx, points[n1]->x); lkset(ry, points[n1]->y); lkclear(z);
   z[0] = 1;
   for (int i = nb - 2; i >= 0; --i) {
     lkp_double(rx, ry, z);
-    int index = (!!lkchk(u1, i)) | ((!!lkchk(u2, i)) << 1);
-    pt *point = points[index];
-    if (point) {
-      lkset(tx, point->x); lkset(ty, point->y);
+    u64 n2 = (!!lkchk(u1, i)) | ((!!lkchk(u2, i)) << 1);
+    if (points[n2]) {
+      lkset(tx, points[n2]->x); lkset(ty, points[n2]->y);
       lkp_appz(tx, ty, z); lkm_sub(tz, rx, tx, curve_p);
       lkp_add(tx, ty, rx, ry); lkm_mul(z, z, tz);
     }
   }
   lkm_inv(z, z, curve_p); lkp_appz(rx, ry, z);
-  if (lkcmp(curve_n, rx) != 1) {lksub(rx, rx, curve_n);}
+  if (lkcmp(curve_n, rx) != 1)
+    lksub(rx, rx, curve_n);
   return (lkcmp(rx, r) == 0);
 }
