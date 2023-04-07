@@ -1,4 +1,4 @@
-//                                                                            //
+//                                                                                                                    //
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
 #ifndef LIGHTHASH_H
 #define LIGHTHASH_H 1

@@ -1,4 +1,4 @@
-//                                                                            //
+//                                                                                                                    //
 // Very simple handshake
 #include <math.h>
 #include <stdio.h>
@@ -144,8 +144,7 @@ key crypto_gen_keys(u64 g, u64 p) {
 //
 // Generate a keypair & shared key then print it (test / demo)
 int crypto_gen_keys_local(void) {
-  u64 g1 = RAND64(), g2 = RAND64(), p1 = RAND64();
-  u64 p2 = RAND64(), c = 123456, d = 1, e = 1;
+  u64 g1 = RAND64(), g2 = RAND64(), p1 = RAND64(), p2 = RAND64(), c = 123456, d = 1, e = 1;
   key k1 = crypto_gen_keys(g1, p1), k2 = crypto_gen_keys(g2, p2);
 
   crypto_gen_share(&k1, &k2, p1, false);
@@ -256,10 +255,8 @@ static void init_asn(asn **asn) {
 //
 // dec = false, Count the der objects
 // dec = true, Decode the der encrypted data
-static int32_t der_decode(const uint8_t *der, uint32_t derlen, asn **o,
-    asn **oobj, uint32_t oobjc, bool dec) {
-  uint32_t deroff = 0, derenclen = get_len(der, derlen, &deroff, 1);
-  uint32_t childrenlen = 0, derdatl = derenclen - deroff, childoff = 0,objcnt=1;
+static int32_t der_decode(const uint8_t *der, uint32_t derlen, asn **o, asn **oobj, uint32_t oobjc, bool dec) {
+  uint32_t deroff=0,derenclen=get_len(der,derlen,&deroff,1),childrenlen=0,derdatl=derenclen-deroff, childoff=0,objcnt=1;
   const uint8_t *derdat = (der + deroff);
 
   if (dec) {init_asn(o); if (o == NULL) return -1;
@@ -305,24 +302,20 @@ static int dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
   if ((*cms)[0 * m].type != A1SEQUENC) return err("Sequence");
   if ((*cms)[1 * m].type != A1OBJIDEN) return err("CT");
-  if (memcmp((*cms)[1 * m].data, AA, (*cms)[1 * m].len) != 0 ||
-    (*cms)[3 * m].type != A1SEQUENC) return err("CT EncryptedData");
-  if ((*cms)[4 * m].type != A1INTEGER || (*cms)[4 * m].len != 1)
-    return err("CMS Version");
+  if (memcmp((*cms)[1 * m].data, AA, (*cms)[1 * m].len) != 0 || (*cms)[3 * m].type != A1SEQUENC)
+    return err("CT EncryptedData");
+  if ((*cms)[4 * m].type != A1INTEGER || (*cms)[4 * m].len != 1) return err("CMS Version");
   if ((*cms)[5 * m].type != A1SEQUENC) return err("EC");
   if ((*cms)[6 * m].type != A1OBJIDEN) return err("CT EC");
-  if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AB, (*cms)[6*m].len)!=0)
-    return err("CT EC PKCS#7");
+  if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AB, (*cms)[6*m].len)!=0) return err("CT EC PKCS#7");
   if ((*cms)[7 * m].type == A1SEQUENC) {
     if ((*cms)[8 * m].type != A1OBJIDEN) return err("EncryptionAlgoIdentifier");
     if (memcmp((*cms)[8 * m].data, AC, (*cms)[8 * m].len) == 0 ||
         memcmp((*cms)[8 * m].data, AD, (*cms)[8 * m].len) == 0 ||
         memcmp((*cms)[8 * m].data, AE, (*cms)[8 * m].len) == 0) {
-      if (((*cms)[9 * m].type != A1OCTSTRI && (*cms)[9 * m].type != A1SEQUENC))
-        return err("AES IV");
+      if (((*cms)[9 * m].type != A1OCTSTRI && (*cms)[9 * m].type != A1SEQUENC)) return err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
-    if ((*cms)[10 * m].type != 0x80 && (*cms)[10 * m].type != 0x02)
-      return err("No encrypted content");
+    if ((*cms)[10 * m].type != 0x80 && (*cms)[10 * m].type != 0x02) return err("No encrypted content");
   }
   printf("\n----- parse begin ----\n");
   printf("Content type: encryptedData\n");
@@ -335,9 +328,8 @@ static int dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   print_hex("Encrypted content:", (*cms)[9 * m].data, (*cms)[9 * m].len);
   // this if statement works now, but not 100% sure its correct
   // Are unprotected attributes available?
-  if ((*cms)[5 * m].pos != 0 && (*cms)[5 * m].pos != (*cms)[5 * m].len) {
-    printf("Unprotected values\n");
-  } else printf("No Unprotected values\n");
+  if ((*cms)[5 * m].pos != 0 && (*cms)[5 * m].pos != (*cms)[5 * m].len) printf("Unprotected values\n");
+  else printf("No Unprotected values\n");
   printf("----- parse end ----\n");
   free((*cms));
   return 0;

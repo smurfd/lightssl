@@ -1,3 +1,4 @@
+//                                                                                                                    //
 #include <stdio.h>
 #include <inttypes.h>
 #include "lightdefs.h"
@@ -173,5 +174,6 @@ void bit_unpack64(u64 b[KB], const u64 n[DI]) {
 //
 // Convert a hex bitstring to a string
 void bit_hex_str(char *s, const uint8_t *ss) {
-  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
+  for (u64 i = 0; i < SHA3_BITS / 16; i++)
+    sprintf(&s[i * 2], "%.2x", ss[i]);
 }

@@ -1,4 +1,4 @@
-//                                                                            //
+//                                                                                                                    //
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
 #include <math.h>
 #include <stdio.h>
@@ -200,8 +200,7 @@ static void keccak_p(uint8_t s[200], const uint8_t *sm) {
 
 //
 // Concatenate
-static u64 cat(uint8_t **z, const uint8_t *x, const u64 xl, const uint8_t *y,
-    const u64 yl) {
+static u64 cat(uint8_t **z, const uint8_t *x, const u64 xl, const uint8_t *y, const u64 yl) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
   *z = calloc(512, sizeof(uint8_t));
@@ -245,8 +244,7 @@ static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
 static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
-  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi,
-    *z = NULL, *pad, str[200] = {0};
+  uint8_t az[64]={0}, s[200]={0}, sc[200]={0}, sxor[200]={0}, *p, *pi, *z=NULL, *pad, str[200]={0};
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
 
   len = pad10(&pad, r, l);
@@ -304,8 +302,7 @@ void hash_shake_xof(uint8_t *sm) {
   keccak_p(sm, sm);
 }
 
-uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next,
-    bool upd) {
+uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next, bool upd) {
   uint8_t j = next, co = 32;
 
   if (upd) co = 20;
