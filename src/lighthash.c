@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include "lighthash.h"
 #include "lightdefs.h"
+#include "lighttools.h"
 
 //
 // Circular shift
@@ -240,7 +241,7 @@ static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
+static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
   uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi,
     *z = NULL, *pad, str[200] = {0};
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
@@ -249,7 +250,8 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
   plen = cat(&p, n, l, pad, len);
   for (u64 i = 0; i < plen / r; i++) {
     cat(&pi, &p[i * r / 8], r, az, c);
-    for (u64 j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
+    for (u64 j = 0; j < b / 8; j++)
+      sxor[j] = s[j] ^ pi[j];
     free(pi);
     keccak_p(s, sxor);
   }
@@ -280,24 +282,24 @@ static void lh3sponge(uint8_t *n, int l, uint8_t **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void lh3new(uint8_t *n, char *s) {
+void hash_new(char *s, const uint8_t *n) {
   u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
   uint8_t *m = malloc(l), z1[] = {2}, *ss = malloc(l);
 
   cat(&m, n, d, z1, 2);
-  lh3sponge(m, d + 2, &ss);
-  lh3bit2str(ss, s);
+  sponge(&ss, m, d + 2);
+  bit_conv_str(s, ss);
   free(m); free(ss);
 }
 
 // Shake inspired from https://github.com/mjosaarinen/tiny_sha3
-void lh3shake_xof(uint8_t *sm, uint8_t (*s)[200]) {
+void hash_shake_xof(uint8_t *sm, const uint8_t (*s)[200]) {
   sm[64] ^= 0x1F;
   sm[135] ^= 0x80;
   keccak_p(sm, sm);
 }
 
-uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
+uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next, bool upd) {
   uint8_t j = next, co = 32;
 
   if (upd) co = 20;
@@ -307,10 +309,4 @@ uint8_t lh3shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
     if (!upd) s[i] = sm[j++];
   }
   return j;
-}
-
-//
-// Convert a hex bitstring to a string
-void lh3bit2str(uint8_t *ss, char *s) {
-  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }
