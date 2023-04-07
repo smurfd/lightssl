@@ -254,30 +254,21 @@ static void mod_mod_mul(u64 *a, u64 *b, u64 *c, u64 *m) {
   set(a, p);
 }
 
-static void or_8(u64 *a, u64 car) {
-  if (car) a[DI - 1] |= 0x8000000000000000;
-}
-
-static void rs_au(u64 *a, u64 *u, u64 *m, u64 car) {
-  rshift1(a);
+static void rs_sub_au(u64 *a, u64 *b, u64 *u, u64 *v, u64 *m, u64 car, bool sb) {
+  if (sb) {
+    sub(a, a, b); rshift1(a);
+    if (compare(u, v) < 0) add(u, u, m);
+    sub(u, u, v);
+  } else rshift1(a);
   if (!EVEN(u)) car = add(u, u, m);
   rshift1(u);
-  or_8(u, car);
-}
-
-static void rs_sub_au(u64 *a, u64 *b, u64 *u, u64 *v, u64 *m, u64 car) {
-  sub(a, a, b); rshift1(a);
-  if (compare(u, v) < 0) add(u, u, m);
-  sub(u, u, v);
-  if (!EVEN(u)) car = add(u, u, m);
-  rshift1(u);
-  or_8(u, car);
+  if (car) u[DI - 1] |= 0x8000000000000000;
 }
 
 //
 // Modulo inversion
 static void mod_invers(u64 *r, u64 *p, u64 *m) {
-  u64 a[DI], b[DI], u[DI], v[DI], car;
+  u64 a[DI], b[DI], u[DI], v[DI], tmp[DI], car;
   int cmpResult;
 
   if(check_zero(p)) {clear(r); return;}
@@ -285,10 +276,10 @@ static void mod_invers(u64 *r, u64 *p, u64 *m) {
   clear(u); u[0] = 1; clear(v);
   while ((cmpResult = compare(a, b)) != 0) {
     car = 0;
-    if (EVEN(a)) rs_au(a, u, m, car);
-    else if (EVEN(b)) rs_au(b, v, m, car);
-    else if (cmpResult > 0) rs_sub_au(a, b, u, v, m, car);
-    else rs_sub_au(b, a, v, u, m, car);
+    if (EVEN(a)) rs_sub_au(a, tmp, u, tmp, m, car, false);
+    else if (EVEN(b)) rs_sub_au(b, tmp, v, tmp, m, car, false);
+    else if (cmpResult > 0) rs_sub_au(a, b, u, v, m, car, true);
+    else rs_sub_au(b, a, v, u, m, car, true);
   }
   set(r, u);
 }
