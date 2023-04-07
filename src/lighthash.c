@@ -14,7 +14,10 @@
 //
 // Circular shift
 static u64 shift_cir(u64 a, u64 n) {
-  if (MOD(n, 64) != 0) return (a << (MOD(n, 64))) ^ (a >> (64 - (MOD(n, 64))));
+  u64 m = MOD(n, 64);
+
+  if (m != 0)
+    return a << m ^ a >> (64 - m);
   return a;
 }
 
@@ -153,7 +156,8 @@ static uint8_t rc(u64 t) {
   for (u64 i = 1; i <= m; i++) {
     r0 = 0;
     r0 ^= MOD(r1, 2);
-    for (int j = 4; j >= 2; j--) r1 ^= MOD(r1, 2) << j;
+    for (int j = 4; j >= 2; j--)
+      r1 ^= MOD(r1, 2) << j;
     r1 /= 2;
     r1 ^= r0 << 7;
   }
@@ -188,7 +192,7 @@ static void keccak_p(uint8_t s[200], const uint8_t *sm) {
 
   str2state(&a, sm);
   for (int i = 0; i <= 23; i++) {
-    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a,i);
+    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
   }
   state2str(s, &a);
 }
@@ -257,7 +261,9 @@ static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
   while (true) {
     memcpy(str, s, r / 8);
     zl = cat(&z, z, zl, str, r);
-    if (zl >= SHA3_BITS) {memcpy((*ps), z, 64); break;}
+    if (zl >= SHA3_BITS) {
+      memcpy((*ps), z, 64); break;
+    }
     memcpy(sc, s, b / 8);
     keccak_p(s, sc);
   }
@@ -305,7 +311,9 @@ uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next,
   if (upd) co = 20;
   for (size_t i = 0; i < co; i++) {
     if (upd) sm[j++] ^= s[i];
-    if (j >= 136) {keccak_p(sm, sm); j = 0;}
+    if (j >= 136) {
+      keccak_p(sm, sm); j = 0;
+    }
     if (!upd) s[i] = sm[j++];
   }
   return j;
