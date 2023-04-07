@@ -42,17 +42,17 @@ static uint8_t AD[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01 ,0x2a};
 static uint8_t AE[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x02 ,0x30};
 
 int crypto_init(cc *host, cc *port, bool b);
-void transfer_key(int s, bool snd, head *h, key *k);
-void transfer_data(const int s, void* data, head *h, bool snd, u64 len);
-void gen_share(key *k1, key *k2, u64 p, bool srv);
-key gen_keys(u64 g, u64 p);
-int srv_listen(int s, sock *cli);
+void crypto_transfer_key(int s, bool snd, head *h, key *k);
+void crypto_transfer_data(const int s, void* data, head *h, bool snd, u64 len);
+void crypto_gen_share(key *k1, key *k2, u64 p, bool srv);
+key crypto_gen_keys(u64 g, u64 p);
+int crypto_gen_keys_local(void);
+int crypto_srv_listen(int s, sock *cli);
 void cryption(u64 data, key k, u64 *enc);
 void crypto_end(int s);
-int gen_keys_local(void);
 
-u64 handle_cert(char *cert, char d[LEN]);
-u64 handle_asn(char *cert, char c[]);
+u64 crypto_handle_cert(char *cert, char d[LEN]);
+u64 crypto_handle_asn(char *cert, char c[]);
 #endif
 /*
 ```

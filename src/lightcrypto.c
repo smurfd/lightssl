@@ -48,18 +48,18 @@ static void *srv_handler(void *sdesc) {
   int s = *(int*)sdesc;
 
   if (s == -1) {return (void*)-1;}
-  key k1 = gen_keys(g1, p1), k2;
+  key k1 = crypto_gen_keys(g1, p1), k2;
   k2.publ = 0; k2.priv = 0; k2.shar = 0;
   head h; h.g = g1; h.p = p1;
 
   // Send and receive stuff
   if (h.len > BLOCK) {return (void*)-1;}
-  transfer_key(s, true, &h, &k1);
-  transfer_key(s, false, &h, &k2);
-  gen_share(&k1, &k2, h.p, true);
+  crypto_transfer_key(s, true, &h, &k1);
+  crypto_transfer_key(s, false, &h, &k2);
+  crypto_gen_share(&k1, &k2, h.p, true);
   printf("share : 0x%.16llx\n", k2.shar);
   // Decrypt the data
-  transfer_data(s, &dat, &h, false, BLOCK-1);
+  crypto_transfer_data(s, &dat, &h, false, BLOCK-1);
   for (u64 i = 0; i < 10; i++) {cryption(dat[i], k2, &cd[i]);}
   pthread_exit(NULL);
   return 0;
@@ -88,14 +88,14 @@ int crypto_init(cc *host, cc *port, bool b) {
 
 //
 // Transfer data (send and receive)
-void transfer_data(const int s, void* data, head *h, bool snd, u64 len) {
+void crypto_transfer_data(const int s, void* data, head *h, bool snd, u64 len) {
   if (snd) {send(s, h, sizeof(head), 0); send(s, data, sizeof(u64)*len, 0);}
   else {recv(s, h, sizeof(head), 0); recv(s, &data, sizeof(u64) * len, 0);}
 }
 
 //
 // Transfer keys (send and receive)
-void transfer_key(int s, bool snd, head *h, key *k) {
+void crypto_transfer_key(int s, bool snd, head *h, key *k) {
   key tmp;
 
   if (snd) {send_key(s, h, k);}
@@ -110,7 +110,7 @@ void crypto_end(int s) {close(s);}
 
 //
 // Server listener
-int srv_listen(const int s, sock *cli) {
+int crypto_srv_listen(const int s, sock *cli) {
   int c = 1, ns[sizeof(int)], len = sizeof(sock_in);
 
   listen(s, 3);
@@ -126,14 +126,14 @@ int srv_listen(const int s, sock *cli) {
 
 //
 // Generate the shared key
-void gen_share(key *k1, key *k2, u64 p, bool srv) {
+void crypto_gen_share(key *k1, key *k2, u64 p, bool srv) {
   if (!srv) {(*k1).shar = p % (int64_t)pow((*k1).publ, (*k2).priv);}
   else {(*k2).shar = p % (int64_t)pow((*k2).publ, (*k1).priv);}
 }
 
 //
 // Generate a public and private keypair
-key gen_keys(u64 g, u64 p) {
+key crypto_gen_keys(u64 g, u64 p) {
   key k;
 
   k.priv = RAND64();
@@ -143,13 +143,13 @@ key gen_keys(u64 g, u64 p) {
 
 //
 // Generate a keypair & shared key then print it (test / demo)
-int gen_keys_local(void) {
+int crypto_gen_keys_local(void) {
   u64 g1 = RAND64(), g2 = RAND64(), p1 = RAND64();
   u64 p2 = RAND64(), c = 123456, d = 1, e = 1;
-  key k1 = gen_keys(g1, p1), k2 = gen_keys(g2, p2);
+  key k1 = crypto_gen_keys(g1, p1), k2 = crypto_gen_keys(g2, p2);
 
-  gen_share(&k1, &k2, p1, false);
-  gen_share(&k1, &k2, p1, true);
+  crypto_gen_share(&k1, &k2, p1, false);
+  crypto_gen_share(&k1, &k2, p1, true);
   printf("Alice public & private key: 0x%.16llx 0x%.16llx\n", k1.publ, k1.priv);
   printf("Bobs public & private key: 0x%.16llx 0x%.16llx\n", k2.publ, k2.priv);
   printf("Alice & Bobs shared key: 0x%.16llx 0x%.16llx\n", k1.shar, k2.shar);
@@ -343,7 +343,7 @@ static int dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   return 0;
 }
 
-u64 handle_cert(char *cert, char d[LEN]) {
+u64 crypto_handle_cert(char *cert, char d[LEN]) {
   uint8_t h[36], f[36];
   char crt[LEN];
   u64 len = read_cert(cert, crt, 0), head = get_header(crt, h);
@@ -356,6 +356,6 @@ u64 handle_cert(char *cert, char d[LEN]) {
 
 //
 // public function to handle asn cert
-u64 handle_asn(char *cert, char c[]) {
+u64 crypto_handle_asn(char *cert, char c[]) {
   return dump_and_parse((uint8_t*)c, read_cert(cert, c, 1));
 }
