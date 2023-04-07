@@ -24,5 +24,4 @@ void bit_pack(u64 big[6], const uint8_t byte[48]);
 void bit_unpack(uint8_t byte[48], const u64 big[6]);
 void bit_pack64(u64 n[6], const u64 b[48]);
 void bit_unpack64(u64 b[48], const u64 n[6]);
-void bit_conv_str(char *s, const uint8_t *ss);
 #endif
