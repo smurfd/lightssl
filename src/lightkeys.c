@@ -347,14 +347,17 @@ static void pt_init_double(u64 *a, u64 *b, u64 *c, u64 *d, const u64 *p) {
   pt_apply_z(a, b, z); pt_double(a, b, z); pt_apply_z(c, d, z);
 }
 
+static void ssmm(u64 *t5, u64 *c, u64 *a, u64 *curve_p) {
+  mod_sub(t5, c, a, curve_p); mod_sqr(t5, t5); mod_mul(a, a, t5);
+  mod_mul(c, c, t5);
+}
+
 //
 // Points add
 static void pt_add(u64 *a, u64 *b, u64 *c, u64 *d) {
   u64 t5[DI];
 
-  mod_sub(t5, c, a, curve_p); mod_sqr(t5, t5); mod_mul(a, a, t5);
-  mod_mul(c, c, t5); mod_sub(d, d, b, curve_p); mod_sqr(t5, d);
-
+  ssmm(t5, c, a, curve_p); mod_sub(d, d, b, curve_p); mod_sqr(t5, d);
   mod_sub(t5, t5, a, curve_p); mod_sub(t5, t5, c, curve_p);
   mod_sub(c, c, a, curve_p); mod_mul(b, b, c); mod_sub(c, a, t5, curve_p);
   mod_mul(d, d, c); mod_sub(d, d, b, curve_p); set(c, t5);
@@ -366,9 +369,7 @@ static void pt_add(u64 *a, u64 *b, u64 *c, u64 *d) {
 static void pt_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
   u64 t5[DI], t6[DI], t7[DI];
 
-  mod_sub(t5, c, a, curve_p); mod_sqr(t5, t5); mod_mul(a, a, t5);
-  mod_mul(c, c, t5); mod_add(t5, d, b, curve_p); mod_sub(d, d, b, curve_p);
-
+  ssmm(t5, c, a, curve_p); mod_add(t5, d, b, curve_p); mod_sub(d, d, b, curve_p);
   mod_sub(t6, c, a, curve_p); mod_mul(b, b, t6); mod_add(t6, a, c, curve_p);
   mod_sqr(c, d); mod_sub(c, c, t6, curve_p);
 
@@ -380,7 +381,7 @@ static void pt_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
 
 //
 // Point multiplication
-static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
+static void pt_mul(pt *r, pt *p, u64 *q, u64 *s) {
   u64 Rx[2][DI], Ry[2][DI], z[DI], nb;
 
   set(Rx[1], p->x); set(Ry[1], p->y);
@@ -397,7 +398,6 @@ static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
   mod_mul(z, z, Ry[1 - nb]); mod_mul(z, z, p->x);
   mod_invers(z, z, curve_p); mod_mul(z, z, p->y); mod_mul(z, z, Rx[1 - nb]);
 
-  // End 1/Z calculation
   pt_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]); pt_apply_z(Rx[0], Ry[0], z);
   set(r->x, Rx[0]); set(r->y, Ry[0]);
 }
@@ -461,7 +461,7 @@ int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
   while(true) {
     if (compare(curve_n, private) != 1)
       sub(private, private, curve_n);
-    lkp_mul(&public, &curve_g, private, NULL);
+    pt_mul(&public, &curve_g, private, NULL);
     if (!pt_check_zero(&public)) break;
   }
   bit_unpack64(priv, private); bit_unpack64(publ + 1, public.x);
@@ -477,7 +477,7 @@ int keys_secr(const u64 pub[KB+1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
 
   pt_decompress(&public, pub);
   bit_pack64(private, prv);
-  lkp_mul(&product, &public, private, r);
+  pt_mul(&product, &public, private, r);
   bit_unpack64(scr, product.x);
   return !pt_check_zero(&product);
 }
@@ -491,7 +491,7 @@ int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) 
   do {
     if (check_zero(k)) continue;
     if (compare(curve_n, k) != 1) sub(k, k, curve_n);
-    lkp_mul(&p, &curve_g, k, NULL);
+    pt_mul(&p, &curve_g, k, NULL);
     if (compare(curve_n, p.x) != 1) sub(p.x, p.x, curve_n);
   } while (check_zero(p.x));
   bit_unpack64(sign, p.x);
