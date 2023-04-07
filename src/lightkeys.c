@@ -163,23 +163,21 @@ static void omega_mul(u64 *a, const u64 *b) {
 
 //
 // Modulo add
-static void lkm_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
+static void mod_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
   if (add(a, b, c) || compare(a, m) >= 0) sub(a, a, m);
 }
 
 //
 // Modulo sub
-static void lkm_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
+static void mod_sub(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
   if (sub(a, b, c)) add(a, a, m);
 }
 
 //
 // Modulo mod
-static void lkm_mod(u64 *a, u64 *b) {
-  u64 t[DI2];
-
+static void mod_mod(u64 *a, u64 *b) {
   while (!check_zero(b + DI)) {
-    u64 ovr = 0;
+    u64 ovr = 0, t[DI2];
 
     clear(t); clear(t + DI);
     omega_mul(t, b + DI);
@@ -196,43 +194,45 @@ static void lkm_mod(u64 *a, u64 *b) {
 
 //
 // Modulo multiply
-static void lkm_mul(u64 *a, const u64 *b, const u64 *c) {
+static void mod_mul(u64 *a, const u64 *b, const u64 *c) {
   u64 p[DI2];
 
-  mul(p, b, c); lkm_mod(a, p);
+  mul(p, b, c); mod_mod(a, p);
 }
 
 //
 // Modulo square
-static void lkm_sqr(u64 *a, const u64 *b) {
+static void mod_sqr(u64 *a, const u64 *b) {
   u64 p[DI2];
 
-  mul(p, b, b); lkm_mod(a, p);
+  mul(p, b, b); mod_mod(a, p);
 }
 
 //
 // Modulo square root
-static void lkm_sqrt(u64 a[DI]) {
+static void mod_sqrt(u64 a[DI]) {
   u64 p1[DI] = {1}, r[DI] = {1};
 
   add(p1, curve_p, p1);
   for (u64 i = check_bits(p1) - 1; i > 1; --i) {
-    lkm_sqr(r, r);
-    if (check_set(p1, i)) lkm_mul(r, r, a);
+    mod_sqr(r, r);
+    if (check_set(p1, i)) mod_mul(r, r, a);
   }
   set(a, r);
 }
 
 //
-//
-static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
+// Modulo multiply (b * c) % m
+static void mod_mod_mul(u64 *a, u64 *b, u64 *c, u64 *m) {
   u64 ds, bs, pb, mb = check_bits(m), p[DI2], mm[DI2];
 
   mul(p, b, c);
   pb = check_bits(p + DI);
   if (pb) pb += DI * 64;
   else pb = check_bits(p);
-  if (pb < mb) {set(a, p); return;}
+  if (pb < mb) {
+    set(a, p); return;
+  }
 
   clear(mm); clear(mm + DI);
   ds = (pb - mb) / 64; bs = MOD(pb - mb, 64);
@@ -254,105 +254,29 @@ static void lkm_mmul(u64 *a, u64 *b, u64 *c, u64 *m) {
   set(a, p);
 }
 
-// Points functions
-//
-// Points is this zero?
-static int lkp_zero(pt *a) {
-  return (check_zero(a->x) && check_zero(a->y));
+static void or_8(u64 *a, u64 car) {
+  if (car) a[DI - 1] |= 0x8000000000000000;
 }
 
-//
-// Points double
-static void lkp_double(u64 *a, u64 *b, u64 *c) {
-  u64 t4[DI], t5[DI];
-
-  if (check_zero(c)) return;
-  lkm_sqr(t4, b); lkm_mul(t5, a, t4); lkm_sqr(t4, t4);
-  lkm_mul(b, b, c); lkm_sqr(c, c);
-
-  lkm_add(a, a, c, curve_p); lkm_add(c, c, c, curve_p);
-  lkm_sub(c, a, c, curve_p); lkm_mul(a, a, c);
-
-  lkm_add(c, a, a, curve_p); lkm_add(a, a, c, curve_p);
-  if (check_set(a, 0)) {
-    u64 ovr = add(a, a, curve_p);
-
-    rshift1(a);
-    a[DI - 1] |= ovr << 63;
-  } else rshift1(a);
-  lkm_sqr(c, a); lkm_sub(c, c, t5, curve_p); lkm_sub(c, c, t5, curve_p);
-  lkm_sub(t5, t5, c, curve_p); lkm_mul(a, a, t5); lkm_sub(t4, a, t4, curve_p);
-  set(a, c); set(c, b); set(b, t4);
+static void rs_au(u64 *a, u64 *u, u64 *m, u64 car) {
+  rshift1(a);
+  if (!EVEN(u)) car = add(u, u, m);
+  rshift1(u);
+  or_8(u, car);
 }
 
-//
-// decompress point
-static void lkp_decom(pt *a, const u64 b[KB + 1]) {
-  u64 tr[DI] = {3};
-
-  bit_pack64(a->x, b + 1);
-  lkm_sqr(a->y, a->x);
-  lkm_sub(a->y, a->y, tr, curve_p);
-  lkm_mul(a->y, a->y, a->x);
-  lkm_add(a->y, a->y, curve_b, curve_p);
-  lkm_sqrt(a->y);
-  if ((a->y[0] & 0x01) != (b[0] & 0x01)) sub(a->y, curve_p, a->y);
-}
-
-//
-// Modify (x1, y1) => (x1 * z^2, y1 * z^3)
-static void lkp_appz(u64 *a, u64 *b, const u64 *z) {
-  u64 t[DI];
-
-  lkm_sqr(t, z); lkm_mul(a, a, t); lkm_mul(t, t, z); lkm_mul(b, b, t);
-}
-
-//
-// P = (x1, y1) => 2P, (x2, y2) => P'
-static void lkp_inidoub(u64 *a, u64 *b, u64 *c, u64 *d, u64 *p) {
-  u64 z[DI];
-
-  set(c, a); set(d, b);
-  clear(z); z[0] = 1;
-  if (p) set(z, p);
-  lkp_appz(a, b, z); lkp_double(a, b, z); lkp_appz(c, d, z);
-}
-
-//
-// Points add
-static void lkp_add(u64 *a, u64 *b, u64 *c, u64 *d) {
-  u64 t5[DI];
-
-  lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5);
-  lkm_mul(a, a, t5); lkm_mul(c, c, t5); lkm_sub(d, d, b, curve_p);
-  lkm_sqr(t5, d);
-
-  lkm_sub(t5, t5, a, curve_p); lkm_sub(t5, t5, c, curve_p);
-  lkm_sub(c, c, a, curve_p); lkm_mul(b, b, c); lkm_sub(c, a, t5, curve_p);
-  lkm_mul(d, d, c); lkm_sub(d, d, b, curve_p); set(c, t5);
-}
-
-//
-// Points add
-// t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
-static void lkp_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
-  u64 t5[DI], t6[DI], t7[DI];
-
-  lkm_sub(t5, c, a, curve_p); lkm_sqr(t5, t5); lkm_mul(a, a, t5);
-  lkm_mul(c, c, t5); lkm_add(t5, d, b, curve_p); lkm_sub(d, d, b, curve_p);
-
-  lkm_sub(t6, c, a, curve_p); lkm_mul(b, b, t6); lkm_add(t6, a, c, curve_p);
-  lkm_sqr(c, d); lkm_sub(c, c, t6, curve_p);
-
-  lkm_sub(t7, a, c, curve_p); lkm_mul(d, d, t7); lkm_sub(d, d, b, curve_p);
-
-  lkm_sqr(t7, t5); lkm_sub(t7, t7, t6, curve_p); lkm_sub(t6, t7, a, curve_p);
-  lkm_mul(t6, t6, t5); lkm_sub(b, t6, b, curve_p); set(a, t7);
+static void rs_sub_au(u64 *a, u64 *b, u64 *u, u64 *v, u64 *m, u64 car) {
+  sub(a, a, b); rshift1(a);
+  if (compare(u, v) < 0) add(u, u, m);
+  sub(u, u, v);
+  if (!EVEN(u)) car = add(u, u, m);
+  rshift1(u);
+  or_8(u, car);
 }
 
 //
 // Modulo inversion
-static void lkm_inv(u64 *r, u64 *p, u64 *m) {
+static void mod_invers(u64 *r, u64 *p, u64 *m) {
   u64 a[DI], b[DI], u[DI], v[DI], car;
   int cmpResult;
 
@@ -361,33 +285,106 @@ static void lkm_inv(u64 *r, u64 *p, u64 *m) {
   clear(u); u[0] = 1; clear(v);
   while ((cmpResult = compare(a, b)) != 0) {
     car = 0;
-    if (EVEN(a)) {
-      rshift1(a);
-      if (!EVEN(u)) car = add(u, u, m);
-      rshift1(u);
-      if (car) u[DI - 1] |= 0x8000000000000000;
-    } else if (EVEN(b)) {
-      rshift1(b);
-      if (!EVEN(v)) car = add(v, v, m);
-      rshift1(v);
-      if (car) v[DI - 1] |= 0x8000000000000000;
-    } else if (cmpResult > 0) {
-      sub(a, a, b); rshift1(a);
-      if (compare(u, v) < 0) add(u, u, m);
-      sub(u, u, v);
-      if (!EVEN(u)) car = add(u, u, m);
-      rshift1(u);
-      if (car) u[DI - 1] |= 0x8000000000000000;
-    } else {
-      sub(b, b, a); rshift1(b);
-      if (compare(v, u) < 0) add(v, v, m);
-      sub(v, v, u);
-      if (!EVEN(v)) car = add(v, v, m);
-      rshift1(v);
-      if (car) v[DI - 1] |= 0x8000000000000000;
-    }
+    if (EVEN(a)) rs_au(a, u, m, car);
+    else if (EVEN(b)) rs_au(b, v, m, car);
+    else if (cmpResult > 0) rs_sub_au(a, b, u, v, m, car);
+    else rs_sub_au(b, a, v, u, m, car);
   }
   set(r, u);
+}
+
+//
+// Points is this zero?
+static int pt_check_zero(pt *a) {
+  return (check_zero(a->x) && check_zero(a->y));
+}
+
+//
+// Points double
+static void pt_double(u64 *a, u64 *b, u64 *c) {
+  u64 t4[DI], t5[DI];
+
+  if (check_zero(c)) return;
+  mod_sqr(t4, b); mod_mul(t5, a, t4); mod_sqr(t4, t4);
+  mod_mul(b, b, c); mod_sqr(c, c);
+
+  mod_add(a, a, c, curve_p); mod_add(c, c, c, curve_p);
+  mod_sub(c, a, c, curve_p); mod_mul(a, a, c);
+
+  mod_add(c, a, a, curve_p); mod_add(a, a, c, curve_p);
+  if (check_set(a, 0)) {
+    u64 ovr = add(a, a, curve_p);
+
+    rshift1(a);
+    a[DI - 1] |= ovr << 63;
+  } else rshift1(a);
+  mod_sqr(c, a); mod_sub(c, c, t5, curve_p); mod_sub(c, c, t5, curve_p);
+  mod_sub(t5, t5, c, curve_p); mod_mul(a, a, t5); mod_sub(t4, a, t4, curve_p);
+  set(a, c); set(c, b); set(b, t4);
+}
+
+//
+// Points decompress
+static void pt_decompress(pt *a, const u64 b[KB + 1]) {
+  u64 tr[DI] = {3};
+
+  bit_pack64(a->x, b + 1);
+  mod_sqr(a->y, a->x); mod_sub(a->y, a->y, tr, curve_p);
+  mod_mul(a->y, a->y, a->x);
+  mod_add(a->y, a->y, curve_b, curve_p); mod_sqrt(a->y);
+  if ((a->y[0] & 0x01) != (b[0] & 0x01)) sub(a->y, curve_p, a->y);
+}
+
+//
+// Points apply z
+// Modify (x1, y1) => (x1 * z^2, y1 * z^3)
+static void pt_apply_z(u64 *a, u64 *b, const u64 *z) {
+  u64 t[DI];
+
+  mod_sqr(t, z); mod_mul(a, a, t); mod_mul(t, t, z); mod_mul(b, b, t);
+}
+
+//
+// Points init double
+// P = (x1, y1) => 2P, (x2, y2) => P'
+static void pt_init_double(u64 *a, u64 *b, u64 *c, u64 *d, const u64 *p) {
+  u64 z[DI];
+
+  set(c, a); set(d, b);
+  clear(z); z[0] = 1;
+  if (p) set(z, p);
+  pt_apply_z(a, b, z); pt_double(a, b, z); pt_apply_z(c, d, z);
+}
+
+//
+// Points add
+static void pt_add(u64 *a, u64 *b, u64 *c, u64 *d) {
+  u64 t5[DI];
+
+  mod_sub(t5, c, a, curve_p); mod_sqr(t5, t5); mod_mul(a, a, t5);
+  mod_mul(c, c, t5); mod_sub(d, d, b, curve_p); mod_sqr(t5, d);
+
+  mod_sub(t5, t5, a, curve_p); mod_sub(t5, t5, c, curve_p);
+  mod_sub(c, c, a, curve_p); mod_mul(b, b, c); mod_sub(c, a, t5, curve_p);
+  mod_mul(d, d, c); mod_sub(d, d, b, curve_p); set(c, t5);
+}
+
+//
+// Points add
+// t1 = X1, t2 = Y1, t3 = X2, t4 = Y2
+static void pt_addc(u64 *a, u64 *b, u64 *c, u64 *d) {
+  u64 t5[DI], t6[DI], t7[DI];
+
+  mod_sub(t5, c, a, curve_p); mod_sqr(t5, t5); mod_mul(a, a, t5);
+  mod_mul(c, c, t5); mod_add(t5, d, b, curve_p); mod_sub(d, d, b, curve_p);
+
+  mod_sub(t6, c, a, curve_p); mod_mul(b, b, t6); mod_add(t6, a, c, curve_p);
+  mod_sqr(c, d); mod_sub(c, c, t6, curve_p);
+
+  mod_sub(t7, a, c, curve_p); mod_mul(d, d, t7); mod_sub(d, d, b, curve_p);
+
+  mod_sqr(t7, t5); mod_sub(t7, t7, t6, curve_p); mod_sub(t6, t7, a, curve_p);
+  mod_mul(t6, t6, t5); mod_sub(b, t6, b, curve_p); set(a, t7);
 }
 
 //
@@ -396,21 +393,21 @@ static void lkp_mul(pt *r, pt *p, u64 *q, u64 *s) {
   u64 Rx[2][DI], Ry[2][DI], z[DI], nb;
 
   set(Rx[1], p->x); set(Ry[1], p->y);
-  lkp_inidoub(Rx[1], Ry[1], Rx[0], Ry[0], s);
+  pt_init_double(Rx[1], Ry[1], Rx[0], Ry[0], s);
   for (int i = check_bits(q) - 2; i > 0; --i) {
     nb = !check_set(q, i);
-    lkp_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
-    lkp_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
+    pt_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
+    pt_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
   }
   nb = !check_set(q, 0);
-  lkp_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
+  pt_addc(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
   // Find final 1/Z value.
-  lkm_sub(z, Rx[1], Rx[0], curve_p);
-  lkm_mul(z, z, Ry[1 - nb]); lkm_mul(z, z, p->x);
-  lkm_inv(z, z, curve_p); lkm_mul(z, z, p->y); lkm_mul(z, z, Rx[1 - nb]);
+  mod_sub(z, Rx[1], Rx[0], curve_p);
+  mod_mul(z, z, Ry[1 - nb]); mod_mul(z, z, p->x);
+  mod_invers(z, z, curve_p); mod_mul(z, z, p->y); mod_mul(z, z, Rx[1 - nb]);
 
   // End 1/Z calculation
-  lkp_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]); lkp_appz(Rx[0], Ry[0], z);
+  pt_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]); pt_apply_z(Rx[0], Ry[0], z);
   set(r->x, Rx[0]); set(r->y, Ry[0]);
 }
 
@@ -474,7 +471,7 @@ int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
     if (compare(curve_n, private) != 1)
       sub(private, private, curve_n);
     lkp_mul(&public, &curve_g, private, NULL);
-    if (!lkp_zero(&public)) break;
+    if (!pt_check_zero(&public)) break;
   }
   bit_unpack64(priv, private); bit_unpack64(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
@@ -487,11 +484,11 @@ int keys_secr(const u64 pub[KB+1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
   pt public, product;
   u64 private[DI];
 
-  lkp_decom(&public, pub);
+  pt_decompress(&public, pub);
   bit_pack64(private, prv);
   lkp_mul(&product, &public, private, r);
   bit_unpack64(scr, product.x);
-  return !lkp_zero(&product);
+  return !pt_check_zero(&product);
 }
 
 //
@@ -508,10 +505,10 @@ int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) 
   } while (check_zero(p.x));
   bit_unpack64(sign, p.x);
   bit_pack64(tmp, priv);
-  lkm_mmul(s, p.x, tmp, curve_n);
+  mod_mod_mul(s, p.x, tmp, curve_n);
   bit_pack64(tmp, hash);
-  lkm_add(s, tmp, s, curve_n);
-  lkm_inv(k, k, curve_n); lkm_mmul(s, s, k, curve_n);
+  mod_add(s, tmp, s, curve_n);
+  mod_invers(k, k, curve_n); mod_mod_mul(s, s, k, curve_n);
   bit_unpack64(sign + KB, s);
   return 1;
 }
@@ -522,19 +519,19 @@ int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   u64 u1[DI], u2[DI], tx[DI], ty[DI], tz[DI], rx[DI], ry[DI], rz[DI];
   pt public, sum;
 
-  lkp_decom(&public, publ);
+  pt_decompress(&public, publ);
   bit_pack64(rx, sign); bit_pack64(ry, sign + KB);
   if (check_zero(rx) || check_zero(ry)) return 0;
   if (compare(curve_n, rx) != 1 || compare(curve_n, ry) != 1) return 0;
-  lkm_inv(rz, ry, curve_n);
+  mod_invers(rz, ry, curve_n);
   bit_pack64(u1, hash);
-  lkm_mmul(u1, u1, rz, curve_n); lkm_mmul(u2, rx, rz, curve_n);
+  mod_mod_mul(u1, u1, rz, curve_n); mod_mod_mul(u2, rx, rz, curve_n);
 
   // Calculate sum = G + Q.
   set(sum.x, public.x); set(sum.y, public.y);
   set(tx, curve_g.x); set(ty, curve_g.y);
-  lkm_sub(rz, sum.x, tx, curve_p); lkp_add(tx, ty, sum.x, sum.y);
-  lkm_inv(rz, rz, curve_p); lkp_appz(sum.x, sum.y, rz);
+  mod_sub(rz, sum.x, tx, curve_p); pt_add(tx, ty, sum.x, sum.y);
+  mod_invers(rz, rz, curve_p); pt_apply_z(sum.x, sum.y, rz);
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
   u64 nb = (check_bits(u1) > check_bits(u2) ? check_bits(u1) : check_bits(u2));
@@ -542,15 +539,15 @@ int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   set(rx, points[n1]->x); set(ry, points[n1]->y); clear(rz);
   rz[0] = 1;
   for (int i = nb - 2; i >= 0; --i) {
-    lkp_double(rx, ry, rz);
+    pt_double(rx, ry, rz);
     u64 n2 = (!!check_set(u1, i)) | ((!!check_set(u2, i)) << 1);
     if (points[n2]) {
       set(tx, points[n2]->x); set(ty, points[n2]->y);
-      lkp_appz(tx, ty, rz); lkm_sub(tz, rx, tx, curve_p);
-      lkp_add(tx, ty, rx, ry); lkm_mul(rz, rz, tz);
+      pt_apply_z(tx, ty, rz); mod_sub(tz, rx, tx, curve_p);
+      pt_add(tx, ty, rx, ry); mod_mul(rz, rz, tz);
     }
   }
-  lkm_inv(rz, rz, curve_p); lkp_appz(rx, ry, rz);
+  mod_invers(rz, rz, curve_p); pt_apply_z(rx, ry, rz);
   if (compare(curve_n, rx) != 1)
     sub(rx, rx, curve_n);
   bit_pack64(ry, sign);
