@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "../lighthash.h"
+#include "../lighttools.h"
 
 int main(void) {
   uint8_t buf[512] = {0}, str[512] = {0}, s[200] = {0}, next = 0, next2 = 0;
@@ -15,7 +16,7 @@ int main(void) {
   hash_shake_xof(str);
   for (int i = 0; i < 32; i++) s[i] = str[i];
   for (int i = 0; i < 512; i += 32) {next2 = hash_shake_touch(str,s,next2,false);}
-  bit2str(sss, s);
+  bit_hex_str(sss, s);
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
   if (*ss) {} // get rid of not used var warning
   printf("OK\n");

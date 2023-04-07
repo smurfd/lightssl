@@ -169,3 +169,9 @@ void bit_unpack64(u64 b[KB], const u64 n[DI]) {
       d[j] = n[i] >> ((7 - j) * 8);
   }
 }
+
+//
+// Convert a hex bitstring to a string
+void bit_hex_str(char *s, const uint8_t *ss) {
+  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
+}

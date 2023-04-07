@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include "lighthash.h"
 #include "lightdefs.h"
+#include "lighttools.h"
 
 //
 // Circular shift
@@ -202,7 +203,8 @@ static u64 cat(uint8_t **z, const uint8_t *x, const u64 xl, const uint8_t *y,
   *z = calloc(512, sizeof(uint8_t));
   if (*z == NULL) return 0;
   memcpy(*z, x, xl8);
-  for (u64 i = 0; i < mxl8; i++) {(*z)[xl8] |= (x[xl8] & (1 << i));}
+  for (u64 i = 0; i < mxl8; i++)
+    (*z)[xl8] |= (x[xl8] & (1 << i));
   u64 zbyc = xl8, zbic = mxl8, ybyc = 0, ybic = 0;
   for (u64 i = 0; i < yl; i++) {
     (*z)[zbyc] |= (((y[ybyc] >> ybic) & 1) << zbic);
@@ -247,7 +249,8 @@ static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
   plen = cat(&p, n, l, pad, len);
   for (u64 i = 0; i < plen / r; i++) {
     cat(&pi, &p[i * r / 8], r, az, c);
-    for (u64 j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
+    for (u64 j = 0; j < b / 8; j++)
+      sxor[j] = s[j] ^ pi[j];
     free(pi);
     keccak_p(s, sxor);
   }
@@ -280,11 +283,11 @@ static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void hash_new(char *s, const uint8_t *n) {
   u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
-  uint8_t *m = malloc(l), z1[] = {2}, *ss = malloc(l);
+  uint8_t *m = malloc(l), *ss = malloc(l), z1[] = {2};
 
   cat(&m, n, d, z1, 2);
   sponge(&ss, m, d + 2);
-  bit2str(s, ss);
+  bit_hex_str(s, ss);
   free(m); free(ss);
 }
 
@@ -306,10 +309,4 @@ uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next,
     if (!upd) s[i] = sm[j++];
   }
   return j;
-}
-
-//
-// Convert a hex bitstring to a string
-void bit2str(char *s, const uint8_t *ss) {
-  for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }
