@@ -12,7 +12,7 @@
 
 //
 // Circular shift
-static u64 ROL64(u64 a, u64 n) {
+static u64 shift_cir(u64 a, u64 n) {
   if (MOD(n, 64) != 0) return (a << (MOD(n, 64))) ^ (a >> (64 - (MOD(n, 64))));
   return a;
 }
@@ -30,11 +30,12 @@ static u64 ROL64(u64 a, u64 n) {
 // The corresponding state array, denoted by A, is defined as follows:
 // For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, A[x, y, z]=S[w(5y+x)+z].
 // For example, if b=1600, so that w=64,
-static void str2state(const uint8_t *s, u64 (*a)[5][5]) {
+static void str2state(u64 (*a)[5][5], const uint8_t *s) {
   for (int x = 0; x < 5; x++)
     for (int y = 0; y < 5; y++) {
       u64 lane = 0;
-      for (int z = 0; z < 8; z++) lane += ROL64(s[8 * (5 * y + x) + z], z * 8);
+      for (int z = 0; z < 8; z++)
+        lane += shift_cir(s[8 * (5 * y + x) + z], z * 8);
       (*a)[x][y] = lane;
     }
 }
@@ -44,11 +45,11 @@ static void str2state(const uint8_t *s, u64 (*a)[5][5]) {
 // can be constructed from the lanes and planes of A, as follows:
 // For each pair of integers (i, j) such that 0≤i<5 and 0≤j<5, define the string Lane(i, j)
 // by Lane(i,j)= A[i,j,0] || A[i,j,1] || A[i,j,2] || ... || A[i,j,w-2] || A[i,j,w-1].
-static void state2str(u64 (*a)[5][5], uint8_t *s) {
+static void state2str(uint8_t *s, u64 (*a)[5][5]) {
   for (int count = 0, y = 0; y < 5; y++)
     for (int x = 0; x < 5; x++)
       for (int z = 0; z < 8; z++)
-        s[count++] = (uint8_t)(ROL64((*a)[x][y], 64 - z * 8) & (u64)255);
+        s[count++] = (uint8_t)(shift_cir((*a)[x][y], 64 - z * 8) & (u64)255);
 }
 
 //
@@ -65,11 +66,13 @@ static void theta(u64 (*a)[5][5]) {
     c[x] = ((*a)[x][0] ^ (*a)[x][1] ^ (*a)[x][2] ^ (*a)[x][3] ^ (*a)[x][4]);
   for (int x = 0; x < 5; x++)
     for (int z = 0; z < 64; z++) {
-      u64 r1 = ROL64(c[MOD(x - 1, 5)], 64 - z);
-      u64 r2 = ROL64(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
-      d[x] = d[x] + ROL64((r1 ^ r2) & 1, z);
+      u64 r1 = shift_cir(c[MOD(x - 1, 5)], 64 - z);
+      u64 r2 = shift_cir(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
+      d[x] = d[x] + shift_cir((r1 ^ r2) & 1, z);
     }
-  for (int x = 0; x < 5; x++) for (int y = 0; y < 5; y++) {(*a)[x][y] ^= d[x];}
+  for (int x = 0; x < 5; x++)
+    for (int y = 0; y < 5; y++)
+      (*a)[x][y] ^= d[x];
 }
 
 //
@@ -87,8 +90,8 @@ static void rho(u64 (*a)[5][5]) {
   for (int t = 0; t < 24; t++) {
     (*a)[x][y] = 0;
     for (int z = 0; z < 64; z++) {
-      cb = (ROL64(ap[x][y], 64 - MOD((z - (t + 1) * (t + 2) / 2), 64)) & 1);
-      (*a)[x][y] += ROL64(cb, z);
+      cb = (shift_cir(ap[x][y], 64 - MOD((z - (t + 1) * (t + 2) / 2), 64)) & 1);
+      (*a)[x][y] += shift_cir(cb, z);
     }
     xtmp = x;
     x = y;
@@ -106,7 +109,8 @@ static void pi(u64 (*a)[5][5]) {
 
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int x = 0; x < 5; x++)
-    for (int y = 0; y < 5; y++) {(*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];}
+    for (int y = 0; y < 5; y++)
+      (*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];
 }
 
 //
@@ -121,9 +125,9 @@ static void chi(u64 (*a)[5][5]) {
     for (int y = 0; y < 5; y++) {
       (*a)[x][y] = 0;
       for (int z = 0; z < 64; z++) {
-        t1 = ap[x][y] & ROL64(one, z);
-        t2 = (ap[MOD(x + 1, 5)][y] & ROL64(one, z)) ^ ROL64(one, z);
-        t3 = ap[MOD(x + 2, 5)][y] & ROL64(one, z);
+        t1 = ap[x][y] & shift_cir(one, z);
+        t2 = (ap[MOD(x + 1, 5)][y] & shift_cir(one, z)) ^ shift_cir(one, z);
+        t3 = ap[MOD(x + 2, 5)][y] & shift_cir(one, z);
         (*a)[x][y] += t1 ^ (t2 & t3);
       }
     }
@@ -166,7 +170,8 @@ static uint8_t rc(u64 t) {
 static void iota(u64 (*A)[5][5], u64 ir) {
   u64 r = 0;
 
-  for (u64 i = 0; i <= 6; i++) {r += ROL64(rc(i + 7 * ir), (int)pow(2,i)-1);}
+  for (u64 i = 0; i <= 6; i++)
+    r += shift_cir(rc(i + 7 * ir), (int)pow(2, i) - 1);
   (*A)[0][0] ^= r;
 }
 
@@ -177,20 +182,20 @@ static void iota(u64 (*A)[5][5], u64 ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static void keccak_p(uint8_t *sm, uint8_t s[200]) {
+static void keccak_p(uint8_t s[200], uint8_t *sm) {
   u64 a[5][5];
 
-  str2state(sm, &a);
+  str2state(&a, sm);
   for (int i = 0; i <= 23; i++) {
     theta(&a); rho(&a); pi(&a); chi(&a); iota(&a,i);
   }
-  state2str(&a, s);
+  state2str(s, &a);
 }
 
 
 //
 // Concatenate
-static u64 cat(uint8_t *x, u64 xl, uint8_t *y, u64 yl, uint8_t **z) {
+static u64 cat(uint8_t **z, uint8_t *x, u64 xl, uint8_t *y, u64 yl) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
   *z = calloc(512, sizeof(uint8_t));
@@ -210,7 +215,7 @@ static u64 cat(uint8_t *x, u64 xl, uint8_t *y, u64 yl, uint8_t **z) {
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static u64 pad10(u64 x, u64 m, uint8_t **p) {
+static u64 pad10(uint8_t **p, u64 x, u64 m) {
   u64 j = MOD((-m - 2), x) + 2, bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
 
   *p = calloc(bl, sizeof(uint8_t));
@@ -232,25 +237,25 @@ static u64 pad10(u64 x, u64 m, uint8_t **p) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void sponge(uint8_t *n, int l, uint8_t **ps) {
+static void sponge(uint8_t **ps, uint8_t *n, int l) {
   uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi,
     *z = NULL, *pad, str[200] = {0};
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
 
-  len = pad10(r, l, &pad);
-  plen = cat(n, l, pad, len, &p);
+  len = pad10(&pad, r, l);
+  plen = cat(&p, n, l, pad, len);
   for (u64 i = 0; i < plen / r; i++) {
-    cat(&p[i * r / 8], r, az, c, &pi);
+    cat(&pi, &p[i * r / 8], r, az, c);
     for (u64 j = 0; j < b / 8; j++) {sxor[j] = s[j] ^ pi[j];}
     free(pi);
-    keccak_p(sxor, s);
+    keccak_p(s, sxor);
   }
   while (true) {
     memcpy(str, s, r / 8);
-    zl = cat(z, zl, str, r, &z);
+    zl = cat(&z, z, zl, str, r);
     if (zl >= SHA3_BITS) {memcpy((*ps), z, 64); break;}
     memcpy(sc, s, b / 8);
-    keccak_p(sc, s);
+    keccak_p(s, sc);
   }
   free(pad); free(p); free(z);
 }
@@ -272,13 +277,13 @@ static void sponge(uint8_t *n, int l, uint8_t **ps) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void hash_new(uint8_t *n, char *s) {
+void hash_new(char *s, uint8_t *n) {
   u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
   uint8_t *m = malloc(l), z1[] = {2}, *ss = malloc(l);
 
-  cat(n, d, z1, 2, &m);
-  sponge(m, d + 2, &ss);
-  bit2str(ss, s);
+  cat(&m, n, d, z1, 2);
+  sponge(&ss, m, d + 2);
+  bit2str(s, ss);
   free(m); free(ss);
 }
 
@@ -303,6 +308,6 @@ uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
 
 //
 // Convert a hex bitstring to a string
-void bit2str(uint8_t *ss, char *s) {
+void bit2str(char *s, uint8_t *ss) {
   for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }

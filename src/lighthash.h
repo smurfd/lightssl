@@ -7,8 +7,8 @@
 #include "lightdefs.h"
 
 // lh3 for LightHash3
-void hash_new(uint8_t *n, char *ss);
-void bit2str(uint8_t *ss, char *s);
+void hash_new(char *ss, uint8_t *n);
+void bit2str(char *s, uint8_t *ss);
 void hash_shake_xof(uint8_t *sm, uint8_t (*s)[200]);
 uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd);
 #endif

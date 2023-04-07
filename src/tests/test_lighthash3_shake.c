@@ -15,7 +15,7 @@ int main(void) {
   hash_shake_xof(str, &s);
   for (int i = 0; i < 32; i++) s[i] = str[i];
   for (int i = 0; i < 512; i += 32) {next2 = hash_shake_touch(str,s,next2,false);}
-  bit2str(s, sss);
+  bit2str(sss, s);
   for (int i = 0; i < 64; i++) {assert(sss[i] == ss[i]);}
   if (*ss) {} // get rid of not used var warning
   printf("OK\n");
