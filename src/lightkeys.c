@@ -471,7 +471,7 @@ int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
 
 //
 // Create a secret from the public and private key
-int keys_secr(const u64 pub[KB+1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
+int keys_secr(const u64 pub[KB + 1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
   pt public, product;
   u64 private[DI];
 

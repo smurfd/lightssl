@@ -167,7 +167,7 @@ static uint8_t rc(u64 t) {
 // 3. For j from 0 to l, let RC[2j – 1] = rc(j + 7ir).
 // 4. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A′ [0, 0, z] ⊕ RC[z].
 // 5. Return A′.
-static void iota(u64 (*A)[5][5], u64 ir) {
+static void iota(u64 (*A)[5][5], const u64 ir) {
   u64 r = 0;
 
   for (u64 i = 0; i <= 6; i++)
@@ -182,7 +182,7 @@ static void iota(u64 (*A)[5][5], u64 ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static void keccak_p(uint8_t s[200], uint8_t *sm) {
+static void keccak_p(uint8_t s[200], const uint8_t *sm) {
   u64 a[5][5];
 
   str2state(&a, sm);
@@ -195,7 +195,8 @@ static void keccak_p(uint8_t s[200], uint8_t *sm) {
 
 //
 // Concatenate
-static u64 cat(uint8_t **z, uint8_t *x, u64 xl, uint8_t *y, u64 yl) {
+static u64 cat(uint8_t **z, const uint8_t *x, const u64 xl, const uint8_t *y,
+    const u64 yl) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
   *z = calloc(512, sizeof(uint8_t));
@@ -215,7 +216,7 @@ static u64 cat(uint8_t **z, uint8_t *x, u64 xl, uint8_t *y, u64 yl) {
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static u64 pad10(uint8_t **p, u64 x, u64 m) {
+static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
   u64 j = MOD((-m - 2), x) + 2, bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
 
   *p = calloc(bl, sizeof(uint8_t));
@@ -237,7 +238,7 @@ static u64 pad10(uint8_t **p, u64 x, u64 m) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void sponge(uint8_t **ps, uint8_t *n, int l) {
+static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
   uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *p, *pi,
     *z = NULL, *pad, str[200] = {0};
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
@@ -277,7 +278,7 @@ static void sponge(uint8_t **ps, uint8_t *n, int l) {
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void hash_new(char *s, uint8_t *n) {
+void hash_new(char *s, const uint8_t *n) {
   u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
   uint8_t *m = malloc(l), z1[] = {2}, *ss = malloc(l);
 
@@ -288,13 +289,14 @@ void hash_new(char *s, uint8_t *n) {
 }
 
 // Shake inspired from https://github.com/mjosaarinen/tiny_sha3
-void hash_shake_xof(uint8_t *sm, uint8_t (*s)[200]) {
+void hash_shake_xof(uint8_t *sm) {
   sm[64] ^= 0x1F;
   sm[135] ^= 0x80;
   keccak_p(sm, sm);
 }
 
-uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
+uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next,
+    bool upd) {
   uint8_t j = next, co = 32;
 
   if (upd) co = 20;
@@ -308,6 +310,6 @@ uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], uint8_t next, bool upd) {
 
 //
 // Convert a hex bitstring to a string
-void bit2str(char *s, uint8_t *ss) {
+void bit2str(char *s, const uint8_t *ss) {
   for (u64 i = 0; i < SHA3_BITS / 16; i++) {sprintf(&s[i * 2], "%.2x", ss[i]);}
 }
