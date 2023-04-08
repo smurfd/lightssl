@@ -162,7 +162,7 @@ int crypto_gen_keys_local(void) {
 // https://en.wikipedia.org/wiki/ASN.1
 // https://www.rfc-editor.org/rfc/rfc6025
 // https://www.rfc-editor.org/rfc/rfc5912
-static u64 get_header(char c[], uint8_t h[]) {
+static u64 get_header(uint8_t h[], const char c[]) {
   u64 i = strlen(c) - strlen(strstr(c, "-----B"));
   // Check for the start of -----BEGIN CERTIFICATE-----
 
@@ -170,7 +170,7 @@ static u64 get_header(char c[], uint8_t h[]) {
   return i + 1;
 }
 
-static u64 get_footer(char c[], u64 len, uint8_t f[]) {
+static u64 get_footer(uint8_t f[], const char c[], const u64 len) {
   u64 i = 0, j = strlen(c) - strlen(strstr(c, "-----E"));
   // check for the start of -----END CERTIFICATE-----
 
@@ -178,14 +178,14 @@ static u64 get_footer(char c[], u64 len, uint8_t f[]) {
   return i + 1;
 }
 
-static u64 get_data(char c[],u64 h,u64 f,u64 l,char d[]) {
+static u64 get_data(char d[], const char c[], const u64 h, const u64 f, const u64 l) {
   u64 co = l - f - h, i = 0;
 
   while (i < co) {d[i] = c[h + i]; i++;} d[i] = '\0';
   return i;
 }
 
-static u64 read_cert(char *fn, char c[], bool iscms) {
+static u64 read_cert(char c[], const char *fn, const bool iscms) {
   FILE* ptr = fopen(fn, "r");
   u64 len = 0;
 
@@ -203,14 +203,14 @@ static u64 read_cert(char *fn, char c[], bool iscms) {
   return len;
 }
 
-static void print_cert(u64 len, uint8_t h[], uint8_t f[], char d[]) {
+static void print_cert(const u64 len, const uint8_t h[], const uint8_t f[], const char d[]) {
   printf("Length %llu\n", len); printf("Header: %s\n", h);
   printf("Data:\n%s\n", d); printf("Footer: %s\n", f);
 }
 
 //
 // Print data in hex and formatted
-static void print_hex(const char *str, const uint8_t *d, uint32_t len) {
+static void print_hex(const char *str, const uint8_t *d, const uint32_t len) {
   printf("%s\n----- hex data ----\n", str);
   for (uint32_t c = 0; c < len;) {
     if (++c % 8 == 0) printf("\n"); printf("%02x ", d[c]);
@@ -229,7 +229,7 @@ static void print(const asn *asn) {
 
 //
 // Get the length // t = type, 1 = tlv, 0 = data
-static uint32_t get_len(const uint8_t *data,uint32_t len, uint32_t *off,bool t) {
+static uint32_t get_len(uint32_t *off, const uint8_t *data, uint32_t len, const bool t) {
   uint32_t a, b = 0, ret;
 
   if (len < 2) return 0xFFFFFFFF;
@@ -255,8 +255,8 @@ static void init_asn(asn **asn) {
 //
 // dec = false, Count the der objects
 // dec = true, Decode the der encrypted data
-static int32_t der_decode(const uint8_t *der, uint32_t derlen, asn **o, asn **oobj, uint32_t oobjc, bool dec) {
-  uint32_t deroff=0,derenclen=get_len(der,derlen,&deroff,1),childrenlen=0,derdatl=derenclen-deroff, childoff=0,objcnt=1;
+static int32_t der_decode(asn **o, asn **oobj, const uint8_t *der, uint32_t derlen, uint32_t oobjc, bool dec) {
+  uint32_t deroff=0,derenclen=get_len(&deroff,der,derlen,1),childrenlen=0,derdatl=derenclen-deroff, childoff=0,objcnt=1;
   const uint8_t *derdat = (der + deroff);
 
   if (dec) {init_asn(o); if (o == NULL) return -1;
@@ -268,15 +268,15 @@ static int32_t der_decode(const uint8_t *der, uint32_t derlen, asn **o, asn **oo
     if (dec && (oobj == NULL || oobjc <= 0)){return -1;}
     while (childrenlen < derdatl) {
       const uint8_t *child = (der + deroff);
-      uint32_t childlen = get_len(child, (derenclen - deroff),&childoff,1);
-      int32_t childobj = der_decode(child, childlen, NULL, NULL, 0, 0);
+      uint32_t childlen = get_len(&childoff, child, (derenclen - deroff), 1);
+      int32_t childobj = der_decode(NULL, NULL, child, childlen, 0, 0);
 
       if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
       if (childobj < 0 || derenclen < derdatl) return -1;
       if (dec) {
         if (childobj > (int)oobjc) return -1;
         asn *childo = *oobj; oobj++; --oobjc;
-        if (der_decode(child, childlen, &childo, oobj, oobjc, 1) < 0)
+        if (der_decode(&childo, oobj, child, childlen, oobjc, 1) < 0)
           return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
       } else objcnt += childobj;
@@ -290,12 +290,12 @@ static int32_t der_decode(const uint8_t *der, uint32_t derlen, asn **o, asn **oo
 
 //
 // Output and parse the asn header.
-static int dump_and_parse(uint8_t *cmsd, uint32_t fs) {
-  int32_t objcnt = der_decode((uint8_t*)cmsd, fs, NULL, NULL, 0, 0), m = 1;
+static int dump_and_parse(const uint8_t *cmsd, const uint32_t fs) {
+  int32_t objcnt = der_decode(NULL, NULL, (uint8_t*)cmsd, fs, 0, 0), m = 1;
   asn *cms[] = {0};
 
   if (objcnt < 0) return err("Objects");
-  if (der_decode(cmsd, fs, cms, cms, objcnt, 1) < 0) return err("Parse");
+  if (der_decode(cms, cms, cmsd, fs, objcnt, 1) < 0) return err("Parse");
   print((*cms));
   // Hack to handle linux, at this point not sure why on linux type is spread on
   // every other, and on mac its as it should be. something with malloc?
@@ -334,12 +334,12 @@ static int dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   return 0;
 }
 
-u64 crypto_handle_cert(char *cert, char d[LEN]) {
+u64 crypto_handle_cert(char d[LEN], const char *cert) {
   uint8_t h[36], f[36];
   char crt[LEN];
-  u64 len = read_cert(cert, crt, 0), head = get_header(crt, h);
-  u64 foot = get_footer(crt, len, f);
-  u64 data = get_data(crt, head, foot, len, d);
+  u64 len = read_cert(crt, cert, 0), head = get_header(h, crt);
+  u64 foot = get_footer(f, crt, len);
+  u64 data = get_data(d, crt, head, foot, len);
 
   print_cert(len, h, f, d);
   return data;
@@ -347,6 +347,6 @@ u64 crypto_handle_cert(char *cert, char d[LEN]) {
 
 //
 // public function to handle asn cert
-u64 crypto_handle_asn(char *cert, char c[]) {
-  return dump_and_parse((uint8_t*)c, read_cert(cert, c, 1));
+u64 crypto_handle_asn(char c[], const char *cert) {
+  return dump_and_parse((uint8_t*)c, read_cert(c, cert, 1));
 }

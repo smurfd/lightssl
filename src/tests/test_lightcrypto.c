@@ -11,11 +11,11 @@ int main(int argc, char **argv) {
   uint8_t s2[] = "smurfd and more stuff", s3[257], s4[LEN];
 
   if (argc == 1) {
-    crypto_handle_cert("build/debug/ca.key", data);
-    crypto_handle_asn("build/debug/ca256.cms", c);
+    crypto_handle_cert(data, "build/debug/ca.key");
+    crypto_handle_asn(c, "build/debug/ca256.cms");
   } else if (argc == 3) {
-    crypto_handle_cert(argv[1], data);
-    crypto_handle_asn(argv[2], c);
+    crypto_handle_cert(data, argv[1]);
+    crypto_handle_asn(c, argv[2]);
     base64dec(s4, (char*)data, strlen((char*)data));
   }
   base64dec(s3, s0, strlen(s0));
