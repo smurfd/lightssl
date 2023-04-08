@@ -420,7 +420,7 @@ static u64 write_crt(FILE* ptr, uint8_t data[]) {
 // Write key to file
 static u64 write_key(FILE* ptr, uint8_t data[]) {
   char tmp[257] = {0};
-  int i = 0, j = base64enc(data, 164, tmp);
+  int i = 0, j = base64enc(tmp, data, 164);
 
   fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {

@@ -74,7 +74,7 @@ uint32_t utf8enc(uint32_t c) {
 
 //
 // Base64 encoder
-int base64enc(const uint8_t *data, int inl, char ed[]) {
+int base64enc(char ed[], const uint8_t *data, int inl) {
   int tab[] = {0, 2, 1}, ol = 4 * ((inl + 2) / 3);
 
   for (int i = 0, j = 0; i < inl;) {
@@ -91,7 +91,7 @@ int base64enc(const uint8_t *data, int inl, char ed[]) {
 
 //
 // Base64 decoder
-int base64dec(const char *data, int inl, uint8_t dd[]) {
+int base64dec(uint8_t dd[], const char *data, int inl) {
   static char dec[LEN] = {0};
   int ol = inl / 4 * 3;
 
