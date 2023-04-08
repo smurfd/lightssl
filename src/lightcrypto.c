@@ -310,9 +310,8 @@ static int dump_and_parse(uint8_t *cmsd, uint32_t fs) {
   if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AB, (*cms)[6*m].len)!=0) return err("CT EC PKCS#7");
   if ((*cms)[7 * m].type == A1SEQUENC) {
     if ((*cms)[8 * m].type != A1OBJIDEN) return err("EncryptionAlgoIdentifier");
-    if (memcmp((*cms)[8 * m].data, AC, (*cms)[8 * m].len) == 0 ||
-        memcmp((*cms)[8 * m].data, AD, (*cms)[8 * m].len) == 0 ||
-        memcmp((*cms)[8 * m].data, AE, (*cms)[8 * m].len) == 0) {
+    if (memcmp((*cms)[8 * m].data, AC, (*cms)[8 * m].len) == 0 || memcmp((*cms)[8 * m].data, AD, (*cms)[8 * m].len) == 0
+      || memcmp((*cms)[8 * m].data, AE, (*cms)[8 * m].len) == 0) {
       if (((*cms)[9 * m].type != A1OCTSTRI && (*cms)[9 * m].type != A1SEQUENC)) return err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
     if ((*cms)[10 * m].type != 0x80 && (*cms)[10 * m].type != 0x02) return err("No encrypted content");

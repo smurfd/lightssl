@@ -152,15 +152,13 @@ const uint8_t MIXINV[4][4] = {
 
 //
 // Copy a state array to another
-static void copy_state(uint8_t s[4][NB], uint8_t in[4][NB]) {
-  for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i)
-      s[j][i] = in[j][i];
+static void copy_state(uint8_t s[4][NB], const uint8_t in[4][NB]) {
+  memcpy(s, in, 4*NB*sizeof(uint8_t));
 }
 
 //
 // Copy to a state array from array
-static void state_from_arr(uint8_t s[4][NB], uint8_t in[NB4]) {
+static void state_from_arr(uint8_t s[4][NB], const uint8_t in[NB4]) {
   for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i)
       s[j][i] = in[j + 4 * i];
@@ -168,7 +166,7 @@ static void state_from_arr(uint8_t s[4][NB], uint8_t in[NB4]) {
 
 //
 // Copy to array from state array
-static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
+static void arr_from_state(uint8_t s[NB4], const uint8_t in[4][NB]) {
   for (int j = 0; j < 4; ++j)
     for (int i = 0; i < NB; ++i)
       s[j + 4 * i] = in[j][i];
@@ -176,7 +174,7 @@ static void arr_from_state(uint8_t s[NB4], uint8_t in[4][NB]) {
 
 //
 //
-static void shift_row(uint8_t state[4][NB], uint32_t i, uint32_t n) {
+static void shift_row(uint8_t state[4][NB], const uint32_t i, const uint32_t n) {
   uint8_t tmp[NB];
 
   for (uint32_t j = 0; j < NB; j++)
@@ -218,7 +216,7 @@ static void invmix_columns(uint8_t state[4][NB]) { // See Sec. 5.3.3
 
 //
 //
-static void add_roundkey(uint8_t state[4][NB], uint8_t *w) { // See Sec. 5.1.4
+static void add_roundkey(uint8_t state[4][NB], const uint8_t *w) { // See Sec. 5.1.4
   uint8_t tmp[4][NB];
 
   copy_state(tmp, state);
@@ -281,7 +279,7 @@ static void rot_word(uint8_t *wrd) {
 
 //
 //
-static void rcon(uint8_t *wrd, uint8_t a) {
+static void rcon(uint8_t *wrd, const uint8_t a) {
   uint8_t c = 1;
 
   for (int i = 0; i < a - 1; i++)
@@ -292,7 +290,7 @@ static void rcon(uint8_t *wrd, uint8_t a) {
 
 //
 //
-static void key_expansion(uint8_t key[NK * 2], uint8_t w[NB * NR]) {
+static void key_expansion(uint8_t w[NB * NR], const uint8_t key[NK * 2]) {
   uint8_t tmp[4], rc[4];
 
   for (int i = 0; i < NK4; ++i)
@@ -315,14 +313,14 @@ static void key_expansion(uint8_t key[NK * 2], uint8_t w[NB * NR]) {
 
 //
 //
-static void xor(const uint8_t *a, const uint8_t *b, uint8_t *c, uint32_t len) {
+static void xor(uint8_t *c, const uint8_t *a, const uint8_t *b, const uint32_t len) {
   for (uint32_t i = 0; i < len; i++)
     c[i] = a[i] ^ b[i];
 }
 
 //
 //
-static void encrypt_block(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
+static void encrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t *rk) {
   uint8_t state[4][NB] = {{0}, {0}};
 
   state_from_arr(state, in);
@@ -341,7 +339,7 @@ static void encrypt_block(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
 
 //
 //
-static void decrypt_block(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
+static void decrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t *rk) {
   uint8_t state[4][NB] = {{0}, {0}};
 
   state_from_arr(state, in);
@@ -361,42 +359,42 @@ static void decrypt_block(uint8_t in[BBL], uint8_t out[BBL], uint8_t *rk) {
 //
 // k = key, o = out
 // https://medium.com/asecuritysite-when-bob-met-alice/a-bluffers-guide-to-aes-modes-ecb-cbc-cfb-and-all-that-jazz-4180f1882e16
-void ciph_encrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc) {
+void ciph_encrypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc) {
   uint8_t block[BBL]={0}, encryptedblock[BBL]={0}, roundkeys[4*NB*(NR+1)]={0};
 
-  key_expansion(k, roundkeys);
+  key_expansion(roundkeys, k);
   memcpy(block, iv, BBL);
   if (cbc) // CBC
     for (uint32_t i = 0; i < BBL; i += BBL) {
-      xor(block, (in + i), block, BBL);
-      encrypt_block(block, (o + i), roundkeys);
-      memcpy(block, (o + i), BBL);
+      xor(block, block, (in + i), BBL);
+      encrypt_block((out + i), block, roundkeys);
+      memcpy(block, (out + i), BBL);
     }
   else // CFB
     for (uint32_t i = 0; i < BBL; i += BBL) {
-      encrypt_block(block, encryptedblock, roundkeys);
-      xor((in + i), encryptedblock, (o + i), BBL);
-      memcpy(block, (o + i), BBL);
+      encrypt_block(encryptedblock, block, roundkeys);
+      xor((out + i), (in + i), encryptedblock, BBL);
+      memcpy(block, (out + i), BBL);
     }
 }
 
 //
 // k = key, o = out
-void ciph_decrypt(uint8_t in[], uint8_t k[], uint8_t *iv, uint8_t o[], bool cbc) {
+void ciph_decrypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc) {
   uint8_t block[NB*NR]={0}, encryptedblock[NB*NR]={0},roundkeys[4*NB*(NR+1)]={0};
 
-  key_expansion(k, roundkeys);
+  key_expansion(roundkeys, k);
   memcpy(block, iv, BBL);
   if (cbc) // CBC
     for (uint32_t i = 0; i < BBL; i += BBL) {
-      decrypt_block((in + i), (o + i), roundkeys);
-      xor(block, (o + i), (o + i), BBL);
+      decrypt_block((out + i), (in + i), roundkeys);
+      xor((out + i), block, (out + i), BBL);
       memcpy(block, in + i, BBL);
     }
   else // CFB
     for (uint32_t i = 0; i < BBL; i += BBL) {
-      encrypt_block(block, encryptedblock, roundkeys);
-      xor(in + i, encryptedblock, o + i, BBL);
+      encrypt_block(encryptedblock, block, roundkeys);
+      xor(out + i, in + i, encryptedblock, BBL);
       memcpy(block, in + i, BBL);
     }
 }

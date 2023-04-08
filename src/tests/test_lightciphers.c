@@ -12,10 +12,10 @@ int main(void) {
   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13,
   0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}, out[BBL] = {0}, in[BBL], in2[BBL];
 
-  ciph_encrypt(plain, key, iv, out, false);
-  ciph_decrypt(out, key, iv, in, false);
-  ciph_encrypt(plain, key, iv, out, true);
-  ciph_decrypt(out, key, iv, in2, true);
+  ciph_encrypt(out, plain, key, iv, false);
+  ciph_decrypt(in, out, key, iv, false);
+  ciph_encrypt(out, plain, key, iv, true);
+  ciph_decrypt(in2, out, key, iv, true);
   for (u64 i = 0; i < BBL; i++) {
     assert(plain[i] == in[i]);
     assert(plain[i] == in2[i]);
