@@ -7,8 +7,8 @@
 #include "lightdefs.h"
 
 u64 keys_write(char *fn, uint8_t data[], int type);
-int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]);
-int keys_secr(const u64 pub[KB + 1], const u64 prv[KB], u64 scr[KB], u64 r[DI]);
-int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]);
-int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]);
+int keys_make(uint8_t publ[KB + 1], uint8_t priv[KB], u64 private[DI]);
+int keys_secr(const uint8_t pub[KB + 1], const uint8_t prv[KB], uint8_t scr[KB], u64 r[DI]);
+int keys_sign(const uint8_t priv[KB], const uint8_t hash[KB], uint8_t sign[KB2], u64 k[DI]);
+int keys_vrfy(const uint8_t publ[KB + 1], const uint8_t hash[KB], const uint8_t sign[KB2]);
 #endif

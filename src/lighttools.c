@@ -110,10 +110,10 @@ int base64dec(const char *data, int inl, uint8_t dd[]) {
 
 //
 // "Randomizer"
-int lrand(u64 h[KB], u64 k[KB]) {
+int lrand(uint8_t h[KB], u64 k[KB]) {
   prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
   for (int i = 0; i < KB; ++i) {
-    h[i] = prng_next(); k[i] = prng_next();
+    h[i] = (uint8_t)prng_next(); k[i] = prng_next();
   }
   return 1;
 }
@@ -131,7 +131,7 @@ int lrand(u64 h[KB], u64 k[KB]) {
 // Bit packing function uint8 to uint64
 void bit_pack(u64 big[6], const uint8_t byte[48]) {
   for(uint32_t i = 0; i < 6; ++i) {
-    const uint8_t *dig = byte + 8 * (6 - 1 - i);
+    const uint8_t *dig = byte + 8 * (6 - 1 - i); big[i] = 0;
     for (int j = 7; j >= 0; j--)
       big[i] |= ((u64)dig[7 - j] << (j * 8));
   }

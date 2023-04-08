@@ -53,13 +53,13 @@ static int check_zero(const u64 *a) {
 
 //
 // Check if bit a or b is set, if so return diff from zero
-static u64 check_set(const u64 *a, const u64 b) {
+static u64 check_set(const u64 *a, const uint32_t b) {
   return (a[b / 64] & ((u64)1 << MOD(b, 64)));
 }
 
 //
 // Check number of bits needed for a
-static u64 check_bits(const u64 *a) {
+static uint32_t check_bits(const u64 *a) {
   u64 i, nd = count(a), d = a[nd - 1];
 
   if (nd == 0) return 0;
@@ -70,11 +70,11 @@ static u64 check_bits(const u64 *a) {
 //
 // Compare a and b
 static int compare(const u64 *a, const u64 *b) {
-  for (int i = DI - 1; i >= 0; --i)
+  for (int i = DI - 1; i >= 0; --i) {
     if (a[i] > b[i]) return 1;
     else if (a[i] < b[i]) return -1;
+  }
   return 0;
-
 }
 
 //
@@ -317,10 +317,10 @@ static void pt_double(u64 *a, u64 *b, u64 *c) {
 
 //
 // Points decompress
-static void pt_decompress(pt *a, const u64 b[KB + 1]) {
+static void pt_decompress(pt *a, const uint8_t b[KB + 1]) {
   u64 tr[DI] = {3};
 
-  bit_pack64(a->x, b + 1);
+  bit_pack(a->x, b + 1);
   mod_sqr(a->y, a->x); mod_sub(a->y, a->y, tr, curve_p);
   mod_mul(a->y, a->y, a->x);
   mod_add(a->y, a->y, curve_b, curve_p); mod_sqrt(a->y);
@@ -330,7 +330,7 @@ static void pt_decompress(pt *a, const u64 b[KB + 1]) {
 //
 // Points apply z
 // Modify (x1, y1) => (x1 * z^2, y1 * z^3)
-static void pt_apply_z(u64 *a, u64 *b, const u64 *z) {
+static void pt_apply_z(u64 *a, u64 *b, u64 *z) {
   u64 t[DI];
 
   mod_sqr(t, z); mod_mul(a, a, t); mod_mul(t, t, z); mod_mul(b, b, t);
@@ -456,7 +456,7 @@ u64 keys_write(char *fn, uint8_t data[], int type) {
 
 //
 // Make public key
-int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
+int keys_make(uint8_t publ[KB + 1], uint8_t priv[KB], u64 private[DI]) {
   pt public;
 
   while(true) {
@@ -465,27 +465,27 @@ int keys_make(u64 publ[KB + 1], u64 priv[KB], u64 private[DI]) {
     pt_mul(&public, &curve_g, private, NULL);
     if (!pt_check_zero(&public)) break;
   }
-  bit_unpack64(priv, private); bit_unpack64(publ + 1, public.x);
+  bit_unpack(priv, private); bit_unpack(publ + 1, public.x);
   publ[0] = 2 + (public.y[0] & 0x01);
   return 1;
 }
 
 //
 // Create a secret from the public and private key
-int keys_secr(const u64 pub[KB + 1], const u64 prv[KB], u64 scr[KB], u64 r[DI]) {
+int keys_secr(const uint8_t pub[KB + 1], const uint8_t prv[KB], uint8_t scr[KB], u64 r[DI]) {
   pt public, product;
   u64 private[DI];
 
   pt_decompress(&public, pub);
-  bit_pack64(private, prv);
+  bit_pack(private, prv);
   pt_mul(&product, &public, private, r);
-  bit_unpack64(scr, product.x);
+  bit_unpack(scr, product.x);
   return !pt_check_zero(&product);
 }
 
 //
 // Create signature
-int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) {
+int keys_sign(const uint8_t priv[KB], const uint8_t hash[KB], uint8_t sign[KB2], u64 k[DI]) {
   u64 tmp[DI], s[DI];
   pt p;
 
@@ -495,28 +495,29 @@ int keys_sign(const u64 priv[KB], const u64 hash[KB], u64 sign[KB2], u64 k[DI]) 
     pt_mul(&p, &curve_g, k, NULL);
     if (compare(curve_n, p.x) != 1) sub(p.x, p.x, curve_n);
   } while (check_zero(p.x));
-  bit_unpack64(sign, p.x);
-  bit_pack64(tmp, priv);
+  bit_unpack(sign, p.x);
+  bit_pack(tmp, priv);
   mod_mod_mul(s, p.x, tmp, curve_n);
-  bit_pack64(tmp, hash);
+  bit_pack(tmp, hash);
   mod_add(s, tmp, s, curve_n);
   mod_invers(k, k, curve_n); mod_mod_mul(s, s, k, curve_n);
-  bit_unpack64(sign + KB, s);
+  bit_unpack(sign + KB, s);
   return 1;
 }
 
 //
 // Verify signature
-int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
-  u64 u1[DI], u2[DI], tx[DI], ty[DI], tz[DI], rx[DI], ry[DI], rz[DI];
+int keys_vrfy(const uint8_t publ[KB + 1], const uint8_t hash[KB], const uint8_t sign[KB2]) {
+  u64 u1[DI]={0}, u2[DI]={0}, tx[DI]={0}, ty[DI]={0}, tz[DI]={0}, rx[DI]={0}, ry[DI]={0}, rz[DI]={0};
   pt public, sum;
 
+
   pt_decompress(&public, publ);
-  bit_pack64(rx, sign); bit_pack64(ry, sign + KB);
+  bit_pack(rx, sign); bit_pack(ry, sign + KB);
   if (check_zero(rx) || check_zero(ry)) return 0;
   if (compare(curve_n, rx) != 1 || compare(curve_n, ry) != 1) return 0;
   mod_invers(rz, ry, curve_n);
-  bit_pack64(u1, hash);
+  bit_pack(u1, hash);
   mod_mod_mul(u1, u1, rz, curve_n); mod_mod_mul(u2, rx, rz, curve_n);
 
   // Calculate sum = G + Q.
@@ -526,14 +527,14 @@ int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   mod_invers(rz, rz, curve_p); pt_apply_z(sum.x, sum.y, rz);
   // Use Shamir's trick to calculate u1*G + u2*Q
   pt *points[4] = {NULL, &curve_g, &public, &sum};
-  u64 nb = (check_bits(u1) > check_bits(u2) ? check_bits(u1) : check_bits(u2));
-  u64 n1 = (!!check_set(u1, nb - 1)) | ((!!check_set(u2, nb - 1)) << 1);
+  uint32_t nb = (check_bits(u1) > check_bits(u2) ? check_bits(u1) : check_bits(u2));
+  uint32_t n1 = (!!check_set(u1, nb - 1)) | ((!!check_set(u2, nb - 1)) << 1);
   set(rx, points[n1]->x); set(ry, points[n1]->y); clear(rz);
   rz[0] = 1;
   for (int i = nb - 2; i >= 0; --i) {
     pt_double(rx, ry, rz);
-    u64 n2 = (!!check_set(u1, i)) | ((!!check_set(u2, i)) << 1);
-    if (points[n2]) {
+    uint32_t n2 = (!!check_set(u1, i)) | ((!!check_set(u2, i)) << 1);
+    if (n2) {
       set(tx, points[n2]->x); set(ty, points[n2]->y);
       pt_apply_z(tx, ty, rz); mod_sub(tz, rx, tx, curve_p);
       pt_add(tx, ty, rx, ry); mod_mul(rz, rz, tz);
@@ -542,6 +543,6 @@ int keys_vrfy(const u64 publ[KB + 1], const u64 hash[KB], const u64 sign[KB2]) {
   mod_invers(rz, rz, curve_p); pt_apply_z(rx, ry, rz);
   if (compare(curve_n, rx) != 1)
     sub(rx, rx, curve_n);
-  bit_pack64(ry, sign);
+  bit_pack(ry, sign);
   return (compare(rx, ry) == 0);
 }

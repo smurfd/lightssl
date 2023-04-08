@@ -9,8 +9,8 @@
 #include "../lightcrypto.h"
 
 int main(void) {
-  u64 sig[KB * 2], h[KB], k[KB], pubkey[KB + 1], privkey[KB], sec[KB];
-  uint8_t p[256];
+  uint8_t p[256], sig[KB * 2],  pubkey[KB + 1],  sec[KB], privkey[KB], h[KB] = {0};
+  u64 k[KB] = {0};
 
   assert(lrand(h, k));
   assert(keys_make(pubkey, privkey, k));
@@ -18,7 +18,7 @@ int main(void) {
   assert(keys_sign(privkey, h, sig, k));
   assert(keys_vrfy(pubkey, h, sig));
   assert(!keys_vrfy(privkey, h, sig)); // assert failure
-  bit_unpack(p, privkey);
+  bit_unpack(p, (u64*)privkey);
   keys_write("ca-own.key", p, 2);
 
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
