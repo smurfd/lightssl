@@ -6,6 +6,5 @@
 extern const uint8_t SBOXINV[16][16], GF[15][256], MIX[4][4], MIX[4][4], K[32], SBOX[16][16];
 extern const u64 WW[8];
 
-void ciph_encrypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc);
-void ciph_decrypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc);
+void ciph_crypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc, bool dec);
 #endif

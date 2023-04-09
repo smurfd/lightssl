@@ -12,6 +12,9 @@ int main(void) {
   uint8_t p[256], sig[KB * 2],  pubkey[KB + 1],  sec[KB], privkey[KB], h[KB] = {0};
   u64 k[KB] = {0};
 
+  // more randomization use :
+  // srand(time(0));
+  // for (int i = 0; i < KB; i++) {k[i] = RAND64(); h[i] = RAND64();}
   assert(lrand(h, k));
   assert(keys_make(pubkey, privkey, k));
   assert(keys_secr(pubkey, privkey, sec, k));

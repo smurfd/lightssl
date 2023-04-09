@@ -312,14 +312,14 @@ static void key_expansion(uint8_t w[NB * NR], const uint8_t key[NK * 2]) {
 }
 
 //
-//
+// xor two arrays
 static void xor(uint8_t *c, const uint8_t *a, const uint8_t *b, const uint32_t len) {
   for (uint32_t i = 0; i < len; i++)
     c[i] = a[i] ^ b[i];
 }
 
 //
-//
+// Encrypt a block of data
 static void encrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t *rk) {
   uint8_t state[4][NB] = {{0}, {0}};
 
@@ -338,7 +338,7 @@ static void encrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t
 }
 
 //
-//
+// Decrypt a block of data
 static void decrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t *rk) {
   uint8_t state[4][NB] = {{0}, {0}};
 
@@ -357,44 +357,30 @@ static void decrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t
 }
 
 //
-// k = key, o = out
+// k = key, o = out, cbc = cbc(true) or cfb, dec = decrypt(true) or encrypt
 // https://medium.com/asecuritysite-when-bob-met-alice/a-bluffers-guide-to-aes-modes-ecb-cbc-cfb-and-all-that-jazz-4180f1882e16
-void ciph_encrypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc) {
-  uint8_t block[BBL]={0}, encryptedblock[BBL]={0}, roundkeys[4*NB*(NR+1)]={0};
+void ciph_crypt(uint8_t out[], const uint8_t in[], const uint8_t key[], const uint8_t *iv, const bool cbc, bool dec) {
+  uint8_t block[NB * NR] = {0}, encryptedblock[NB * NR] = {0}, roundkeys[4 * NB * (NR + 1)] = {0};
 
-  key_expansion(roundkeys, k);
+  key_expansion(roundkeys, key);
   memcpy(block, iv, BBL);
   if (cbc) // CBC
     for (uint32_t i = 0; i < BBL; i += BBL) {
-      xor(block, block, (in + i), BBL);
-      encrypt_block((out + i), block, roundkeys);
-      memcpy(block, (out + i), BBL);
+      if (dec) {
+        decrypt_block((out + i), (in + i), roundkeys);
+        xor((out + i), block, (out + i), BBL);
+        memcpy(block, in + i, BBL);
+      } else {
+        xor(block, block, (in + i), BBL);
+        encrypt_block((out + i), block, roundkeys);
+        memcpy(block, (out + i), BBL);
+      }
     }
   else // CFB
     for (uint32_t i = 0; i < BBL; i += BBL) {
       encrypt_block(encryptedblock, block, roundkeys);
       xor((out + i), (in + i), encryptedblock, BBL);
-      memcpy(block, (out + i), BBL);
-    }
-}
-
-//
-// k = key, o = out
-void ciph_decrypt(uint8_t out[], const uint8_t in[], const uint8_t k[], const uint8_t *iv, const bool cbc) {
-  uint8_t block[NB*NR]={0}, encryptedblock[NB*NR]={0},roundkeys[4*NB*(NR+1)]={0};
-
-  key_expansion(roundkeys, k);
-  memcpy(block, iv, BBL);
-  if (cbc) // CBC
-    for (uint32_t i = 0; i < BBL; i += BBL) {
-      decrypt_block((out + i), (in + i), roundkeys);
-      xor((out + i), block, (out + i), BBL);
-      memcpy(block, in + i, BBL);
-    }
-  else // CFB
-    for (uint32_t i = 0; i < BBL; i += BBL) {
-      encrypt_block(encryptedblock, block, roundkeys);
-      xor(out + i, in + i, encryptedblock, BBL);
-      memcpy(block, in + i, BBL);
+      if (dec) memcpy(block, in + i, BBL);
+      else memcpy(block, (out + i), BBL);
     }
 }
