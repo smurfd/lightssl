@@ -99,9 +99,10 @@ void crypto_transfer_key(int s, bool snd, head *h, key *k) {
   key tmp;
 
   if (snd) {send_key(s, h, k);}
-  else {recv_key(s, h, &tmp);
-    (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;}
-    // This to ensure if we receive a private key we clear it
+  else { // This to ensure if we receive a private key we clear it
+    recv_key(s, h, &tmp);
+    (*k).publ = tmp.publ; (*k).shar = tmp.shar; (*k).priv = 0;
+  }
 }
 
 //
@@ -118,7 +119,7 @@ int crypto_srv_listen(const int s, sock *cli) {
     c = accept(s, (sock*)&cli, (socklen_t*)&len);
     pthread_t thrd;
     *ns = c;
-    if (pthread_create(&thrd, NULL, srv_handler, (void*)ns) < 0){return -1;}
+    if (pthread_create(&thrd, NULL, srv_handler, (void*)ns) < 0) return -1;
     pthread_join(thrd, NULL);
   }
   return c;

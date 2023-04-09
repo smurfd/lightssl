@@ -305,7 +305,7 @@ static void key_expansion(uint8_t w[NB * NR], const uint8_t key[NK * 2]) {
       for (int k = 0; k < 4; k++)
         tmp[k] = tmp[k] ^ rc[k];
     } else if (NK > 6 && i / 4 % NK == 4)
-    sub_word(tmp);
+      sub_word(tmp);
     for (int j = 0; j < 4; ++j)
       w[i + j] = w[i + j - 4 * NK] ^ tmp[j];
   }

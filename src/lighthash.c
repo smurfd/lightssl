@@ -244,7 +244,7 @@ static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
 static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
-  uint8_t az[64]={0}, s[200]={0}, sc[200]={0}, sxor[200]={0}, *p, *pi, *z=NULL, *pad, str[200]={0};
+  uint8_t az[64]={0}, s[200]={0}, sc[200]={0}, sxor[200]={0}, *pad, str[200]={0}, *p, *pi, *z=NULL;
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
 
   len = pad10(&pad, r, l);
@@ -287,12 +287,12 @@ static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void hash_new(char *s, const uint8_t *n) {
   u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
-  uint8_t *m = malloc(l), *ss = malloc(l), z1[] = {2};
+  uint8_t *ss = malloc(l), z1[] = {2}, *mmm;
 
-  cat(&m, n, d, z1, 2);
-  sponge(&ss, m, d + 2);
+  cat(&mmm, n, d, z1, 2);
+  sponge(&ss, mmm, d + 2);
   bit_hex_str(s, ss);
-  free(m); free(ss);
+  free(ss); free(mmm);
 }
 
 // Shake inspired from https://github.com/mjosaarinen/tiny_sha3
