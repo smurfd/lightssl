@@ -171,9 +171,28 @@ void bit_unpack64(u64 b[KB], const u64 n[DI]) {
   }
 }
 
+static void to_hex(uint8_t h[2], uint8_t d) {
+  h[0] = d >> 4;
+  h[1] = d & 0xf;
+}
+
+static void to_hex_chr(char *hs, uint8_t h[2]) {
+  hs[0] = hex[h[0]];
+  hs[1] = hex[h[1]];
+}
+
 //
 // Convert a hex bitstring to a string
-void bit_hex_str(char *s, const uint8_t *ss) {
-  for (u64 i = 0; i < SHA3_BITS / 16; i++)
-    sprintf(&s[i * 2], "%.2x", ss[i]);
+void bit_hex_str(char *hs, uint8_t *d, int len) {
+  int co = 0;
+  for (int i = 0 ; i < len; i++) {
+    uint8_t h[2];
+    char hc[2];
+
+    to_hex(h, d[i]);
+    to_hex_chr(hc, h);
+    hs[co++] = hc[0];
+    hs[co++] = hc[1];
+  }
+  hs[len*2+1] = '\0';
 }
