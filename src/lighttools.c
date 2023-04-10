@@ -194,5 +194,5 @@ void bit_hex_str(char *hs, uint8_t *d, int len) {
     hs[co++] = hc[0];
     hs[co++] = hc[1];
   }
-  hs[len*2+1] = '\0';
+  hs[len*2] = '\0';
 }
