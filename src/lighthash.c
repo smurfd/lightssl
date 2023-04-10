@@ -291,7 +291,7 @@ void hash_new(char *s, const uint8_t *n) {
 
   cat(&mmm, n, d, z1, 2);
   sponge(&ss, mmm, d + 2);
-  bit_hex_str(s, ss);
+  bit_hex_str(s, ss, 64);
   free(ss); free(mmm);
 }
 

@@ -17,7 +17,7 @@ int main(void) {
   for (int i = 0; i < 32; i++) s[i] = str[i];
   for (int i = 0; i < 512; i += 32)
     next2 = hash_shake_touch(str, s, next2, false);
-  bit_hex_str(sss, s);
+  bit_hex_str(sss, s, 64);
   for (int i = 0; i < 64; i++)
     assert(sss[i] == ss[i]);
   if (*ss) {} // get rid of not used var warning
