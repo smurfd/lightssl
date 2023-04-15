@@ -14,10 +14,10 @@ static u64 n1[] = {0x000003f, 0x0000fc0, 0x003f000, 0x01c0000, 0x0000800, 0x0000
 uint32_t utf8enc(uint32_t c);
 uint32_t utf8dec(uint32_t c);
 int err(char *s);
-int lrand(uint8_t h[BYTES], u64 k[BYTES]);
+int lrand(uint8_t h[], u64 k[]);
 int base64enc(char ed[], const uint8_t *data, int inl);
 int base64dec(uint8_t dd[], const char *data, int inl);
-void bit_pack(u64 big[6], const uint8_t byte[48]);
-void bit_unpack(uint8_t byte[48], const u64 big[6]);
+void bit_pack(u64 big[], const uint8_t byte[]);
+void bit_unpack(uint8_t byte[], const u64 big[]);
 void bit_hex_str(char *hs, uint8_t *d, int len);
 #endif

@@ -4,12 +4,12 @@
 #include "lightdefs.h"
 #include "lighttools.h"
 
-static uint32_t oct(int i, int inl, const uint8_t d[257]) {
+static uint32_t oct(int i, int inl, const uint8_t d[]) {
   if (i < inl) return d[i];
   return 0;
 }
 
-static uint32_t sex(const char d[257], char c[257], int i) {
+static uint32_t sex(const char d[], char c[], int i) {
   if (d[i] == '=') return (0 & i++);
   return c[(int)d[i]];
 }
@@ -110,7 +110,7 @@ int base64dec(uint8_t dd[], const char *data, int inl) {
 
 //
 // "Randomizer"
-int lrand(uint8_t h[BYTES], u64 k[BYTES]) {
+int lrand(uint8_t h[], u64 k[]) {
   prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
   for (int i = 0; i < BYTES; ++i) {
     h[i] = (uint8_t)prng_next(); k[i] = prng_next();
@@ -129,7 +129,7 @@ int lrand(uint8_t h[BYTES], u64 k[BYTES]) {
 // (uint64_t)dig[7];
 //
 // Bit packing function uint8 to uint64
-void bit_pack(u64 big[6], const uint8_t byte[48]) {
+void bit_pack(u64 big[], const uint8_t byte[]) {
   for(uint32_t i = 0; i < 6; ++i) {
     const uint8_t *dig = byte + 8 * (6 - 1 - i); big[i] = 0;
     for (int j = 7; j >= 0; j--)
@@ -147,7 +147,7 @@ void bit_pack(u64 big[6], const uint8_t byte[48]) {
 // dig[7] = big[i];
 //
 // Bit unpack uint64 to uint8
-void bit_unpack(uint8_t byte[48], const u64 big[6]) {
+void bit_unpack(uint8_t byte[], const u64 big[]) {
   for(uint32_t i = 0; i < 6; ++i) {
     uint8_t *dig = byte + 8 * (6 - 1 - i);
     for (int j = 7; j >= 0; j--)
@@ -155,7 +155,7 @@ void bit_unpack(uint8_t byte[48], const u64 big[6]) {
   }
 }
 
-void bit_pack64(u64 n[DIGITS], const u64 b[BYTES]) {
+void bit_pack64(u64 n[], const u64 b[]) {
   for(u64 i = 0; i < DIGITS; ++i) {
     const u64 *d = b + 8 * (DIGITS - 1 - i); n[i] = 0;
     for (u64 j = 0; j < 8; j++)
@@ -163,7 +163,7 @@ void bit_pack64(u64 n[DIGITS], const u64 b[BYTES]) {
   }
 }
 
-void bit_unpack64(u64 b[BYTES], const u64 n[DIGITS]) {
+void bit_unpack64(u64 b[], const u64 n[]) {
   for(u64 i = 0; i < DIGITS; ++i) {
     u64 *d = b + 8 * (DIGITS - 1 - i);
     for (u64 j = 0; j < 8; j++)
@@ -173,12 +173,12 @@ void bit_unpack64(u64 b[BYTES], const u64 n[DIGITS]) {
 
 //
 // 0-255 to 0x0 to 0xff
-static void to_hex(uint8_t h[2], uint8_t d) {
+static void to_hex(uint8_t h[], uint8_t d) {
   h[0] = d >> 4;
   h[1] = d & 0xf;
 }
 
-static void to_hex_chr(char *hs, uint8_t h[2]) {
+static void to_hex_chr(char *hs, uint8_t h[]) {
   hs[0] = hex[h[0]];
   hs[1] = hex[h[1]];
 }

@@ -50,7 +50,7 @@ int crypto_srv_listen(int s, sock *cli);
 void cryption(u64 data, key k, u64 *enc);
 void crypto_end(int s);
 
-u64 crypto_handle_cert(char d[LEN], const char *cert);
+u64 crypto_handle_cert(char d[], const char *cert);
 u64 crypto_handle_asn(char c[], const char *cert);
 #endif
 /*

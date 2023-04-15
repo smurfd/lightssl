@@ -290,7 +290,7 @@ static void rcon(uint8_t *wrd, const uint8_t a) {
 
 //
 //
-static void key_expansion(uint8_t w[NB * NR], const uint8_t key[NK * 2]) {
+static void key_expansion(uint8_t w[], const uint8_t key[]) {
   uint8_t tmp[4], rc[4];
 
   for (int i = 0; i < NK4; ++i)
@@ -320,7 +320,7 @@ static void xor(uint8_t *c, const uint8_t *a, const uint8_t *b, const uint32_t l
 
 //
 // Encrypt a block of data
-static void encrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t *rk) {
+static void encrypt_block(uint8_t out[], const uint8_t in[], const uint8_t *rk) {
   uint8_t state[4][NB] = {{0}, {0}};
 
   state_from_arr(state, in);
@@ -339,7 +339,7 @@ static void encrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t
 
 //
 // Decrypt a block of data
-static void decrypt_block(uint8_t out[BBL], const uint8_t in[BBL], const uint8_t *rk) {
+static void decrypt_block(uint8_t out[], const uint8_t in[], const uint8_t *rk) {
   uint8_t state[4][NB] = {{0}, {0}};
 
   state_from_arr(state, in);

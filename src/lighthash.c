@@ -172,12 +172,12 @@ static uint8_t rc(u64 t) {
 // 3. For j from 0 to l, let RC[2j – 1] = rc(j + 7ir).
 // 4. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A′ [0, 0, z] ⊕ RC[z].
 // 5. Return A′.
-static void iota(u64 (*A)[5][5], const u64 ir) {
+static void iota(u64 (*a)[5][5], const u64 ir) {
   u64 r = 0;
 
   for (u64 i = 0; i <= 6; i++)
     r += shift_cir(rc(i + 7 * ir), (int)pow(2, i) - 1);
-  (*A)[0][0] ^= r;
+  (*a)[0][0] ^= r;
 }
 
 //
@@ -187,7 +187,7 @@ static void iota(u64 (*A)[5][5], const u64 ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static void keccak_p(uint8_t s[200], const uint8_t *sm) {
+static void keccak_p(uint8_t s[], const uint8_t *sm) {
   u64 a[5][5];
 
   str2state(&a, sm);
@@ -302,7 +302,7 @@ void hash_shake_xof(uint8_t *sm) {
   keccak_p(sm, sm);
 }
 
-uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[200], const uint8_t next, bool upd) {
+uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[], const uint8_t next, bool upd) {
   uint8_t j = next, co = 32;
 
   if (upd) co = 20;
