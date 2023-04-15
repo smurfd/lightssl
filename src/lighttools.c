@@ -52,7 +52,7 @@ int err(char *s) {
 
 // from UTF-8 encoding to Unicode Codepoint
 uint32_t utf8dec(uint32_t c) {
-  if (c > 0x7F) {
+  if (c > 0x7f) {
     uint32_t m = (c <= n2[0]) ? n2[1] : n2[2];
     c = ((c & n2[3]) >> 6) | ((c & m) >> 4) | ((c & n2[4]) >> 2) | (c & n2[5]);
   }
@@ -63,7 +63,7 @@ uint32_t utf8dec(uint32_t c) {
 uint32_t utf8enc(uint32_t c) {
   uint32_t m = c;
 
-  if (c > 0x7F) {
+  if (c > 0x7f) {
     m = (c & n1[0]) | (c & n1[1]) << 2 | (c & n1[2]) << 4 | (c & n1[3]) << 6;
     if (c < n1[4]) m |= n1[5];
     else if (c < n1[6]) m |= n1[7];
@@ -81,7 +81,7 @@ int base64enc(char ed[], const uint8_t *data, int inl) {
     uint32_t a = oct(i++, inl, data), b = oct(i++, inl, data);
     uint32_t c = oct(i++, inl, data), tri = (a << 0x10) + (b << 0x08) + c;
     for (int k = 3; k >=0; k--)
-      ed[j++] = enc[(tri >> k * 6) & 0x3F];
+      ed[j++] = enc[(tri >> k * 6) & 0x3f];
   }
   for (int i = 0; i < tab[inl % 3]; i++)
     ed[ol - 1 - i] = '=';
@@ -103,7 +103,7 @@ int base64dec(uint8_t dd[], const char *data, int inl) {
     uint32_t tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
     if (j < ol)
       for (int k = 2; k >= 0; k--)
-        dd[j++] = (tri >> k * 8) & 0xFF;
+        dd[j++] = (tri >> k * 8) & 0xff;
   }
   return ol;
 }

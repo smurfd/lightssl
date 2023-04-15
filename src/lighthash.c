@@ -297,7 +297,7 @@ void hash_new(char *s, const uint8_t *n) {
 
 // Shake inspired from https://github.com/mjosaarinen/tiny_sha3
 void hash_shake_xof(uint8_t *sm) {
-  sm[64] ^= 0x1F;
+  sm[64] ^= 0x1f;
   sm[135] ^= 0x80;
   keccak_p(sm, sm);
 }

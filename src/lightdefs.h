@@ -12,9 +12,9 @@
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 
 // SSL
-#define RAND64() (rand() & 0x7FFFFFFFFFFFFFFF) << 48 ^ (rand() & 0x7FFFFFFFFFFFFFFF) << 35 ^\
-                 (rand() & 0x7FFFFFFFFFFFFFFF) << 22 ^ (rand() & 0x7FFFFFFFFFFFFFFF) << 9 ^\
-                 (rand() & 0x7FFFFFFFFFFFFFFF) >> 4
+#define RAND64() (rand() & 0x7fffffffffffffff) << 48 ^ (rand() & 0x7fffffffffffffff) << 35 ^\
+                 (rand() & 0x7fffffffffffffff) << 22 ^ (rand() & 0x7fffffffffffffff) << 9 ^\
+                 (rand() & 0x7fffffffffffffff) >> 4
 
 // Lightciphers
 #define NB 4

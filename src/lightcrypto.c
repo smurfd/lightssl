@@ -233,15 +233,15 @@ static void print(const asn *asn) {
 static uint32_t get_len(uint32_t *off, const uint8_t *data, uint32_t len, const bool t) {
   uint32_t a, b = 0, ret;
 
-  if (len < 2) return 0xFFFFFFFF;
+  if (len < 2) return 0xffffffff;
   ++data; a = *data++; len -= 2; *off = 0;
   if (t == 1) {++(*off); ++(*off); ret = a + (*off);}
   else {ret = a;}
   if (a < 128) return ret;
-  a &= 0x7F; *off += a;
-  if (a == 0 || a > 4 || a > len) return 0xFFFFFFFF;
+  a &= 0x7f; *off += a;
+  if (a == 0 || a > 4 || a > len) return 0xffffffff;
   while ((a--) > 0) {b = (b << 8) | ((uint32_t)*data); ++data;};
-  if (t == 1) {if (UINT32_MAX - (*off) < b) return 0xFFFFFFFF; ret = b + (*off);}
+  if (t == 1) {if (UINT32_MAX - (*off) < b) return 0xffffffff; ret = b + (*off);}
   else {ret = b;} // check to not return overflow ^^
   return ret;
 }
@@ -264,7 +264,7 @@ static int32_t der_decode(asn **o, asn **oobj, const uint8_t *der, uint32_t derl
     (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
   }
   if (der == NULL || derlen == 0 || derenclen < deroff) return -1;
-  if (derenclen == 0xFFFFFFFF || derlen < derenclen) return -1;
+  if (derenclen == 0xffffffff || derlen < derenclen) return -1;
   if ((*der & 0x20) != 0) {
     if (dec && (oobj == NULL || oobjc <= 0)){return -1;}
     while (childrenlen < derdatl) {
@@ -272,7 +272,7 @@ static int32_t der_decode(asn **o, asn **oobj, const uint8_t *der, uint32_t derl
       uint32_t childlen = get_len(&childoff, child, (derenclen - deroff), 1);
       int32_t childobj = der_decode(NULL, NULL, child, childlen, 0, 0);
 
-      if (childlen == 0xFFFFFFFF || (childlen+childrenlen) > derdatl) return -1;
+      if (childlen == 0xffffffff || (childlen+childrenlen) > derdatl) return -1;
       if (childobj < 0 || derenclen < derdatl) return -1;
       if (dec) {
         if (childobj > (int)oobjc) return -1;
