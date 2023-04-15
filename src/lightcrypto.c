@@ -73,7 +73,7 @@ void cryption(u64 data, key k, u64 *enc) {
 
 //
 // Initialize server and client (b=true for server deamon)
-int crypto_init(cc *host, cc *port, bool b) {
+int crypto_init(const char *host, const char *port, bool b) {
   int s = socket(AF_INET, SOCK_STREAM, 0);
   sock_in adr;
 

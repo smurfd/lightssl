@@ -4,10 +4,8 @@
 #include <stdint.h>
 
 // Only defines here, no typedefs
-#define cc const char
-#define u128 unsigned __int128
-#define cuc const uint8_t
-#define u64 unsigned long long int // because linux u64 is not same as on mac
+#define u64 unsigned long long int // because linux uint64_t is not same as on mac
+
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 

@@ -130,16 +130,17 @@ static u64 sub(u64 *a, const u64 *b, const u64 *c) {
 //
 // Multiply
 static void mul(u64 *a, const u64 *b, const u64 *c) {
-  u128 r = 0; u64 r2 = 0, di22 = DI * 2 - 1;
+  u64 r2 = 0, di22 = DI * 2 - 1;
+  unsigned __int128 r = 0;
 
   for (u64 k = 0; k < di22; ++k) {
     u64 min = (k < DI ? 0 : (k + 1) - DI);
     for (u64 j = min; j <= k && j < DI; ++j) {
-      u128 p = (u128)b[j] * c[k - j]; // product
+      unsigned __int128 p = (unsigned __int128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
     }
     a[k] = (u64)(r);
-    r = (r >> 64) | (((u128)r2) << 64);
+    r = (r >> 64) | (((unsigned __int128)r2) << 64);
     r2 = 0;
   }
   a[di22] = (u64)r;

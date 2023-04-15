@@ -40,7 +40,7 @@ static uint8_t AC[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
 static uint8_t AD[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01 ,0x2a};
 static uint8_t AE[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x02 ,0x30};
 
-int crypto_init(cc *host, cc *port, bool b);
+int crypto_init(const char *host, const char *port, bool b);
 void crypto_transfer_key(int s, bool snd, head *h, key *k);
 void crypto_transfer_data(const int s, void* data, head *h, bool snd, u64 len);
 void crypto_gen_share(key *k1, key *k2, u64 p, bool srv);
