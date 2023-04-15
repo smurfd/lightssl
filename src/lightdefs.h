@@ -6,12 +6,15 @@
 // Only defines here, no typedefs
 #define u64 unsigned long long int // because linux uint64_t is not same as on mac
 
+#define EVEN(p) (!(p[0] & 1))
+
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 
 // SSL
-#define RD() (rand() & 0x7FFFFFFFFFFFFFFF)
-#define RAND64() RD() << 48 ^ RD() << 35 ^ RD() << 22 ^ RD() << 9 ^ RD() >> 4
+#define RAND64() (rand() & 0x7FFFFFFFFFFFFFFF) << 48 ^ (rand() & 0x7FFFFFFFFFFFFFFF) << 35 ^\
+                 (rand() & 0x7FFFFFFFFFFFFFFF) << 22 ^ (rand() & 0x7FFFFFFFFFFFFFFF) << 9 ^\
+                 (rand() & 0x7FFFFFFFFFFFFFFF) >> 4
 
 // Lightciphers
 #define NB 4
@@ -30,12 +33,10 @@
 #define SHA3_BITS 1024 // SHA3-256 = 512, SHA3-512 = 1024 (default)
 
 // Lightkeys
-#define BT 8
 #define KB 48
 #define KB2 KB * 2
-#define DI (KB / BT)
+#define DI (KB / 8)
 #define DI2 (DI * 2)
-#define EVEN(p) (!(p[0] & 1))
 
 typedef struct pt {u64 x[DI], y[DI];} pt;
 typedef struct prng_t {u64 a, b, c, d;} prng_t;
