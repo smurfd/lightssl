@@ -1,5 +1,6 @@
 //                                                                                                                    //
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
+// https://hashes.com/en/generate/hash
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

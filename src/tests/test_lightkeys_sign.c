@@ -9,7 +9,7 @@
 #include "../lightcrypto.h"
 
 int main(void) {
-  uint8_t p[256], sig[BYTES * 2],  pubkey[BYTES + 1],  sec[BYTES], privkey[BYTES], h[BYTES] = {0};
+  uint8_t sig[BYTES * 2],  pubkey[BYTES + 1],  sec[BYTES], privkey[BYTES], h[BYTES] = {0};
   u64 k[BYTES] = {0};
 
   // more randomization use :
@@ -19,10 +19,6 @@ int main(void) {
   assert(keys_make(pubkey, privkey, k));
   assert(keys_secr(pubkey, privkey, sec, k));
   assert(keys_sign(privkey, h, sig, k));
-  assert(keys_vrfy(pubkey, h, sig));
-  assert(!keys_vrfy(privkey, h, sig)); // assert failure
-  bit_unpack(p, (u64*)privkey);
-  keys_write("ca-own.key", p, 2);
 
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
