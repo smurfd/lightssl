@@ -110,9 +110,9 @@ int base64dec(uint8_t dd[], const char *data, int inl) {
 
 //
 // "Randomizer"
-int lrand(uint8_t h[KB], u64 k[KB]) {
+int lrand(uint8_t h[BYTES], u64 k[BYTES]) {
   prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
-  for (int i = 0; i < KB; ++i) {
+  for (int i = 0; i < BYTES; ++i) {
     h[i] = (uint8_t)prng_next(); k[i] = prng_next();
   }
   return 1;
@@ -155,17 +155,17 @@ void bit_unpack(uint8_t byte[48], const u64 big[6]) {
   }
 }
 
-void bit_pack64(u64 n[DI], const u64 b[KB]) {
-  for(u64 i = 0; i < DI; ++i) {
-    const u64 *d = b + 8 * (DI - 1 - i); n[i] = 0;
+void bit_pack64(u64 n[DIGITS], const u64 b[BYTES]) {
+  for(u64 i = 0; i < DIGITS; ++i) {
+    const u64 *d = b + 8 * (DIGITS - 1 - i); n[i] = 0;
     for (u64 j = 0; j < 8; j++)
       n[i] |= ((u64)d[j] << ((7 - j) * 8));
   }
 }
 
-void bit_unpack64(u64 b[KB], const u64 n[DI]) {
-  for(u64 i = 0; i < DI; ++i) {
-    u64 *d = b + 8 * (DI - 1 - i);
+void bit_unpack64(u64 b[BYTES], const u64 n[DIGITS]) {
+  for(u64 i = 0; i < DIGITS; ++i) {
+    u64 *d = b + 8 * (DIGITS - 1 - i);
     for (u64 j = 0; j < 8; j++)
       d[j] = n[i] >> ((7 - j) * 8);
   }
