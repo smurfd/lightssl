@@ -14,12 +14,14 @@ int main(void) {
   for (int i = 0; i < 200; i += 20)
     next = hash_shake_touch(str, buf, next, true);
   hash_shake_xof(str);
-  for (int i = 0; i < 32; i++) s[i] = str[i];
+  memcpy(s, str, 32 * sizeof(uint8_t));
   for (int i = 0; i < 512; i += 32)
     next2 = hash_shake_touch(str, s, next2, false);
   bit_hex_str(sss, s, 64);
-  for (int i = 0; i < 66; i++)
+  for (int i = 0; i < 66; i++) {
     assert(sss[i] == ss[i]);
+    assert(sss[i] != (ss[i] + 1));
+  }
   if (*ss) {} // get rid of not used var warning
   printf("OK\n");
 }
