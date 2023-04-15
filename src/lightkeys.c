@@ -509,7 +509,8 @@ int keys_sign(const uint8_t priv[], const uint8_t hash[], uint8_t sign[], u64 k[
 //
 // Verify signature
 int keys_vrfy(const uint8_t publ[], const uint8_t hash[], const uint8_t sign[]) {
-  u64 u1[DIGITS]={0}, u2[DIGITS]={0}, tx[DIGITS]={0}, ty[DIGITS]={0}, tz[DIGITS]={0}, rx[DIGITS]={0}, ry[DIGITS]={0}, rz[DIGITS]={0};
+  u64 u1[DIGITS] = {0}, u2[DIGITS] = {0}, tx[DIGITS] = {0}, ty[DIGITS] = {0}, tz[DIGITS] = {0};
+  u64 rx[DIGITS] = {0}, ry[DIGITS] = {0}, rz[DIGITS] = {0};
   pt public, sum;
 
 
