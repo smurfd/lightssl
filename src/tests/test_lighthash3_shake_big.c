@@ -13,9 +13,10 @@ int main(void) {
  ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip e\
 x ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pa\
 riatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
   for (int i = 0; i < 200; i += 20)
     hash_shake_touch(str, plain, &next, true);
- 
+
   hash_shake_xof(str);
   memcpy(s, str, 32 * sizeof(uint8_t));
 

@@ -13,7 +13,7 @@ int main(void) {
   memset(buf, 0xa3, 20);
   for (int i = 0; i < 200; i += 20)
     hash_shake_touch(str, buf, &next, true);
- 
+
   hash_shake_xof(str);
   memcpy(s, str, 32 * sizeof(uint8_t));
 
