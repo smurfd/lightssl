@@ -185,8 +185,9 @@ static void to_hex_chr(char *hs, uint8_t h[]) {
 
 //
 // Convert a hex bitstring to a string
-void bit_hex_str(char *hs, uint8_t *d, int len) {
+void bit_hex_str(char *hs, const uint8_t *d, const int len) {
   int co = 2;
+
   hs[0] = '0';
   hs[1] = 'x';
   for (int i = 0 ; i < len; i++) {

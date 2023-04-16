@@ -8,5 +8,5 @@
 
 void hash_new(char *ss, const uint8_t *n);
 void hash_shake_xof(uint8_t *sm);
-uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[], const uint8_t next, bool upd);
+void hash_shake_touch(uint8_t *sm, uint8_t s[], uint8_t *next, bool upd);
 #endif

@@ -7,12 +7,12 @@
 #include "../lighttools.h"
 
 int main(void) {
-  uint8_t str[512] = {0}, s[200] = {0}, next = 0, next2 = 0;
-  char sss[66]={0}, ss[66] = "0xc59a34d4356567e98fcacfd18c42771ad450704784bf24cd0884ca992e931423";
-  uint8_t *smurfd = (uint8_t*)"smurfd\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+  uint8_t buf[512] = {0}, str[512] = {0}, s[200] = {0}, next = 0, next2 = 0;
+  char sss[64], ss[66] = "0x6a1a9d7846436e4dca5728b6f760eef0ca92bf0be5615e96959d767197a0beeb";
 
+  memset(buf, 0xa3, 20);
   for (int i = 0; i < 200; i += 20)
-    hash_shake_touch(str, smurfd, &next, true);
+    hash_shake_touch(str, buf, &next, true);
  
   hash_shake_xof(str);
   memcpy(s, str, 32 * sizeof(uint8_t));
@@ -25,6 +25,7 @@ int main(void) {
     assert(sss[i] == ss[i]);
     assert(sss[i] != (ss[i] + 1));
   }
+
   if (*ss) {} // get rid of not used var warning
   printf("OK\n");
 }

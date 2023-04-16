@@ -303,16 +303,16 @@ void hash_shake_xof(uint8_t *sm) {
   keccak_p(sm, sm);
 }
 
-uint8_t hash_shake_touch(uint8_t *sm, uint8_t s[], const uint8_t next, bool upd) {
-  uint8_t j = next, co = 32;
+void hash_shake_touch(uint8_t *sm, uint8_t s[], uint8_t *next, bool upd) {
+  uint8_t j = (*next), co = 32;
 
   if (upd) co = 20;
-  for (size_t i = 0; i < co; i++) {
+  for (int i = 0; i < co; i++) {
     if (upd) sm[j++] ^= s[i];
     if (j >= 136) {
       keccak_p(sm, sm); j = 0;
     }
     if (!upd) s[i] = sm[j++];
   }
-  return j;
+  (*next) = j;
 }
