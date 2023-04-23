@@ -375,4 +375,3 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen) {
       out[i] = t[i];
   }
 }
-
