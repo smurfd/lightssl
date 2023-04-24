@@ -316,3 +316,92 @@ void hash_shake_touch(uint8_t *sm, uint8_t s[], uint8_t *next, bool upd) {
   }
   (*next) = j;
 }
+
+static void two2one(u64 ret[5][5], u64 a[25]) {
+  for (int i = 0; i < 5; i++)
+    for (int j = 0; j < 5; j++)
+      ret[j][i] = a[j + 5 * i];
+}
+
+static void one2two(u64 ret[25], u64 a[5][5]) {
+  for (int i = 0; i < 5; i++)
+    for (int j = 0; j < 5; j++)
+      ret[j + 5 * i] = a[j][i];
+}
+
+static u64 load64(const uint8_t x[8]) {
+  u64 r = 0;
+
+  for(uint32_t i = 0; i < 8; i++)
+    r |= (u64)x[i] << 8*i;
+
+  return r;
+}
+
+static void store64(uint8_t x[8], u64 u) {
+  for(uint32_t i = 0; i < 8; i++)
+    x[i] = u >> 8*i;
+}
+
+static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
+  uint8_t t[200] = {0};
+  u64 ss[5][5];
+
+  // Zero state
+  for(int i = 0;i < 25; i++)
+    s[i] = 0;
+
+  while(mlen >= r) {
+    two2one(ss, s);
+    for(uint32_t i = 0; i < r / 8; i++)
+      s[i] ^= load64(m + 8 * i);
+
+    for (int xx = 0; xx <= 23; xx++) {
+      theta(&ss); rho(&ss); pi(&ss); chi(&ss); iota(&ss, xx);
+    }
+    mlen -= r;
+    m += r;
+    one2two(s, ss);
+  }
+
+  for(uint32_t i = 0; i < mlen; i++)
+    t[i] = m[i];
+  t[mlen] = p;
+  t[r-1] |= 128;
+  for(uint32_t i = 0; i < r / 8; i++)
+    s[i] ^= load64(t + 8 * i);
+}
+
+static void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25], uint32_t r) {
+  u64 ss[5][5];
+
+  two2one(ss, s);
+  while(nblocks > 0) {
+    for (int xx = 0; xx <= 23; xx++) {
+      theta(&ss); rho(&ss); pi(&ss); chi(&ss); iota(&ss, xx);
+    }
+    one2two(s, ss);
+    for(uint32_t i = 0; i < r / 8; i++)
+      store64(out + 8 * i, s[i]);
+    out += r;
+    --nblocks;
+  }
+}
+
+void shake256(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
+  uint32_t nblocks = outlen/SHAKE256_RATE;
+  uint8_t t[SHAKE256_RATE];
+  keccak_state state;
+
+  keccak_absorb(state.s, SHAKE256_RATE, in, inlen, 0x1F);
+  keccak_squeezeblocks(out, nblocks, state.s, SHAKE256_RATE);
+
+  out += nblocks*SHAKE256_RATE;
+  outlen -= nblocks*SHAKE256_RATE;
+
+  if(outlen) {
+    keccak_squeezeblocks(t, 1, state.s, SHAKE256_RATE);
+    for(uint32_t i = 0; i < outlen; i++)
+      out[i] = t[i];
+  }
+}
