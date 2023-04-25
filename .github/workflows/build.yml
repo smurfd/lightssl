@@ -7,21 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-  build-release:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get -y install clang cmake make git openssl
-    - name: Build
-      run: cmake -DCMAKE_BUILD_TYPE=Release -Bbuild/release -DCMAKE_C_COMPILER=clang
-    - name: Generate cert release
-      run: sh src/scripts/gen_cert_release.sh
-    - name: Compile
-      run: make -Cbuild/release
-    - name: Test
-      run: make -Cbuild/release test
-
   build-debug:
     runs-on: ubuntu-20.04
     steps:
