@@ -188,14 +188,16 @@ static void iota(u64 (*a)[5][5], const u64 ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static void keccak_p(uint8_t s[], const uint8_t *sm) {
+static void keccak_p(uint8_t s[], u64 (*ss)[5][5], const uint8_t *sm, bool str) {
   u64 a[5][5];
 
-  str2state(&a, sm);
+  if (str) str2state(&a, sm);
+  else memcpy(&a, (*ss), 25 * sizeof(u64));
   for (int i = 0; i <= 23; i++) {
     theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
   }
-  state2str(s, &a);
+  if (str) state2str(s, &a);
+  else memcpy((*ss), &a, 25 * sizeof(u64));
 }
 
 
@@ -255,7 +257,7 @@ static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
     for (u64 j = 0; j < b / 8; j++)
       sxor[j] = s[j] ^ pi[j];
     free(pi);
-    keccak_p(s, sxor);
+    keccak_p(s, NULL, sxor, true);
   }
   while (true) {
     memcpy(str, s, r / 8);
@@ -264,9 +266,73 @@ static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
       memcpy((*ps), z, 64); break;
     }
     memcpy(sc, s, b / 8);
-    keccak_p(s, sc);
+    keccak_p(s, NULL, sc, true);
   }
   free(pad); free(p); free(z);
+}
+
+static void two2one(u64 ret[5][5], u64 a[25]) {
+  for (int i = 0; i < 5; i++)
+    for (int j = 0; j < 5; j++)
+      ret[j][i] = a[j + 5 * i];
+}
+
+static void one2two(u64 ret[25], u64 a[5][5]) {
+  for (int i = 0; i < 5; i++)
+    for (int j = 0; j < 5; j++)
+      ret[j + 5 * i] = a[j][i];
+}
+
+static u64 load64(const uint8_t x[8]) {
+  u64 r = 0;
+
+  for(uint32_t i = 0; i < 8; i++)
+    r |= (u64)x[i] << 8*i;
+
+  return r;
+}
+
+static void store64(uint8_t x[8], u64 u) {
+  for(uint32_t i = 0; i < 8; i++)
+    x[i] = u >> 8*i;
+}
+
+static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
+  uint8_t t[200] = {0};
+  u64 ss[5][5];
+
+  memset(s, 0, 25 * sizeof(u64));
+  while(mlen >= r) {
+    two2one(ss, s);
+    for(uint32_t i = 0; i < r / 8; i++)
+      s[i] ^= load64(m + 8 * i);
+    keccak_p(NULL, &ss, NULL, false);
+
+    mlen -= r;
+    m += r;
+    one2two(s, ss);
+  }
+
+  for(uint32_t i = 0; i < mlen; i++)
+    t[i] = m[i];
+  t[mlen] = p;
+  t[r-1] |= 128;
+  for(uint32_t i = 0; i < r / 8; i++)
+    s[i] ^= load64(t + 8 * i);
+}
+
+static void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25], uint32_t r) {
+  u64 ss[5][5];
+
+  two2one(ss, s);
+  while(nblocks > 0) {
+    keccak_p(NULL, &ss, NULL, false);
+    one2two(s, ss);
+    for(uint32_t i = 0; i < r / 8; i++)
+      store64(out + 8 * i, s[i]);
+    out += r;
+    --nblocks;
+  }
 }
 
 //
@@ -300,7 +366,7 @@ void hash_new(char *s, const uint8_t *n) {
 void hash_shake_xof(uint8_t *sm) {
   sm[64] ^= 0x1f;
   sm[135] ^= 0x80;
-  keccak_p(sm, sm);
+  keccak_p(sm, NULL, sm, true);
 }
 
 void hash_shake_touch(uint8_t *sm, uint8_t s[], uint8_t *next, bool upd) {
@@ -310,81 +376,11 @@ void hash_shake_touch(uint8_t *sm, uint8_t s[], uint8_t *next, bool upd) {
   for (int i = 0; i < co; i++) {
     if (upd) sm[j++] ^= s[i];
     if (j >= 136) {
-      keccak_p(sm, sm); j = 0;
+      keccak_p(sm, NULL, sm, true); j = 0;
     }
     if (!upd) s[i] = sm[j++];
   }
   (*next) = j;
-}
-
-static void two2one(u64 ret[5][5], u64 a[25]) {
-  for (int i = 0; i < 5; i++)
-    for (int j = 0; j < 5; j++)
-      ret[j][i] = a[j + 5 * i];
-}
-
-static void one2two(u64 ret[25], u64 a[5][5]) {
-  for (int i = 0; i < 5; i++)
-    for (int j = 0; j < 5; j++)
-      ret[j + 5 * i] = a[j][i];
-}
-
-static u64 load64(const uint8_t x[8]) {
-  u64 r = 0;
-
-  for(uint32_t i = 0; i < 8; i++)
-    r |= (u64)x[i] << 8*i;
-
-  return r;
-}
-
-static void store64(uint8_t x[8], u64 u) {
-  for(uint32_t i = 0; i < 8; i++)
-    x[i] = u >> 8*i;
-}
-
-static void keccak_loop(u64 (*ss)[5][5]) {
-  for (int i = 0; i <= 23; i++) {
-    theta(ss); rho(ss); pi(ss); chi(ss); iota(ss, i);
-  }
-}
-
-static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
-  uint8_t t[200] = {0};
-  u64 ss[5][5];
-
-  memset(s, 0, 25 * sizeof(u64));
-  while(mlen >= r) {
-    two2one(ss, s);
-    for(uint32_t i = 0; i < r / 8; i++)
-      s[i] ^= load64(m + 8 * i);
-    keccak_loop(&ss);
-
-    mlen -= r;
-    m += r;
-    one2two(s, ss);
-  }
-
-  for(uint32_t i = 0; i < mlen; i++)
-    t[i] = m[i];
-  t[mlen] = p;
-  t[r-1] |= 128;
-  for(uint32_t i = 0; i < r / 8; i++)
-    s[i] ^= load64(t + 8 * i);
-}
-
-static void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25], uint32_t r) {
-  u64 ss[5][5];
-
-  two2one(ss, s);
-  while(nblocks > 0) {
-    keccak_loop(&ss);
-    one2two(s, ss);
-    for(uint32_t i = 0; i < r / 8; i++)
-      store64(out + 8 * i, s[i]);
-    out += r;
-    --nblocks;
-  }
 }
 
 void shake256(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
