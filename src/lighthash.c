@@ -362,27 +362,6 @@ void hash_new(char *s, const uint8_t *n) {
   free(ss); free(mmm);
 }
 
-// Shake inspired from https://github.com/mjosaarinen/tiny_sha3
-void hash_shake_xof(uint8_t *sm) {
-  sm[64] ^= 0x1f;
-  sm[135] ^= 0x80;
-  keccak_p(sm, NULL, sm, true);
-}
-
-void hash_shake_touch(uint8_t *sm, uint8_t s[], uint8_t *next, bool upd) {
-  uint8_t j = (*next), co = 32;
-
-  if (upd) co = 20;
-  for (int i = 0; i < co; i++) {
-    if (upd) sm[j++] ^= s[i];
-    if (j >= 136) {
-      keccak_p(sm, NULL, sm, true); j = 0;
-    }
-    if (!upd) s[i] = sm[j++];
-  }
-  (*next) = j;
-}
-
 void shake256(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
   uint32_t nblocks = outlen / 136;
   uint8_t t[inlen];
