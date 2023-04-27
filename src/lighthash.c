@@ -286,15 +286,15 @@ static void one2two(u64 ret[25], u64 a[5][5]) {
 static u64 load64(const uint8_t x[8]) {
   u64 r = 0;
 
-  for(uint32_t i = 0; i < 8; i++)
-    r |= (u64)x[i] << 8*i;
+  for (uint32_t i = 0; i < 8; i++)
+    r |= (u64)x[i] << 8 * i;
 
   return r;
 }
 
 static void store64(uint8_t x[8], u64 u) {
-  for(uint32_t i = 0; i < 8; i++)
-    x[i] = u >> 8*i;
+  for (uint32_t i = 0; i < 8; i++)
+    x[i] = u >> 8 * i;
 }
 
 static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
@@ -302,9 +302,9 @@ static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen
   u64 ss[5][5];
 
   memset(s, 0, 25 * sizeof(u64));
-  while(mlen >= r) {
+  while (mlen >= r) {
     two2one(ss, s);
-    for(uint32_t i = 0; i < r / 8; i++)
+    for (uint32_t i = 0; i < r / 8; i++)
       s[i] ^= load64(m + 8 * i);
     keccak_p(NULL, &ss, NULL, false);
 
@@ -313,11 +313,11 @@ static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen
     one2two(s, ss);
   }
 
-  for(uint32_t i = 0; i < mlen; i++)
+  for (uint32_t i = 0; i < mlen; i++)
     t[i] = m[i];
   t[mlen] = p;
-  t[r-1] |= 128;
-  for(uint32_t i = 0; i < r / 8; i++)
+  t[r - 1] |= 128;
+  for (uint32_t i = 0; i < r / 8; i++)
     s[i] ^= load64(t + 8 * i);
 }
 
@@ -325,10 +325,10 @@ static void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25], uint
   u64 ss[5][5];
 
   two2one(ss, s);
-  while(nblocks > 0) {
+  while (nblocks > 0) {
     keccak_p(NULL, &ss, NULL, false);
     one2two(s, ss);
-    for(uint32_t i = 0; i < r / 8; i++)
+    for (uint32_t i = 0; i < r / 8; i++)
       store64(out + 8 * i, s[i]);
     out += r;
     --nblocks;
@@ -394,9 +394,9 @@ void shake256(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) 
   out += nblocks * 136;
   outlen -= nblocks * 136;
 
-  if(outlen) {
+  if (outlen) {
     keccak_squeezeblocks(t, 1, st, 136);
-    for(uint32_t i = 0; i < outlen; i++)
+    for (uint32_t i = 0; i < outlen; i++)
       out[i] = t[i];
   }
 }
