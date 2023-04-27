@@ -362,7 +362,7 @@ void hash_new(char *s, const uint8_t *n) {
   free(ss); free(mmm);
 }
 
-void shake256(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
+void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
   uint32_t nblocks = outlen / 136;
   uint8_t t[inlen];
   u64 st[25];

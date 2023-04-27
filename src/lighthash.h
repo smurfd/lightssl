@@ -7,5 +7,5 @@
 #include "lightdefs.h"
 
 void hash_new(char *ss, const uint8_t *n);
-void shake256(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen);
+void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen);
 #endif

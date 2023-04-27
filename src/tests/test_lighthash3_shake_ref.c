@@ -15,8 +15,8 @@ int main(void) {
   char s[] = "\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3";
 
   for (int i = 0; i < 20; i++) {in_gold1[i] = s[i]; in_gold2[i] = s[i];}
-  shake256(out_gold1, 64, in_gold1, 20);
-  shake256(out_gold2, 64, in_gold2, 20);
+  hash_shake_new(out_gold1, 64, in_gold1, 20);
+  hash_shake_new(out_gold2, 64, in_gold2, 20);
 
   for (int i = 0; i < 64; i++) {printf("%02x %02x %02x\n", out_gold1[i], out_gold2[i], res[i]);}
   for (int i = 0; i < 64; i++) {assert(out_gold1[i] == res[i]); assert(out_gold2[i] == res[i]);}
