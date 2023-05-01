@@ -1,19 +1,4 @@
-//                                                                                                                    //
-// AES
-// https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-// https://www.rfc-editor.org/rfc/rfc3565
-// https://www.rfc-editor.org/rfc/rfc3565
-// https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
-
-// Cipher Key = 60 3d eb 10 15 ca 71 be 2b 73 ae f0 85 7d 77 81
-// 1f 35 2c 07 3b 61 08 d7 2d 98 10 a3 09 14 df f4
-// Nk = 8
-// w0 = 603deb10 w1 = 15ca71be w2 = 2b73aef0 w3 = 857d7781
-// w4 = 1f352c07 w5 = 3b6108d7 w6 = 2d9810a3 w7 = 0914dff4
-// C.3 AES-256 (Nk=8, Nr=14)
-// PLAINTEXT: 00112233445566778899aabbccddeeff
-// KEY: 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
-
+// Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
@@ -384,3 +369,18 @@ void ciph_crypt(uint8_t out[], const uint8_t in[], const uint8_t key[], const ui
       else memcpy(block, (out + i), BBL);
     }
 }
+
+// AES
+// https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+// https://www.rfc-editor.org/rfc/rfc3565
+// https://www.rfc-editor.org/rfc/rfc3565
+// https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+
+// Cipher Key = 60 3d eb 10 15 ca 71 be 2b 73 ae f0 85 7d 77 81
+// 1f 35 2c 07 3b 61 08 d7 2d 98 10 a3 09 14 df f4
+// Nk = 8
+// w0 = 603deb10 w1 = 15ca71be w2 = 2b73aef0 w3 = 857d7781
+// w4 = 1f352c07 w5 = 3b6108d7 w6 = 2d9810a3 w7 = 0914dff4
+// C.3 AES-256 (Nk=8, Nr=14)
+// PLAINTEXT: 00112233445566778899aabbccddeeff
+// KEY: 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f

@@ -1,6 +1,4 @@
-//                                                                                                                    //
-// Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
-// https://hashes.com/en/generate/hash
+// Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -379,3 +377,6 @@ void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t i
       out[i] = t[i];
   }
 }
+
+// Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged
+// https://hashes.com/en/generate/hash

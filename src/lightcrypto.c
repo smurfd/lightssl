@@ -1,5 +1,4 @@
-//                                                                                                                    //
-// Very simple handshake
+// Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,10 +14,6 @@
 #include "lightcrypto.h"
 #include "lighttools.h"
 #include "lightdefs.h"
-
-// What im looking for:
-// https://github.com/gh2o/tls_mini
-// asn1 stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
 
 //
 // Receive key (clears private key if we receive it for some reason)
@@ -351,3 +346,9 @@ u64 crypto_handle_cert(char d[LEN], const char *cert) {
 u64 crypto_handle_asn(char c[], const char *cert) {
   return dump_and_parse((uint8_t*)c, read_cert(c, cert, 1));
 }
+
+// Very simple handshake
+
+// What im looking for:
+// https://github.com/gh2o/tls_mini
+// asn1 stolen / inspired from https://gitlab.com/mtausig/tiny-asn1

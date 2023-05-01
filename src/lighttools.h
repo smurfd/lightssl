@@ -1,4 +1,4 @@
-//                                                                                                                    //
+// Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #ifndef LIGHTTOOLS_H
 #define LIGHTTOOLS_H 1
 #include <inttypes.h>

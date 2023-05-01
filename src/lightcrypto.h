@@ -1,6 +1,4 @@
-//                                                                                                                    //
-// Very simple handshake
-// asn1 - stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
+// Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #ifndef LIGHTCRYPTO_H
 #define LIGHTCRYPTO_H 1
 #include <stdbool.h>
@@ -53,6 +51,10 @@ void crypto_end(int s);
 u64 crypto_handle_cert(char d[], const char *cert);
 u64 crypto_handle_asn(char c[], const char *cert);
 #endif
+
+// Very simple handshake
+// asn1 - stolen / inspired from https://gitlab.com/mtausig/tiny-asn1
+
 /*
 ```
     |                                                     |                    .

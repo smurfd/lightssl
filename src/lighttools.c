@@ -1,4 +1,4 @@
-//                                                                                                                    //
+// Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #include <stdio.h>
 #include <inttypes.h>
 #include "lightdefs.h"
@@ -45,10 +45,6 @@ static void prng_init(u64 seed) {
 int err(char *s) {
   printf("ERR: %s\n", s); return 1;
 }
-
-
-// https://stackoverflow.com/questions/66715611/check-for-valid-utf-8-encoding-in-c/66723102#66723102
-// UTF8 encode/decode
 
 // from UTF-8 encoding to Unicode Codepoint
 uint32_t utf8dec(uint32_t c) {
@@ -201,3 +197,6 @@ void bit_hex_str(char *hs, const uint8_t *d, const int len) {
   }
   hs[len*2+2] = '\0';
 }
+
+// https://stackoverflow.com/questions/66715611/check-for-valid-utf-8-encoding-in-c/66723102#66723102
+// UTF8 encode/decode
