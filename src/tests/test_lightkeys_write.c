@@ -19,7 +19,6 @@ int main(void) {
   assert(keys_make(pubkey, privkey, k));
   bit_unpack(p, (u64*)privkey);
   keys_write("ca-own.key", p, 2);
-
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
 }

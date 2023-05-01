@@ -21,7 +21,6 @@ int main(void) {
   assert(keys_sign(privkey, h, sig, k));
   assert(keys_vrfy(pubkey, h, sig));
   assert(!keys_vrfy(privkey, h, sig)); // assert failure
-
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
 }

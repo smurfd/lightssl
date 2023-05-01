@@ -18,7 +18,6 @@ int main(void) {
   assert(lrand(h, k));
   assert(keys_make(pubkey, privkey, k));
   assert(keys_secr(pubkey, privkey, sec, k));
-
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
 }

@@ -17,7 +17,6 @@ int main(void) {
   // for (int i = 0; i < BYTES; i++) {k[i] = RAND64(); h[i] = RAND64();}
   assert(lrand(h, k));
   assert(keys_make(pubkey, privkey, k));
-
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
 }

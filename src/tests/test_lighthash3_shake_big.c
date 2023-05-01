@@ -21,6 +21,5 @@ int main(void) {
     assert(out1[i] == res[i]); assert(out2[i] == res[i]);
   }
   if ((*res)) {} // get rid of not used var warning
-
   printf("OK\n");
 }

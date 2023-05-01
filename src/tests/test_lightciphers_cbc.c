@@ -14,8 +14,7 @@ int main(void) {
 
   ciph_crypt(out, plain, key, iv, true, false);
   ciph_crypt(in, out, key, iv, true, true);
-  for (u64 i = 0; i < BBL; i++) {
+  for (u64 i = 0; i < BBL; i++)
     assert(plain[i] == in[i]);
-  }
   printf("OK\n");
 }

@@ -19,7 +19,6 @@ int main(void) {
   assert(keys_make(pubkey, privkey, k));
   assert(keys_secr(pubkey, privkey, sec, k));
   assert(keys_sign(privkey, h, sig, k));
-
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
 }
