@@ -144,17 +144,13 @@ static void copy_state(uint8_t s[4][NB], const uint8_t in[4][NB]) {
 //
 // Copy to a state array from array
 static void state_from_arr(uint8_t s[4][NB], const uint8_t in[NB4]) {
-  for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i)
-      s[j][i] = in[j + 4 * i];
+  memcpy(s, in, 4 * NB * sizeof(uint8_t));
 }
 
 //
 // Copy to array from state array
 static void arr_from_state(uint8_t s[NB4], const uint8_t in[4][NB]) {
-  for (int j = 0; j < 4; ++j)
-    for (int i = 0; i < NB; ++i)
-      s[j + 4 * i] = in[j][i];
+  memcpy(s, in, 4 * NB * sizeof(uint8_t));
 }
 
 //
@@ -162,16 +158,14 @@ static void arr_from_state(uint8_t s[NB4], const uint8_t in[4][NB]) {
 static void shift_row(uint8_t state[4][NB], const uint32_t i, const uint32_t n) {
   uint8_t tmp[NB];
 
-  for (uint32_t j = 0; j < NB; j++)
-    tmp[j] = state[i][(j + n) % NB];
+  memcpy(tmp, state[i], NB * sizeof(uint8_t));
   memcpy(state[i], tmp, NB * sizeof(uint8_t));
 }
 
 //
 // 5.3.x
 static void invshift_rows(uint8_t state[4][NB]) { // See Sec. 5.3.1
-  for (int i = 1; i < 4; i++)
-    shift_row(state, i, NB - i);
+  shift_row(state, 1, NB - 1); shift_row(state, 2, NB - 2); shift_row(state, 3, NB - 3);
 }
 
 //
@@ -189,14 +183,12 @@ static void invsub_bytes(uint8_t state[4][NB]) { // See Sec. 5.3.2
 static void invmix_columns(uint8_t state[4][NB]) { // See Sec. 5.3.3
   uint8_t temp_state[4][NB];
 
-  for (int i = 0; i < 4; ++i)
-    memset(temp_state[i], 0, 4);
+  memset(temp_state, 0, 16);
   for (int i = 0; i < 4; ++i)
     for (int k = 0; k < 4; ++k)
       for (int j = 0; j < 4; ++j)
         temp_state[i][j] ^= GF[MIXINV[i][k]][state[k][j]];
-  for (int i = 0; i < 4; ++i)
-    memcpy(state[i], temp_state[i], 4);
+  memcpy(state, temp_state, 16);
 }
 
 //
@@ -224,8 +216,7 @@ static void sub_bytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
 //
 //
 static void shift_rows(uint8_t state[4][NB]) { // See Sec. 5.1.2
-  for (int i = 1; i < 4; i++)
-    shift_row(state, i, i);
+  shift_row(state, 1, 1); shift_row(state, 2, 2); shift_row(state, 3, 3);
 }
 
 //
@@ -233,15 +224,13 @@ static void shift_rows(uint8_t state[4][NB]) { // See Sec. 5.1.2
 static void mix_columns(uint8_t state[4][NB]) { // See Sec. 5.1.3
   uint8_t temp_state[4][NB];
 
-  for (int i = 0; i < 4; ++i)
-    memset(temp_state[i], 0, 4);
+  memset(temp_state, 0, 16);
   for (int i = 0; i < 4; ++i)
     for (int k = 0; k < 4; ++k)
       for (int j = 0; j < 4; ++j)
         if (MIX[i][k] == 1) temp_state[i][j] ^= state[k][j];
         else temp_state[i][j] ^= GF[MIX[i][k]][state[k][j]];
-  for (int i = 0; i < 4; ++i)
-    memcpy(state[i], temp_state[i], 4);
+  memcpy(state, temp_state, 16);
 }
 
 //
@@ -280,8 +269,7 @@ static void key_expansion(uint8_t w[], const uint8_t key[]) {
 
   memcpy(w, key, NK4 * sizeof(uint8_t));
   for (int i = NK4; i < 4 * NB * (NR + 1); i += 4) {
-    for (int j = 0; j < 4; ++j)
-      tmp[j] = w[i - 4 + j];
+    memcpy(tmp, w, 4 * sizeof(uint8_t));
     if (i / 4 % NK == 0) {
       rot_word(tmp);
       sub_word(tmp);

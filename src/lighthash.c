@@ -244,7 +244,8 @@ static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
 static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
-  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *pad, str[200] = {0}, *p, *pi, *z = NULL;
+  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, str[200] = {0};
+  uint8_t *pad, *p, *pi, *z = NULL;
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
 
   len = pad10(&pad, r, l);
