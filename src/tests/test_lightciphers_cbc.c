@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <stdbool.h>
 #include "../lightdefs.h"
 #include "../lightciphers.h"
@@ -14,7 +15,6 @@ int main(void) {
 
   ciph_crypt(out, plain, key, iv, true, false);
   ciph_crypt(in, out, key, iv, true, true);
-  for (u64 i = 0; i < BBL; i++)
-    assert(plain[i] == in[i]);
+  assert(memcmp(plain, in, BBL * sizeof(uint8_t)) == 0);
   printf("OK\n");
 }

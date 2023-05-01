@@ -74,8 +74,7 @@ int base64enc(char ed[], const uint8_t *data, int inl) {
   int tab[] = {0, 2, 1}, ol = 4 * ((inl + 2) / 3);
 
   for (int i = 0, j = 0; i < inl;) {
-    uint32_t a = oct(i++, inl, data), b = oct(i++, inl, data);
-    uint32_t c = oct(i++, inl, data), tri = (a << 0x10) + (b << 0x08) + c;
+    uint32_t a = oct(i++, inl, data), b = oct(i++, inl, data), c = oct(i++, inl, data),tri = (a << 0x10)+(b << 0x08) + c;
     for (int k = 3; k >=0; k--)
       ed[j++] = enc[(tri >> k * 6) & 0x3f];
   }
@@ -91,11 +90,10 @@ int base64dec(uint8_t dd[], const char *data, int inl) {
   static char dec[LEN] = {0};
   int ol = inl / 4 * 3;
 
-  for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') (ol)--;}
+  for (int i = 1; i <= 2; i++) {if (data[inl - i] == '=') ol--;}
   for (int i = 0; i < 64; i++) dec[(uint8_t)enc[i]] = i;
   for (int i = 0, j = 0; i < inl;) {
-    uint32_t a = sex(data, dec, i++), b = sex(data, dec, i++);
-    uint32_t c = sex(data, dec, i++), d = sex(data, dec, i++);
+    uint32_t a = sex(data, dec, i++), b = sex(data, dec, i++), c = sex(data, dec, i++), d = sex(data, dec, i++);
     uint32_t tri = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
     if (j < ol)
       for (int k = 2; k >= 0; k--)

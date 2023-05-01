@@ -16,10 +16,7 @@ int main(void) {
 
   memcpy(in1, s, 130 * sizeof(uint8_t)); memcpy(in2, s, 130 * sizeof(uint8_t));
   hash_shake_new(out1, 64, in1, 130); hash_shake_new(out2, 64, in2, 130);
-  for (int i = 0; i < 64; i++) {
-    printf("%02x %02x %02x\n", out1[i], out2[i], res[i]);
-    assert(out1[i] == res[i]); assert(out2[i] == res[i]);
-  }
+  assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
   if ((*res)) {} // get rid of not used var warning
   printf("OK\n");
 }

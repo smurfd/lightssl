@@ -495,7 +495,6 @@ int keys_vrfy(const uint8_t publ[], const uint8_t hash[], const uint8_t sign[]) 
   u64 rx[DIGITS] = {0}, ry[DIGITS] = {0}, rz[DIGITS] = {0};
   pt public, sum;
 
-
   pt_decompress(&public, publ);
   bit_pack(rx, sign); bit_pack(ry, sign + BYTES);
   if (check_zero(rx) || check_zero(ry)) return 0;

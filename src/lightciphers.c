@@ -138,7 +138,7 @@ const uint8_t MIXINV[4][4] = {
 //
 // Copy a state array to another
 static void copy_state(uint8_t s[4][NB], const uint8_t in[4][NB]) {
-  memcpy(s, in, 4*NB*sizeof(uint8_t));
+  memcpy(s, in, 4 * NB * sizeof(uint8_t));
 }
 
 //
@@ -278,8 +278,7 @@ static void rcon(uint8_t *wrd, const uint8_t a) {
 static void key_expansion(uint8_t w[], const uint8_t key[]) {
   uint8_t tmp[4], rc[4];
 
-  for (int i = 0; i < NK4; ++i)
-    w[i] = key[i];
+  memcpy(w, key, NK4 * sizeof(uint8_t));
   for (int i = NK4; i < 4 * NB * (NR + 1); i += 4) {
     for (int j = 0; j < 4; ++j)
       tmp[j] = w[i - 4 + j];

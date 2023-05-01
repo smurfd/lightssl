@@ -69,8 +69,7 @@ static void theta(u64 (*a)[5][5]) {
     c[x] = ((*a)[x][0] ^ (*a)[x][1] ^ (*a)[x][2] ^ (*a)[x][3] ^ (*a)[x][4]);
   for (int x = 0; x < 5; x++)
     for (int z = 0; z < 64; z++) {
-      u64 r1 = shift_cir(c[MOD(x - 1, 5)], 64 - z);
-      u64 r2 = shift_cir(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
+      u64 r1 = shift_cir(c[MOD(x - 1, 5)], 64 - z), r2 = shift_cir(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
       d[x] = d[x] + shift_cir((r1 ^ r2) & 1, z);
     }
   for (int x = 0; x < 5; x++)
@@ -245,7 +244,7 @@ static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
 static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
-  uint8_t az[64]={0}, s[200]={0}, sc[200]={0}, sxor[200]={0}, *pad, str[200]={0}, *p, *pi, *z=NULL;
+  uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, *pad, str[200] = {0}, *p, *pi, *z = NULL;
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
 
   len = pad10(&pad, r, l);
@@ -286,7 +285,6 @@ static u64 load64(const uint8_t x[8]) {
 
   for (uint32_t i = 0; i < 8; i++)
     r |= (u64)x[i] << 8 * i;
-
   return r;
 }
 
@@ -305,14 +303,11 @@ static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen
     for (uint32_t i = 0; i < r / 8; i++)
       s[i] ^= load64(m + 8 * i);
     keccak_p(NULL, &ss, NULL, false);
-
     mlen -= r;
     m += r;
     one2two(s, ss);
   }
-
-  for (uint32_t i = 0; i < mlen; i++)
-    t[i] = m[i];
+  memcpy(t, m, sizeof(uint8_t) * mlen);
   t[mlen] = p;
   t[r - 1] |= 128;
   for (uint32_t i = 0; i < r / 8; i++)
