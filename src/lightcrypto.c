@@ -216,7 +216,7 @@ static void print_hex(const char *str, const uint8_t *d, const uint32_t len) {
 
 //
 // Print data
-static void print(const asn *asn) {
+static void print_asn(const asn *asn) {
   for (int i = 0; asn[i].type != 0; i++) {
     printf("Type: %02x, Length: %u\n", asn[i].type, asn[i].len);
     if (asn[i].pos == 0) {print_hex("Value:", asn[i].data, asn[i].len);}
@@ -243,21 +243,18 @@ static uint32_t get_len(uint32_t *off, const uint8_t *data, uint32_t len, const 
 
 //
 // Initialize the asn struct
-static void init_asn(asn **asn) {
-  (*asn) = malloc(sizeof(struct asn));
-  (*asn)->type = 0; (*asn)->len = 0; (*asn)->pos = 0; (*asn)->data = NULL;
+static void init_asn(asn asn[]) {
+  asn->type = 0; asn->len = 0; asn->pos = 0; asn->data = NULL;
 }
 
 //
 // dec = false, Count the der objects
 // dec = true, Decode the der encrypted data
-static int32_t der_decode(asn **o, asn **oobj, const uint8_t *der, uint32_t derlen, uint32_t oobjc, bool dec) {
+static int32_t der_decode(asn o[], asn oobj[], const uint8_t *der, uint32_t derlen, uint32_t oobjc, bool dec) {
   uint32_t deroff=0,derenclen=get_len(&deroff,der,derlen,1),childrenlen=0,derdatl=derenclen-deroff, childoff=0,objcnt=1;
   const uint8_t *derdat = (der + deroff);
 
-  if (dec) {init_asn(o); if (o == NULL) return -1;
-    (*o)->type = *der; (*o)->len = derdatl; (*o)->data = derdat;
-  }
+  if (dec) {init_asn(o); if (o == NULL) return -1; o->type = *der; o->len = derdatl; o->data = derdat;}
   if (der == NULL || derlen == 0 || derenclen < deroff) return -1;
   if (derenclen == 0xffffffff || derlen < derenclen) return -1;
   if ((*der & 0x20) != 0) {
@@ -271,14 +268,13 @@ static int32_t der_decode(asn **o, asn **oobj, const uint8_t *der, uint32_t derl
       if (childobj < 0 || derenclen < derdatl) return -1;
       if (dec) {
         if (childobj > (int)oobjc) return -1;
-        asn *childo = *oobj; oobj++; --oobjc;
-        if (der_decode(&childo, oobj, child, childlen, oobjc, 1) < 0)
-          return -1;
+        asn childo[512]; memcpy(childo, oobj, sizeof(asn)); oobj++; --oobjc;
+        if (der_decode(childo, oobj, child, childlen, oobjc, 1) < 0) return -1;
         oobj += (childobj - 1); oobjc -= (childobj - 1);
       } else objcnt += childobj;
       childrenlen += childlen; deroff += childlen;
       if (childobj == -1 || UINT32_MAX - childlen < childrenlen) return -1;
-      if (dec) (*o)->pos = childrenlen;
+      if (dec) o->pos = childrenlen;
     }
   }
   return objcnt;
@@ -288,45 +284,43 @@ static int32_t der_decode(asn **o, asn **oobj, const uint8_t *der, uint32_t derl
 // Output and parse the asn header.
 static int dump_and_parse(const uint8_t *cmsd, const uint32_t fs) {
   int32_t objcnt = der_decode(NULL, NULL, (uint8_t*)cmsd, fs, 0, 0), m = 1;
-  asn *cms[] = {0};
+  asn cms[512];
 
   if (objcnt < 0) return err("Objects");
   if (der_decode(cms, cms, cmsd, fs, objcnt, 1) < 0) return err("Parse");
-  print((*cms));
+  print_asn(cms);
   // Hack to handle linux, at this point not sure why on linux type is spread on
   // every other, and on mac its as it should be. something with malloc?
-  if ((*cms)[objcnt].type != 0 && (*cms)[objcnt + 1].type != 0) {m = 2;};
-  if ((*cms)[0 * m].type != A1SEQUENC) return err("Sequence");
-  if ((*cms)[1 * m].type != A1OBJIDEN) return err("CT");
-  if (memcmp((*cms)[1 * m].data, AA, (*cms)[1 * m].len) != 0 || (*cms)[3 * m].type != A1SEQUENC)
-    return err("CT EncryptedData");
-  if ((*cms)[4 * m].type != A1INTEGER || (*cms)[4 * m].len != 1) return err("CMS Version");
-  if ((*cms)[5 * m].type != A1SEQUENC) return err("EC");
-  if ((*cms)[6 * m].type != A1OBJIDEN) return err("CT EC");
-  if ((*cms)[6*m].len != 9 || memcmp((*cms)[6*m].data, AB, (*cms)[6*m].len)!=0) return err("CT EC PKCS#7");
-  if ((*cms)[7 * m].type == A1SEQUENC) {
-    if ((*cms)[8 * m].type != A1OBJIDEN) return err("EncryptionAlgoIdentifier");
-    if (memcmp((*cms)[8 * m].data, AC, (*cms)[8 * m].len) == 0 || memcmp((*cms)[8 * m].data, AD, (*cms)[8 * m].len) == 0
-      || memcmp((*cms)[8 * m].data, AE, (*cms)[8 * m].len) == 0) {
-      if (((*cms)[9 * m].type != A1OCTSTRI && (*cms)[9 * m].type != A1SEQUENC)) return err("AES IV");
+  if (cms[objcnt].type != 0 && cms[objcnt + 1].type != 0) m = 2;
+  if (cms[0 * m].type != A1SEQUENC) return err("Sequence");
+  if (cms[1 * m].type != A1OBJIDEN) return err("CT");
+  if (memcmp(cms[1 * m].data, AA, cms[1 * m].len) != 0 || cms[3 * m].type != A1SEQUENC) return err("CT EncryptedData");
+  if (cms[4 * m].type != A1INTEGER || cms[4 * m].len != 1) return err("CMS Version");
+  if (cms[5 * m].type != A1SEQUENC) return err("EC");
+  if (cms[6 * m].type != A1OBJIDEN) return err("CT EC");
+  if (cms[6*m].len != 9 || memcmp(cms[6*m].data, AB, cms[6*m].len)!=0) return err("CT EC PKCS#7");
+  if (cms[7 * m].type == A1SEQUENC) {
+    if (cms[8 * m].type != A1OBJIDEN) return err("EncryptionAlgoIdentifier");
+    if (memcmp(cms[8 * m].data, AC, cms[8 * m].len) == 0 || memcmp(cms[8 * m].data, AD, cms[8 * m].len) == 0
+      || memcmp(cms[8 * m].data, AE, cms[8 * m].len) == 0) {
+      if ((cms[9 * m].type != A1OCTSTRI && cms[9 * m].type != A1SEQUENC)) return err("AES IV");
     } else {printf("Unknown encryption algorithm\n");}
-    if ((*cms)[10 * m].type != 0x80 && (*cms)[10 * m].type != 0x02) return err("No encrypted content");
+    if (cms[10 * m].type != 0x80 && cms[10 * m].type != 0x02) return err("No encrypted content");
   }
   printf("\n----- parse begin ----\n");
   printf("Content type: encryptedData\n");
-  printf("CMS version: %d\n", (*cms)[3 * m].data[0]);
+  printf("CMS version: %d\n", cms[3 * m].data[0]);
   printf("ContentType EncryptedContent: PKCS#7\n");
-  if ((*cms)[8 * m].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
-  if ((*cms)[8 * m].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
-  if ((*cms)[8 * m].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
-  print_hex("AES IV:", (*cms)[8 * m].data, (*cms)[8 * m].len);
-  print_hex("Encrypted content:", (*cms)[9 * m].data, (*cms)[9 * m].len);
+  if (cms[8 * m].data[8] == 0x02) printf("Algorithm: AES-128-CBC\n");
+  if (cms[8 * m].data[8] == 0x2a) printf("Algorithm: AES-256-CBC\n");
+  if (cms[8 * m].data[8] == 0x30) printf("Algorithm: AES-256-CBC RC2\n");
+  print_hex("AES IV:", cms[8 * m].data, cms[8 * m].len);
+  print_hex("Encrypted content:", cms[9 * m].data, cms[9 * m].len);
   // this if statement works now, but not 100% sure its correct
   // Are unprotected attributes available?
-  if ((*cms)[5 * m].pos != 0 && (*cms)[5 * m].pos != (*cms)[5 * m].len) printf("Unprotected values\n");
+  if (cms[5 * m].pos != 0 && cms[5 * m].pos != cms[5 * m].len) printf("Unprotected values\n");
   else printf("No Unprotected values\n");
   printf("----- parse end ----\n");
-  free((*cms));
   return 0;
 }
 
