@@ -149,22 +149,6 @@ void bit_unpack(uint8_t byte[], const u64 big[]) {
   }
 }
 
-void bit_pack64(u64 n[], const u64 b[]) {
-  for(u64 i = 0; i < DIGITS; ++i) {
-    const u64 *d = b + 8 * (DIGITS - 1 - i); n[i] = 0;
-    for (u64 j = 0; j < 8; j++)
-      n[i] |= ((u64)d[j] << ((7 - j) * 8));
-  }
-}
-
-void bit_unpack64(u64 b[], const u64 n[]) {
-  for(u64 i = 0; i < DIGITS; ++i) {
-    u64 *d = b + 8 * (DIGITS - 1 - i);
-    for (u64 j = 0; j < 8; j++)
-      d[j] = n[i] >> ((7 - j) * 8);
-  }
-}
-
 //
 // 0-255 to 0x0 to 0xff
 static void to_hex(uint8_t h[], uint8_t d) {
