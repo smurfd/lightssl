@@ -172,14 +172,14 @@ static void to_hex(uint8_t h[], uint8_t d) {
   h[1] = d & 0xf;
 }
 
-static void to_hex_chr(char *hs, uint8_t h[]) {
+static void to_hex_chr(char hs[], uint8_t h[]) {
   hs[0] = hex[h[0]];
   hs[1] = hex[h[1]];
 }
 
 //
 // Convert a hex bitstring to a string
-void bit_hex_str(char *hs, const uint8_t *d, const int len) {
+void bit_hex_str(char hs[], const uint8_t *d, const int len) {
   int co = 2;
 
   hs[0] = '0';

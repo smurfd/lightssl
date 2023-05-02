@@ -185,7 +185,7 @@ static void iota(u64 (*a)[5][5], const u64 ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static void keccak_p(uint8_t s[], u64 (*ss)[5][5], const uint8_t *sm, bool str) {
+static void keccak_p(uint8_t s[], u64 (*ss)[5][5], const uint8_t sm[], bool str) {
   u64 a[5][5];
 
   if (str) str2state(&a, sm);
@@ -200,17 +200,15 @@ static void keccak_p(uint8_t s[], u64 (*ss)[5][5], const uint8_t *sm, bool str) 
 
 //
 // Concatenate
-static u64 cat(uint8_t **z, const uint8_t *x, const u64 xl, const uint8_t *y, const u64 yl) {
+static u64 cat(uint8_t z[], const uint8_t x[], const u64 xl, const uint8_t y[], const u64 yl) {
   u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
 
-  *z = calloc(512, sizeof(uint8_t));
-  if (*z == NULL) return 0;
-  memcpy(*z, x, xl8);
+  memcpy(z, x, xl8);
   for (u64 i = 0; i < mxl8; i++)
-    (*z)[xl8] |= (x[xl8] & (1 << i));
+    z[xl8] |= (x[xl8] & (1 << i));
   u64 zbyc = xl8, zbic = mxl8, ybyc = 0, ybic = 0;
   for (u64 i = 0; i < yl; i++) {
-    (*z)[zbyc] |= (((y[ybyc] >> ybic) & 1) << zbic);
+    z[zbyc] |= (((y[ybyc] >> ybic) & 1) << zbic);
     if (++ybic == 8) {ybyc++; ybic = 0;}
     if (++zbic == 8) {zbyc++; zbic = 0;}
   }
@@ -221,12 +219,12 @@ static u64 cat(uint8_t **z, const uint8_t *x, const u64 xl, const uint8_t *y, co
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
+static u64 pad10(uint8_t p[], const u64 x, const u64 m) {
   u64 j = MOD((-m - 2), x) + 2, bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
 
-  *p = calloc(bl, sizeof(uint8_t));
-  (*p)[0] |= 1;
-  (*p)[bl - 1] |= (1 << MOD(j - 1, 8));
+  memset(p, 0, bl * sizeof(uint8_t));
+  p[0] |= 1;
+  p[bl - 1] |= (1 << MOD(j - 1, 8));
   return j;
 }
 
@@ -243,30 +241,28 @@ static u64 pad10(uint8_t **p, const u64 x, const u64 m) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static void sponge(uint8_t **ps, const uint8_t *n, const int l) {
+static void sponge(uint8_t ps[], const uint8_t n[], const int l) {
   uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, str[200] = {0};
-  uint8_t *pad, *p, *pi, *z = NULL;
+  uint8_t pad[1600] = {0}, p[1600] = {0}, pi[1600] = {0}, z[1600] = {0};
   u64 b = 1600, c = 512, len, plen, zl = 0, r = b - SHA3_BITS;
 
-  len = pad10(&pad, r, l);
-  plen = cat(&p, n, l, pad, len);
+  len = pad10(pad, r, l);
+  plen = cat(p, n, l, pad, len);
   for (u64 i = 0; i < plen / r; i++) {
-    cat(&pi, &p[i * r / 8], r, az, c);
+    cat(pi, &p[i * r / 8], r, az, c);
     for (u64 j = 0; j < b / 8; j++)
       sxor[j] = s[j] ^ pi[j];
-    free(pi);
     keccak_p(s, NULL, sxor, true);
   }
   while (true) {
     memcpy(str, s, r / 8);
-    zl = cat(&z, z, zl, str, r);
+    zl = cat(z, z, zl, str, r);
     if (zl >= SHA3_BITS) {
-      memcpy((*ps), z, 64); break;
+      memcpy(ps, z, 64); break;
     }
     memcpy(sc, s, b / 8);
     keccak_p(s, NULL, sc, true);
   }
-  free(pad); free(p); free(z);
 }
 
 static void two2one(u64 ret[5][5], u64 a[25]) {
@@ -294,7 +290,7 @@ static void store64(uint8_t x[8], u64 u) {
     x[i] = u >> 8 * i;
 }
 
-static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
+static void keccak_absorb(u64 s[25], uint32_t r, const uint8_t m[], uint32_t mlen, uint8_t p) {
   uint8_t t[200] = {0};
   u64 ss[5][5];
 
@@ -346,14 +342,13 @@ static void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25], uint
 
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
-void hash_new(char *s, const uint8_t *n) {
-  u64 d = strlen((char*)n) * 8, l = 256 * sizeof(uint8_t);
-  uint8_t *ss = malloc(l), z1[] = {2}, *mmm;
+void hash_new(char s[], const uint8_t n[]) {
+  uint8_t z1[] = {2}, mmm[512] = {0}, ss[512] = {0};
+  u64 d = strlen((char*)n) * 8;
 
-  cat(&mmm, n, d, z1, 2);
-  sponge(&ss, mmm, d + 2);
+  cat(mmm, n, d, z1, 2);
+  sponge(ss, mmm, d + 2);
   bit_hex_str(s, ss, 64);
-  free(ss); free(mmm);
 }
 
 void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
@@ -363,10 +358,8 @@ void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t i
 
   keccak_absorb(st, 136, in, inlen, 0x1F);
   keccak_squeezeblocks(out, nblocks, st, 136);
-
   out += nblocks * 136;
   outlen -= nblocks * 136;
-
   if (outlen) {
     keccak_squeezeblocks(t, 1, st, 136);
     for (uint32_t i = 0; i < outlen; i++)
