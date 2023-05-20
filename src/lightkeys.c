@@ -401,6 +401,8 @@ static u64 write_crt(FILE* ptr, uint8_t data[]) {
 
 //
 // Write key to file
+// Public key: https://datatracker.ietf.org/doc/html/rfc5480
+// Private key: https://datatracker.ietf.org/doc/html/rfc5915.html
 static u64 write_key(FILE* ptr, uint8_t data[]) {
   char tmp[257] = {0};
   int i = 0, j = base64enc(tmp, data, 164);

@@ -9,16 +9,15 @@
 #include "../lightcrypto.h"
 
 int main(void) {
-  uint8_t p[256], sig[BYTES * 2],  pubkey[BYTES + 1],  sec[BYTES], privkey[BYTES], h[BYTES] = {0};
+  uint8_t sig[BYTES * 2], pubkey[BYTES + 1], sec[BYTES], privkey[BYTES], h[BYTES] = {0};
   u64 k[BYTES] = {0};
 
   // more randomization use :
-  // srand(time(0));
-  // for (int i = 0; i < BYTES; i++) {k[i] = RAND64(); h[i] = RAND64();}
-  assert(lrand(h, k));
+  srand(time(0));
+  for (int i = 0; i < BYTES; i++) {k[i] = RAND64(); h[i] = RAND64();}
+  //assert(lrand(h, k)); // pseudo random
   assert(keys_make(pubkey, privkey, k));
-  bit_unpack(p, (u64*)privkey);
-  keys_write("ca-own.key", p, 2);
+  keys_write("ca-own.key", privkey, 2);
   if (*sig || *pubkey || *sec || *privkey || *h || *k) {} // get rid of not used var warning
   printf("OK\n");
 }
