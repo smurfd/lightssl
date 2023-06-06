@@ -405,15 +405,17 @@ static u64 write_crt(FILE* ptr, uint8_t data[]) {
 // Private key: https://datatracker.ietf.org/doc/html/rfc5915.html
 static u64 write_key(FILE* ptr, uint8_t data[]) {
   char tmp[257] = {0};
-  int i = 0, j = base64enc(tmp, data, 164);
+  uint8_t d[BYTES] = {0};
+  int i = 10, j = 0;
 
-  fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
+  bit_unpack(d, (u64*)data);
+  j = base64enc(tmp, d, 164);
+  fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\nMIGkAgEBBD");
   while (i < j) {
-    if (i != 0 && i % 64 == 0)
-      fprintf(ptr, "\n");
-    fprintf(ptr, "%c", tmp[i++]);
+    if (i % 64 == 0) fprintf(ptr, "\n");
+    fprintf(ptr, "%c", tmp[(i++) - 10]);
   }
-  fprintf(ptr, "\n-----END EC PRIVATE KEY-----\n");
+  fprintf(ptr, "=\n-----END EC PRIVATE KEY-----\n");
   return 1;
 }
 
