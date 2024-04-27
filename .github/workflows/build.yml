@@ -36,3 +36,21 @@ jobs:
       run: make -Cbuild/debug
     - name: Test
       run: make -Cbuild/debug test
+
+  stdout-test1:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get -y install clang
+    - name: run
+      run: echo "int main() {int i = 0;}"| clang -x c - -o - >&2 > aa.out && chmod +x ./aa.out && ./aa.out
+
+  stdout-test2:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get -y install clang
+    - name: run
+      run: echo "int main() {int i = 0;}"| clang -x c - -o - /dev/stdout > aa.out && chmod +x ./aa.out && ./aa.out
