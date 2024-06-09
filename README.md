@@ -20,7 +20,7 @@ sh ./src/scripts/gen_cert_debug.sh
 make -Cbuild/debug
 make -Cbuild/debug test
 ```
-`./scr/scripts/build.sh` has those parts in it. Use the Debug type to have
+`./src/scripts/build.sh` has those parts in it. Use the Debug type to have
 asserts working.
 
 ### Use lightSSL

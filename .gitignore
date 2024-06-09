@@ -1,4 +1,5 @@
 .DS_Store
 src/lightcrypto/__*
+src/lightbig
 build/
 ca*

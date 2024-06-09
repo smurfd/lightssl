@@ -155,17 +155,32 @@ static void arr_from_state(uint8_t s[NB4], const uint8_t in[4][NB]) {
 
 //
 //
-static void shift_row(uint8_t state[4][NB], const uint32_t i, const uint32_t n) {
+static void shift_row(uint8_t state[4][NB], const uint32_t i) {
   uint8_t tmp[NB];
 
   memcpy(tmp, state[i], NB * sizeof(uint8_t));
-  memcpy(state[i], tmp, NB * sizeof(uint8_t));
+  state[i][0] = tmp[1];
+  state[i][1] = tmp[2];
+  state[i][2] = tmp[3];
+  state[i][3] = tmp[0];
+}
+
+//
+//
+static void invshift_row(uint8_t state[4][NB], const uint32_t i) {
+  uint8_t tmp[NB];
+
+  memcpy(tmp, state[i], NB * sizeof(uint8_t));
+  state[i][0] = tmp[3];
+  state[i][1] = tmp[0];
+  state[i][2] = tmp[1];
+  state[i][3] = tmp[2];
 }
 
 //
 // 5.3.x
 static void invshift_rows(uint8_t state[4][NB]) { // See Sec. 5.3.1
-  shift_row(state, 1, NB - 1); shift_row(state, 2, NB - 2); shift_row(state, 3, NB - 3);
+  invshift_row(state, 1); invshift_row(state, 2); invshift_row(state, 3);
 }
 
 //
@@ -216,7 +231,7 @@ static void sub_bytes(uint8_t state[4][NB]) { // See Sec. 5.1.1
 //
 //
 static void shift_rows(uint8_t state[4][NB]) { // See Sec. 5.1.2
-  shift_row(state, 1, 1); shift_row(state, 2, 2); shift_row(state, 3, 3);
+  shift_row(state, 1); shift_row(state, 2); shift_row(state, 3);
 }
 
 //

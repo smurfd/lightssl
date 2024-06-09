@@ -337,7 +337,7 @@ u64 crypto_handle_cert(char d[LEN], const char *cert) {
 
 //
 // public function to handle asn cert
-u64 crypto_handle_asn(char c[], const char *cert) {
+u64 crypto_handle_asn(char c[LEN], const char *cert) {
   return dump_and_parse((uint8_t*)c, read_cert(c, cert, 1));
 }
 
