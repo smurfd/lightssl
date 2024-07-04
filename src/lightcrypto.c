@@ -19,21 +19,15 @@
 // Receive key (clears private key if we receive it for some reason)
 static void recv_key(int s, head *h, key *k) {
   recv(s, h, sizeof(head), 0);
-  recv(s, k, sizeof(key), 0);
-  (*k).priv = 0;
+  recv(s, &k->publ, sizeof(u64), 0);
 }
 
 //
 // Send key
 static void send_key(int s, head *h, key *k) {
   // This to ensure not to send the private key
-  key kk;
-
-  kk.publ = (*k).publ;
-  kk.shar = (*k).shar;
-  kk.priv = 0;
   send(s, h, sizeof(head), 0);
-  send(s, &kk, sizeof(key), 0);
+  send(s, &k->publ, sizeof(u64), 0);
 }
 
 //
