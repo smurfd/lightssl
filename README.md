@@ -11,17 +11,9 @@ Crypto: ASN1<br>
 Hashing: SHA3-256, SHA3-512<br>
 
 ### Compile lightSSL
-
 ```bash
-rm -rf build
-mkdir -p build/debug
-cmake -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug -DCMAKE_C_COMPILER=clang
-sh ./src/scripts/gen_cert_debug.sh
-make -Cbuild/debug
-make -Cbuild/debug test
+make -Csrc
 ```
-`./src/scripts/build.sh` has those parts in it. Use the Debug type to have
-asserts working.
 
 ### Use lightSSL
 See the [tests](https://github.com/smurfd/lightssl/tree/master/src/tests)

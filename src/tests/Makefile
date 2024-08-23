@@ -1,0 +1,72 @@
+CL:=clang -O3 -Wall -pedantic
+CC:=clang -O3 -Wall -pedantic
+BUILD:=../.build
+
+all: mkcrt test_lightciphers_cbc test_lightciphers_cfb test_lightcrypto test_lighthash3 test_lighthash3_big test_lighthash3_shake test_lighthash3_shake_big\
+	test_lighthash3_shake_ref test_lighthkeys_make test_lighthkeys_secr test_lighthkeys_sign test_lighthkeys_vrfy test_lighthkeys_write run
+
+mkcrt:
+	echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > ${BUILD}/ca128.cms
+	echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes256 -secretkey 31337DEADBEEF666999ABCDEF31337FF31337DEADBEEF666999ABCDEF31337FF -outform der > ${BUILD}/ca256.cms
+	openssl ecparam -name secp384r1 -genkey -noout -out ${BUILD}/ca.key
+
+test_lightciphers_cbc:
+	${CL} -o ${BUILD}/test_lightciphers_cbc test_lightciphers_cbc.c ${BUILD}/lightciphers.o -fuse-ld=lld -lpthread -lm
+
+test_lightciphers_cfb:
+	${CL} -o ${BUILD}/test_lightciphers_cfb test_lightciphers_cfb.c ${BUILD}/lightciphers.o -fuse-ld=lld -lpthread -lm
+
+test_lightcrypto:
+	${CL} -o ${BUILD}/test_lightcrypto test_lightcrypto.c ${BUILD}/lightcrypto.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthash3:
+	${CL} -o ${BUILD}/test_lighthash3 test_lighthash3.c ${BUILD}/lighthash.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthash3_big:
+	${CL} -o ${BUILD}/test_lighthash3_big test_lighthash3_big.c ${BUILD}/lighthash.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthash3_shake:
+	${CL} -o ${BUILD}/test_lighthash3_shake test_lighthash3_shake.c ${BUILD}/lighthash.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthash3_shake_big:
+	${CL} -o ${BUILD}/test_lighthash3_shake_big test_lighthash3_shake_big.c ${BUILD}/lighthash.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthash3_shake_ref:
+	${CL} -o ${BUILD}/test_lighthash3_shake_ref test_lighthash3_shake_ref.c ${BUILD}/lighthash.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthkeys_make:
+	${CL} -o ${BUILD}/test_lightkeys_make test_lightkeys_make.c ${BUILD}/lightkeys.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthkeys_secr:
+	${CL} -o ${BUILD}/test_lightkeys_secr test_lightkeys_secr.c ${BUILD}/lightkeys.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthkeys_sign:
+	${CL} -o ${BUILD}/test_lightkeys_sign test_lightkeys_sign.c ${BUILD}/lightkeys.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthkeys_vrfy:
+	${CL} -o ${BUILD}/test_lightkeys_vrfy test_lightkeys_vrfy.c ${BUILD}/lightkeys.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+test_lighthkeys_write:
+	${CL} -o ${BUILD}/test_lightkeys_write test_lightkeys_write.c ${BUILD}/lightkeys.o ${BUILD}/lighttools.o -fuse-ld=lld -lpthread -lm
+
+run:
+	${BUILD}/test_lightciphers_cbc
+	${BUILD}/test_lightciphers_cfb
+	#${BUILD}/test_lightcrypto ../.build/ca.key ../.build/ca256.cms
+	${BUILD}/test_lighthash3
+	${BUILD}/test_lighthash3_big
+	${BUILD}/test_lighthash3_shake
+	${BUILD}/test_lighthash3_shake_big
+	${BUILD}/test_lighthash3_shake_ref
+	${BUILD}/test_lightkeys_make
+	${BUILD}/test_lightkeys_secr
+	${BUILD}/test_lightkeys_sign
+	${BUILD}/test_lightkeys_vrfy
+	${BUILD}/test_lightkeys_write
+
+
+
+#README.md                    test_lightcrypto_cli.c       test_lighthash3_shake.c      test_lightkeys_secr.c        
+#test_lightciphers_cbc.c      test_lightcrypto_srv.c       test_lighthash3_shake_big.c  test_lightkeys_sign.c        
+#test_lightciphers_cfb.c      test_lighthash3.c            test_lighthash3_shake_ref.c  test_lightkeys_vrfy.c        
+#test_lightcrypto.c           test_lighthash3_big.c        test_lightkeys_make.c        test_lightkeys_write.c  

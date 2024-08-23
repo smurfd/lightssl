@@ -11,8 +11,8 @@ int main(int argc, char **argv) {
   uint8_t s2[] = "smurfd and more stuff", s3[257], s4[LEN];
 
   if (argc == 1) {
-    crypto_handle_cert(data, "build/debug/ca.key");
-    crypto_handle_asn(c, "build/debug/ca256.cms");
+    crypto_handle_cert(data, "ca.key");
+    crypto_handle_asn(c, "ca256.cms");
   } else if (argc == 3) {
     crypto_handle_cert(data, argv[1]);
     crypto_handle_asn(c, argv[2]);
