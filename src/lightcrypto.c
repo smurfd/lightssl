@@ -179,7 +179,7 @@ static u64 read_cert(char c[], const char *fn, const bool iscms) {
   FILE* ptr = fopen(fn, "r");
   u64 len = 0;
 
-  if (ptr == NULL) {printf("Can't find cert: %s\n", fn);}
+  //if (ptr == NULL) {printf("Can't find cert: %s\n", fn);}
   if (iscms) {
     uint32_t fs = 0, fpos = 0;
     while (EOF != fgetc(ptr)) ++fs;

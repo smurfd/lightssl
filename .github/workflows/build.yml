@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get -y install clang make git openssl
+      run: sudo apt-get update && sudo apt-get -y install gcc make git openssl
     - name: Generate cert debug
       run: sh src/scripts/gen_cert_debug.sh
     - name: Compile
@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get -y install clang make git openssl
+      run: sudo apt-get update && sudo apt-get -y install gcc make git openssl
     - name: Generate cert debug
       run: sh src/scripts/gen_cert_debug.sh
     - name: Compile

@@ -1,5 +1,5 @@
-CL:=clang -O3 -Wall -pedantic
-CC:=clang -O3 -Wall -pedantic
+CL:=gcc -O3 -Wall -pedantic -std=c99
+CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=.build
 
 all: mkbuilddir lightciphers lighttools lightcrypto1 lighthash lightkeys test
@@ -24,7 +24,3 @@ lighttools:
 
 test:
 	make -Ctests
-	#¢{BUILD}/tests
-
-#example/        lightciphers.h  lightcrypto.c   lightdefs.h     lighthash.h     lightkeys.h     lighttools.h    tests/
-#lightciphers.c  lightcrypto/    lightcrypto.h   lighthash.c     lightkeys.c     lighttools.c    scripts/
