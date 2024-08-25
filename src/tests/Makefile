@@ -55,9 +55,9 @@ run:
 	#${BUILD}/test_lightcrypto ${BUILD}/ca.key ${BUILD}/ca256.cms
 	${BUILD}/test_lighthash3
 	${BUILD}/test_lighthash3_big
-	#${BUILD}/test_lighthash3_shake
-	#${BUILD}/test_lighthash3_shake_big
-	#${BUILD}/test_lighthash3_shake_ref
+	${BUILD}/test_lighthash3_shake
+	${BUILD}/test_lighthash3_shake_big
+	${BUILD}/test_lighthash3_shake_ref
 	${BUILD}/test_lightkeys_make
 	${BUILD}/test_lightkeys_secr
 	${BUILD}/test_lightkeys_sign

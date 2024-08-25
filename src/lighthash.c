@@ -353,7 +353,7 @@ void hash_new(char s[], const uint8_t n[]) {
 
 void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
   uint32_t nblocks = outlen / 136;
-  uint8_t t[inlen];
+  uint8_t t[512];
   u64 st[25];
 
   keccak_absorb(st, 136, in, inlen, 0x1F);
