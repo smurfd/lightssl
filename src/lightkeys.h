@@ -6,6 +6,8 @@
 #include <string.h>
 #include "lightdefs.h"
 
+__extension__ typedef unsigned __int128 uint128;
+
 u64 keys_write(char *fn, uint8_t data[], int type);
 int keys_make(uint8_t publ[], uint8_t priv[], u64 private[]);
 int keys_secr(const uint8_t pub[], const uint8_t prv[], uint8_t scr[], u64 r[]);

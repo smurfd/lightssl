@@ -15,6 +15,12 @@
 #include "lighttools.h"
 #include "lightdefs.h"
 
+static uint8_t AA[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x07,0x06};
+static uint8_t AB[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
+static uint8_t AC[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x02};
+static uint8_t AD[] = {0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x01 ,0x2a};
+static uint8_t AE[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x02 ,0x30};
+
 //
 // Receive key (clears private key if we receive it for some reason)
 static void recv_key(int s, head *h, key *k) {
@@ -203,7 +209,8 @@ static void print_cert(const u64 len, const uint8_t h[], const uint8_t f[], cons
 static void print_hex(const char *str, const uint8_t *d, const uint32_t len) {
   printf("%s\n----- hex data ----\n", str);
   for (uint32_t c = 0; c < len;) {
-    if (++c % 8 == 0) printf("\n"); printf("%02x ", d[c]);
+    if (++c % 8 == 0) printf("\n");
+    printf("%02x ", d[c]);
   }
   if (len - 1 % 8) printf("\n----- hex end ----\n");
 }

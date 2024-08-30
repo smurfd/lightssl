@@ -7,6 +7,14 @@
 #include "lightdefs.h"
 #include "lighttools.h"
 
+static u64 curve_p[DIGITS] = {0x00000000ffffffff, 0xffffffff00000000, 0xfffffffffffffffe, 0xffffffffffffffff,
+  0xffffffffffffffff,0xffffffffffffffff}, curve_b[DIGITS] = {0x2a85c8edd3ec2aef, 0xc656398d8a2ed19d, 0x0314088f5013875a,
+  0x181d9c6efe814112, 0x988e056be3f82d19, 0xb3312fa7e23ee7e4}, curve_n[DIGITS] = {0xecec196accc52973, 0x581a0db248b0a77a,
+  0xc7634d81f4372ddf, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff};
+static pt curve_g = {{0x3a545e3872760ab7, 0x5502f25dbf55296c, 0x59f741e082542a38, 0x6e1d3b628ba79b98, 0x8eb1c71ef320ad74,
+  0xaa87ca22be8b0537},{0x7a431d7c90ea0e5f, 0x0a60b1ce1d7e819d,0xe9da3113b5f0b8c0, 0xf8f41dbd289a147c, 0x5d9e98bf9292dc29,
+  0x3617de4a96262c6f}};
+
 //
 // Clear a
 static void clear(u64 *a) {
@@ -113,16 +121,16 @@ static u64 sub(u64 *a, const u64 *b, const u64 *c) {
 // Multiply
 static void mul(u64 *a, const u64 *b, const u64 *c) {
   u64 r2 = 0, di22 = DIGITS * 2 - 1;
-  unsigned __int128 r = 0;
+  uint128 r = 0;
 
   for (u64 k = 0; k < di22; ++k) {
     u64 min = (k < DIGITS ? 0 : (k + 1) - DIGITS);
     for (u64 j = min; j <= k && j < DIGITS; ++j) {
-      unsigned __int128 p = (unsigned __int128)b[j] * c[k - j]; // product
+      uint128 p = (uint128)b[j] * c[k - j]; // product
       r += p; r2 += (r < p);
     }
     a[k] = (u64)(r);
-    r = (r >> 64) | (((unsigned __int128)r2) << 64);
+    r = (r >> 64) | (((uint128)r2) << 64);
     r2 = 0;
   }
   a[di22] = (u64)r;
