@@ -12,7 +12,6 @@ int main(void) {
        0x6b, 0x0b, 0x3d, 0x47, 0xcd, 0x61, 0xac, 0x67, 0x6a, 0xd1, 0xfb, 0x20, 0xcf, 0x3d, 0x92, 0xab, 0x2b, 0x68, 0xda,
        0xa4, 0x89, 0x31, 0xcc, 0x58, 0xd6, 0xd7, 0x23, 0xc7}, in1[1024], in2[1024], out1[512], out2[512];
   char s[] = "\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3";
-
   memcpy(in1, s, 20 * sizeof(uint8_t)); memcpy(in2, s, 20 * sizeof(uint8_t));
   hash_shake_new(out1, 64, in1, 20); hash_shake_new(out2, 64, in2, 20);
   assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);

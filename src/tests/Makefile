@@ -3,7 +3,7 @@ CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=../.build
 
 all: mkcrt test_lightciphers_cbc test_lightciphers_cfb test_lightcrypto test_lighthash3 test_lighthash3_big test_lighthash3_shake test_lighthash3_shake_big\
-	test_lighthash3_shake_ref test_lighthkeys_make test_lighthkeys_secr test_lighthkeys_sign test_lighthkeys_vrfy test_lighthkeys_write run
+	test_lighthash3_shake_ref test_lighthkeys_make test_lighthkeys_secr test_lighthkeys_sign test_lighthkeys_vrfy test_lighthkeys_write test_lightaes run
 
 mkcrt:
 	echo "66612345678966601234567890666" | openssl cms -EncryptedData_encrypt -aes128 -secretkey 31337DEADBEEF666999ABCDEF31337FF -outform der > ${BUILD}/ca128.cms
@@ -49,6 +49,9 @@ test_lighthkeys_vrfy:
 test_lighthkeys_write:
 	${CL} -o ${BUILD}/test_lightkeys_write test_lightkeys_write.c ${BUILD}/lightkeys.o ${BUILD}/lighttools.o -lpthread -lm
 
+test_lightaes:
+	${CL} -o ${BUILD}/test_lightaes test_lightaes.c ${BUILD}/lightaes.o -lpthread -lm
+
 run:
 	${BUILD}/test_lightciphers_cbc
 	${BUILD}/test_lightciphers_cfb
@@ -63,4 +66,4 @@ run:
 	${BUILD}/test_lightkeys_sign
 	${BUILD}/test_lightkeys_vrfy
 	${BUILD}/test_lightkeys_write
-
+	${BUILD}/test_lightaes

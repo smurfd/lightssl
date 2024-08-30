@@ -2,7 +2,7 @@ CL:=gcc -O3 -Wall -pedantic -std=c99
 CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=.build
 
-all: mkbuilddir lightciphers lighttools lightcrypto1 lighthash lightkeys test
+all: mkbuilddir lightciphers lighttools lightcrypto1 lighthash lightkeys lightaes test
 
 mkbuilddir:
 	mkdir -p ${BUILD}
@@ -21,6 +21,9 @@ lightkeys:
 
 lighttools:
 	${CL} -c lighttools.c -o ${BUILD}/lighttools.o
+
+lightaes:
+	${CL} -c lightaes.c -o ${BUILD}/lightaes.o
 
 test:
 	make -Ctests

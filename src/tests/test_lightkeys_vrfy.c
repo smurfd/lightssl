@@ -20,11 +20,9 @@ u64 u64rnd(void) {
   return (r[0] & f7) << 48 ^ (r[1] & f7) << 35 ^ (r[2] & f7) << 22 ^ (r[3] & f7) << 9 ^ (r[4] & f7) >> 4;
 }
 
-
 int main(void) {
   uint8_t sig[BYTES * 2],  pubkey[BYTES + 1],  sec[BYTES], privkey[BYTES], h[BYTES] = {0};
   u64 k[BYTES] = {0};
-
   // more randomization use :
   // srand(time(0));
   // for (int i = 0; i < BYTES; i++) {k[i] = RAND64(); h[i] = RAND64();}

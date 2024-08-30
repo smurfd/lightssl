@@ -8,7 +8,6 @@
 int main(void) {
   int s = crypto_init("127.0.0.1", "9998", true);
   sock *cli = NULL;
-
   if (crypto_srv_listen(s, cli) < 0) {
     printf("Can't create a Thread\n");
     exit(0);

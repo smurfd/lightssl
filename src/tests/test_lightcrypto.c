@@ -9,7 +9,6 @@
 int main(int argc, char **argv) {
   char s0[] = "c211cmZkIGFuZCBtb3JlIHN0dWZm", s1[257], data[LEN], c[8192];
   uint8_t s2[] = "smurfd and more stuff", s3[257], s4[LEN];
-
   if (argc == 1) {
     crypto_handle_cert(data, "ca.key");
     crypto_handle_asn(c, "ca256.cms");

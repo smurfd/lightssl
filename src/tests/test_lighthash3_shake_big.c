@@ -13,7 +13,6 @@ int main(void) {
        0x49, 0x8e, 0xa4, 0x95, 0xbd, 0x41, 0x3a, 0x9f, 0x58}, in1[1024], in2[1024], out1[512], out2[512];
   char s[130] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et\
  dolore magna aliqua. Ut eni";
-
   memcpy(in1, s, 130 * sizeof(uint8_t)); memcpy(in2, s, 130 * sizeof(uint8_t));
   hash_shake_new(out1, 64, in1, 130); hash_shake_new(out2, 64, in2, 130);
   assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);

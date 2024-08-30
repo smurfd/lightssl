@@ -9,7 +9,6 @@
 
 int main(void) {
   int s = crypto_init("127.0.0.1", "9998", false);
-
   if (s >= 0) {
     u64 dat[BLOCK], cd[BLOCK];
     key k1, k2;
