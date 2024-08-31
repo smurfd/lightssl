@@ -15,5 +15,4 @@ int main(void) {
   ciph_crypt(out, plain, key, iv, false, false);
   ciph_crypt(in, out, key, iv, false, true);
   assert(memcmp(plain, in, BBL * sizeof(uint8_t)) == 0);
-  printf("OK\n");
 }

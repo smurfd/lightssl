@@ -15,5 +15,4 @@ riatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui offici
 6853b9797ef9ab10cbde1009c7d0f09") == 0);
   assert(strcmp(s, "0xf32a9423551351df0a07c0b8c20eb972367c398d61066038e16986448ebfbc3d15ede0ed3693e3905e9a8c601d9d002a0\
 6853b9797ef9ab10cbde1009c7d0fff") != 0); // Assume failure
-  printf("OK\n");
 }

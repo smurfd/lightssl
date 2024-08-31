@@ -13,5 +13,4 @@ int main(void) {
     exit(0);
   }
   crypto_end(s);
-  printf("OK\n");
 }

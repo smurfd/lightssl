@@ -17,5 +17,4 @@ int main(void) {
   hash_shake_new(out1, 64, in1, 6); hash_shake_new(out2, 64, in2, 6);
   assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
   if ((*res)) {} // get rid of not used var warning
-  printf("OK\n");
 }

@@ -20,5 +20,4 @@ int main(int argc, char **argv) {
   base64dec(s3, s0, strlen(s0));
   base64enc(s1, s2, strlen("smurfd and more stuff"));
   assert(strcmp(s1, s0) == 0);
-  printf("OK\n");
 }

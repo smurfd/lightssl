@@ -13,7 +13,6 @@ int main(void) {
     u64 dat[BLOCK], cd[BLOCK];
     key k1, k2;
     head h;
-
     crypto_transfer_key(s, false, &h, &k1);
     k2 = crypto_gen_keys(h.g, h.p);
     crypto_transfer_key(s, true, &h, &k2);
@@ -28,5 +27,4 @@ int main(void) {
   // locally generate two keypairs
   srand(time(0));
   crypto_gen_keys_local();
-  printf("OK\n");
 }
