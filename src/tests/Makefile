@@ -1,4 +1,3 @@
-CL:=gcc -O3 -Wall -pedantic -std=c99
 CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=../.build
 
@@ -10,7 +9,7 @@ mkcrt:
 	openssl ecparam -name secp384r1 -genkey -noout -out ${BUILD}/ca.key
 
 tests:
-	${CL} -o ${BUILD}/tests tests.c ${BUILD}/lightaes.o ${BUILD}/lightkeys.o ${BUILD}/lighttools.o ${BUILD}/lighthash.o ${BUILD}/lightcrypto.o ${BUILD}/lightciphers.o -lpthread -lm
+	${CC} -o ${BUILD}/tests tests.c ${BUILD}/lightaes.o ${BUILD}/lightkeys.o ${BUILD}/lighttools.o ${BUILD}/lighthash.o ${BUILD}/lightcrypto.o ${BUILD}/lightciphers.o -lpthread -lm
 
 run:
 	${BUILD}/tests

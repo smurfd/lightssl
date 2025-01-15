@@ -1,458 +1,699 @@
-// Auth: smurfd 2024 https://github.com/mko-x/SharedAES-GCM // ----------------- taken from this, and massaged
-#include <stdio.h>
-#include <stdint.h>
+// Auth: smurfd, 2024 More reading at the bottom of the file; 2 spacs indent; 150 width                                                             //
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include "lightaes.h"
 
-static box fsb;
-static box rsb;
-static uint32_t RCON[10];   // AES round constants
+// if (a == 1) {b = 3;} else {b = 4;} ==
+// b = (a == 1) ? 3 : 4; // way faster than a if-statement
+static const uint8_t SBOX[256] = {
+  0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+  0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
+  0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
+  0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
+  0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84,
+  0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
+  0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8,
+  0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2,
+  0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
+  0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb,
+  0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79,
+  0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
+  0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
+  0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
+  0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
+  0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16};
 
-// AES
-void aes_init_keygen_tables(void) {
-  int x, y, z, pow[256], log[256];
-  for (int i = 0, x = 1; i < 256; i++) {
-    pow[i] = x;
-    log[x] = i;
-    x = (x ^ XTIME(x)) & 0xFF;
+static const uint8_t INV_SBOX[256] = {
+  0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+  0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
+  0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+  0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
+  0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
+  0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+  0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
+  0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
+  0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+  0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
+  0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
+  0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+  0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
+  0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
+  0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+  0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d};
+// TODO: SLOW
+
+//
+// Convert 4 bytes to a word
+static inline uint32_t bytes2word(const uint8_t *b) {
+  return (b[0] << 24) + (b[1] << 16) + (b[2] << 8) + b[3];
+}
+
+//
+// Convert a word to 4 bytes
+static inline void word2bytes(uint8_t *b, const uint32_t w) {
+  b[0] = (w >> 24) & 0xff;
+  b[1] = (w >> 16) & 0xff;
+  b[2] = (w >> 8) & 0xff;
+  b[3] = (w >> 0) & 0xff;
+}
+
+//
+// Used to manage 4.1 & 4.2 addition and multiplication
+static inline uint8_t gm2(const uint8_t b) {
+  return ((b << 1) ^ (0x1b & ((b >> 7) * 0xff))) & 0xff;
+}
+
+//
+// Substitue a word using SBox
+static inline uint32_t subword(const uint32_t w) {
+  uint8_t b[4], s[4];
+  word2bytes(b, w);
+  s[0] = SBOX[b[0]];
+  s[1] = SBOX[b[1]];
+  s[2] = SBOX[b[2]];
+  s[3] = SBOX[b[3]];
+  return bytes2word(s);
+}
+
+//
+// Rotate word x steps
+static inline uint32_t rolx(const uint32_t w, const uint32_t x) {
+  return ((w << x) | (w >> (32 - x))) & 0xffffffff;
+}
+
+static inline void expandnextkeyA(uint32_t *k, const uint32_t *key0, const uint32_t *key1, const uint8_t rcon) {
+  uint32_t w[8] = {0};
+  memcpy(w + 0, key0, KEYSIZE1);
+  memcpy(w + 4, key1, KEYSIZE1);
+  uint32_t sw = subword(rolx(w[7], 8)), rw = (rcon << 24), t = sw ^ rw;
+  k[0] = w[0] ^ t;
+  k[1] = w[1] ^ w[0] ^ t;
+  k[2] = w[2] ^ w[1] ^ w[0] ^ t;
+  k[3] = w[3] ^ w[2] ^ w[1] ^ w[0] ^ t;
+}
+
+static inline void expandnextkeyB(uint32_t *k, const uint32_t *key0, const uint32_t *key1) {
+  uint32_t w[8] = {0};
+  memcpy(w + 0, key0, KEYSIZE1);
+  memcpy(w + 4, key1, KEYSIZE1);
+  uint32_t t = subword(w[7]);
+  k[0] = w[0] ^ t;
+  k[1] = w[1] ^ w[0] ^ t;
+  k[2] = w[2] ^ w[1] ^ w[0] ^ t;
+  k[3] = w[3] ^ w[2] ^ w[1] ^ w[0] ^ t;
+}
+
+//
+// Get the RCON constant
+static inline uint8_t getrcon(const uint8_t round) {
+  uint8_t rcon = 0x8d;
+  for (int i = 0; i < round; i++) {
+    rcon = ((rcon << 1) ^ (0x11b & - (rcon >> 7))) & 0xff;
   }
-  for (int i = 0, x = 1; i < 10; i++) {
-    RCON[i] = (uint32_t)x;
-    x = XTIME(x) & 0xFF;
+  return rcon;
+}
+
+//
+// 5.2
+// KEYEXPANSION() is a routine that is applied to the key to generate 4 ∗ (Nr + 1) words. Thus, four words are generated for each of the Nr + 1
+// applications of ADDROUNDKEY() within the specifcation of CIPHER(), as described in Section 5.1.4. The output of the routine consists of a
+// linear array of words, denoted by w[i], where i is in the range 0 ≤ i < 4 ∗ (Nr + 1)
+static inline void keyexpansion(uint32_t *rk, const uint32_t *key) {
+  uint32_t ktmp[4], rk1[64], rk2[64], rk3[64], co1 = 4, co2 = 0, rkco = 8;
+  memcpy(rk1, key + 0, KEYSIZE1);
+  memcpy(rk2, key + 4, KEYSIZE1);
+  memcpy(rk, key, 8 * sizeof(uint32_t));
+  for (uint8_t i = 0; i < 12; i++) { // 14 number of rounds - 2
+    expandnextkeyA(ktmp, rk1 + co2, rk2 + co2, getrcon(i + 1));
+    memcpy(rk1 + co1, ktmp, KEYSIZE1);
+    memcpy(rk3 + co2, ktmp, KEYSIZE1);
+    expandnextkeyB(ktmp, rk2 + co2, rk3 + co2);
+    memcpy(rk2 + co1, ktmp, KEYSIZE1);
+    memcpy(rk + rkco + 0, rk3 + co2, KEYSIZE1);
+    memcpy(rk + rkco + 4, rk2 + co1, KEYSIZE1);
+    co1+=4; co2+=4; rkco+=8;
   }
-  fsb.b[0x00] = 0x63;
-  rsb.b[0x63] = 0x00;
-  for (int i = 0; i < 256; i++) {
-    if (i) {
-      x = y = pow[255 - log[i]];
-      MIX4(x, y);
-      fsb.b[i] = (uint8_t)(x ^= 0x63);
-      rsb.b[x] = (uint8_t)i;
-    }
-    x = fsb.b[i];
-    y = XTIME(x) & 0xFF;
-    z = (y ^ x) & 0xFF;
+  expandnextkeyA(ktmp, rk1 + co1, rk2 + co1, getrcon(7));
+  memcpy(rk + (rkco - 8), ktmp, KEYSIZE1);
+}
 
-    fsb.T0[i] = ((uint32_t)y) ^ ((uint32_t)x << 8) ^ ((uint32_t)x << 16) ^ ((uint32_t)z << 24);
-    fsb.T1[i] = ROTL8(fsb.T0[i]);
-    fsb.T2[i] = ROTL8(fsb.T1[i]);
-    fsb.T3[i] = ROTL8(fsb.T2[i]);
+static inline uint32_t mixword(uint32_t w) {
+  uint8_t b[4] = {0}, mb[4] = {0};
+  word2bytes(b, w);
+  mb[0] = gm2(b[0]) ^ gm2(b[1]) ^ b[1] ^ b[2] ^ b[3];
+  mb[1] = b[0] ^ gm2(b[1]) ^ gm2(b[2]) ^ b[2] ^ b[3];
+  mb[2] = b[0] ^ b[1] ^ gm2(b[2]) ^ gm2(b[3]) ^ b[3];
+  mb[3] = gm2(b[0]) ^ b[0] ^ b[1] ^ b[2] ^ gm2(b[3]);
+  return bytes2word(mb);
+}
 
-    x = rsb.b[i];
-    rsb.T0[i] = ((uint32_t)MUL(0x0E, x)) ^ ((uint32_t)MUL(0x09, x) <<  8) ^ ((uint32_t)MUL(0x0D, x) << 16) ^ ((uint32_t)MUL(0x0B, x) << 24);
-    rsb.T1[i] = ROTL8(rsb.T0[i]);
-    rsb.T2[i] = ROTL8(rsb.T1[i]);
-    rsb.T3[i] = ROTL8(rsb.T2[i]);
+//
+// 5.1.1
+// SUBBYTES() is an invertible, non-linear transformation of the state in which a substitution table, called an S-box, is applied independently to
+// each byte in the state. The AES S-box is denoted by SBOX().
+static inline void subbytes(uint32_t *ret, const uint32_t *block) {
+  ret[0] = subword(block[0]);
+  ret[1] = subword(block[1]);
+  ret[2] = subword(block[2]);
+  ret[3] = subword(block[3]);
+}
+
+//
+// 5.1.2
+// SHIFTROWS() is a transformation of the state in which the bytes in the last three rows of the state are cyclically shifted.
+static inline void shiftrows(uint32_t *ret, const uint32_t *block) {
+  uint8_t c0[4], c1[4], c2[4], c3[4], ctmp[4];
+  word2bytes(c0, block[0]);
+  word2bytes(c1, block[1]);
+  word2bytes(c2, block[2]);
+  word2bytes(c3, block[3]);
+  ctmp[0] = c0[0]; ctmp[1] = c1[1]; ctmp[2] = c2[2]; ctmp[3] = c3[3];
+  ret[0] = bytes2word(ctmp);
+  ctmp[0] = c1[0]; ctmp[1] = c2[1]; ctmp[2] = c3[2]; ctmp[3] = c0[3];
+  ret[1] = bytes2word(ctmp);
+  ctmp[0] = c2[0]; ctmp[1] = c3[1]; ctmp[2] = c0[2]; ctmp[3] = c1[3];
+  ret[2] = bytes2word(ctmp);
+  ctmp[0] = c3[0]; ctmp[1] = c0[1]; ctmp[2] = c1[2]; ctmp[3] = c2[3];
+  ret[3] = bytes2word(ctmp);
+}
+
+//
+// 5.1.3
+// MIXCOLUMNS() is a transformation of the state that multiplies each of the four columns of the state by a single fxed matrix,
+// as described in Section 4.3
+static inline void mixcolumns(uint32_t *ret, const uint32_t *block) {
+  ret[0] = mixword(block[0]);
+  ret[1] = mixword(block[1]);
+  ret[2] = mixword(block[2]);
+  ret[3] = mixword(block[3]);
+}
+
+//
+// 5.1.4
+// ADDROUNDKEY() is a transformation of the state in which a round key is combined with the state by applying the bitwise XOR operation.
+// In particular, each round key consists of four words from the key schedule (described in Section 5.2),
+// each of which is combined with a column of the state
+static inline void addroundkey(uint32_t *ret, const uint32_t *key, const uint32_t *block) {
+  ret[0] = block[0] ^ key[0];
+  ret[1] = block[1] ^ key[1];
+  ret[2] = block[2] ^ key[2];
+  ret[3] = block[3] ^ key[3];
+}
+
+//
+// Substitute a word using SBox inverse
+static inline uint32_t inv_subword(const uint32_t w) {
+  uint8_t b[4], s[4];
+  word2bytes(b, w);
+  s[0] = INV_SBOX[b[0]];
+  s[1] = INV_SBOX[b[1]];
+  s[2] = INV_SBOX[b[2]];
+  s[3] = INV_SBOX[b[3]];
+  return bytes2word(s);
+}
+
+static inline uint32_t inv_mixword(uint32_t w) {
+  uint8_t b[4] = {0}, mb[4] = {0};
+  word2bytes(b, w);
+  // gm14(b0) ^ gm11(b1) ^ gm13(b2) ^ gm09(b3)
+  mb[0] = (gm2(gm2(gm2(b[0]))) ^ gm2(gm2(b[0])) ^ gm2(b[0])) ^ (gm2(gm2(gm2(b[1]))) ^ gm2(b[1]) ^ b[1]) ^ \
+  (gm2(gm2(gm2(b[2]))) ^ gm2(gm2(b[2])) ^ b[2]) ^ (gm2(gm2(gm2(b[3]))) ^ b[3]);
+  // gm09(b0) ^ gm14(b1) ^ gm11(b2) ^ gm13(b3)
+  mb[1] = (gm2(gm2(gm2(b[0]))) ^ b[0]) ^ (gm2(gm2(gm2(b[1]))) ^ gm2(gm2(b[1])) ^ gm2(b[1])) ^ \
+  (gm2(gm2(gm2(b[2]))) ^ gm2(b[2]) ^ b[2]) ^ (gm2(gm2(gm2(b[3]))) ^ gm2(gm2(b[3])) ^ b[3]);
+  // gm13(b0) ^ gm09(b1) ^ gm14(b2) ^ gm11(b3)
+  mb[2] = (gm2(gm2(gm2(b[0]))) ^ gm2(gm2(b[0])) ^ b[0]) ^ (gm2(gm2(gm2(b[1]))) ^ b[1]) ^ \
+  (gm2(gm2(gm2(b[2]))) ^ gm2(gm2(b[2])) ^ gm2(b[2])) ^ (gm2(gm2(gm2(b[3]))) ^ gm2(b[3]) ^ b[3]);
+  // gm11(b0) ^ gm13(b1) ^ gm09(b2) ^ gm14(b3)
+  mb[3] = (gm2(gm2(gm2(b[0]))) ^ gm2(b[0]) ^ b[0]) ^ (gm2(gm2(gm2(b[1]))) ^ gm2(gm2(b[1])) ^ b[1]) ^ \
+  (gm2(gm2(gm2(b[2]))) ^ b[2]) ^ (gm2(gm2(gm2(b[3]))) ^ gm2(gm2(b[3])) ^ gm2(b[3]));
+  return bytes2word(mb);
+}
+
+//
+// 5.3.1
+// INVSHIFTROWS() is the inverse of SHIFROWS()
+static inline void inv_shiftrows(uint32_t *ret, const uint32_t *block) {
+  uint8_t c0[4], c1[4], c2[4], c3[4], ctmp[4];
+  word2bytes(c0, block[0]);
+  word2bytes(c1, block[1]);
+  word2bytes(c2, block[2]);
+  word2bytes(c3, block[3]);
+  ctmp[0] = c0[0]; ctmp[1] = c3[1]; ctmp[2] = c2[2]; ctmp[3] = c1[3];
+  ret[0] = bytes2word(ctmp);
+  ctmp[0] = c1[0]; ctmp[1] = c0[1]; ctmp[2] = c3[2]; ctmp[3] = c2[3];
+  ret[1] = bytes2word(ctmp);
+  ctmp[0] = c2[0]; ctmp[1] = c1[1]; ctmp[2] = c0[2]; ctmp[3] = c3[3];
+  ret[2] = bytes2word(ctmp);
+  ctmp[0] = c3[0]; ctmp[1] = c2[1]; ctmp[2] = c1[2]; ctmp[3] = c0[3];
+  ret[3] = bytes2word(ctmp);
+}
+
+//
+// 5.3.2
+// INVSUBBYTES() is the inverse of SUBBYTES(), in which the inverse of SBOX(), denoted by INVSBOX(), is applied to each byte of the state.
+// INVSBOX() is derived from Table 4 by switching the roles of inputs and outputs, as presented in Table 6
+static inline void inv_subbytes(uint32_t *ret, const uint32_t *block) {
+  ret[0] = inv_subword(block[0]);
+  ret[1] = inv_subword(block[1]);
+  ret[2] = inv_subword(block[2]);
+  ret[3] = inv_subword(block[3]);
+}
+
+//
+// 5.3.3
+// INVMIXCOLUMNS() is the inverse of MIXCOLUMNS(). In particular, INVMIXCOLUMNS() multiplies each of the four columns of the state by a single
+// fixed matrix, as described in Section 4.3
+static inline void inv_mixcolumns(uint32_t *ret, const uint32_t *block) {
+  ret[0] = inv_mixword(block[0]);
+  ret[1] = inv_mixword(block[1]);
+  ret[2] = inv_mixword(block[2]);
+  ret[3] = inv_mixword(block[3]);
+}
+
+//
+// 5.1
+// The rounds in the specifcation of CIPHER() are composed of the following four byte-oriented transformations on the state:
+// SUBBYTES() applies a substitution table (S-box) to each byte.
+// SHIFTROWS() shifts rows of the state array by different offsets.
+// MIXCOLUMNS() mixes the data within each column of the state array.
+// ADDROUNDKEY() combines a round key with the state.
+// The four transformations are specifed in Sections 5.1.1–5.1.4.
+void cipher(uint32_t *ret, const uint32_t *key, const uint32_t *block) {
+  uint32_t rk[128], tmpb1[4] = {0}, tmpb2[4] = {0}, tmpb3[4] = {0}, tmpb4[4] = {0};
+  keyexpansion(rk, key);
+  addroundkey(tmpb4, rk, block);
+  for (int i = 1; i < 14; i++) {
+    subbytes(tmpb1, tmpb4);
+    shiftrows(tmpb2, tmpb1);
+    mixcolumns(tmpb3, tmpb2);
+    addroundkey(tmpb4, rk + (i * 4), tmpb3);
+  }
+  subbytes(tmpb1, tmpb4);
+  shiftrows(tmpb2, tmpb1);
+  addroundkey(ret, rk + (14 * 4), tmpb2);
+}
+
+//
+// 5.3
+// To implement INVCIPHER(), the transformations in the specifcation of CIPHER() (Section 5.1) are inverted and executed in reverse order.
+// The inverted transformations of the state — denoted by INVSHIFTROWS(), INVSUBBYTES(), INVMIXCOLUMNS(), and ADDROUNDKEY() — are
+// described in Sections 5.3.1–5.3.4.
+void inv_cipher(uint32_t *ret, const uint32_t *key, const uint32_t *block) {
+  uint32_t rk[128], tmpb1[4] = {0}, tmpb2[4] = {0}, tmpb3[4] = {0}, tmpb4[4] = {0};
+  keyexpansion(rk, key);
+  addroundkey(tmpb1, rk + (14 * 4), block);
+  inv_shiftrows(tmpb2, tmpb1);
+  inv_subbytes(tmpb4, tmpb2);
+  for (int i = 13; i >= 1; i--) { // 14 rounds but one already done, so -1
+    addroundkey(tmpb1, rk + (i * 4), tmpb4);
+    inv_mixcolumns(tmpb2, tmpb1);
+    inv_shiftrows(tmpb3, tmpb2);
+    inv_subbytes(tmpb4, tmpb3);
+  }
+  addroundkey(ret, rk, tmpb4);
+}
+
+static inline void big_endian_uint32(uint8_t *a, uint32_t value) {
+  a[0] = (value >> 24) & 0xff;
+  a[1] = (value >> 16) & 0xff;
+  a[2] = (value >> 8) & 0xff;
+  a[3] = (value >> 0) & 0xff;
+}
+
+static inline uint32_t read_big_endian_uint32(const uint8_t *a) {
+  return (a[0] << 24) | (a[1] << 16) | (a[2] << 8) | a[3];
+}
+
+static inline void xorblock(uint8_t *Z, const uint8_t *X, const uint8_t *Y) {
+  for (int i = 0; i < 16; i++) {
+    Z[i] = (X[i] ^ Y[i]);
   }
 }
 
-static uint8_t aes_set_encryption_key(aes_context *c, const uint8_t *key, uint8_t kz) {
-  uint32_t *RK = c->rk, tmp;
-  for (uint32_t i = 0; i < (kz >> 2); i++) GET_UINT32_LE(RK[i], key, i << 2);
-  if (c->rounds == 10) {
-    for(uint32_t i = 0; i < 10; i++, RK += 4) {
-      ROUND(tmp, fsb.b, RK[3] >> 8, RK[3] >> 16, RK[3] >> 24, RK[3] >> 0, 0, 8, 16, 24);
-      RK[4] = RK[0] ^ RCON[i] ^ tmp;
-      RK[5] = RK[1] ^ RK[4];
-      RK[6] = RK[2] ^ RK[5];
-      RK[7] = RK[3] ^ RK[6];
-    }
-  } else if (c->rounds == 12) {
-    for(uint32_t i = 0; i < 8; i++, RK += 6) {
-      ROUND(tmp, fsb.b, RK[5] >> 8, RK[5] >> 16, RK[5] >> 24, RK[5] >> 0, 0, 8, 16, 24);
-      RK[6] = RK[0] ^ RCON[i] ^ tmp;
-      RK[7] = RK[1] ^ RK[6];
-      RK[8] = RK[2] ^ RK[7];
-      RK[9] = RK[3] ^ RK[8];
-      RK[10] = RK[4] ^ RK[9];
-      RK[11] = RK[5] ^ RK[10];
-    }
-  } else if (c->rounds == 14) {
-    for(uint32_t i = 0; i < 7; i++, RK += 8) {
-      ROUND(tmp, fsb.b, RK[7] >> 8, RK[7] >> 16, RK[7] >> 24, RK[7] >> 0, 0, 8, 16, 24);
-      RK[8] = RK[0] ^ RCON[i] ^ tmp;
-      RK[9]  = RK[1] ^ RK[8];
-      RK[10] = RK[2] ^ RK[9];
-      RK[11] = RK[3] ^ RK[10];
-      ROUND(tmp, fsb.b, RK[11] >> 0, RK[11] >> 8, RK[11] >> 16, RK[11] >> 24, 0, 8, 16, 24);
-      RK[12] = RK[4] ^ tmp;
-      RK[13] = RK[5] ^ RK[12];
-      RK[14] = RK[6] ^ RK[13];
-      RK[15] = RK[7] ^ RK[14];
-    }
-  } else return -1;
-  return 0;
-}
-
-static uint8_t aes_set_decryption_key(aes_context *c, const uint8_t *key, uint8_t keysize) {
-  uint32_t *SK, *RK = c->rk, i, St;
-  aes_context cc;
-  cc.rounds = c->rounds;
-  cc.rk = cc.buf;
-  if (aes_set_encryption_key(&cc, key, keysize) != 0) return 1;
-  SK = cc.rk + cc.rounds * 4;
-  CPY128(RK, SK);
-  for (i = c->rounds - 1, SK -= 8; i > 0; i--, SK -= 8) {
-    St = *SK;
-    *RK++ = rsb.T0[fsb.b[(St) & 0xFF]] ^ rsb.T1[fsb.b[(St >> 8) & 0xFF]] ^ rsb.T2[fsb.b[(St >> 16) & 0xFF]] ^ rsb.T3[fsb.b[(St >> 24) & 0xFF]]; St++;
-    *RK++ = rsb.T0[fsb.b[(St) & 0xFF]] ^ rsb.T1[fsb.b[(St >> 8) & 0xFF]] ^ rsb.T2[fsb.b[(St >> 16) & 0xFF]] ^ rsb.T3[fsb.b[(St >> 24) & 0xFF]]; St++;
-    *RK++ = rsb.T0[fsb.b[(St) & 0xFF]] ^ rsb.T1[fsb.b[(St >> 8) & 0xFF]] ^ rsb.T2[fsb.b[(St >> 16) & 0xFF]] ^ rsb.T3[fsb.b[(St >> 24) & 0xFF]]; St++;
-    *RK++ = rsb.T0[fsb.b[(St) & 0xFF]] ^ rsb.T1[fsb.b[(St >> 8) & 0xFF]] ^ rsb.T2[fsb.b[(St >> 16) & 0xFF]] ^ rsb.T3[fsb.b[(St >> 24) & 0xFF]]; St++;
+static inline void xorblock32bit(uint32_t *Z, const uint32_t *X, const uint32_t *Y) {
+  for (int i = 0; i < 8; i++) {
+    Z[i] = (X[i] ^ Y[i]);
   }
-  CPY128(RK, SK);
-  memset(&cc, 0, sizeof(aes_context));
-  return 0;
 }
-
-int aes_setkey(aes_context *c, uint8_t mode, const uint8_t *key, uint8_t keysize) {
-  c->mode = mode;
-  c->rk = c->buf;
-  if (keysize == 16) c->rounds = 10;      // 16-byte, 128-bit key
-  else if (keysize == 24) c->rounds = 12; // 24-byte, 192-bit key
-  else if (keysize == 32) c->rounds = 14; // 32-byte, 256-bit key
-  else return -1;
-  if (mode == 0) return aes_set_decryption_key(c, key, keysize);
-  else return aes_set_encryption_key(c, key, keysize);
-}
-
-int aes_cipher(aes_context *c, const uint8_t in[16], uint8_t out[16]) {
-  uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3, tmp0, tmp1, tmp2, tmp3;
-  RK = c->rk;
-  GET_UINT32_LE(X0, in,  0); X0 ^= *RK++;
-  GET_UINT32_LE(X1, in,  4); X1 ^= *RK++;
-  GET_UINT32_LE(X2, in,  8); X2 ^= *RK++;
-  GET_UINT32_LE(X3, in, 12); X3 ^= *RK++;
-  if (c->mode == 0) { // decrypt
-    for (int i = (c->rounds >> 1) - 1; i > 0; i--) {
-      AES_RROUND(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-      AES_RROUND(X0, X1, X2, X3, Y0, Y1, Y2, Y3);
-    }
-    AES_RROUND(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-    ROUND(tmp0, rsb.b, Y0 >> 0, Y3 >> 8, Y2 >> 16, Y1 >> 24, 0, 8, 16, 24);
-    ROUND(tmp1, rsb.b, Y1 >> 0, Y0 >> 8, Y3 >> 16, Y2 >> 24, 0, 8, 16, 24);
-    ROUND(tmp2, rsb.b, Y2 >> 0, Y1 >> 8, Y0 >> 16, Y3 >> 24, 0, 8, 16, 24);
-    ROUND(tmp3, rsb.b, Y3 >> 0, Y2 >> 8, Y1 >> 16, Y0 >> 24, 0, 8, 16, 24);
-    X0 = *RK++ ^ tmp0;
-    X1 = *RK++ ^ tmp1;
-    X2 = *RK++ ^ tmp2;
-    X3 = *RK++ ^ tmp3;
-  } else { // encrypt
-    for (int i = (c->rounds >> 1) - 1; i > 0; i--) {
-      AES_FROUND(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-      AES_FROUND(X0, X1, X2, X3, Y0, Y1, Y2, Y3);
-    }
-    AES_FROUND(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-    ROUND(tmp0, fsb.b, Y0 >> 0, Y1 >> 8, Y2 >> 16, Y3 >> 24, 0, 8, 16, 24);
-    ROUND(tmp1, fsb.b, Y1 >> 0, Y2 >> 8, Y3 >> 16, Y0 >> 24, 0, 8, 16, 24);
-    ROUND(tmp2, fsb.b, Y2 >> 0, Y3 >> 8, Y0 >> 16, Y1 >> 24, 0, 8, 16, 24);
-    ROUND(tmp3, fsb.b, Y3 >> 0, Y0 >> 8, Y1 >> 16, Y2 >> 24, 0, 8, 16, 24);
-    X0 = *RK++ ^ tmp0;
-    X1 = *RK++ ^ tmp1;
-    X2 = *RK++ ^ tmp2;
-    X3 = *RK++ ^ tmp3;
-  }
-  PUT_UINT32_LE(X0, out,  0);
-  PUT_UINT32_LE(X1, out,  4);
-  PUT_UINT32_LE(X2, out,  8);
-  PUT_UINT32_LE(X3, out, 12);
-  return 0;
-}
-
-// GCM
-static void gcm_mult(gcm_context *ctx, const uint8_t x[16], uint8_t out[16]) {
-  u64 zh = ctx->HH[(uint8_t)(x[15] & 0x0F)], zl = ctx->HL[(uint8_t)(x[15] & 0x0F)]; // lo, lo
-  uint8_t r = (uint8_t)(zl & 0x0F);
-  zl = (zh << 60) | (zl >> 4);
-  zh = (zh >> 4);
-  zh ^= (u64)last4[r] << 48;
-  zh ^= ctx->HH[(uint8_t)(x[15] >> 4)]; // hi
-  zl ^= ctx->HL[(uint8_t)(x[15] >> 4)]; // hi
-  for (int i = 14; i >= 0; i--) {
-    r = (uint8_t)(zl & 0x0F);
-    zl = (zh << 60) | (zl >> 4);
-    zh = (zh >> 4);
-    zh ^= (u64)last4[r] << 48;
-    zh ^= ctx->HH[(uint8_t)(x[i] & 0x0F)]; // lo
-    zl ^= ctx->HL[(uint8_t)(x[i] & 0x0F)]; // lo
-
-    r = (uint8_t)(zl & 0x0F);
-    zl = (zh << 60) | (zl >> 4);
-    zh = (zh >> 4);
-    zh ^= (u64)last4[r] << 48;
-    zh ^= ctx->HH[(uint8_t)(x[i] >> 4)]; // hi
-    zl ^= ctx->HL[(uint8_t)(x[i] >> 4)]; // hi
-  }
-  PUT_UINT32_BE(zh >> 32, out, 0);
-  PUT_UINT32_BE(zh, out, 4);
-  PUT_UINT32_BE(zl >> 32, out, 8);
-  PUT_UINT32_BE(zl, out, 12);
-}
-
-// keysize in bytes (must be 16, 24, 32 for 128, 192 or 256-bit keys respectively)
-int gcm_setkey(gcm_context *ctx, const uint8_t *key, const uint32_t keysize) {
-  u64 hi, lo;
-  uint8_t h[16];
-  memset(ctx, 0, sizeof(gcm_context));
-  memset(h, 0, 16);
-  if (aes_setkey(&ctx->aes_ctx, 1, key, keysize) != 0) return 1;
-  if (aes_cipher(&ctx->aes_ctx, h, h) != 0) return 1;
-  GET_UINT32_BE(hi, h, 0); // pack h as two 64-bit ints, big-endian
-  GET_UINT32_BE(lo, h, 4);
-  u64 vh = (u64)hi << 32 | lo;
-  GET_UINT32_BE(hi, h, 8);
-  GET_UINT32_BE(lo, h, 12);
-  u64 vl = (u64)hi << 32 | lo;
-  ctx->HL[8] = vl; // 8 = 1000 corresponds to 1 in GF(2^128)
-  ctx->HH[8] = vh;
-  ctx->HH[0] = 0; // 0 corresponds to 0 in GF(2^128)
-  ctx->HL[0] = 0;
-  for(int i = 4; i > 0; i >>= 1) {
-    uint32_t T = (uint32_t)(vl & 1) * 0xe1000000U;
-    vl = (vh << 63) | (vl >> 1);
-    vh = (vh >> 1) ^ ((u64)T << 32);
-    ctx->HL[i] = vl;
-    ctx->HH[i] = vh;
-  }
-  for (int i = 2; i < 16; i <<= 1) {
-    u64 *HiL = ctx->HL + i, *HiH = ctx->HH + i;
-    vh = *HiH;
-    vl = *HiL;
-    for(int j = 1; j < i; j++) {
-      HiH[j] = vh ^ ctx->HH[j];
-      HiL[j] = vl ^ ctx->HL[j];
-    }
-  }
-  return 0;
-}
-
-int gcm_crypt_and_tag(gcm_context *ctx, int mode, const uint8_t *iv, size_t iv_len, const uint8_t *add, size_t add_len, const uint8_t *input,
-    uint8_t *output, size_t length, uint8_t *tag, size_t tag_len) {
-  gcm_start(ctx, mode, iv, iv_len, add, add_len);
-  gcm_update(ctx, length, input, output);
-  gcm_finish(ctx, tag, tag_len);
-  return 0;
-}
-
-int gcm_crypt_and_tag2(gcm_context *ctx, int mode, ctx_param *cprm) {
-  gcm_start(ctx, mode, cprm->iv, cprm->iv_len, cprm->aad, cprm->aad_len);
-  gcm_update(ctx, cprm->length, cprm->input, cprm->output);
-  gcm_finish(ctx, cprm->tag, cprm->tag_len);
-  return 0;
-}
-
-int gcm_auth_decrypt(gcm_context *ctx, const uint8_t *iv, size_t iv_len, const uint8_t *add, size_t add_len, const uint8_t *input, uint8_t *output,
-    size_t length, const uint8_t *tag, size_t tag_len) {
-  uint8_t check_tag[16], diff = 0;
-  gcm_crypt_and_tag(ctx, 0 , iv, iv_len, add, add_len, input, output, length, check_tag, tag_len); // decrypt
-  for (size_t i = 0; i < tag_len; i++) {
-    diff |= tag[i] ^ check_tag[i];
-  }
-  if (diff != 0) {
-    memset(output, 0, length);
-    return GCM_AUTH_FAILURE; // auth failure
-  }
-  return 0;
-}
-
-int gcm_start(gcm_context *ctx, int mode, const uint8_t *iv, size_t iv_len, const uint8_t *add, size_t add_len) {
-  uint8_t work_buf[16], ret;
-  const uint8_t *p;
-  size_t use_len;
-  memset(ctx->y, 0, sizeof(ctx->y));
-  memset(ctx->buf, 0, sizeof(ctx->buf));
-  ctx->len = 0;
-  ctx->add_len = 0;
-  ctx->mode = mode;
-  ctx->aes_ctx.mode = 1; // encrypt
-  if (iv_len == 12) {
-    memcpy(ctx->y, iv, iv_len);
-    ctx->y[15] = 1;
-  } else {
-    memset(work_buf, 0, 16);
-    PUT_UINT32_BE(iv_len * 8, work_buf, 12); // place the IV into buffer
-    p = iv;
-    while(iv_len > 0) {
-      if (iv_len < 16) use_len = iv_len; else use_len = 16;
-      for(size_t i = 0; i < use_len; i++) ctx->y[i] ^= p[i];
-      gcm_mult(ctx, ctx->y, ctx->y);
-      iv_len -= use_len;
-      p += use_len;
-    }
-    for(size_t i = 0; i < 16; i++) ctx->y[i] ^= work_buf[i];
-    gcm_mult(ctx, ctx->y, ctx->y);
-  }
-  if ((ret = aes_cipher(&ctx->aes_ctx, ctx->y, ctx->base_ectr)) != 0) return ret;
-  ctx->add_len = add_len;
-  p = add;
-  while(add_len > 0) {
-    if (add_len < 16) use_len = add_len; else use_len = 16;
-    for(size_t i = 0; i < use_len; i++) ctx->buf[i] ^= p[i];
-    gcm_mult(ctx, ctx->buf, ctx->buf);
-    add_len -= use_len;
-    p += use_len;
-  }
-  return 0;
-}
-
-int gcm_update(gcm_context *ctx, size_t length, const uint8_t *input, uint8_t *output) {
-  uint8_t ectr[16], ret;
-  size_t use_len;
-  ctx->len += length;
-  while(length > 0) {
-    if (length < 16) use_len = length; else use_len = 16;
-    for (size_t i = 16; i > 12; i--) if(++ctx->y[i-1] != 0) break;
-    if ((ret = aes_cipher(&ctx->aes_ctx, ctx->y, ectr)) != 0) return ret;
-    if (ctx->mode == 1) { // encrypt
-      for (size_t i = 0; i < use_len; i++) {
-        output[i] = (uint8_t)(ectr[i] ^ input[i]);
-        ctx->buf[i] ^= output[i];
-      }
-    } else { // decrypt
-      for (size_t i = 0; i < use_len; i++) {
-        ctx->buf[i] ^= input[i];
-        output[i] = (uint8_t)(ectr[i] ^ input[i]);
-      }
-    }
-    gcm_mult(ctx, ctx->buf, ctx->buf); // perform a GHASH operation
-    length -= use_len; // drop the remaining byte count to process
-    input  += use_len; // bump our input pointer forward
-    output += use_len; // bump our output pointer forward
-  }
-  return 0;
-}
-
-int gcm_finish(gcm_context *ctx, uint8_t *tag, size_t tag_len) {
-  u64 orig_len = ctx->len * 8, orig_add_len = ctx->add_len * 8;
-  uint8_t work_buf[16];
-  if(tag_len != 0) memcpy(tag, ctx->base_ectr, tag_len);
-  if(orig_len || orig_add_len) {
-    memset(work_buf, 0, 16);
-    PUT_UINT32_BE((orig_add_len >> 32), work_buf, 0);
-    PUT_UINT32_BE((orig_add_len), work_buf, 4);
-    PUT_UINT32_BE((orig_len >> 32), work_buf, 8);
-    PUT_UINT32_BE((orig_len), work_buf, 12);
-    for(size_t i = 0; i < 16; i++) ctx->buf[i] ^= work_buf[i];
-    gcm_mult(ctx, ctx->buf, ctx->buf);
-    for(size_t i = 0; i < tag_len; i++) tag[i] ^= ctx->buf[i];
-  }
-  return 0;
-}
-
-void gcm_zero_ctx(gcm_context *ctx) {
-  memset(ctx, 0, sizeof(gcm_context));
-}
-
-static void set_ctxparm(ctx_param *c, const uint8_t *i, size_t il, uint8_t *a, size_t al, const uint8_t *in, size_t inl, uint8_t *t, size_t tl) {
-  memset(&(*c), 0, sizeof(ctx_param));
-  memcpy(&(*c).iv, i, il);
-  (*c).iv_len = il;
-  memcpy((*c).aad, a, al);
-  (*c).aad_len = al;
-  memcpy((*c).input, in, inl);
-  memcpy((*c).tag, t, tl);
-  (*c).tag_len = tl;
-}
-// AES GCM
-int aes_gcm_encrypt(uint8_t *out, const uint8_t *in, int in_len, const uint8_t *key, const size_t key_len, const uint8_t *iv, const size_t iv_len) {
-  uint8_t *tag_buf = NULL;
-  size_t tl = 0;
-  gcm_context c;
-  ctx_param cprm;
-  gcm_setkey(&c, key, (const uint32_t)key_len);
-  set_ctxparm(&cprm, iv, iv_len, NULL, 0, in, in_len, tag_buf, tl);
-  gcm_crypt_and_tag2(&c, 1, &cprm);
-  gcm_zero_ctx(&c);
-  return 0;
-}
-
-int aes_gcm_decrypt(uint8_t *out, const uint8_t *in, int in_len, const uint8_t *key, const size_t key_len, const uint8_t *iv, const size_t iv_len) {
-  uint8_t *tag_buf = NULL;
-  size_t tl = 0;
-  gcm_context c;
-  ctx_param cprm;
-  gcm_setkey(&c, key, (const uint32_t)key_len);
-  set_ctxparm(&cprm, iv, iv_len, NULL, 0, in, in_len, tag_buf, tl);
-  gcm_crypt_and_tag2(&c, 1, &cprm);
-  gcm_zero_ctx(&c);
-  return 0;
-}
-
-// TEST AES GCM functions
-static int verify_gcm_encryption(ctx_param par) {
-  uint8_t ct_buf[256], tag_buf[16];
-  gcm_context ctx;
-  gcm_setkey(&ctx, par.key, par.key_len);
-  int ret = gcm_crypt_and_tag(&ctx, ENCRYPT, par.iv, par.iv_len, par.aad, par.aad_len, par.pt, ct_buf, par.ct_len, tag_buf, par.tag_len);
-  ret |= memcmp(ct_buf, par.ct, par.ct_len);
-  ret |= memcmp(tag_buf, par.tag, par.tag_len);
-  gcm_zero_ctx(&ctx);
-  return ret;
-}
-
-static int verify_gcm_decryption(ctx_param par) {
-  uint8_t pt_buf[256];
-  gcm_context ctx;
-  gcm_setkey(&ctx, par.key, par.key_len);
-  int ret = gcm_auth_decrypt(&ctx, par.iv, par.iv_len, par.aad, par.aad_len, par.ct, pt_buf, par.ct_len, par.tag, par.tag_len);
-  ret |= memcmp(pt_buf, par.pt, par.ct_len);
-  gcm_zero_ctx(&ctx);
-  return ret;
-}
-
-static int verify_bad_decryption(ctx_param par) {
-  uint8_t pt_buf[256];
-  gcm_context ctx;
-  gcm_setkey(&ctx, par.key, par.key_len);
-  int ret = gcm_auth_decrypt(&ctx, par.iv, par.iv_len, par.aad, par.aad_len, par.ct, pt_buf, par.ct_len, par.tag, par.tag_len);
-  ret ^= GCM_AUTH_FAILURE;
-  gcm_zero_ctx(&ctx);
-  return ret;
-}
-
-static void bump_vd(uint8_t **key, size_t *key_len, uint8_t **vd) {
-  (*key_len) = *(*vd)++;
-  (*key) = (*vd);
-  (*vd) += (*key_len);
-}
-
-int verify_gcm(uint8_t *vd) {
-  uint8_t ret, RecordType;
-  ctx_param par;
-  while ((RecordType = *vd++)) {
-    bump_vd(&par.key, &par.key_len, &vd);
-    bump_vd(&par.iv, &par.iv_len, &vd);
-    bump_vd(&par.aad, &par.aad_len, &vd);
-    bump_vd(&par.pt, &par.pt_len, &vd);
-    bump_vd(&par.ct, &par.ct_len, &vd);
-    bump_vd(&par.tag, &par.tag_len, &vd);
-    if (RecordType == 1) {if ((ret = verify_gcm_encryption(par))) break;}
-    else if (RecordType == 2) {if ((ret = verify_gcm_decryption(par))) break;}
-    else if (RecordType == 3) {if ((ret = verify_bad_decryption(par))) break;}
-  }
-  return ret; // 0 == OK
-}
-
-int load_file_into_ram(const char *filename, uint8_t **result) {
-  FILE *f = fopen(filename, "rb");
-  if (f == NULL) {*result = NULL; return -1;}
-  fseek(f, 0, SEEK_END);
-  size_t size = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  if ((*result = (uint8_t*)malloc(size)) == 0) return -2;
-  if(size != fread(*result, sizeof(char), size, f)) {free(*result); return -3;}
-  fclose(f);
-  return size;
-}
-
 
 // AES GCM
 // https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
 // https://csrc.nist.rip/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf
-// http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
 
-// https://en.wikipedia.org/wiki/AES-GCM-SIV
-// https://www.rfc-editor.org/rfc/rfc8452.html
+// 6.2
+// Incrementing Function
+// For a positive integer s and a bit string X such that len(X)≥s, let the s-bit incrementing function, denoted incs(X)
+static inline void inc32(uint8_t *wrd) {
+  uint32_t value = read_big_endian_uint32((wrd + (16 - 4)));
+  value++;
+  big_endian_uint32((wrd + (16 - 4)), value);
+}
 
-// https://github.com/mko-x/SharedAES-GCM // ----------------- taken from this, and massaged
+// 6.3
+// Algorithm 1: X • Y
+// MULTIPLICATION Function
+// Multiplication Operation on Blocks
+static inline void GCM_MULTIPLY(uint8_t *BITZ, const uint8_t *BITX, const uint8_t *BITY) {
+  u64 Z, R=0xe1000000U, t;
+  uint8_t b8[16] = {0}, b0, b1, b2, b3, b4, b5, b6, b7;
+  uint32_t bz[16] = {0};
+  // Pre-calculate for speed
+  for (int i = 0; i < 16; i++) {
+    bz[i] = BITX[i] ^ BITY[i];
+    b0 = BITX[i] & 128, b1 = BITX[i] & 64, b2 = BITX[i] & 32, b3 = BITX[i] & 16, b4 = BITX[i] & 8, b5 = BITX[i] & 4, b6 = BITX[i] & 2, b7 = BITX[i] & 1;
+    b8[i] = (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7);
+  }
+  for (int i = 0; i < 16; i++) {
+    BITZ[i] = (b8[i]) ? bz[i] : BITZ[i];
+    t = R & Z;
+    R <<= 1;
+    R = (t & 0x10000000U) ? R ^ 0x87 : R;
+    Z = t;
+    for (int j = 0; j < 16; j++) {
+      BITZ[j] = (BITZ[j] >> (8 * j)) & 0xFF;
+    }
+  }
+}
+
+static inline void GCM_MULTIPLY32bit(uint32_t *BITZ, const uint32_t *BITX, const uint32_t *BITY) {
+  u64 Z, R=0xe1000000U, t;
+  uint8_t b8[8] = {0}, b0, b1, b2, b3, b4, b5, b6, b7;
+  uint32_t bz[8] = {0};
+  // Pre-calculate for speed
+  for (int i = 0; i < 8; i++) {
+    bz[i] = BITX[i] ^ BITY[i];
+    b0 = BITX[i] & 128, b1 = BITX[i] & 64, b2 = BITX[i] & 32, b3 = BITX[i] & 16, b4 = BITX[i] & 8, b5 = BITX[i] & 4, b6 = BITX[i] & 2, b7 = BITX[i] & 1;
+    b8[i] = (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7);
+  }
+  for (int i = 0; i < 8; i++) {
+    BITZ[i] = (b8[i]) ? bz[i] : BITZ[i]; // way faster than a if-statement
+    t = R & Z;
+    R <<= 1;
+    R = (t & 0x10000000U) ? R ^ 0x87 : R;
+    Z = t;
+    for (int j = 0; j < 8; j++) {
+      BITZ[j] = (BITZ[j] >> (8 * j)) & 0xFF;
+    }
+  }
+}
+
+// 6.4
+// Algorithm 2: GHASHh (X)
+// GHASH Function
+// In effect, the GHASH function calculates X1•Hm ⊕ X2•Hm-1 ⊕ ... ⊕ Xm-1•H2 ⊕ Xm•H. Ref. [6] describes methods for optimizing
+// implementations of GHASH in both hardware and software
+static inline void GHASH(uint8_t *Y, const uint8_t *X, const uint8_t *H, uint32_t lenx) {
+  uint8_t tmp[32] = {0};
+  memset(Y, 0, 16 * sizeof(uint8_t));
+  for (int i = 1; i < (lenx / 16) + 1; i++) {
+    xorblock(tmp, Y, X + ((i - 1) * 16));
+    GCM_MULTIPLY(Y, tmp, H);
+  }
+}
+
+static inline void GHASH32bit(uint32_t *Y, const uint32_t *X, const uint32_t *H, uint32_t lenx) {
+  uint32_t tmp[32] = {0};
+  memset(Y, 0, 8 * sizeof(uint32_t));
+  for (int i = 1; i < (lenx / 16) + 1; i++) {
+    xorblock32bit(tmp, Y, X + ((i - 1) * 8));
+    GCM_MULTIPLY32bit(Y, tmp, H);
+  }
+}
+
+// 6.5
+// Algorithm 3: GCTRk (ICB, X)
+// GCTR Function
+static inline void GCTR(uint8_t *Y, const uint8_t *ICB, const uint8_t *X, const uint8_t *key, const uint32_t lenx) {
+  uint32_t nblocks = lenx / 16, eCB[32] = {0}, CBwrd[32] = {0}, *CBinc = CBwrd;
+  uint8_t CB[32] = {0}, plain[32] = {0}, cipB[32] = {0}, eCBbytes[32] = {0}, eCBb[4] = {0}, CBb[4] = {0};
+  if (X == NULL) return;
+  for (int i = 0; i < 16; i++) CB[i] = ICB[i];
+  inc32(CB);
+  uint32_t keywrd[32] = {0};
+  uint8_t bkey[4] = {0};
+  for (int j = 0; j < 32; j+=4) {
+    bkey[0] = key[j + 0];
+    bkey[1] = key[j + 1];
+    bkey[2] = key[j + 2];
+    bkey[3] = key[j + 3];
+    keywrd[j/4] = bytes2word(bkey);
+    CBb[0] = CB[j + 0];
+    CBb[1] = CB[j + 1];
+    CBb[2] = CB[j + 2];
+    CBb[3] = CB[j + 3];
+    CBwrd[j/4] = bytes2word(CBb);
+  }
+  for (int i = 0; i < nblocks; i++) {
+    //(((i + 1) * 16) > lenx) ? break;:;
+    if (((i + 1) * 16) > lenx) break;
+    cipher(eCB, keywrd, CBinc++);
+    for (int j = 0; j < 8; j++) {
+      word2bytes(eCBb, eCB[j]);
+      eCBbytes[(j * 4) + 0] = eCBb[0];
+      eCBbytes[(j * 4) + 1] = eCBb[1];
+      eCBbytes[(j * 4) + 2] = eCBb[2];
+      eCBbytes[(j * 4) + 3] = eCBb[3];
+    }
+    memcpy(plain, X + (i * 16), 16);
+    xorblock(cipB, eCBbytes, plain);
+    memcpy(Y + (i * 16), cipB, 16);
+  }
+  uint32_t fl = lenx - (nblocks * 16);
+  cipher(eCB, keywrd, CBinc++);
+  for (int j = 0; j < 8; j++) {
+    word2bytes(eCBb, eCB[j]);
+    eCBbytes[(j * 4) + 0] = eCBb[0];
+    eCBbytes[(j * 4) + 1] = eCBb[1];
+    eCBbytes[(j * 4) + 2] = eCBb[2];
+    eCBbytes[(j * 4) + 3] = eCBb[3];
+  }
+  memcpy(plain, X + (nblocks * 16), fl);
+  xorblock(cipB, eCBbytes, plain);
+  memcpy(Y + (nblocks * 16), cipB, fl);
+}
+
+static inline void GCTR32bit(uint32_t *Y, const uint32_t *ICB, const uint32_t *X, const uint32_t *key, const uint32_t lenx) {
+  uint32_t nblocks = lenx / 8, eCB[32] = {0}, CBwrd[32] = {0}, *CBinc = CBwrd, CB[32] = {0}, plain[32]= {0}, cipB[32] = {0};
+  if (X == NULL) return;
+  for (int i = 0; i < 8; i++) CB[i] = ICB[i];
+  (*CB)++;
+  for (int i = 0; i < nblocks; i++) {
+    if (((i + 1) * 8) > lenx) break;
+    cipher(eCB, key, CBinc++);
+    memcpy(plain, X + (i * 8), 8 * sizeof(uint32_t));
+    xorblock32bit(cipB, eCB, plain);
+    memcpy(Y + (i * 8), cipB, 8 * sizeof(uint32_t));
+  }
+  uint32_t fl = lenx - (nblocks * 8);
+  cipher(eCB, key, CBinc++);
+  memcpy(plain, X + (nblocks * 8), fl);
+  xorblock32bit(cipB, eCB, plain);
+  memcpy(Y + (nblocks * 8), cipB, fl);
+}
+
+// 7.1
+// Algorithm 4: GCM-AEK (IV, P, A)
+// Algorithm for the Authenticated Encryption Function
+void gcm_ciphertag(uint8_t *c, uint8_t *t, const uint8_t *key, uint8_t *iv, const uint8_t *plain, const uint8_t *aad, const u64 lenx) {
+  u64 aadlen = 12, ivlen = 32, clen = 32;
+  if (lenx > MAXPLAIN || aadlen > MAXAAD || ivlen > MAXIV || ivlen < 1) return;
+  uint32_t keywrd[32] = {0}, hwrd[32] = {0}, hkwrd[32] = {0}, pc = (16 * (clen / 16)) - clen, pa = (16 * (aadlen / 16)) - aadlen;
+  uint32_t bhlen = aadlen + (4 * sizeof(uint32_t)) + clen;
+  uint8_t *bh = malloc(bhlen), hk[32] = {0}, h[32] = {0}, j0[16] = {0}, hb[32] = {0}, bkey[4] = {0}, bbh[4] = {0}, bhk[4] = {0};
+  memset(bh, 0, bhlen * sizeof(uint8_t));
+  for (int j = 0; j < 32; j+=4) {
+    bkey[0] = key[j + 0];
+    bkey[1] = key[j + 1];
+    bkey[2] = key[j + 2];
+    bkey[3] = key[j + 3];
+    keywrd[j/4] = bytes2word(bkey);
+    bbh[0] = h[j + 0];
+    bbh[1] = h[j + 1];
+    bbh[2] = h[j + 2];
+    bbh[3] = h[j + 3];
+    hwrd[j/4] = bytes2word(bbh);
+    bhk[0] = hk[j + 0];
+    bhk[1] = hk[j + 1];
+    bhk[2] = hk[j + 2];
+    bhk[3] = hk[j + 3];
+    hkwrd[j/4] = bytes2word(bhk);
+  }
+  cipher(hkwrd, keywrd, hwrd);
+  if (ivlen == 12) { // when does this happen?!
+    uint8_t b0[4] = {0x00, 0x00, 0x00, 0x01};
+    memcpy(iv + ivlen, b0, 4);
+  } else {
+    uint32_t pl = (16 * (ivlen / 16)) - ivlen;
+    uint8_t *bs = malloc((ivlen + pl + (2 * sizeof(uint32_t))) * sizeof(uint8_t));
+    memset(bs, 0, ivlen + pl + (2 * sizeof(uint32_t)));
+    memcpy(bs, iv, ivlen);
+    memcpy(bs + ivlen, &pl, sizeof(uint32_t));
+    memcpy(bs + ivlen + sizeof(uint32_t), &ivlen, sizeof(uint32_t));
+    GHASH(j0, bs, hk, ivlen + (2 * sizeof(uint32_t)));
+    free(bs);
+  }
+  inc32(j0);
+  (*j0)++;
+  GCTR(c, j0, plain, key, lenx);
+  memcpy(bh, aad, aadlen);
+  memcpy(bh + aadlen, &pc, sizeof(uint32_t));
+  memcpy(bh + aadlen + sizeof(uint32_t), c, clen);
+  memcpy(bh + aadlen + sizeof(uint32_t) + clen, &pa, sizeof(uint32_t));
+  memcpy(bh + aadlen + (2 * sizeof(uint32_t)) + clen, &aadlen, sizeof(uint32_t));
+  memcpy(bh + aadlen + (3 * sizeof(uint32_t)) + clen, &clen, sizeof(uint32_t));
+  GHASH(hb, bh, hk, bhlen);
+  GCTR(t, j0, hb, key, 12); // 12 = tag length?
+  free(bh);
+}
+
+void gcm_ciphertag32bit(uint32_t *c, uint32_t *t, const uint32_t *key, uint32_t *iv, const uint32_t *plain, const uint32_t *aad, const u64 lenx) {
+  u64 aadlen = 12, ivlen = 8, clen = 8;
+  if (lenx > MAXPLAIN || aadlen > MAXAAD || ivlen > MAXIV || ivlen < 1) return;
+  uint32_t pc = (8 * (clen / 8)) - clen, pa = (8 * (aadlen / 8)) - aadlen;
+  uint32_t bhlen = aadlen + (4 * sizeof(uint32_t)) + clen, hk[32] = {0}, h[32] = {0}, j0[32] = {0};
+  uint32_t *bh = malloc(bhlen * sizeof(uint32_t)), hb[32] = {0};
+  memset(bh, 0, bhlen * sizeof(uint32_t));
+  cipher(hk, key, h);
+  if (ivlen == 12) { // when does this happen?!
+    uint32_t b0[4] = {0x00000000, 0x00000000, 0x00000000, 0x000000000001};
+    memcpy(iv + ivlen, b0, 4*sizeof(uint32_t));
+  } else {
+    uint32_t pl = (16 * (ivlen / 16)) - ivlen;
+    uint32_t *bs = malloc((ivlen + pl + (2 * sizeof(uint32_t))) * sizeof(uint32_t));
+    memset(bs, 0, (ivlen + pl + (2 * sizeof(uint32_t))) * sizeof(uint32_t));
+    memcpy(bs, iv, ivlen);
+    memcpy(bs + ivlen, &pl, sizeof(uint32_t));
+    memcpy(bs + ivlen + sizeof(uint32_t), &ivlen, sizeof(uint32_t));
+    GHASH32bit(j0, bs, hk, ivlen + (2 * sizeof(uint32_t)));
+    free(bs);
+  }
+  (*j0)++;
+  (*j0)++;
+  GCTR32bit(c, j0, plain, key, lenx);
+  memcpy(bh, aad, aadlen);
+  memcpy(bh + aadlen, &pc, sizeof(uint32_t));
+  memcpy(bh + aadlen + sizeof(uint32_t), c, clen);
+  memcpy(bh + aadlen + sizeof(uint32_t) + clen, &pa, sizeof(uint32_t));
+  memcpy(bh + aadlen + (2 * sizeof(uint32_t)) + clen, &aadlen, sizeof(uint32_t));
+  memcpy(bh + aadlen + (3 * sizeof(uint32_t)) + clen, &clen, sizeof(uint32_t));
+  GHASH32bit(hb, bh, hk, bhlen);
+  GCTR32bit(t, j0, hb, key, 12); // 12 = tag length?
+  free(bh);
+}
+
+// 7.2
+// Algorithm 5: GCM-ADK (IV, C, A, T)
+// Algorithm for the Authenticated Decryption Function
+void gcm_inv_ciphertag(uint8_t *plain, uint8_t *t, const uint8_t *key, const uint8_t *iv, const uint8_t *c, const uint8_t *aad, const uint8_t *tag) {
+  u64 aadlen = 12, ivlen = 32, clen = 32;
+  if (clen > MAXPLAIN || aadlen > MAXAAD || ivlen > MAXIV || ivlen < 1) return;
+  uint32_t pc = (16 * (clen / 16)) - clen, pa = (16 * (aadlen / 16)) - aadlen, bhlen = aadlen + (4 * sizeof(uint32_t)) + clen;
+  uint32_t keywrd[32] = {0}, hwrd[32] = {0}, hkwrd[32] = {0};
+  uint8_t bkey[4] = {0}, bbh[4] = {0}, bhk[4] = {0}, hk[32] = {0}, h[32] = {0}, j0[32] = {0}, hb[32] = {0}, *bh = malloc(bhlen);
+  memset(bh, 0, bhlen * sizeof(uint8_t));
+  for (int j = 0; j < 32; j+=4) {
+    bkey[0] = key[j + 0];
+    bkey[1] = key[j + 1];
+    bkey[2] = key[j + 2];
+    bkey[3] = key[j + 3];
+    keywrd[j/4] = bytes2word(bkey);
+    bbh[0] = h[j + 0];
+    bbh[1] = h[j + 1];
+    bbh[2] = h[j + 2];
+    bbh[3] = h[j + 3];
+    hwrd[j/4] = bytes2word(bbh);
+    bhk[0] = hk[j + 0];
+    bhk[1] = hk[j + 1];
+    bhk[2] = hk[j + 2];
+    bhk[3] = hk[j + 3];
+    hkwrd[j/4] = bytes2word(bhk);
+  }
+  cipher(hkwrd, keywrd, hwrd);
+  if (ivlen == 12) { // when does this happen?!
+    uint8_t b0[4] = {0x00, 0x00, 0x00, 0x01};
+    memcpy(j0, iv, ivlen);
+    memcpy(j0 + ivlen, b0, 4);
+  } else {
+    uint32_t pl = (16 * (ivlen / 16)) - ivlen;
+    uint8_t *bs = malloc(ivlen + pl + (2 * sizeof(uint32_t)));
+    memset(bs, 0, ivlen + pl + (2 * sizeof(uint32_t)));
+    memcpy(bs, iv, ivlen);
+    memcpy(bs + ivlen, &pl, sizeof(uint32_t));
+    memcpy(bs + ivlen + sizeof(uint32_t), &ivlen, sizeof(uint32_t));
+    GHASH(j0, bs, hk, ivlen + (2 * sizeof(uint32_t)));
+    free(bs);
+  }
+  inc32(j0);
+  (*j0)++;
+  GCTR(plain, j0, c, key, clen);
+  memcpy(bh, aad, aadlen);
+  memcpy(bh + aadlen, &pc, sizeof(uint32_t));
+  memcpy(bh + aadlen + sizeof(uint32_t), c, clen);
+  memcpy(bh + aadlen + sizeof(uint32_t) + clen, &pa, sizeof(uint32_t));
+  memcpy(bh + aadlen + (2 * sizeof(uint32_t)) + clen, &aadlen, sizeof(uint32_t));
+  memcpy(bh + aadlen + (3 * sizeof(uint32_t)) + clen, &clen, sizeof(uint32_t));
+  GHASH(hb, bh, hk, bhlen);
+  GCTR(t, j0, hb, key, 12); // 12 = tag length?
+  assert(memcmp(t, tag, 16 * sizeof(uint8_t)) == 0);
+  free(bh);
+}
+
+void gcm_inv_ciphertag32bit(uint32_t *plain, uint32_t *t, const uint32_t *key, const uint32_t *iv, const uint32_t *c, const uint32_t *aad, const uint32_t *tag) {
+  u64 aadlen = 12, ivlen = 8, clen = 8;
+  if (clen > MAXPLAIN || aadlen > MAXAAD || ivlen > MAXIV || ivlen < 1) return;
+  uint32_t pc = (8 * (clen / 8)) - clen, pa = (8 * (aadlen / 8)) - aadlen, bhlen = aadlen + (4 * sizeof(uint32_t)) + clen;
+  uint32_t j0[32] = {0}, hk[32] = {0}, h[32] = {0}, hb[32] = {0}, *bh = malloc(bhlen * sizeof(uint32_t));
+  memset(bh, 0, bhlen * sizeof(uint32_t));
+  cipher(hk, key, h);
+  if (ivlen == 12) { // when does this happen?!
+    uint32_t b0[4] = {0x00000000, 0x00000000, 0x00000000, 0x00000001};
+    memcpy(j0, iv, ivlen * sizeof(uint32_t));
+    memcpy(j0 + ivlen, b0, 4 * sizeof(uint32_t));
+  } else {
+    uint32_t pl = (16 * (ivlen / 16)) - ivlen;
+    uint32_t *bs = malloc((ivlen + pl + (2 * sizeof(uint32_t))) * sizeof(uint32_t));
+    memset(bs, 0, (ivlen + pl + (2 * sizeof(uint32_t))) * sizeof(uint32_t));
+    memcpy(bs, iv, ivlen);
+    memcpy(bs + ivlen, &pl, sizeof(uint32_t));
+    memcpy(bs + ivlen + sizeof(uint32_t), &ivlen, sizeof(uint32_t));
+    GHASH32bit(j0, bs, hk, ivlen + (2 * sizeof(uint32_t)));
+    free(bs);
+  }
+  (*j0)++;
+  (*j0)++;
+  GCTR32bit(plain, j0, c, key, clen);
+  memcpy(bh, aad, aadlen);
+  memcpy(bh + aadlen, &pc, sizeof(uint32_t));
+  memcpy(bh + aadlen + sizeof(uint32_t), c, clen);
+  memcpy(bh + aadlen + sizeof(uint32_t) + clen, &pa, sizeof(uint32_t));
+  memcpy(bh + aadlen + (2 * sizeof(uint32_t)) + clen, &aadlen, sizeof(uint32_t));
+  memcpy(bh + aadlen + (3 * sizeof(uint32_t)) + clen, &clen, sizeof(uint32_t));
+  GHASH32bit(hb, bh, hk, bhlen);
+  GCTR32bit(t, j0, hb, key, 12); // 12 = tag length?
+  assert(memcmp(t, tag, 8 * sizeof(uint32_t)) == 0);
+  free(bh);
+}
+
+// Code grabbed from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf and massaged
+
+// good read:
+//   https://engineering.purdue.edu/kak/compsec/NewLectures/Lecture8.pdf
+//   https://www.cse.wustl.edu/~jain/cse571-11/ftp/l_05aes.pdf
+//   https://ie.u-ryukyu.ac.jp/~wada/design04/spec_e.html
+//   https://blog.0x7d0.dev/education/how-aes-is-implemented/
+//   https://github.com/m3y54m/aes-in-c?tab=readme-ov-file#the-rijndael-key-schedule
+//   https://en.wikipedia.org/wiki/Rijndael_S-box
+//   https://csrc.nist.gov/csrc/media/Events/2023/third-workshop-on-block-cipher-modes-of-operation/documents/accepted-papers/Galois%20Counter%20Mode%20with%20Secure%20Short%20Tags.pdf
+//   https://medium.com/codex/aes-how-the-most-advanced-encryption-actually-works-b6341c44edb9
+//   https://networkbuilders.intel.com/docs/networkbuilders/advanced-encryption-standard-galois-counter-mode-optimized-ghash-function-technology-guide-1693300747.pdf
+//   https://datatracker.ietf.org/doc/html/rfc8452#appendix-A
+//   https://github.com/secworks/aes/blob/master/src/model/python/aes.py
+//   https://github.com/p4-team/crypto-commons/blob/master/crypto_commons/symmetrical/aes.py#L243
+
+// AES GCM
+// https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
+// https://csrc.nist.rip/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf

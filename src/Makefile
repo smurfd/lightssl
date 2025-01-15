@@ -1,4 +1,3 @@
-CL:=gcc -O3 -Wall -pedantic -std=c99
 CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=.build
 
@@ -8,22 +7,22 @@ mkbuilddir:
 	mkdir -p ${BUILD}
 
 lightciphers:
-	${CL} -c lightciphers.c -o ${BUILD}/lightciphers.o
+	${CC} -c lightciphers.c -o ${BUILD}/lightciphers.o
 
 lightcrypto1:
-	${CL} -c lightcrypto.c -o ${BUILD}/lightcrypto.o
+	${CC} -c lightcrypto.c -o ${BUILD}/lightcrypto.o
 
 lighthash:
-	${CL} -c lighthash.c -o ${BUILD}/lighthash.o
+	${CC} -c lighthash.c -o ${BUILD}/lighthash.o
 
 lightkeys:
-	${CL} -c lightkeys.c -o ${BUILD}/lightkeys.o
+	${CC} -c lightkeys.c -o ${BUILD}/lightkeys.o
 
 lighttools:
-	${CL} -c lighttools.c -o ${BUILD}/lighttools.o
+	${CC} -c lighttools.c -o ${BUILD}/lighttools.o
 
 lightaes:
-	${CL} -c lightaes.c -o ${BUILD}/lightaes.o
+	${CC} -c lightaes.c -o ${BUILD}/lightaes.o
 
 test:
 	make -Ctests
