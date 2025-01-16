@@ -14,9 +14,9 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get -y install gcc make git openssl
     - name: Generate cert debug
-      run: sh src/scripts/gen_cert_debug.sh
+      run: sh lightssl/src/scripts/gen_cert_debug.sh
     - name: Compile
-      run: make -Csrc
+      run: make -Clightssl/src
 
   build-latest-debug:
     runs-on: ubuntu-latest
@@ -25,6 +25,6 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get -y install gcc make git openssl
     - name: Generate cert debug
-      run: sh src/scripts/gen_cert_debug.sh
+      run: sh lightssl/src/scripts/gen_cert_debug.sh
     - name: Compile
-      run: make -Csrc
+      run: make -Clightssl/src
