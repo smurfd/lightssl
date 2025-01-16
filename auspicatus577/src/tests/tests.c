@@ -168,6 +168,24 @@ riatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui offici
   return 1;
 }
 
+uint8_t test_hash3bigloop(void) {
+  uint8_t *plain = (uint8_t*)"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt\
+ ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip e\
+x ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pa\
+riatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+  res = 0;
+  clock_t start = clock();
+  for (int i = 0; i < 1000000; i++) {
+    char s[256] = {0};
+    hash_new(s, plain);
+    res += memcmp(s, "0xf32a9423551351df0a07c0b8c20eb972367c398d61066038e16986448ebfbc3d15ede0ed3693e3905e9a8c601d9d002a0\
+6853b9797ef9ab10cbde1009c7d0f09", 130);
+  }
+  assert(res == 0);
+  printf("hash3bigloop: Time %us %ums\n", (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) / 1000, (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) % 1000);
+  return 1;
+}
+
 uint8_t test_hash3shk(void) {
   uint8_t res[] = {0x0d, 0xcf, 0xbc, 0x11, 0xbd, 0xd2, 0x43, 0x82, 0x4b, 0x31, 0xe5, 0x13, 0x5b, 0x8f, 0x83, 0xfa, 0x1c,
        0x11, 0x8d, 0xd7, 0x6a, 0xc0, 0xea, 0xaf, 0xee, 0x19, 0x10, 0x17, 0x0b, 0xa5, 0x61, 0x89, 0xa5, 0x8d, 0x21, 0x2a,
@@ -275,6 +293,7 @@ int main(int argc, char** argv) {
       ret &= test_aesgcm32bitloop();
       ret &= test_hash3();
       ret &= test_hash3big();
+      ret &= test_hash3bigloop();
      // ret &= test_hash3shk();
      // ret &= test_hash3shkbig();
      // ret &= test_hash3shkref();
