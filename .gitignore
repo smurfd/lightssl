@@ -1,6 +1,6 @@
 .DS_Store
-lightssl/src/lightcrypto/__*
-lightssl/src/lightbig
-lightssl/src/.build/
+auspicatus577/src/lightcrypto/__*
+auspicatus577/src/lightbig
+auspicatus577/src/.build/
 ca*
-lightssl/src/rewrite/lightssl/src/.build
+auspicatus577/src/rewrite/auspicatus577/src/.build

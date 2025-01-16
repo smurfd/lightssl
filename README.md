@@ -1,12 +1,14 @@
 ```
-@@@      @@@  @@@@@@@  @@@  @@@ @@@@@@@  @@@@@@  @@@@@@ @@@
-@@!      @@! !@@       @@!  @@@   @@!   !@@     !@@     @@!
-@!!      !!@ !@! @!@!@ @!@!@!@!   @!!    !@@!!   !@@!!  @!!
-!!:      !!: :!!   !!: !!:  !!!   !!:       !:!     !:! !!:
-: ::.: : :    :: :: :   :   : :    :    ::.: :  ::.: :  : ::.: :
+ @@@@@@  @@@  @@@  @@@@@@ @@@@@@@  @@@  @@@@@@@  @@@@@@  @@@@@@@ @@@  @@@  @@@@@@ @@@@@@@ @@@@@@@@ @@@@@@@@
+@@!  @@@ @@!  @@@ !@@     @@!  @@@ @@! !@@      @@!  @@@   @@!   @@!  @@@ !@@     !@@          @@!      @@!
+@!@!@!@! @!@  !@!  !@@!!  @!@@!@!  !!@ !@!      @!@!@!@!   @!!   @!@  !@!  !@@!!  !!@@!!      @!!      @!!
+!!:  !!! !!:  !!!     !:! !!:      !!: :!!      !!:  !!!   !!:   !!:  !!!     !:!     !:!  .!!:     .!!:
+ :   : :  :.:: :  ::.: :   :       :    :: :: :  :   : :    :     :.:: :  ::.: :  :: : :  : :      : :
+     auth: smurfd 2024   SSL, sneaky like natures bandit
 ```
+`https://en.wikipedia.org/wiki/Raccoon`
 
-# lightSSL
+# auspicatus577
 Do SSL really need to be so hard?
 
 Ciphers: AES<br>
@@ -14,15 +16,15 @@ Keys: ECDSA<br>
 Crypto: ASN1<br>
 Hashing: SHA3-256, SHA3-512<br>
 
-### Compile lightSSL
+### Compile auspicatus577
 ```bash
-make -Clightssl/src
+make -Causpicatus577/src
 ```
 
-### Use lightSSL
-See the [tests](https://github.com/smurfd/lightssl/tree/master/lightssl/src/tests)
+### Use auspicatus577
+See the [tests](https://github.com/smurfd/auspicatus577/tree/master/auspicatus577/src/tests)
 
-### Compile your project (in the lightssl/src/example folder)
+### Compile your project (in the auspicatus577/src/example folder)
 ```bash
 clang -c -o lighttools.o ../lighttools.c -fPIC -Wall -pedantic -O3
 clang -c -o lighthash.o ../lighthash.c -fPIC -Wall -pedantic -O3
@@ -33,7 +35,7 @@ clang example.c -o example lighthash.o lighttools.o -Wall -pedantic -O3
 ./example
 rm -f example *.o
 ```
-### Small example (in the lightssl/src/example folder)
+### Small example (in the auspicatus577/src/example folder)
 ```c
 #include <stdio.h>
 #include <assert.h>
@@ -53,4 +55,4 @@ int main(void) {
 
 # Very simple Crypto handshake
 very simple Crypto handshake in Python
-[lightcrypto](https://github.com/smurfd/lightssl/tree/main/lightssl/src/lightcrypto)
+[lightcrypto](https://github.com/smurfd/auspicatus577/tree/main/auspicatus577/src/lightcrypto)
