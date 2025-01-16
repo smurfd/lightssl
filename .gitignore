@@ -3,3 +3,4 @@ src/lightcrypto/__*
 src/lightbig
 src/.build/
 ca*
+src/rewrite/lightssl/src/.build
