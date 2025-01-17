@@ -193,9 +193,9 @@ uint8_t test_hash3shk(void) {
        0x39, 0x78, 0x8b, 0x75, 0x81, 0xb5, 0xbb, 0x4f, 0x42}, in1[1024], in2[1024], out1[512], out2[512];
   char s[] = "smurfd";
   memcpy(in1, s, 6 * sizeof(uint8_t)); memcpy(in2, s, 6 * sizeof(uint8_t));
-  hash_shake_new(out1, 64, in1, 6); hash_shake_new(out2, 64, in2, 6);
+  hash_shake_new((char*)out1, 64, in1, 6); hash_shake_new((char*)out2, 64, in2, 6);
   for (int i = 0; i < 64; i++) {
-    printf("%d %d: %d\n", out1[i], out2[i], res[i]);
+    printf("%x %x: %x\n", out1[i], out2[i], res[i]);
   }
   assert(memcmp((uint8_t*)out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp((uint8_t*)out2, res, 64 * sizeof(uint8_t)) == 0);
   return 1;
@@ -209,7 +209,7 @@ uint8_t test_hash3shkbig(void) {
   char s[130] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et\
  dolore magna aliqua. Ut eni";
   memcpy(in1, s, 130 * sizeof(uint8_t)); memcpy(in2, s, 130 * sizeof(uint8_t));
-  hash_shake_new(out1, 64, in1, 130); hash_shake_new(out2, 64, in2, 130);
+  hash_shake_new((char*)out1, 64, in1, 130); hash_shake_new((char*)out2, 64, in2, 130);
   assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
   return 1;
 }
@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
     ret &= test_aesgcm32bit();
     ret &= test_hash3();
     ret &= test_hash3big();
-   // ret &= test_hash3shk(); // TODO: why does these fail?
+   // ret &= test_hash3shk(); // TODO: why does these fail? not shake256
    // ret &= test_hash3shkbig();
    // ret &= test_hash3shkref();
     ret &= test_keysmake();
