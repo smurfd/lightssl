@@ -11,19 +11,19 @@ static char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
 
 //
 // 0-255 to 0x0 to 0xff
-static inline void to_hex(uint8_t h[], uint8_t d) {
+static inline void to_hex(uint8_t *h, uint8_t d) {
   h[0] = d >> 4;
   h[1] = d & 0xf;
 }
 
-static inline void to_hex_chr(char hs[], uint8_t h[]) {
+static inline void to_hex_chr(char *hs, uint8_t *h) {
   hs[0] = hex[h[0]];
   hs[1] = hex[h[1]];
 }
 
 //
 // Convert a hex bitstring to a string
-static inline void bit_hex_str(char hs[], const uint8_t *d, const int len) {
+static inline void bit_hex_str(char *hs, const uint8_t *d, const int len) {
   uint8_t h[2] = {0}, hc[2] = {0};
   hs[0] = '0';
   hs[1] = 'x';
@@ -39,8 +39,7 @@ static inline void bit_hex_str(char hs[], const uint8_t *d, const int len) {
 // Circular shift
 static inline u64 shift_cir(u64 a, u64 n) {
   u64 m = MOD(n, 64);
-  a = (m != 0) ? (a << m ^ a >> (64 - m)) : a;
-  return a;
+  return (a = (m != 0) ? (a << m ^ a >> (64 - m)) : a);
 }
 
 //
@@ -187,7 +186,7 @@ static inline uint8_t rc(u64 t) {
     for (int j = 4; j >= 2; j--) {
       r1 ^= MOD(r1, 2) << j;
     }
-    r1 = r1 >> 1;
+    r1 = r1 >> 1; // / 2
     r1 ^= r0 << 7;
   }
   return r1 >> 7;
@@ -216,7 +215,7 @@ static inline void iota(u64 (*a)[5][5], const u64 ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static void keccak_p(uint8_t s[], u64 (*ss)[5][5], const uint8_t sm[], bool str) {
+static inline void keccak_p(uint8_t *s, u64 (*ss)[5][5], const uint8_t *sm, bool str) {
   u64 a[5][5] = {0};
   if (str) str2state(&a, sm);
   else memcpy(&a, (*ss), 25 * sizeof(u64));
@@ -229,8 +228,8 @@ static void keccak_p(uint8_t s[], u64 (*ss)[5][5], const uint8_t sm[], bool str)
 
 //
 // Concatenate
-static inline u64 cat(uint8_t z[], const uint8_t x[], const u64 xl, const uint8_t y[], const u64 yl) {
-  u64 zbil = xl + yl, xl8 = xl / 8, mxl8 = MOD(xl, 8);
+static inline u64 cat(uint8_t *z, const uint8_t *x, const u64 xl, const uint8_t *y, const u64 yl) {
+  u64 zbil = xl + yl, xl8 = DIV8(xl), mxl8 = MOD(xl, 8);
   memcpy(z, x, xl8);
   for (u64 i = 0; i < mxl8; i++) {
     z[xl8] |= (x[xl8] & (1 << i));
@@ -248,8 +247,8 @@ static inline u64 cat(uint8_t z[], const uint8_t x[], const u64 xl, const uint8_
 // Steps:
 // 1. Let j = (– m – 2) mod x.
 // 2. Return P = 1 || 0j || 1.
-static inline u64 pad10(uint8_t p[], const u64 x, const u64 m) {
-  u64 j = MOD((-m - 2), x) + 2, bl = (j) / 8 + (MOD(j, 8) ? 1 : 0);
+static inline u64 pad10(uint8_t *p, const u64 x, const u64 m) {
+  u64 j = MOD((-m - 2), x) + 2, bl = (DIV8(j)) + (MOD(j, 8) ? 1 : 0);
   memset(p, 0, bl * sizeof(uint8_t));
   p[0] |= 1;
   p[bl - 1] |= (1 << MOD(j - 1, 8));
@@ -269,24 +268,24 @@ static inline u64 pad10(uint8_t p[], const u64 x, const u64 m) {
 // 8. Let Z=Z || Truncr(S).
 // 9. If d ≤ |Z|, then return Trunc d (Z); else continue.
 // 10. Let S=f(S), and continue with Step 8.
-static inline void sponge(uint8_t ps[], const uint8_t n[], const int l) {
+static inline void sponge(uint8_t *ps, const uint8_t *n, const int l) {
   uint8_t az[64] = {0}, s[200] = {0}, sc[200] = {0}, sxor[200] = {0}, str[200] = {0};
   uint8_t pad[1600] = {0}, p[1600] = {0}, pi[1600] = {0}, z[1600] = {0};
   u64 b = 1600, c = 512, zl = 0, r = b - SHA3_BITS, len = pad10(pad, r, l), plen = cat(p, n, l, pad, len); // between 500 & 1000+
   for (u64 i = 0; i < plen / r; i++) {
-    cat(pi, &p[i * r>>3],r,az,c);// / 8], r, az, c);
-    for (u64 j = 0; j < b >>3;j++){// / 8; j++) {
+    cat(pi, &p[i * DIV8(r)], r, az, c);
+    for (u64 j = 0; j < DIV8(b); j++) {
       sxor[j] = s[j] ^ pi[j];
     }
     keccak_p(s, NULL, sxor, true);
   }
   while (true) {
-    memcpy(str, s, r>>3);// / 8);
+    memcpy(str, s, DIV8(r));
     zl = cat(z, z, zl, str, r);
     if (zl >= SHA3_BITS) {
       memcpy(ps, z, 64); break;
     }
-    memcpy(sc, s, b>>3);// / 8);
+    memcpy(sc, s, DIV8(b));
     keccak_p(s, NULL, sc, true);
   }
 }
@@ -321,13 +320,13 @@ static inline void store64(uint8_t x[8], u64 u) {
   }
 }
 
-static inline void keccak_absorb(u64 s[25], uint32_t r, const uint8_t m[], uint32_t mlen, uint8_t p) {
+static inline void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
   uint8_t t[200] = {0};
   u64 ss[5][5] = {0};
   memset(s, 0, 25 * sizeof(u64));
   while (mlen >= r) {
     two2one(ss, s);
-    for (uint32_t i = 0; i < r >>3; i++) {// / 8; i++) {
+    for (uint32_t i = 0; i < DIV8(r); i++) {
       s[i] ^= load64(m + 8 * i);
     }
     keccak_p(NULL, &ss, NULL, false);
@@ -338,7 +337,7 @@ static inline void keccak_absorb(u64 s[25], uint32_t r, const uint8_t m[], uint3
   memcpy(t, m, sizeof(uint8_t) * mlen);
   t[mlen] = p;
   t[r - 1] |= 128;
-  for (uint32_t i = 0; i < r>>3; i++) {// / 8; i++) {
+  for (uint32_t i = 0; i < DIV8(r); i++) {
     s[i] ^= load64(t + 8 * i);
   }
 }
@@ -349,7 +348,7 @@ static inline void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25
   while (nblocks > 0) {
     keccak_p(NULL, &ss, NULL, false);
     one2two(s, ss);
-    for (uint32_t i = 0; i < r>>3;i++) {// / 8; i++) {
+    for (uint32_t i = 0; i < DIV8(r); i++) {
       store64(out + 8 * i, s[i]);
     }
     out += r;
@@ -382,16 +381,18 @@ void hash_new(char *s, const uint8_t *n) {
   bit_hex_str(s, ss, 64);
 }
 
-void hash_shake_new(char *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
+void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t inlen) {
   u64 nblocks = outlen / 136, st[25] = {0};
-  uint8_t t[512];
+  uint8_t t[512] = {0};
   keccak_absorb(st, 136, in, inlen, 0x1F);
   keccak_squeezeblocks((uint8_t*)out, nblocks, st, 136);
   out += nblocks * 136;
   outlen -= nblocks * 136;
   if (outlen) {
     keccak_squeezeblocks(t, 1, st, 136);
-    bit_hex_str(out, t, 64);
+    for (uint32_t i = 0; i < outlen; i++) {
+      out[i] = t[i];
+    }
   }
 }
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged

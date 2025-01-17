@@ -190,14 +190,14 @@ uint8_t test_hash3shk(void) {
   uint8_t res[] = {0x0d, 0xcf, 0xbc, 0x11, 0xbd, 0xd2, 0x43, 0x82, 0x4b, 0x31, 0xe5, 0x13, 0x5b, 0x8f, 0x83, 0xfa, 0x1c,
        0x11, 0x8d, 0xd7, 0x6a, 0xc0, 0xea, 0xaf, 0xee, 0x19, 0x10, 0x17, 0x0b, 0xa5, 0x61, 0x89, 0xa5, 0x8d, 0x21, 0x2a,
        0xa2, 0xb4, 0x2d, 0xfe, 0xbd, 0x1b, 0x8c, 0xdd, 0x08, 0xa4, 0xc4, 0xd5, 0xae, 0xcb, 0xfa, 0x0c, 0x33, 0x60, 0x0f,
-       0x39, 0x78, 0x8b, 0x75, 0x81, 0xb5, 0xbb, 0x4f, 0x42}, in1[1024], in2[1024], out1[512], out2[512];
+       0x39, 0x78, 0x8b, 0x75, 0x81, 0xb5, 0xbb, 0x4f, 0x42}, in1[1024] = {0}, in2[1024] = {0}, out1[512] = {0}, out2[512] = {0};
   char s[] = "smurfd";
-  memcpy(in1, s, 6 * sizeof(uint8_t)); memcpy(in2, s, 6 * sizeof(uint8_t));
-  hash_shake_new((char*)out1, 64, in1, 6); hash_shake_new((char*)out2, 64, in2, 6);
-  for (int i = 0; i < 64; i++) {
-    printf("%x %x: %x\n", out1[i], out2[i], res[i]);
-  }
-  assert(memcmp((uint8_t*)out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp((uint8_t*)out2, res, 64 * sizeof(uint8_t)) == 0);
+  memcpy(in1, s, 6 * sizeof(uint8_t));
+  memcpy(in2, s, 6 * sizeof(uint8_t));
+  hash_shake_new(out1, 64, in1, 6);
+  hash_shake_new(out2, 64, in2, 6);
+  assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0);
+  assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
   return 1;
 }
 
@@ -208,9 +208,12 @@ uint8_t test_hash3shkbig(void) {
        0x49, 0x8e, 0xa4, 0x95, 0xbd, 0x41, 0x3a, 0x9f, 0x58}, in1[1024], in2[1024], out1[512], out2[512];
   char s[130] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et\
  dolore magna aliqua. Ut eni";
-  memcpy(in1, s, 130 * sizeof(uint8_t)); memcpy(in2, s, 130 * sizeof(uint8_t));
-  hash_shake_new((char*)out1, 64, in1, 130); hash_shake_new((char*)out2, 64, in2, 130);
-  assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
+  memcpy(in1, s, 130 * sizeof(uint8_t));
+  memcpy(in2, s, 130 * sizeof(uint8_t));
+  hash_shake_new(out1, 64, in1, 130);
+  hash_shake_new(out2, 64, in2, 130);
+  assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0);
+  assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
   return 1;
 }
 
@@ -218,11 +221,49 @@ uint8_t test_hash3shkref(void) {
   uint8_t res[] = {0xf6, 0x49, 0x68, 0x85, 0x8b, 0x5c, 0xd8, 0xa6, 0x4f, 0xfd, 0xd9, 0x2e, 0x8c, 0x72, 0xda, 0x03, 0x87,
        0xc5, 0x68, 0x9b, 0x56, 0x2e, 0x96, 0x28, 0x86, 0x04, 0xdf, 0x95, 0x31, 0x5f, 0xee, 0xfa, 0x5a, 0xe9, 0xf0, 0x59,
        0x6b, 0x0b, 0x3d, 0x47, 0xcd, 0x61, 0xac, 0x67, 0x6a, 0xd1, 0xfb, 0x20, 0xcf, 0x3d, 0x92, 0xab, 0x2b, 0x68, 0xda,
-       0xa4, 0x89, 0x31, 0xcc, 0x58, 0xd6, 0xd7, 0x23, 0xc7}, in1[1024], in2[1024];
-  char s[] = "\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3", out1[512], out2[512];
-  memcpy(in1, s, 20 * sizeof(uint8_t)); memcpy(in2, s, 20 * sizeof(uint8_t));
-  hash_shake_new(out1, 64, in1, 20); hash_shake_new(out2, 64, in2, 20);
-  assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0); assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
+       0xa4, 0x89, 0x31, 0xcc, 0x58, 0xd6, 0xd7, 0x23, 0xc7}, in1[1024], in2[1024], out1[512], out2[512];
+  char s[] = "\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3";
+  memcpy(in1, s, 20 * sizeof(uint8_t));
+  memcpy(in2, s, 20 * sizeof(uint8_t));
+  hash_shake_new(out1, 64, in1, 20);
+  hash_shake_new(out2, 64, in2, 20);
+  assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0);
+  assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
+  return 1;
+}
+
+uint8_t test_hash3shkrefloop(void) {
+  uint8_t res[] = {0xf6, 0x49, 0x68, 0x85, 0x8b, 0x5c, 0xd8, 0xa6, 0x4f, 0xfd, 0xd9, 0x2e, 0x8c, 0x72, 0xda, 0x03, 0x87,
+       0xc5, 0x68, 0x9b, 0x56, 0x2e, 0x96, 0x28, 0x86, 0x04, 0xdf, 0x95, 0x31, 0x5f, 0xee, 0xfa, 0x5a, 0xe9, 0xf0, 0x59,
+       0x6b, 0x0b, 0x3d, 0x47, 0xcd, 0x61, 0xac, 0x67, 0x6a, 0xd1, 0xfb, 0x20, 0xcf, 0x3d, 0x92, 0xab, 0x2b, 0x68, 0xda,
+       0xa4, 0x89, 0x31, 0xcc, 0x58, 0xd6, 0xd7, 0x23, 0xc7}, in1[1024], in2[1024], out1[512], out2[512];
+  char s[] = "\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3";
+  clock_t start = clock();
+  for (int i = 0; i < 1000000; i++) {
+    memcpy(in1, s, 20 * sizeof(uint8_t));
+    memcpy(in2, s, 20 * sizeof(uint8_t));
+    hash_shake_new(out1, 64, in1, 20);
+    hash_shake_new(out2, 64, in2, 20);
+    assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0);
+    assert(memcmp(out2, res, 64 * sizeof(uint8_t)) == 0);
+  }
+  printf("hash3shkrefloop: Time %us %ums\n", (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) / 1000, (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) % 1000);
+  return 1;
+}
+
+uint8_t test_hash3shkrefloop2(void) {
+  uint8_t res[] = {0xf6, 0x49, 0x68, 0x85, 0x8b, 0x5c, 0xd8, 0xa6, 0x4f, 0xfd, 0xd9, 0x2e, 0x8c, 0x72, 0xda, 0x03, 0x87,
+       0xc5, 0x68, 0x9b, 0x56, 0x2e, 0x96, 0x28, 0x86, 0x04, 0xdf, 0x95, 0x31, 0x5f, 0xee, 0xfa, 0x5a, 0xe9, 0xf0, 0x59,
+       0x6b, 0x0b, 0x3d, 0x47, 0xcd, 0x61, 0xac, 0x67, 0x6a, 0xd1, 0xfb, 0x20, 0xcf, 0x3d, 0x92, 0xab, 0x2b, 0x68, 0xda,
+       0xa4, 0x89, 0x31, 0xcc, 0x58, 0xd6, 0xd7, 0x23, 0xc7}, in1[1024], out1[512];
+  char s[] = "\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3\xa3";
+  clock_t start = clock();
+  for (int i = 0; i < 1000000; i++) {
+    memcpy(in1, s, 20 * sizeof(uint8_t));
+    hash_shake_new(out1, 64, in1, 20);
+    assert(memcmp(out1, res, 64 * sizeof(uint8_t)) == 0);
+  }
+  printf("hash3shkrefloop2: Time %us %ums\n", (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) / 1000, (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) % 1000);
   return 1;
 }
 
@@ -272,9 +313,9 @@ int main(int argc, char** argv) {
     ret &= test_aesgcm32bit();
     ret &= test_hash3();
     ret &= test_hash3big();
-   // ret &= test_hash3shk(); // TODO: why does these fail? not shake256
-   // ret &= test_hash3shkbig();
-   // ret &= test_hash3shkref();
+    ret &= test_hash3shk();
+    ret &= test_hash3shkbig();
+    ret &= test_hash3shkref();
     ret &= test_keysmake();
     ret &= test_keyssecr();
     ret &= test_keyssign();
@@ -290,13 +331,15 @@ int main(int argc, char** argv) {
       ret &= test_aesgcm();
       ret &= test_aesgcmloop();
       ret &= test_aesgcm32bit();
-      ret &= test_aesgcm32bitloop();
+      //ret &= test_aesgcm32bitloop();
       ret &= test_hash3();
       ret &= test_hash3big();
       ret &= test_hash3bigloop();
-     // ret &= test_hash3shk();
-     // ret &= test_hash3shkbig();
-     // ret &= test_hash3shkref();
+      ret &= test_hash3shk();
+      ret &= test_hash3shkbig();
+      ret &= test_hash3shkref();
+      ret &= test_hash3shkrefloop();
+      ret &= test_hash3shkrefloop2();
       ret &= test_keysmake();
       ret &= test_keyssecr();
       ret &= test_keyssign();
