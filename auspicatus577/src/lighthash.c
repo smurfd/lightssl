@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "lighthash.h"
 
 // TODO: SLOOOOOOoooooOOO0000WW!
@@ -42,6 +43,12 @@ static inline u64 shift_cir(u64 a, u64 n) {
   return (a = (m != 0) ? (a << m ^ a >> (64 - m)) : a);
 }
 
+static inline u64 shift_cir16(u64 a, uint8_t n) {
+  uint8_t m = MOD(n, 64);
+  return (a = (m != 0) ? (a << m ^ a >> (64 - m)) : a);
+}
+
+
 //
 // The state for the KECCAK-p[b, nr] permutation is comprised of b bits.
 // The specifications in this Standard contain two other quantities related to
@@ -60,7 +67,7 @@ static inline void str2state(u64 (*a)[5][5], const uint8_t *s) {
     for (int y = 0; y < 5; y++) {
       u64 lane = 0;
       for (int z = 0; z < 8; z++) {
-        lane += shift_cir(s[8 * (5 * y + x) + z], z * 8);
+        lane += shift_cir16(s[8 * (5 * y + x) + z], z * 8);
       }
       (*a)[x][y] = lane;
     }
@@ -75,8 +82,9 @@ static inline void str2state(u64 (*a)[5][5], const uint8_t *s) {
 static inline void state2str(uint8_t *s, u64 (*a)[5][5]) {
   for (int count = 0, y = 0; y < 5; y++) {
     for (int x = 0; x < 5; x++) {
-      for (int z = 0; z < 8; z++) {
-        s[count++] = (uint8_t)(shift_cir((*a)[x][y], 64 - z * 8) & (u64)255);
+      //printf("xxx %llu\n", (*a)[x][y]);
+      for (int z = 0; z < 8; z++) { ///
+        s[count++] = (uint8_t)(shift_cir16((*a)[x][y], 64 - z * 8) & (u64)255);
       }
     }
   }
@@ -96,8 +104,8 @@ static inline void theta(u64 (*a)[5][5]) {
   }
   for (int x = 0; x < 5; x++) {
     for (int z = 0; z < 64; z++) {
-      u64 r1 = shift_cir(c[MOD(x - 1, 5)], 64 - z), r2 = shift_cir(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
-      d[x] = d[x] + shift_cir((r1 ^ r2) & 1, z);
+      uint8_t r1 = shift_cir16(c[MOD(x - 1, 5)], 64 - z), r2 = shift_cir16(c[MOD(x + 1, 5)], 64 - MOD(z - 1, 64));
+      d[x] = d[x] + shift_cir16((r1 ^ r2) & 1, z);
     }
   }
   for (int x = 0; x < 5; x++) {
@@ -119,10 +127,11 @@ static inline void rho(u64 (*a)[5][5]) {
   u64 x = 1, y = 0, xtmp = 0, ap[5][5], cb;
   memcpy(ap, *a, sizeof(u64) * 5 * 5);
   for (int t = 0; t < 24; t++) {
+    uint8_t tt = (t + 1) * (t + 2) >> 1;/// 2;
     (*a)[x][y] = 0;
     for (int z = 0; z < 64; z++) {
-      cb = (shift_cir(ap[x][y], 64 - MOD((z - (t + 1) * (t + 2) / 2), 64)) & 1);
-      (*a)[x][y] += shift_cir(cb, z);
+      cb = (shift_cir16(ap[x][y], 64 - MOD((z - tt), 64)) & 1);//(t + 1) * (t + 2) / 2), 64)) & 1);
+      (*a)[x][y] += shift_cir16(cb, z);
     }
     xtmp = x;
     x = y;
@@ -192,6 +201,98 @@ static inline uint8_t rc(u64 t) {
   return r1 >> 7;
 }
 
+/*
++rc 1 0 0 0 0 :: 1
++rc 1 0 0 1 1 :: 1
++rc 1 0 1 0 1 :: 0
++rc 0 1 1 1 0 :: 0
++rc 0 0 1 1 0 :: 0
++rc 1 0 1 0 1 :: 1
++rc 0 1 1 0 0 :: 1
++rc 1 1 1 1 1 :: 1
++rc 1 1 1 1 0 :: 0
++rc 1 0 1 1 1 :: 0
++rc 1 1 0 0 1 :: 0
++rc 0 1 0 0 1 :: 0
++rc 0 0 0 1 0 :: 0
++rc 0 1 1 0 1 :: 0
++rc 0 1 1 0 0 :: 1
++rc 1 0 0 1 1 :: 1
++rc 0 0 0 1 1 :: 0
++rc 1 0 0 0 0 :: 1
++rc 0 0 1 0 1 :: 1
++rc 1 0 0 0 0 :: 0
++rc 0 1 0 1 1 :: 0
++rc 0 1 1 1 1 :: 0
++rc 0 0 0 0 1 :: 1
++rc 1 1 1 1 1 :: 0
+*/
+/*
+rc 1 0 0 0 0 0 0:: 0 : 1: 0
+rc 0 1 0 1 1 0 0:: 1 : 32898: 1
+rc 0 1 1 1 1 0 1:: 2 : 9223372036854808714: 2
+
+rc 0 0 0 0 1 1 1:: 3 : 9223372039002292224: 3
+
+rc 1 1 1 1 1 0 0:: 4 : 32907: 4
+
+rc 1 0 0 0 0 1 0:: 5 : 2147483649: 5
+
+rc 1 0 0 1 1 1 1:: 6 : 9223372039002292353: 6
+
+rc 1 0 1 0 1 0 1:: 7 : 9223372036854808585: 7
+
+rc 0 1 1 1 0 0 0:: 8 : 138: 8
+
+rc 0 0 1 1 0 0 0:: 9 : 136: 9
+rc 1 0 1 0 1 1 0:: 10 : 2147516425: 10
+rc 0 1 1 0 0 1 0:: 11 : 2147483658: 11
+
+rc 1 1 1 1 1 1 0:: 12 : 2147516555: 12
+
+rc 1 1 1 1 0 0 1:: 13 : 9223372036854775947: 13
+rc 1 0 1 1 1 0 1:: 14 : 9223372036854808713: 14
+
+rc 1 1 0 0 1 0 1:: 15 : 9223372036854808579: 15
+
+rc 0 1 0 0 1 0 1:: 16 : 9223372036854808578: 16
+rc 0 0 0 1 0 0 1:: 17 : 9223372036854775936: 17
+
+rc 0 1 1 0 1 0 0:: 18 : 32778: 18
+rc 0 1 1 0 0 1 1:: 19 : 9223372039002259466: 19
+rc 1 0 0 1 1 1 1:: 20 : 9223372039002292353: 20
+rc 0 0 0 1 1 0 1:: 21 : 9223372036854808704: 21
+rc 1 0 0 0 0 1 0:: 22 : 2147483649: 22
+rc 0 0 1 0 1 1 1:: 23 : 9223372039002292232: 23
+*/
+
+// precalculated RC
+uint8_t rrr[24][7] = {
+  {1, 0, 0, 0, 0, 0, 0},
+  {0, 1, 0, 1, 1, 0, 0},
+  {0, 1, 1, 1, 1, 0, 1},
+  {0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 1, 1, 0, 0},
+  {1, 0, 0, 0, 0, 1, 0},
+  {1, 0, 0, 1, 1, 1, 1},
+  {1, 0, 1, 0, 1, 0, 1},
+  {0, 1, 1, 1, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0, 0},
+  {1, 0, 1, 0, 1, 1, 0},
+  {0, 1, 1, 0, 0, 1, 0},
+  {1, 1, 1, 1, 1, 1, 0},
+  {1, 1, 1, 1, 0, 0, 1},
+  {1, 0, 1, 1, 1, 0, 1},
+  {1, 1, 0, 0, 1, 0, 1},
+  {0, 1, 0, 0, 1, 0, 1},
+  {0, 0, 0, 1, 0, 0, 1},
+  {0, 1, 1, 0, 1, 0, 0},
+  {0, 1, 1, 0, 0, 1, 1},
+  {1, 0, 0, 1, 1, 1, 1},
+  {0, 0, 0, 1, 1, 0, 1},
+  {1, 0, 0, 0, 0, 1, 0},
+  {0, 0, 1, 0, 1, 1, 1}
+};
 //
 // Steps:
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and
@@ -202,9 +303,14 @@ static inline uint8_t rc(u64 t) {
 // 5. Return A′.
 static inline void iota(u64 (*a)[5][5], const u64 ir) {
   u64 r = 0;
+  int pw[7] = {0, 1, 3, 7, 15, 31, 63}, c[7] = {0, 1, 3, 7, 15, 31, 63};
+  //for (u64 i = 0; i <= 6; i++) {
+  //  c[i] = rc(i + 7 * ir);
+  //}
   for (u64 i = 0; i <= 6; i++) {
-    r += shift_cir(rc(i + 7 * ir), (int)pow(2, i) - 1);
+    r += shift_cir16(rrr[ir][i], pw[i]);//c[i], pw[i]);//rc(i + 7 * ir), pw[i]);
   }
+//printf("rc %llu %llu %llu %llu %llu %llu %llu:: %llu : %llu: %d\n", c[0], c[1], c[2], c[3], c[4], c[5], c[6], ir, r, ii);
   (*a)[0][0] ^= r;
 }
 
@@ -292,17 +398,27 @@ static inline void sponge(uint8_t *ps, const uint8_t *n, const int l) {
 
 static inline void two2one(u64 ret[5][5], u64 a[25]) {
   for (int i = 0; i < 5; i++) {
-    for (int j = 0; j < 5; j++) {
-      ret[j][i] = a[j + 5 * i];
-    }
+    //for (int j = 0; j < 5; j++) {
+    //  ret[j][i] = a[j + 5 * i];
+    //}
+    ret[0][i] = a[(5 * i) + 0];
+    ret[1][i] = a[(5 * i) + 1];
+    ret[2][i] = a[(5 * i) + 2];
+    ret[3][i] = a[(5 * i) + 3];
+    ret[4][i] = a[(5 * i) + 4];
   }
 }
 
 static inline void one2two(u64 ret[25], u64 a[5][5]) {
   for (int i = 0; i < 5; i++) {
-    for (int j = 0; j < 5; j++) {
-      ret[j + 5 * i] = a[j][i];
-    }
+    //for (int j = 0; j < 5; j++) {
+    //  ret[j + 5 * i] = a[j][i];
+    //}
+    ret[(5 * i) + 0] = a[0][i];
+    ret[(5 * i) + 1] = a[1][i];
+    ret[(5 * i) + 2] = a[2][i];
+    ret[(5 * i) + 3] = a[3][i];
+    ret[(5 * i) + 4] = a[4][i];
   }
 }
 
@@ -352,7 +468,8 @@ static inline void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25
       store64(out + 8 * i, s[i]);
     }
     out += r;
-    --nblocks;
+    //--nblocks;
+    nblocks--;
   }
 }
 
@@ -390,9 +507,10 @@ void hash_shake_new(uint8_t *out, uint32_t outlen, const uint8_t *in, uint32_t i
   outlen -= nblocks * 136;
   if (outlen) {
     keccak_squeezeblocks(t, 1, st, 136);
-    for (uint32_t i = 0; i < outlen; i++) {
-      out[i] = t[i];
-    }
+    //for (uint32_t i = 0; i < outlen; i++) {
+    //  out[i] = t[i];
+    //}
+    memcpy(out, t, outlen * sizeof(uint8_t));
   }
 }
 // Code grabbed from https://www.rfc-editor.org/rfc/rfc6234 and massaged

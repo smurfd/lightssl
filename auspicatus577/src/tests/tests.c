@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
@@ -331,7 +332,7 @@ int main(int argc, char** argv) {
       ret &= test_aesgcm();
       ret &= test_aesgcmloop();
       ret &= test_aesgcm32bit();
-      //ret &= test_aesgcm32bitloop();
+      ret &= test_aesgcm32bitloop();
       ret &= test_hash3();
       ret &= test_hash3big();
       ret &= test_hash3bigloop();
