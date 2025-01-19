@@ -1,14 +1,11 @@
 CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=.build
 
-all: mkbuilddir lightciphers lighttools lightcrypto1 lighthash lightkeys lightaes test
-local: mkbuilddir lightciphers lighttools lightcrypto1 lighthash lightkeys lightaes test_local
+all: mkbuilddir lighttools lightcrypto1 lighthash lightkeys lightaes test
+local: mkbuilddir lighttools lightcrypto1 lighthash lightkeys lightaes test_local
 
 mkbuilddir:
 	mkdir -p ${BUILD}
-
-lightciphers:
-	${CC} -c lightciphers.c -o ${BUILD}/lightciphers.o
 
 lightcrypto1:
 	${CC} -c lightcrypto.c -o ${BUILD}/lightcrypto.o
