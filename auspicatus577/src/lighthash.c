@@ -265,6 +265,25 @@ static inline uint16_t pad10(uint8_t *p, const uint16_t x, const uint16_t m) {
   return j;
 }
 
+static inline void keccak_p1(uint8_t *s, const uint8_t *sm) { // str true
+  u64 a[5][5] = {0};
+  str2state(&a, sm);
+  for (int i = 0; i <= 23; i++) {
+    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
+  }
+  state2str(s, &a);
+}
+
+static inline void keccak_p2(u64 (*ss)[5][5]) { // str false
+  u64 a[5][5] = {0};
+  memcpy(&a, (*ss), 25 * sizeof(u64));
+  for (int i = 0; i <= 23; i++) {
+    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
+  }
+  memcpy((*ss), &a, 25 * sizeof(u64));
+}
+
+
 //
 // Steps:
 // 1. Let P=N || pad(r, len(N)).
@@ -287,7 +306,7 @@ static inline void sponge(uint8_t *ps, const uint8_t *n, const int l) {
     for (uint16_t j = 0; j < DIV8(b); j++) {
       sxor[j] = s[j] ^ pi[j];
     }
-    keccak_p(s, NULL, sxor, true);
+    keccak_p1(s, sxor);
   }
   while (true) {
     memcpy(str, s, DIV8(r));
@@ -296,7 +315,7 @@ static inline void sponge(uint8_t *ps, const uint8_t *n, const int l) {
       memcpy(ps, z, 64); break;
     }
     memcpy(sc, s, DIV8(b));
-    keccak_p(s, NULL, sc, true);
+    keccak_p1(s, sc);
   }
 }
 
@@ -343,7 +362,7 @@ static inline void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32
     for (uint32_t i = 0; i < DIV8(r); i++) {
       s[i] ^= load64(m + 8 * i);
     }
-    keccak_p(NULL, &ss, NULL, false);
+    keccak_p2(&ss);
     mlen -= r;
     m += r;
     one2two(s, ss);
@@ -360,7 +379,7 @@ static inline void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25
   u64 ss[5][5] = {0};
   two2one(ss, s);
   while (nblocks > 0) {
-    keccak_p(NULL, &ss, NULL, false);
+    keccak_p2(&ss);
     one2two(s, ss);
     for (uint32_t i = 0; i < DIV8(r); i++) {
       store64(out + 8 * i, s[i]);
