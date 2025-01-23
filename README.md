@@ -1,14 +1,18 @@
 ```
- @@@@@@  @@@  @@@  @@@@@@ @@@@@@@  @@@  @@@@@@@  @@@@@@  @@@@@@@ @@@  @@@  @@@@@@ @@@@@@@ @@@@@@@@ @@@@@@@@
-@@!  @@@ @@!  @@@ !@@     @@!  @@@ @@! !@@      @@!  @@@   @@!   @@!  @@@ !@@     !@@          @@!      @@!
-@!@!@!@! @!@  !@!  !@@!!  @!@@!@!  !!@ !@!      @!@!@!@!   @!!   @!@  !@!  !@@!!  !!@@!!      @!!      @!!
-!!:  !!! !!:  !!!     !:! !!:      !!: :!!      !!:  !!!   !!:   !!:  !!!     !:!     !:!  .!!:     .!!:
- :   : :  :.:: :  ::.: :   :       :    :: :: :  :   : :    :     :.:: :  ::.: :  :: : :  : :      : :
+             _,.---._    ,--.--------.   _,.---._                  ,-,--.    ,-,--.
+   _.-.    ,-.' , -  `. /==/,  -   , -\,-.' , -  `.   .-.,.---.  ,-.'-  _\ ,-.'-  _\  _.-.
+ .-,.'|   /==/_,  ,  - \\==\.-.  - ,-./==/_,  ,  - \ /==/  `   \/==/_ ,_.'/==/_ ,_.'.-,.'|
+|==|, |  |==|   .=.     |`--`\==\- \ |==|   .=.     |==|-, .=., \==\  \   \==\  \  |==|, |
+|==|- |  |==|_ : ;=:  - |     \==\_ \|==|_ : ;=:  - |==|   '='  /\==\ -\   \==\ -\ |==|- |
+|==|, |  |==| , '='     |     |==|- ||==| , '='     |==|- ,   .' _\==\ ,\  _\==\ ,\|==|, |
+|==|- `-._\==\ -    ,_ /      |==|, | \==\ -    ,_ /|==|_  . ,'./==/\/ _ |/==/\/ _ |==|- `-._
+/==/ - , ,/'.='. -   .'       /==/ -/  '.='. -   .' /==/  /\ ,  )==\ - , /\==\ - , /==/ - , ,/
+`--`-----'   `--`--''         `--`--`    `--`--''   `--`-`--`--' `--`---'  `--`---'`--`-----'
      auth: smurfd 2024   SSL, sneaky like natures bandit
 ```
 `https://en.wikipedia.org/wiki/Raccoon`
 
-# auspicatus577
+# lotorssl
 Do SSL really need to be so hard?
 
 Ciphers: AES<br>
@@ -16,15 +20,15 @@ Keys: ECDSA<br>
 Crypto: ASN1<br>
 Hashing: SHA3-256, SHA3-512<br>
 
-### Compile auspicatus577
+### Compile lotorssl
 ```bash
-make -Causpicatus577/src
+make -lotorssl/src
 ```
 
-### Use auspicatus577
-See the [tests](https://github.com/smurfd/auspicatus577/tree/master/auspicatus577/src/tests)
+### Use lotorssl
+See the [tests](https://github.com/smurfd/lotorssl/tree/master/lotorssl/src/tests)
 
-### Compile your project (in the auspicatus577/src/example folder)
+### Compile your project (in the lotorssl/src/example folder)
 ```bash
 clang -c -o lighttools.o ../lighttools.c -fPIC -Wall -pedantic -O3
 clang -c -o lighthash.o ../lighthash.c -fPIC -Wall -pedantic -O3
@@ -35,7 +39,7 @@ clang example.c -o example lighthash.o lighttools.o -Wall -pedantic -O3
 ./example
 rm -f example *.o
 ```
-### Small example (in the auspicatus577/src/example folder)
+### Small example (in the lotorssl/src/example folder)
 ```c
 #include <stdio.h>
 #include <assert.h>
@@ -55,4 +59,4 @@ int main(void) {
 
 # Very simple Crypto handshake
 very simple Crypto handshake in Python
-[lightcrypto](https://github.com/smurfd/auspicatus577/tree/main/auspicatus577/src/lightcrypto)
+[lightcrypto](https://github.com/smurfd/lotorssl/tree/main/lotorssl/src/lightcrypto)
