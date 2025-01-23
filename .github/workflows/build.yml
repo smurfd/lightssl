@@ -14,9 +14,9 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get -y install gcc make openssl
     - name: Generate cert debug
-      run: sh auspicatus577/src/scripts/gen_cert_debug.sh
+      run: sh lotorssl/src/scripts/gen_cert_debug.sh
     - name: Compile
-      run: make -Causpicatus577/src
+      run: make -Clotorssl/src
 
   build-latest-debug:
     runs-on: ubuntu-latest
@@ -25,6 +25,6 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get -y install gcc make openssl
     - name: Generate cert debug
-      run: sh auspicatus577/src/scripts/gen_cert_debug.sh
+      run: sh lotorssl/src/scripts/gen_cert_debug.sh
     - name: Compile
-      run: make -Causpicatus577/src
+      run: make -Clotorssl/src
