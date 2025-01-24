@@ -6,8 +6,29 @@
 #include <stdio.h>
 #include "lighthash.h"
 
-// TODO: SLOOOOOOoooooOOO0000WW!
-// TODO: FIX: rewrite to use uint8_t instead of u64 when xor:ing, extremely slow to xor u64 and u64
+/*
+hash3bigloop: Time 155s 658ms
+hash3shkrefloop: Time 18s 553ms
+hash3shkrefloop2: Time 18s 679ms
+
+hash3bigloop: Time 13s 261ms
+hash3shkrefloop: Time 0s 852ms
+hash3shkrefloop2: Time 0s 863ms
+10-20x improvement
+*/
+
+static const uint64_t rc_precalc[24] = {
+  0x0000000000000001, 0x0000000000008082, 0x800000000000808a, 0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
+  0x8000000080008081, 0x8000000000008009, 0x000000000000008a, 0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
+  0x000000008000808b, 0x800000000000008b, 0x8000000000008089, 0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
+  0x000000000000800a, 0x800000008000000a, 0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008
+};
+static const uint8_t rotnr_precalc[24] = {
+  1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14, 27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44
+};
+static const uint8_t pipos_precalc[24] = {
+  10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1
+};
 
 //
 // 0-255 to 0x0 to 0xff
@@ -39,10 +60,38 @@ static inline u64 shift_cir16(u64 a, uint8_t n) {
   return (a = (m != 0) ? (a << m ^ a >> (64 - m)) : a);
 }
 
-static inline u64 shift_cir8(uint8_t a, uint8_t n) {
-  u64 ret = a;
-  uint8_t m = MOD(n, 64);
-  return (ret = (m != 0) ? ((u64)a << m ^ (u64)a >> (64 - m)) : ret);
+static inline void one_2_two(u64 ret[5][5], u64 a[25]) {
+  for (uint8_t i = 0; i < 5; i++) {
+    ret[0][i] = a[(5 * i) + 0];
+    ret[1][i] = a[(5 * i) + 1];
+    ret[2][i] = a[(5 * i) + 2];
+    ret[3][i] = a[(5 * i) + 3];
+    ret[4][i] = a[(5 * i) + 4];
+  }
+}
+
+static inline void two_2_one(u64 ret[25], u64 a[5][5]) {
+  for (uint8_t i = 0; i < 5; i++) {
+    ret[(5 * i) + 0] = a[0][i];
+    ret[(5 * i) + 1] = a[1][i];
+    ret[(5 * i) + 2] = a[2][i];
+    ret[(5 * i) + 3] = a[3][i];
+    ret[(5 * i) + 4] = a[4][i];
+  }
+}
+
+static inline u64 load64(const uint8_t x[8]) {
+  u64 r = 0;
+  for (uint8_t i = 0; i < 8; i++) {
+    r |= (u64)x[i] << 8 * i;
+  }
+  return r;
+}
+
+static inline void store64(uint8_t x[8], u64 u) {
+  for (uint8_t i = 0; i < 8; i++) {
+    x[i] = u >> 8 * i;
+  }
 }
 
 //
@@ -93,114 +142,54 @@ static inline void state2str(uint8_t *s, u64 (*a)[5][5]) {
 // 3. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
 static inline void theta(u64 (*a)[5][5]) {
-  u64 c[5] = {0}, d[5] = {0};
+  u64 c[5] = {0};
   for (uint8_t x = 0; x < 5; x++) {
     c[x] = ((*a)[x][0] ^ (*a)[x][1] ^ (*a)[x][2] ^ (*a)[x][3] ^ (*a)[x][4]);
   }
   for (uint8_t x = 0; x < 5; x++) {
-    uint8_t mx1 = MOD(x - 1, 5), mx2 = MOD(x + 1, 5);
-    for (uint8_t z = 0; z < 64; z++) {
-      uint8_t r1 = shift_cir16(c[mx1], 64 - z), r2 = shift_cir16(c[mx2], 64 - MOD(z - 1, 64));
-      d[x] = d[x] + shift_cir8((r1 ^ r2) & 1, z);
+    u64 t = c[(x + 4) % 5] ^ ROTL64(c[(x + 1) % 5], 1);
+    for (uint8_t y = 0; y < 5; y++) {
+      (*a)[x][y] ^= t;
     }
-  }
-  for (uint8_t x = 0; x < 5; x++) {
-    (*a)[x][0] ^= d[x]; (*a)[x][1] ^= d[x]; (*a)[x][2] ^= d[x]; (*a)[x][3] ^= d[x]; (*a)[x][4] ^= d[x];
   }
 }
 
 //
-// Steps:
+// Rho Steps:
 // 1. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A[0, 0, z].
 // 2. Let (x, y) = (1, 0).
 // 3. For t from 0 to 23:
 // a. for all z such that 0 ≤ z < w, let A′[x, y, z] = A[x, y, (z – (t + 1)(t + 2)/2) mod w];
 // b. let (x, y) = (y, (2x + 3y) mod 5).
 // 4. Return A′.
-static inline void rho(u64 (*a)[5][5]) {
-  uint8_t x = 1, y = 0, xtmp = 0, cb;
-  u64 ap[5][5];
-  memcpy(ap, *a, sizeof(u64) * 5 * 5);
-  for (uint8_t t = 0; t < 24; t++) {
-    uint8_t tt = (t + 1) * (t + 2) >> 1;/// 2;
-    (*a)[x][y] = 0;
-    for (uint8_t z = 0; z < 64; z++) {
-      cb = (shift_cir16(ap[x][y], 64 - MOD((z - tt), 64)) & 1);
-      (*a)[x][y] += shift_cir8(cb, z);;
-    }
-    xtmp = x;
-    x = y;
-    y = MOD((2 * xtmp + 3 * y), 5);
-  }
-}
-
 //
-// Steps:
+// Pi Steps:
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′[x, y, z]= A[(x + 3y) mod 5, x, z].
 // 2. Return A′.
-static inline void pi(u64 (*a)[5][5]) {
-  u64 ap[5][5] = {0};
-  memcpy(ap, *a, sizeof(u64) * 5 * 5);
-  for (uint8_t x = 0; x < 5; x++) {
-    for (uint8_t y = 0; y < 5; y++) {
-      (*a)[x][y] = ap[MOD((x + 3 * y), 5)][x];
-    }
+static inline void rho_pi(u64 (*a)[5][5]) {
+  u64 t = (*a)[1][0], tmp;
+  for (int i = 0; i < 24; i++) {
+    tmp = (*a)[pipos_precalc[i] % 5][pipos_precalc[i] / 5];
+    (*a)[pipos_precalc[i] % 5][pipos_precalc[i] / 5] = ROTL64(t, rotnr_precalc[i]);
+    t = tmp;
   }
 }
-
 //
 // 1. For all triples (x, y, z) such that 0 ≤ x < 5, 0 ≤ y < 5, and 0 ≤ z < w, let
 // A′ [x, y, z] = A[x, y, z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5, y, z]).
 // 2. Return A′.
 static inline void chi(u64 (*a)[5][5]) {
-  u64 ap[5][5] = {0}, one = 1, t1, t2, t3, t4;
-  memcpy(ap, *a, sizeof(u64) * 5 * 5);
+  u64 apa[5];
   for (uint8_t x = 0; x < 5; x++) {
-    uint8_t mx1 = MOD(x + 1, 5), mx2 = MOD(x + 2, 5);
     for (uint8_t y = 0; y < 5; y++) {
-      (*a)[x][y] = 0;
-      for (uint8_t z = 0; z < 64; z++) {
-        u64 sc = shift_cir8(one, z);
-        t1 = ap[x][y] & sc;
-        t2 = (ap[mx1][y] & sc) ^ sc;
-        t3 = ap[mx2][y] & sc;
-        t4 = t1 ^ (t2 & t3);
-        (*a)[x][y] += t4;
-      }
+      apa[y] = (*a)[y][x];
+    }
+    for (uint8_t y = 0; y < 5; y++) {
+      (*a)[y][x] ^= (~apa[(y + 1) % 5] & apa[(y + 2) % 5]);
     }
   }
 }
-
-//
-// Steps:
-// 1. If t mod 255 = 0, return 1.
-// 2. Let R = 10000000.
-// 3. For i from 1 to t mod 255, let:
-//   a. R=0||R;
-//   b. R[0] = R[0] ⊕ R[8];
-//   c. R[4] = R[4] ⊕ R[8];
-//   d. R[5] = R[5] ⊕ R[8];
-//   e. R[6] = R[6] ⊕ R[8];
-//   f. R =Trunc8[R].
-// 4. Return R[0]
-/*
-// Not used, precalculated
-static inline uint8_t rc(u64 t) {
-  uint8_t m = MOD(t, 255), r1 = 128, r0;
-  if (m == 0) return 1;
-  for (u64 i = 1; i <= m; i++) {
-    r0 = 0;
-    r0 ^= MOD(r1, 2);
-    for (int j = 4; j >= 2; j--) {
-      r1 ^= MOD(r1, 2) << j;
-    }
-    r1 = r1 >> 1; // / 2
-    r1 ^= r0 << 7;
-  }
-  return r1 >> 7;
-}
-*/
 
 //
 // Steps:
@@ -211,12 +200,7 @@ static inline uint8_t rc(u64 t) {
 // 4. For all z such that 0 ≤ z < w, let A′ [0, 0, z] = A′ [0, 0, z] ⊕ RC[z].
 // 5. Return A′.
 static inline void iota(u64 (*a)[5][5], const uint8_t ir) {
-  uint8_t pw[7] = {0, 1, 3, 7, 15, 31, 63};
-  u64 r = 0;
-  for (uint8_t i = 0; i <= 6; i++) {
-    r += shift_cir16(rc_precalc[ir][i], pw[i]);
-  }
-  (*a)[0][0] ^= r;
+  (*a)[0][0] ^= rc_precalc[ir];
 }
 
 //
@@ -226,15 +210,22 @@ static inline void iota(u64 (*a)[5][5], const uint8_t ir) {
 // 3. Convert A into a string S′ of length b, as described in Sec. 3.1.3.
 // 4. Return S′.
 // Rnd(A, ir) = ι(χ(π(ρ(θ(A)))), ir). // nr = 24; ir = 24 - nr; ir <= 23;
-static inline void keccak_p(uint8_t *s, u64 (*ss)[5][5], const uint8_t *sm, bool str) {
+static inline void keccak_p1(uint8_t *s, const uint8_t *sm) { // str true
   u64 a[5][5] = {0};
-  if (str) str2state(&a, sm);
-  else memcpy(&a, (*ss), 25 * sizeof(u64));
+  str2state(&a, sm);
   for (int i = 0; i <= 23; i++) {
-    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
+    theta(&a); rho_pi(&a); chi(&a); iota(&a, i);
   }
-  if (str) state2str(s, &a);
-  else memcpy((*ss), &a, 25 * sizeof(u64));
+  state2str(s, &a);
+}
+
+static inline void keccak_p2(u64 (*ss)[5][5]) { // str false
+  u64 a[5][5] = {0};
+  memcpy(&a, (*ss), 25 * sizeof(u64));
+  for (int i = 0; i <= 23; i++) {
+    theta(&a); rho_pi(&a); chi(&a); iota(&a, i);
+  }
+  memcpy((*ss), &a, 25 * sizeof(u64));
 }
 
 //
@@ -265,32 +256,12 @@ static inline uint16_t pad10(uint8_t *p, const uint16_t x, const uint16_t m) {
   return j;
 }
 
-static inline void keccak_p1(uint8_t *s, const uint8_t *sm) { // str true
-  u64 a[5][5] = {0};
-  str2state(&a, sm);
-  for (int i = 0; i <= 23; i++) {
-    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
-  }
-  state2str(s, &a);
-}
-
-static inline void keccak_p2(u64 (*ss)[5][5]) { // str false
-  u64 a[5][5] = {0};
-  memcpy(&a, (*ss), 25 * sizeof(u64));
-  for (int i = 0; i <= 23; i++) {
-    theta(&a); rho(&a); pi(&a); chi(&a); iota(&a, i);
-  }
-  memcpy((*ss), &a, 25 * sizeof(u64));
-}
-
-
 //
 // Steps:
 // 1. Let P=N || pad(r, len(N)).
 // 2. Let n = len(P)/r.
 // 3. Let c=b-r.
-// 4. Let P0, ... , Pn-1 be the unique sequence of strings of length r such
-//      that P = P0 || ... || Pn-1.
+// 4. Let P0, ... , Pn-1 be the unique sequence of strings of length r such that P = P0 || ... || Pn-1.
 // 5. Let S=0b.
 // 6. For i from 0 to n-1, let S=f(S ⊕ (Pi || 0c)).
 // 7. Let Z be the empty string.
@@ -319,53 +290,19 @@ static inline void sponge(uint8_t *ps, const uint8_t *n, const int l) {
   }
 }
 
-static inline void two2one(u64 ret[5][5], u64 a[25]) {
-  for (uint8_t i = 0; i < 5; i++) {
-    ret[0][i] = a[(5 * i) + 0];
-    ret[1][i] = a[(5 * i) + 1];
-    ret[2][i] = a[(5 * i) + 2];
-    ret[3][i] = a[(5 * i) + 3];
-    ret[4][i] = a[(5 * i) + 4];
-  }
-}
-
-static inline void one2two(u64 ret[25], u64 a[5][5]) {
-  for (uint8_t i = 0; i < 5; i++) {
-    ret[(5 * i) + 0] = a[0][i];
-    ret[(5 * i) + 1] = a[1][i];
-    ret[(5 * i) + 2] = a[2][i];
-    ret[(5 * i) + 3] = a[3][i];
-    ret[(5 * i) + 4] = a[4][i];
-  }
-}
-
-static inline u64 load64(const uint8_t x[8]) {
-  u64 r = 0;
-  for (uint8_t i = 0; i < 8; i++) {
-    r |= (u64)x[i] << 8 * i;
-  }
-  return r;
-}
-
-static inline void store64(uint8_t x[8], u64 u) {
-  for (uint8_t i = 0; i < 8; i++) {
-    x[i] = u >> 8 * i;
-  }
-}
-
 static inline void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32_t mlen, uint8_t p) {
   uint8_t t[200] = {0};
   u64 ss[5][5] = {0};
   memset(s, 0, 25 * sizeof(u64));
   while (mlen >= r) {
-    two2one(ss, s);
+    one_2_two(ss, s);
     for (uint32_t i = 0; i < DIV8(r); i++) {
       s[i] ^= load64(m + 8 * i);
     }
     keccak_p2(&ss);
     mlen -= r;
     m += r;
-    one2two(s, ss);
+    two_2_one(s, ss);
   }
   memcpy(t, m, sizeof(uint8_t) * mlen);
   t[mlen] = p;
@@ -377,10 +314,10 @@ static inline void keccak_absorb(u64 s[25], uint32_t r, const uint8_t *m, uint32
 
 static inline void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25], uint32_t r) {
   u64 ss[5][5] = {0};
-  two2one(ss, s);
+  one_2_two(ss, s);
   while (nblocks > 0) {
     keccak_p2(&ss);
-    one2two(s, ss);
+    two_2_one(s, ss);
     for (uint32_t i = 0; i < DIV8(r); i++) {
       store64(out + 8 * i, s[i]);
     }
@@ -397,13 +334,13 @@ static inline void keccak_squeezeblocks(uint8_t *out, uint32_t nblocks, u64 s[25
 // any choices of the rate r and the capacity c such that r + c is in
 // {25, 50, 100, 200, 400, 800, 1600}, i.e., one of the seven values for b in
 // Table 1.
-
+//
 // When restricted to the case b = 1600, the KECCAK family is denoted by
 // KECCAK[c]; in this case r is determined by the choice of c.
-
+//
 // In particular,
 // KECCAK[c] = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c].
-
+//
 // Thus, given an input bit string N and an output length d,
 // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
 void hash_new(char *s, const uint8_t *n) {
