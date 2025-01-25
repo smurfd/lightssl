@@ -30,7 +30,6 @@ See the [tests](https://github.com/smurfd/lotorssl/tree/master/lotorssl/src/test
 
 ### Compile your project (in the lotorssl/src/example folder)
 ```bash
-gcc -c -o tool.o ../tool.c -fPIC -Wall -pedantic -O3
 gcc -c -o hash.o ../hash.c -fPIC -Wall -pedantic -O3
 gcc -c -o keys.o ../keys.c -fPIC -Wall -pedantic -O3
 gcc -c -o cryp.o ../cryp.c -fPIC -Wall -pedantic -O3

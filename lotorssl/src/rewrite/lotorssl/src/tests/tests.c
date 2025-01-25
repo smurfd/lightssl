@@ -7,7 +7,7 @@
 #include "../ecc.h"
 
 uint8_t test_ecc(void) {
-  ecc_sign_gen();
+  ecc();
   return 1;
 }
 
