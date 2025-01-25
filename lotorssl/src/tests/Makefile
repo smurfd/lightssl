@@ -10,7 +10,7 @@ mkcrt:
 	openssl ecparam -name secp384r1 -genkey -noout -out ${BUILD}/ca.key
 
 tests:
-	${CC} -o ${BUILD}/tests tests.c ${BUILD}/lightaes.o ${BUILD}/lightkeys.o ${BUILD}/lighttools.o ${BUILD}/lighthash.o ${BUILD}/lightcrypto.o -lpthread -lm
+	${CC} -o ${BUILD}/tests tests.c ${BUILD}/ciph.o ${BUILD}/keys.o ${BUILD}/hash.o ${BUILD}/cryp.o -lpthread -lm
 
 runner:
 	${BUILD}/tests

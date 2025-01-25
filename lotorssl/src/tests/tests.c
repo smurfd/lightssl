@@ -6,12 +6,11 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
-#include "../lightaes.h"
-#include "../lightdefs.h"
-#include "../lighthash.h"
-#include "../lightcrypto.h"
-#include "../lighttools.h"
-#include "../lightkeys.h"
+#include "../ciph.h"
+#include "../definitions.h"
+#include "../hash.h"
+#include "../cryp.h"
+#include "../keys.h"
 
 uint8_t test_aes(void) {
   uint32_t key[8] = {0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781, 0x1f352c07, 0x3b6108d7, 0x2d9810a3, 0x0914dff4};

@@ -1,6 +1,6 @@
 // Auth: smurfd, 2024 More reading at the bottom of the file; 2 spacs indent; 150 width                                                             //
-#ifndef AES_H
-#define AES_H 1
+#ifndef CIPH_H
+#define CIPH_H 1
 #include <stdint.h>
 #define KEYSIZE1 sizeof(uint32_t) * 4
 #define KEYSIZE2 sizeof(uint32_t) * 8

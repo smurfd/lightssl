@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "lighthash.h"
+#include "hash.h"
 
 /*
 hash3bigloop: Time 155s 658ms

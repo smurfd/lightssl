@@ -1,9 +1,9 @@
 // Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
-#ifndef LIGHTCRYPTO_H
-#define LIGHTCRYPTO_H 1
+#ifndef CRYP_H
+#define CRYP_H 1
 #include <stdbool.h>
 #include <inttypes.h>
-#include "lightdefs.h"
+#include "definitions.h"
 
 typedef struct asn asn;
 typedef struct keys key;

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "lightaes.h"
+#include "ciph.h"
 
 // if (a == 1) {b = 3;} else {b = 4;} ==
 // b = (a == 1) ? 3 : 4; // way faster than a if-statement

@@ -11,7 +11,7 @@ ecc:
 	${CC} -c ecc.c -o .build/ecc.o
 
 hash:
-	${CC} -c ../../../lighthash.c -o .build/lighthash.o
+	${CC} -c ../../../hash.c -o .build/hash.o
 
 test:
 	make -Ctests

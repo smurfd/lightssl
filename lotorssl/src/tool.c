@@ -1,18 +1,18 @@
 // Auth: smurfd, 2023 More reading & Borrow/Stolen parts read at the bottom of the file; 2 spacs indent; 120 width    //
 #include <stdio.h>
 #include <inttypes.h>
-#include "lightdefs.h"
-#include "lighttools.h"
-
+#include "definitions.h"
+#include "tool.h"
+/*
 static char enc[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
   'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
   's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
-
+*/
 static u64 n1[] = {0x000003f, 0x0000fc0, 0x003f000, 0x01c0000, 0x0000800, 0x0000c080, 0x0010000, 0x00e08080, 0xf0808080},
            n2[] = {0x00efbfbf, 0x000f0000, 0x003f0000, 0x07000000, 0x00003f00, 0x0000003f};
 static char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-static prng_t prng_ctx;
-
+//static prng_t prng_ctx;
+/*
 static uint32_t oct(int i, int inl, const uint8_t d[]) {
   if (i < inl) return d[i];
   return 0;
@@ -22,7 +22,8 @@ static uint32_t sex(const char d[], char c[], int i) {
   if (d[i] == '=') return (0 & i++);
   return c[(int)d[i]];
 }
-
+*/
+/*
 //
 // Random rotate
 static u64 prng_rotate(u64 x, u64 k) {
@@ -48,6 +49,10 @@ static void prng_init(u64 seed) {
   prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
   for (u64 i = 0; i < 31; ++i) {(void)prng_next();}
 }
+*/
+
+
+/*
 
 //
 // Error "handler"
@@ -77,6 +82,19 @@ uint32_t utf8enc(uint32_t c) {
   return m;
 }
 
+*/
+
+
+
+
+
+
+
+
+
+
+
+/*
 //
 // Base64 encoder
 int base64enc(char ed[], const uint8_t *data, int inl) {
@@ -110,7 +128,8 @@ int base64dec(uint8_t dd[], const char *data, int inl) {
   }
   return ol;
 }
-
+*/
+/*
 //
 // "Randomizer"
 int lrand(uint8_t h[], u64 k[]) {
@@ -120,7 +139,8 @@ int lrand(uint8_t h[], u64 k[]) {
   }
   return 1;
 }
-
+*/
+/*
 // big[i] =
 // ((uint64_t)dig[0] << 56) |
 // ((uint64_t)dig[1] << 48) |
@@ -157,7 +177,20 @@ void bit_unpack(uint8_t byte[], const u64 big[]) {
       dig[7 - j] = big[i] >> (j * 8);
   }
 }
+*/
 
+
+
+
+
+
+
+
+
+
+
+
+/*
 //
 // 0-255 to 0x0 to 0xff
 static void to_hex(uint8_t h[], uint8_t d) {
@@ -188,6 +221,6 @@ void bit_hex_str(char hs[], const uint8_t *d, const int len) {
   }
   hs[len*2+2] = '\0';
 }
-
+*/
 // https://stackoverflow.com/questions/66715611/check-for-valid-utf-8-encoding-in-c/66723102#66723102
 // UTF8 encode/decode

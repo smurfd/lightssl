@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <math.h>
-#include "../../../lighthash.h"
+#include "../../../hash.h"
 #include "ecc.h"
 
 static inline void u64rnd_array(uint8_t *h, u64 *k, const int len) {

@@ -1,26 +1,23 @@
 CC:=gcc -O3 -Wall -pedantic -std=c99
 BUILD:=.build
 
-all: mkbuilddir lighttools lightcrypto1 lighthash lightkeys lightaes test
-local: mkbuilddir lighttools lightcrypto1 lighthash lightkeys lightaes test_local
+all: mkbuilddir cryp hash keys ciph test
+local: mkbuilddir cryp hash keys ciph test_local
 
 mkbuilddir:
 	mkdir -p ${BUILD}
 
-lightcrypto1:
-	${CC} -c lightcrypto.c -o ${BUILD}/lightcrypto.o
+cryp:
+	${CC} -c cryp.c -o ${BUILD}/cryp.o
 
-lighthash:
-	${CC} -c lighthash.c -o ${BUILD}/lighthash.o
+hash:
+	${CC} -c hash.c -o ${BUILD}/hash.o
 
-lightkeys:
-	${CC} -c lightkeys.c -o ${BUILD}/lightkeys.o
+keys:
+	${CC} -c keys.c -o ${BUILD}/keys.o
 
-lighttools:
-	${CC} -c lighttools.c -o ${BUILD}/lighttools.o
-
-lightaes:
-	${CC} -c lightaes.c -o ${BUILD}/lightaes.o
+ciph:
+	${CC} -c ciph.c -o ${BUILD}/ciph.o
 
 test:
 	make -Ctests

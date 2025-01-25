@@ -11,9 +11,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include "lightcrypto.h"
-#include "lighttools.h"
-#include "lightdefs.h"
+#include "definitions.h"
+#include "cryp.h"
 
 static uint8_t AA[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x06,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x07,0x06};
 static uint8_t AB[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01};
@@ -280,7 +279,11 @@ static int32_t der_decode(asn o[], asn oobj[], const uint8_t *der, uint32_t derl
   }
   return objcnt;
 }
-
+//
+// Error "handler"
+int err(char *s) {
+  printf("ERR: %s\n", s); return 1;
+}
 //
 // Output and parse the asn header.
 static int dump_and_parse(const uint8_t *cmsd, const uint32_t fs) {
