@@ -30,12 +30,12 @@ See the [tests](https://github.com/smurfd/lotorssl/tree/master/lotorssl/src/test
 
 ### Compile your project (in the lotorssl/src/example folder)
 ```bash
-clang -c -o lighttools.o ../lighttools.c -fPIC -Wall -pedantic -O3
-clang -c -o lighthash.o ../lighthash.c -fPIC -Wall -pedantic -O3
-clang -c -o lightkeys.o ../lightkeys.c -fPIC -Wall -pedantic -O3
-clang -c -o lightcrypto.o ../lightcrypto.c -fPIC -Wall -pedantic -O3
-clang -c -o lightciphers.o ../lightciphers.c -fPIC -Wall -pedantic -O3
-clang example.c -o example lighthash.o lighttools.o -Wall -pedantic -O3
+gcc -c -o tool.o ../tool.c -fPIC -Wall -pedantic -O3
+gcc -c -o hash.o ../hash.c -fPIC -Wall -pedantic -O3
+gcc -c -o keys.o ../keys.c -fPIC -Wall -pedantic -O3
+gcc -c -o cryp.o ../cryp.c -fPIC -Wall -pedantic -O3
+gcc -c -o ciph.o ../ciph.c -fPIC -Wall -pedantic -O3
+gcc example.c -o example hash.o tool.o -Wall -pedantic -O3
 ./example
 rm -f example *.o
 ```
@@ -44,7 +44,7 @@ rm -f example *.o
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "../lighthash.h"
+#include "../hash.h"
 
 int main(void) {
   uint8_t *smurfd = (uint8_t*)"smurfd";
