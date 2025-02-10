@@ -1,4 +1,4 @@
-CC:=gcc -O3 -Wall -pedantic -std=c99
+CC:=gcc -Ofast -Wall -pedantic -std=c99
 BUILD:=../.build
 
 all: mkcrt tests runner

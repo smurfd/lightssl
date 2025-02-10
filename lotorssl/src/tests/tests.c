@@ -294,6 +294,21 @@ uint8_t test_keyswrite(void) {
   return 1;
 }
 
+uint8_t test_keyssvrfyloop(void) {
+  uint32_t ret = 0;
+  clock_t start = clock();
+  uint8_t sig[BYTES * 2] = {0}, pubkey[BYTES + 1] = {0}, sec[BYTES] = {0}, privkey[BYTES] = {0}, h[BYTES] = {0};
+  for (int i = 0; i < 1000000; i++) {
+    ret += !keys_make(pubkey, privkey);
+    ret += !keys_secr(pubkey, privkey, sec);
+    ret += !keys_sign(privkey, h, sig);
+    ret += !keys_vrfy(pubkey, h, sig);
+  }
+  assert(ret == 0);
+  printf("keyssvrfyloop: Time %us %ums\n", (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) / 1000, (uint32_t)((clock() - start) * 1000 / CLOCKS_PER_SEC) % 1000);
+  return 1;
+}
+
 int main(int argc, char** argv) {
   int ret = 1;
   if (argc == 1) { // When run without arguments
@@ -332,6 +347,7 @@ int main(int argc, char** argv) {
       ret &= test_keyssign();
       ret &= test_keyssvrfy();
       ret &= test_keyswrite();
+      //ret &= test_keyssvrfyloop(); // Slow as fudge
     }
   }
   if (ret) printf("OK\n");

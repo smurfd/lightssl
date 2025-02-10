@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-//#include "definitions.h"
 #define BLOCK 1024
 #define LEN 4096
 #define BYTES 48
@@ -14,7 +13,6 @@
 // Imitate pythons %. -1 % 5 = 4, not -1
 #define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
 typedef struct pt {u64 x[DIGITS], y[DIGITS];} pt;
-typedef struct prng_t {u64 a, b, c, d;} prng_t;
 __extension__ typedef unsigned __int128 uint128;
 u64 keys_write(char *fn, uint8_t data[], int type);
 int keys_make(uint8_t publ[], uint8_t priv[]);

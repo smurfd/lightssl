@@ -5,13 +5,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-//#include "definitions.h"
 #include "keys.h"
-//#include "tool.h"
+
+// Static variables
 static char enc[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
   'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
   's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
-// Static variables
 static u64 curve_p[DIGITS] = {0x00000000ffffffff, 0xffffffff00000000, 0xfffffffffffffffe, 0xffffffffffffffff,
   0xffffffffffffffff,0xffffffffffffffff}, curve_b[DIGITS] = {0x2a85c8edd3ec2aef, 0xc656398d8a2ed19d, 0x0314088f5013875a,
   0x181d9c6efe814112, 0x988e056be3f82d19, 0xb3312fa7e23ee7e4}, curve_n[DIGITS] = {0xecec196accc52973, 0x581a0db248b0a77a,
@@ -19,41 +18,7 @@ static u64 curve_p[DIGITS] = {0x00000000ffffffff, 0xffffffff00000000, 0xffffffff
 static pt curve_g = {{0x3a545e3872760ab7, 0x5502f25dbf55296c, 0x59f741e082542a38, 0x6e1d3b628ba79b98, 0x8eb1c71ef320ad74,
   0xaa87ca22be8b0537},{0x7a431d7c90ea0e5f, 0x0a60b1ce1d7e819d,0xe9da3113b5f0b8c0, 0xf8f41dbd289a147c, 0x5d9e98bf9292dc29,
   0x3617de4a96262c6f}};
-static prng_t prng_ctx;
 
-//
-// Random rotate
-static u64 prng_rotate(u64 x, u64 k) {
-  return (x << k) | (x >> (32 - k));
-}
-
-//
-// Random next
-static u64 prng_next(void) {
-  u64 e = prng_ctx.a - prng_rotate(prng_ctx.b, 27);
-
-  prng_ctx.a = prng_ctx.b ^ prng_rotate(prng_ctx.c, 17);
-  prng_ctx.b = prng_ctx.c + prng_ctx.d;
-  prng_ctx.c = prng_ctx.d + e; prng_ctx.d = e + prng_ctx.a;
-  return prng_ctx.d;
-}
-
-//
-// Random init
-static void prng_init(u64 seed) {
-  prng_ctx.a = 0xea7f00d1;
-
-  prng_ctx.b = prng_ctx.c = prng_ctx.d = seed;
-  for (u64 i = 0; i < 31; ++i) {(void)prng_next();}
-}
-
-int lrand(uint8_t h[], u64 k[]) {
-  prng_init((u64)(0xea1 ^ 0x31ee7 ^ 42) | 0xe1ee77ee | 31337);
-  for (int i = 0; i < BYTES; ++i) {
-    h[i] = (uint8_t)prng_next(); k[i] = prng_next();
-  }
-  return 1;
-}
 static uint32_t oct(int i, int inl, const uint8_t d[]) {
   if (i < inl) return d[i];
   return 0;
@@ -141,10 +106,10 @@ static void u64rnd_array(uint8_t h[], u64 k[], int len) {
   int rr = read(f, &r, sizeof r);
   close(f);
   if (rr >= 0)
-  for (int i = 0; i < len; ++i) {
-    h[i] = (uint8_t)(r[i] & f7);
-    k[i] = (u64)(r[i] & f7);
-  }
+    for (int i = 0; i < len; ++i) {
+      h[i] = (uint8_t)(r[i] & f7);
+      k[i] = (u64)(r[i] & f7);
+    }
 }
 
 //
@@ -277,8 +242,8 @@ static void omega_mul(u64 *a, const u64 *b) {
   u64 d = a[DIGITS] - ovr;
   if (d > a[DIGITS]) {
     for (u64 i = 1 + DIGITS; ; ++i) {
-      --a[i];
-      if (a[i] != (u64)-1) break;
+     // --a[i];
+      if (--a[i] != (u64)-1) break;
     }
   }
   a[DIGITS] = d;
@@ -288,7 +253,8 @@ static void omega_mul(u64 *a, const u64 *b) {
 // Modulo add
 // https://www.jjj.de/fxt/fxtbook.pdf 39.1.1 add & sub
 static void mod_add(u64 *a, const u64 *b, const u64 *c, const u64 *m) {
-  if (c[0] == 0 && c[1] == 0 && c[2] == 0 && c[3] == 0 && c[4] == 0 && c[5] == 0) set(a, b);
+  u64 zeros[6] = {0};
+  if (memcmp(c, zeros, (size_t)(6 * sizeof(u64))) == 0) set(a, b);
   else {
     u64 rb[DIGITS];
     sub(rb, m, c);
@@ -618,7 +584,7 @@ static u64 write_key(FILE* ptr, const uint8_t data[]) {
   int i = 10, j = 0;
   bit_unpack(d, (u64*)data);
   j = base64enc(tmp, d, 164);
-  fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\nMIGkAgEBBD");
+  fprintf(ptr, "-----BEGIN EC PRIVATE KEY-----\n");
   while (i < j) {
     if (i % 64 == 0) fprintf(ptr, "\n");
     fprintf(ptr, "%c", tmp[(i++) - 10]);
@@ -720,7 +686,6 @@ int keys_vrfy(const uint8_t publ[], const uint8_t hash[], const uint8_t sign[]) 
   bit_pack(u1, hash);
   mod_mod_mul(u1, u1, rz, curve_n);
   mod_mod_mul(u2, rx, rz, curve_n);
-
   // Calculate sum = G + Q.
   set(sum.x, public.x);
   set(sum.y, public.y);
@@ -762,9 +727,6 @@ int keys_vrfy(const uint8_t publ[], const uint8_t hash[], const uint8_t sign[]) 
 // https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 // https://www.rfc-editor.org/rfc/rfc6979
 // https://www.rfc-editor.org/rfc/rfc4050
-
-// https://github.com/smurfd/lightecdh ?
-
 
 // http://www.secg.org/sec2-v2.pdf
 // http://csrc.nist.gov/publications/fips/fips186-3/fips_186-3.pdf
