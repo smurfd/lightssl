@@ -5,7 +5,7 @@ all: build runner
 local: build runner_local
 
 build:
-	${CC} -o ${BUILD}/tests tests.c ${BUILD}/ecc.o ${BUILD}/hash.o -lpthread -lm
+	${CC} -o ${BUILD}/tests tests.c ${BUILD}/ecc.o ${BUILD}/ecdsa.o ${BUILD}/hash.o -lpthread -lm
 
 runner:
 	${BUILD}/tests

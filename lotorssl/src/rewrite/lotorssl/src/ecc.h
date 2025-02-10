@@ -6,11 +6,9 @@
 #define DIGITS (BYTES / 8)
 #define u64 unsigned long long int // because linux uint64_t is not same as on mac
 // Imitate pythons %. -1 % 5 = 4, not -1
-#define MOD(n, m) n % m //(((int)n % (int)m) + (int)m) % (int)m
-struct pt {
-  u64 x[6], y[6];
-};
-typedef struct pt pt;
+#define MOD(n, m) (((int)n % (int)m) + (int)m) % (int)m
+typedef struct pt {u64 x[DIGITS], y[DIGITS];} pt;
+
 void ecc(void);
 #endif
 
