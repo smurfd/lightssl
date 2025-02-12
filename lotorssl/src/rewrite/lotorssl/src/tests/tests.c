@@ -31,6 +31,25 @@ uint8_t test_ecdsa(void) {
   return 1;
 }
 
+uint8_t test_ecdsa2(void) {
+  long d = 0, h = 0xdeadbeef0, set[6] = {3, 2, 5, 2, 1, 5};
+  curve e;
+  if (curve_init(&e, set)) {
+    assert(ecdsa(h, d, &e) == 0);
+  } else printf("oops\n");
+  return 1;
+}
+
+uint8_t test_ecdsaloop(void) {
+  long d = 0, h = 0xdeadbeef, set[6] = {3, 2, 5, 2, 1, 5};
+  curve e;
+  for (int i = 0; i < 1000000; i++)
+  if (curve_init(&e, set)) {
+    assert(ecdsa(h, d, &e) == 0);
+  } else printf("oops\n");
+  return 1;
+}
+
 uint8_t test_ecc(void) {
   ecc();
   return 1;
@@ -41,9 +60,12 @@ int main(int argc, char** argv) {
   if (argc == 1) { // When run without arguments or in CI
     ret &= test_ecc();
     ret &= test_ecdsa();
+    ret &= test_ecdsa2();
   } else {
     ret &= test_ecc();
     ret &= test_ecdsa();
+    ret &= test_ecdsa2();
+    ret &= test_ecdsaloop();
   }
   if (ret) {
     printf("OK\n");
