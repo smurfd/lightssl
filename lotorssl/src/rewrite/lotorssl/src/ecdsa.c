@@ -1,3 +1,4 @@
+// Auth: smurfd, 2025 More reading at the bottom of the file; 2 spacs indent; 150 width                                                             //
 // https://rosettacode.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 #include <stdbool.h>
 #include <stdlib.h>
@@ -173,3 +174,10 @@ int ecdsa(long h, long d, curve *e) {
   } // if valid return 0
   return -1;
 }
+
+// ECDSA
+// https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
+// https://www.rfc-editor.org/rfc/rfc6979
+// https://www.rfc-editor.org/rfc/rfc4050
+// https://datatracker.ietf.org/doc/html/rfc6979
+// https://aaronbloomfield.github.io/ccc/slides/encryption.html#/3/16

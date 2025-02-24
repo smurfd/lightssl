@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "../ecc.h"
 #include "../ecdsa.h"
 
 uint8_t test_ecdsa(void) {
@@ -50,19 +49,12 @@ uint8_t test_ecdsaloop(void) {
   return 1;
 }
 
-uint8_t test_ecc(void) {
-  ecc();
-  return 1;
-}
-
 int main(int argc, char** argv) {
   uint8_t ret = 1;
   if (argc == 1) { // When run without arguments or in CI
-    ret &= test_ecc();
     ret &= test_ecdsa();
     ret &= test_ecdsa2();
   } else {
-    ret &= test_ecc();
     ret &= test_ecdsa();
     ret &= test_ecdsa2();
     ret &= test_ecdsaloop();
